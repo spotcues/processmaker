@@ -17,6 +17,11 @@ switch ($page) {
         G::LoadClass( 'configuration' );
         $c = new Configurations();
         $oHeadPublisher->assign( 'FORMATS', $c->getFormats() );
+        $ieVersion = null;
+        if(preg_match("/^.*\(.*MSIE (\d+)\..+\).*$/", $_SERVER["HTTP_USER_AGENT"], $arrayMatch) || preg_match("/^.*\(.*rv.(\d+)\..+\).*$/", $_SERVER["HTTP_USER_AGENT"], $arrayMatch)){
+            $ieVersion = intval($arrayMatch[1]);
+        }
+        $oHeadPublisher->assign( 'ieVersion', $ieVersion );
         break;
     case "documents":
 

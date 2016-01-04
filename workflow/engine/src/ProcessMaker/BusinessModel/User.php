@@ -60,7 +60,9 @@ class User
 
         /*----------------------------------********---------------------------------*/
 
-        "USR_LOGGED_NEXT_TIME" => array("type" => "int",    "required" => false, "empty" => false, "defaultValues" => array(0, 1),                                           "fieldNameAux" => "usrLoggedNextTime")
+        'USR_LOGGED_NEXT_TIME' => ['type' => 'int',         'required' => false, 'empty' => false, 'defaultValues' => [0, 1],                                                'fieldNameAux' => 'usrLoggedNextTime'],
+
+        'USR_TIME_ZONE'        => ['type' => 'string',      'required' => false, 'empty' => true,  'defaultValues' => [],                                                    'fieldNameAux' => 'usrTimeZone']
 
     );
 
@@ -586,6 +588,18 @@ class User
 
             }
 
+
+
+            if (isset($arrayData['USR_TIME_ZONE']) && $arrayData['USR_TIME_ZONE'] != '') {
+
+                if (!in_array($arrayData['USR_TIME_ZONE'], \DateTimeZone::listIdentifiers())) {
+
+                    throw new \Exception(\G::LoadTranslation('ID_TIME_ZONE_DOES_NOT_EXIST', [$this->arrayFieldNameForException['usrTimeZone'], $arrayData['USR_TIME_ZONE']]));
+
+                }
+
+            }
+
         } catch (\Exception $e) {
 
             throw $e;
@@ -682,83 +696,95 @@ class User
 
 
 
-            return array(
+            $arrayResult = [];
 
-                $this->getFieldNameByFormatFieldName("USR_UID")                => $record["USR_UID"],
+            $arrayResult[$this->getFieldNameByFormatFieldName('USR_UID')]                = $record['USR_UID'];
 
-                $this->getFieldNameByFormatFieldName("USR_USERNAME")           => $record["USR_USERNAME"],
+            $arrayResult[$this->getFieldNameByFormatFieldName('USR_USERNAME')]           = $record['USR_USERNAME'];
 
-                //$this->getFieldNameByFormatFieldName("USR_PASSWORD")           => $record["USR_PASSWORD"],
+            //$arrayResult[$this->getFieldNameByFormatFieldName('USR_PASSWORD')]           = $record['USR_PASSWORD'];
 
-                $this->getFieldNameByFormatFieldName("USR_FIRSTNAME")          => $record["USR_FIRSTNAME"],
+            $arrayResult[$this->getFieldNameByFormatFieldName('USR_FIRSTNAME')]          = $record['USR_FIRSTNAME'];
 
-                $this->getFieldNameByFormatFieldName("USR_LASTNAME")           => $record["USR_LASTNAME"],
+            $arrayResult[$this->getFieldNameByFormatFieldName('USR_LASTNAME')]           = $record['USR_LASTNAME'];
 
-                $this->getFieldNameByFormatFieldName("USR_EMAIL")              => $record["USR_EMAIL"],
+            $arrayResult[$this->getFieldNameByFormatFieldName('USR_EMAIL')]              = $record['USR_EMAIL'];
 
-                $this->getFieldNameByFormatFieldName("USR_DUE_DATE")           => $record["USR_DUE_DATE"],
+            $arrayResult[$this->getFieldNameByFormatFieldName('USR_DUE_DATE')]           = $record['USR_DUE_DATE'];
 
-                $this->getFieldNameByFormatFieldName("USR_CREATE_DATE")        => $record["USR_CREATE_DATE"],
+            $arrayResult[$this->getFieldNameByFormatFieldName('USR_CREATE_DATE')]        = $record['USR_CREATE_DATE'];
 
-                $this->getFieldNameByFormatFieldName("USR_UPDATE_DATE")        => $record["USR_UPDATE_DATE"],
+            $arrayResult[$this->getFieldNameByFormatFieldName('USR_UPDATE_DATE')]        = $record['USR_UPDATE_DATE'];
 
-                $this->getFieldNameByFormatFieldName("USR_STATUS")             => $record["USR_STATUS"],
+            $arrayResult[$this->getFieldNameByFormatFieldName('USR_STATUS')]             = $record['USR_STATUS'];
 
-                $this->getFieldNameByFormatFieldName("USR_COUNTRY")            => $record["USR_COUNTRY"],
+            $arrayResult[$this->getFieldNameByFormatFieldName('USR_COUNTRY')]            = $record['USR_COUNTRY'];
 
-                $this->getFieldNameByFormatFieldName("USR_CITY")               => $record["USR_CITY"],
+            $arrayResult[$this->getFieldNameByFormatFieldName('USR_CITY')]               = $record['USR_CITY'];
 
-                $this->getFieldNameByFormatFieldName("USR_LOCATION")           => $record["USR_LOCATION"],
+            $arrayResult[$this->getFieldNameByFormatFieldName('USR_LOCATION')]           = $record['USR_LOCATION'];
 
-                $this->getFieldNameByFormatFieldName("USR_ADDRESS")            => $record["USR_ADDRESS"],
+            $arrayResult[$this->getFieldNameByFormatFieldName('USR_ADDRESS')]            = $record['USR_ADDRESS'];
 
-                $this->getFieldNameByFormatFieldName("USR_PHONE")              => $record["USR_PHONE"],
+            $arrayResult[$this->getFieldNameByFormatFieldName('USR_PHONE')]              = $record['USR_PHONE'];
 
-                $this->getFieldNameByFormatFieldName("USR_FAX")                => $record["USR_FAX"],
+            $arrayResult[$this->getFieldNameByFormatFieldName('USR_FAX')]                = $record['USR_FAX'];
 
-                $this->getFieldNameByFormatFieldName("USR_CELLULAR")           => $record["USR_CELLULAR"],
+            $arrayResult[$this->getFieldNameByFormatFieldName('USR_CELLULAR')]           = $record['USR_CELLULAR'];
 
-                $this->getFieldNameByFormatFieldName("USR_ZIP_CODE")           => $record["USR_ZIP_CODE"],
+            $arrayResult[$this->getFieldNameByFormatFieldName('USR_ZIP_CODE')]           = $record['USR_ZIP_CODE'];
 
-                $this->getFieldNameByFormatFieldName("DEP_UID")                => $record["DEP_UID"],
+            $arrayResult[$this->getFieldNameByFormatFieldName('DEP_UID')]                = $record['DEP_UID'];
 
-                $this->getFieldNameByFormatFieldName("USR_POSITION")           => $record["USR_POSITION"],
+            $arrayResult[$this->getFieldNameByFormatFieldName('USR_POSITION')]           = $record['USR_POSITION'];
 
-                $this->getFieldNameByFormatFieldName("USR_RESUME")             => $record["USR_RESUME"],
+            $arrayResult[$this->getFieldNameByFormatFieldName('USR_RESUME')]             = $record['USR_RESUME'];
 
-                $this->getFieldNameByFormatFieldName("USR_BIRTHDAY")           => $record["USR_BIRTHDAY"],
+            $arrayResult[$this->getFieldNameByFormatFieldName('USR_BIRTHDAY')]           = $record['USR_BIRTHDAY'];
 
-                $this->getFieldNameByFormatFieldName("USR_ROLE")               => $record["USR_ROLE"],
+            $arrayResult[$this->getFieldNameByFormatFieldName('USR_ROLE')]               = $record['USR_ROLE'];
 
-                $this->getFieldNameByFormatFieldName("USR_REPORTS_TO")         => $record["USR_REPORTS_TO"],
+            $arrayResult[$this->getFieldNameByFormatFieldName('USR_REPORTS_TO')]         = $record['USR_REPORTS_TO'];
 
-                $this->getFieldNameByFormatFieldName("USR_REPLACED_BY")        => $record["USR_REPLACED_BY"],
+            $arrayResult[$this->getFieldNameByFormatFieldName('USR_REPLACED_BY')]        = $record['USR_REPLACED_BY'];
 
-                $this->getFieldNameByFormatFieldName("USR_CALENDAR_UID")       => $aFields["USR_CALENDAR_UID"],
+            $arrayResult[$this->getFieldNameByFormatFieldName('USR_CALENDAR_UID')]       = $aFields['USR_CALENDAR_UID'];
 
-                $this->getFieldNameByFormatFieldName("USR_CALENDAR_NAME")           => $aFields["USR_CALENDAR"],
+            $arrayResult[$this->getFieldNameByFormatFieldName('USR_CALENDAR_NAME')]      = $aFields['USR_CALENDAR'];
 
-                $this->getFieldNameByFormatFieldName("USR_UX")                 => $record["USR_UX"],
+            $arrayResult[$this->getFieldNameByFormatFieldName('USR_UX')]                 = $record['USR_UX'];
 
-                /*----------------------------------********---------------------------------*/
+            /*----------------------------------********---------------------------------*/
 
-                $this->getFieldNameByFormatFieldName("USR_TOTAL_INBOX")        => $record["USR_TOTAL_INBOX"],
+            $arrayResult[$this->getFieldNameByFormatFieldName('USR_TOTAL_INBOX')]        = $record['USR_TOTAL_INBOX'];
 
-                $this->getFieldNameByFormatFieldName("USR_TOTAL_DRAFT")        => $record["USR_TOTAL_DRAFT"],
+            $arrayResult[$this->getFieldNameByFormatFieldName('USR_TOTAL_DRAFT')]        = $record['USR_TOTAL_DRAFT'];
 
-                $this->getFieldNameByFormatFieldName("USR_TOTAL_CANCELLED")    => $record["USR_TOTAL_CANCELLED"],
+            $arrayResult[$this->getFieldNameByFormatFieldName('USR_TOTAL_CANCELLED')]    = $record['USR_TOTAL_CANCELLED'];
 
-                $this->getFieldNameByFormatFieldName("USR_TOTAL_PARTICIPATED") => $record["USR_TOTAL_PARTICIPATED"],
+            $arrayResult[$this->getFieldNameByFormatFieldName('USR_TOTAL_PARTICIPATED')] = $record['USR_TOTAL_PARTICIPATED'];
 
-                $this->getFieldNameByFormatFieldName("USR_TOTAL_PAUSED")       => $record["USR_TOTAL_PAUSED"],
+            $arrayResult[$this->getFieldNameByFormatFieldName('USR_TOTAL_PAUSED')]       = $record['USR_TOTAL_PAUSED'];
 
-                $this->getFieldNameByFormatFieldName("USR_TOTAL_COMPLETED")    => $record["USR_TOTAL_COMPLETED"],
+            $arrayResult[$this->getFieldNameByFormatFieldName('USR_TOTAL_COMPLETED')]    = $record['USR_TOTAL_COMPLETED'];
 
-                $this->getFieldNameByFormatFieldName("USR_TOTAL_UNASSIGNED")   => $record["USR_TOTAL_UNASSIGNED"],
+            $arrayResult[$this->getFieldNameByFormatFieldName('USR_TOTAL_UNASSIGNED')]   = $record['USR_TOTAL_UNASSIGNED'];
 
-                $this->getFieldNameByFormatFieldName("USR_PHOTO_PATH")   => $pathPhotoUser
+            $arrayResult[$this->getFieldNameByFormatFieldName('USR_PHOTO_PATH')]         = $pathPhotoUser;
 
-            );
+
+
+            if (isset($_SESSION['__SYSTEM_UTC_TIME_ZONE__']) && $_SESSION['__SYSTEM_UTC_TIME_ZONE__']) {
+
+                $arrayResult[$this->getFieldNameByFormatFieldName('USR_TIME_ZONE')] = (trim($record['USR_TIME_ZONE']) != '')? trim($record['USR_TIME_ZONE']) : \ProcessMaker\Util\System::getTimeZone();
+
+            }
+
+
+
+            //Return
+
+            return $arrayResult;
 
         } catch (\Exception $e) {
 
@@ -858,7 +884,11 @@ class User
 
             $criteria->addSelectColumn(\UsersPeer::USR_TOTAL_UNASSIGNED);
 
+            $criteria->addSelectColumn(\UsersPeer::USR_TIME_ZONE);
 
+
+
+            //Return
 
             return $criteria;
 
@@ -1176,9 +1206,17 @@ class User
 
 
 
-                if (isset($arrayData["USR_NEW_PASS"])) {
+                if (isset($arrayData['USR_PASSWORD'])) {
 
-                    $arrayData["USR_PASSWORD"] = \Bootstrap::hashPassword($arrayData["USR_NEW_PASS"]);
+                    $arrayData['USR_PASSWORD'] = \Bootstrap::hashPassword($arrayData['USR_PASSWORD']);
+
+                } else {
+
+                    if (isset($arrayData['USR_NEW_PASS'])) {
+
+                        $arrayData['USR_PASSWORD'] = \Bootstrap::hashPassword($arrayData['USR_NEW_PASS']);
+
+                    }
 
                 }
 
@@ -1478,7 +1516,7 @@ class User
 
 
 
-            $rsCriteria->next();
+            $result = $rsCriteria->next();
 
 
 
@@ -2372,6 +2410,56 @@ class User
 
     /**
 
+     * change Bookmarks of an user
+
+     *
+
+     * @access public
+
+     * @param $userUID
+
+     * @param $tasUid
+
+     * @param $type
+
+     * @return void
+
+     */
+
+    public function updateBookmark($userUID, $tasUid, $type)
+
+    {
+
+        $this->userObj = new \Users();
+
+        $fields = $this->userObj->load($userUID);
+
+        $bookmark = empty($fields['USR_BOOKMARK_START_CASES']) ? array() : unserialize($fields['USR_BOOKMARK_START_CASES']);
+
+        $position = array_search($tasUid, $bookmark);
+
+
+
+        if ($type === 'INSERT' and $position === false) {
+
+            $bookmark[] = $tasUid;
+
+        } elseif ($type === 'DELETE' and $position !== false) {
+
+            unset($bookmark[$position]);
+
+        }
+
+        $fields['USR_BOOKMARK_START_CASES'] = serialize($bookmark);
+
+        $this->userObj->update($fields);
+
+    }
+
+
+
+    /**
+
      * Check permission
 
      *
@@ -2417,6 +2505,52 @@ class User
             //Return
 
             return $flagPermission;
+
+        } catch (\Exception $e) {
+
+            throw $e;
+
+        }
+
+    }
+
+
+
+    /**
+
+     * Get User-Logged Time Zone
+
+     *
+
+     * @return string Return the User-Logged Time Zone; Time Zone system settings otherwise
+
+     */
+
+    public static function getUserLoggedTimeZone()
+
+    {
+
+        try {
+
+            $timeZone = 'UTC';
+
+
+
+            if (isset($_SESSION['USR_TIME_ZONE'])) {
+
+                $tz = trim($_SESSION['USR_TIME_ZONE']);
+
+
+
+                $timeZone = ($tz != '')? $tz : $timeZone;
+
+            }
+
+
+
+            //Return
+
+            return $timeZone;
 
         } catch (\Exception $e) {
 

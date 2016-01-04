@@ -4910,10 +4910,14 @@ class G
             $list = glob( rtrim( $path, DIRECTORY_SEPARATOR ) . DIRECTORY_SEPARATOR . '*' );
 
             $sw = true;
-            foreach ($list as $f) {
-                if (! G::is_writable_r( $f, $noWritableFiles )) {
-                    $sw = false;
+            if(is_array($list)){
+                foreach ($list as $f) {
+                    if (! G::is_writable_r( $f, $noWritableFiles )) {
+                        $sw = false;
+                    }
                 }
+            } else {
+                $sw = false;
             }
 
             return $sw;
@@ -5495,16 +5499,31 @@ class G
                     }
                     break;
                 case 'docx':
+                    if ($docType[1] == 'vnd.openxmlformats-officedocument.wordprocessingml.document') {
+                        $res->status = true;
+                        return $res;
+                    }
+                    break;
                 case 'pptx':
+                    if ($docType[1] == 'vnd.openxmlformats-officedocument.presentationml.presentation') {
+                        $res->status = true;
+                        return $res;
+                    }
+                    break;
                 case 'xlsx':
-                    if ($docType[1] == 'zip') {
+                    if ($docType[1] == 'vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
                         $res->status = true;
                         return $res;
                     }
                     break;
                 case 'exe':
+                    if ($docType[1] == 'x-msdownload' || $docType[1] == 'x-dosexec') {
+                        $res->status = true;
+                        return $res;
+                    }
+                    break;
                 case 'wmv':
-                    if($docType[1] == 'octet-stream'){
+                    if($docType[1] == 'x-ms-asf' || $docType[1] == 'x-ms-wmv'){
                         $res->status = true;
                         return $res;
                     }

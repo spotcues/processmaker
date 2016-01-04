@@ -112,7 +112,7 @@ class PushMessageIOS
             $fp = stream_socket_client($this->url, $err, $errstr, 60, STREAM_CLIENT_CONNECT | STREAM_CLIENT_PERSISTENT, $ctx);
 
             if (!$fp) {
-                throw (new \Exception( G::LoadTranslation( 'ID_FAILED' ).': ' ."$err $errstr"));
+                throw (new \Exception( \G::LoadTranslation( 'ID_FAILED' ).': ' ."$err $errstr"));
             } else {
                 //echo 'Apple service is online. ' . '<br />';
             }

@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: ProcessMaker 3.0\n"
+"Project-Id-Version: ProcessMaker (Branch 3.0.1.7)\n"
 "POT-Creation-Date: \n"
-"PO-Revision-Date: 2015-10-08 18:22:42\n"
+"PO-Revision-Date: 2015-12-10 16:08:31\n"
 "Last-Translator: \n"
 "Language-Team: Colosa Developers Team <developers@colosa.com>\n"
 "MIME-Version: 1.0\n"
@@ -15820,8 +15820,8 @@ msgstr "Definition section is incomplete."
 # TRANSLATION
 # LABEL/ID_CASES_INPUT_DOES_NOT_EXIST
 #: LABEL/ID_CASES_INPUT_DOES_NOT_EXIST
-msgid "This input document with inp_doc_uid: {0} does not exist!"
-msgstr "This input document with inp_doc_uid: {0} does not exist!"
+msgid "This input document with app_doc_uid: {0} does not exist!"
+msgstr "This input document with app_doc_uid: {0} does not exist!"
 
 # TRANSLATION
 # LABEL/ID_CASES_INPUT_FILENAME_DOES_NOT_EXIST
@@ -15832,8 +15832,8 @@ msgstr "This filename does not exist!"
 # TRANSLATION
 # LABEL/ID_CASES_OUTPUT_DOES_NOT_EXIST
 #: LABEL/ID_CASES_OUTPUT_DOES_NOT_EXIST
-msgid "This output document with out_doc_id: {0} does not exist!"
-msgstr "This output document with out_doc_id: {0} does not exist!"
+msgid "This output document with app_doc_id: {0} does not exist!"
+msgstr "This output document with app_doc_id: {0} does not exist!"
 
 # TRANSLATION
 # LABEL/ID_CASES_INCORRECT_INFORMATION
@@ -24130,8 +24130,8 @@ msgstr "Service Account Email"
 # TRANSLATION
 # LABEL/ID_PMG_FILE
 #: LABEL/ID_PMG_FILE
-msgid "Sevice Accout Certificate"
-msgstr "Sevice Accout Certificate"
+msgid "Service Account Certificate"
+msgstr "Service Account Certificate"
 
 # TRANSLATION
 # LABEL/ID_PMG_TYPE_ACCEPT
@@ -26406,6 +26406,354 @@ msgstr "Can't create folder <br/> A folder with same name already exist.<br/>"
 #: LABEL/CANT_CREATE_FOLDER_A
 msgid "Can't create folder A"
 msgstr "Can't create folder A"
+
+# TRANSLATION
+# LABEL/ID_CURRENT_ASSING_TYPE_WITH_CASES
+#: LABEL/ID_CURRENT_ASSING_TYPE_WITH_CASES
+msgid "The current activity has cases and cannot be deleted"
+msgstr "The current activity has cases and cannot be deleted"
+
+# TRANSLATION
+# LABEL/ID_TEST_EMAIL_SERVER
+#: LABEL/ID_TEST_EMAIL_SERVER
+msgid "Test Email Server"
+msgstr "Test Email Server"
+
+# TRANSLATION
+# LABEL/ID_CREATE_EMAIL_SERVER
+#: LABEL/ID_CREATE_EMAIL_SERVER
+msgid "Create Email Server"
+msgstr "Create Email Server"
+
+# TRANSLATION
+# LABEL/ID_DELETE_EMAIL_SERVER
+#: LABEL/ID_DELETE_EMAIL_SERVER
+msgid "Delete Email Server"
+msgstr "Delete Email Server"
+
+# TRANSLATION
+# LABEL/ID_UPDATE_EMAIL_SERVER
+#: LABEL/ID_UPDATE_EMAIL_SERVER
+msgid "Update Email Server"
+msgstr "Update Email Server"
+
+# TRANSLATION
+# LABEL/ID_SCRIPT_TASK
+#: LABEL/ID_SCRIPT_TASK
+msgid "[LABEL/ID_SCRIPT_TASK] Script Task"
+msgstr "Script Task"
+
+# TRANSLATION
+# LABEL/ID_INVALID_QUERY
+#: LABEL/ID_INVALID_QUERY
+msgid "Invalid query."
+msgstr "Invalid query."
+
+# TRANSLATION
+# LABEL/ID_SESSION_DIRECTORY
+#: LABEL/ID_SESSION_DIRECTORY
+msgid "Session directory"
+msgstr "Session directory"
+
+# TRANSLATION
+# LABEL/ID_ISO8601_INVALID_FORMAT
+#: LABEL/ID_ISO8601_INVALID_FORMAT
+msgid "Invalid value for \"{0}\", this has not the format ISO 8601."
+msgstr "Invalid value for \"{0}\", this has not the format ISO 8601."
+
+# TRANSLATION
+# LABEL/ID_TIME_ZONE_DOES_NOT_EXIST
+#: LABEL/ID_TIME_ZONE_DOES_NOT_EXIST
+msgid "The time zone with {0}: \"{1}\" does not exist."
+msgstr "The time zone with {0}: \"{1}\" does not exist."
+
+# TRANSLATION
+# LABEL/ID_PROCESSMAKER_REQUIREMENTS_APCU
+#: LABEL/ID_PROCESSMAKER_REQUIREMENTS_APCU
+msgid "ACPU"
+msgstr "ACPU"
+
+# TRANSLATION
+# LABEL/ID_MAFE_d83b8b001a039716e2e7b8c02c4c9b4d
+#: LABEL/ID_MAFE_d83b8b001a039716e2e7b8c02c4c9b4d
+msgid "+ '"
+msgstr "+ '"
+
+# TRANSLATION
+# LABEL/ID_MAFE_6c24f6923944d3f9d84bcf924661abff
+#: LABEL/ID_MAFE_6c24f6923944d3f9d84bcf924661abff
+msgid "New variables created"
+msgstr "New variables created"
+
+# TRANSLATION
+# LABEL/ID_MAFE_0064d01e99a46ae4d9ff7eed1b75ec22
+#: LABEL/ID_MAFE_0064d01e99a46ae4d9ff7eed1b75ec22
+msgid "The following variables have been created and related to the imported form:<br>"
+msgstr "The following variables have been created and related to the imported form:<br>"
+
+# TRANSLATION
+# LABEL/ID_MAFE_076bbf458415eb4b6684ebad6c6094c0
+#: LABEL/ID_MAFE_076bbf458415eb4b6684ebad6c6094c0
+msgid "Variable Name:"
+msgstr "Variable Name:"
+
+# TRANSLATION
+# LABEL/ID_MAFE_f4f70727dc34561dfde1a3c529b6205c
+#: LABEL/ID_MAFE_f4f70727dc34561dfde1a3c529b6205c
+msgid "[LABEL/ID_MAFE_f4f70727dc34561dfde1a3c529b6205c] Settings"
+msgstr "Settings"
+
+# TRANSLATION
+# LABEL/ID_MAFE_e659b52eba1f0299b2d8ca3483919e72
+#: LABEL/ID_MAFE_e659b52eba1f0299b2d8ca3483919e72
+msgid "Type:"
+msgstr "Type:"
+
+# TRANSLATION
+# LABEL/ID_MAFE_e071ce22a73ed2e5ea13f4d61d76f5ab
+#: LABEL/ID_MAFE_e071ce22a73ed2e5ea13f4d61d76f5ab
+msgid "Database Connection:"
+msgstr "Database Connection:"
+
+# TRANSLATION
+# LABEL/ID_MAFE_d3eb32a3c80167aaa9aa114db53a22dd
+#: LABEL/ID_MAFE_d3eb32a3c80167aaa9aa114db53a22dd
+msgid "Sql:"
+msgstr "Sql:"
+
+# TRANSLATION
+# LABEL/ID_MAFE_ebcc39462e6620a8cf432194084a5483
+#: LABEL/ID_MAFE_ebcc39462e6620a8cf432194084a5483
+msgid "Options:"
+msgstr "Options:"
+
+# TRANSLATION
+# LABEL/ID_MAFE_08a7d6fab0acef5396b8e564b32f48f8
+#: LABEL/ID_MAFE_08a7d6fab0acef5396b8e564b32f48f8
+msgid "Supported Controls: text, textarea, dropdown, radio, suggest, hidden."
+msgstr "Supported Controls: text, textarea, dropdown, radio, suggest, hidden."
+
+# TRANSLATION
+# LABEL/ID_MAFE_380e92305f89798cc7ff7db6e73b22c6
+#: LABEL/ID_MAFE_380e92305f89798cc7ff7db6e73b22c6
+msgid "There are problems updating the Loop Marker"
+msgstr "There are problems updating the Loop Marker"
+
+# TRANSLATION
+# LABEL/ID_MAFE_4b420957db489cc5aff8bee58d07b8b1
+#: LABEL/ID_MAFE_4b420957db489cc5aff8bee58d07b8b1
+msgid "The row can not be removed, because is being edited."
+msgstr "The row can not be removed, because is being edited."
+
+# TRANSLATION
+# LABEL/ID_MAFE_acd6337dfeb8a29685e3856bfa76756c
+#: LABEL/ID_MAFE_acd6337dfeb8a29685e3856bfa76756c
+msgid "History of use"
+msgstr "History of use"
+
+# TRANSLATION
+# LABEL/ID_MAFE_b754d64a4ddb13e5eb9803baabb938b6
+#: LABEL/ID_MAFE_b754d64a4ddb13e5eb9803baabb938b6
+msgid "This content is empty."
+msgstr "This content is empty."
+
+# TRANSLATION
+# LABEL/ID_MAFE_aa0f2fff4f672e8106d8490171512bbd
+#: LABEL/ID_MAFE_aa0f2fff4f672e8106d8490171512bbd
+msgid "The form was recovered from a previous version {0}. Possible missing controls are going to be recreated."
+msgstr "The form was recovered from a previous version {0}. Possible missing controls are going to be recreated."
+
+# TRANSLATION
+# LABEL/ID_MAFE_f6eb4ee83cd8508379e695479564fddd
+#: LABEL/ID_MAFE_f6eb4ee83cd8508379e695479564fddd
+msgid "The imported dynaform include new variables and existing variables that require changes."
+msgstr "The imported dynaform include new variables and existing variables that require changes."
+
+# TRANSLATION
+# LABEL/ID_MAFE_dc57a7c94c6039e453fc44f153b865a4
+#: LABEL/ID_MAFE_dc57a7c94c6039e453fc44f153b865a4
+msgid "The changed variables have been added with the suffix “_1”."
+msgstr "The changed variables have been added with the suffix “_1”."
+
+# TRANSLATION
+# LABEL/ID_MAFE_2b30b478acce5ed435bdf80f39de9b1f
+#: LABEL/ID_MAFE_2b30b478acce5ed435bdf80f39de9b1f
+msgid "Please take note of the changes to update your process logic."
+msgstr "Please take note of the changes to update your process logic."
+
+# TRANSLATION
+# LABEL/ID_MAFE_cba3917d344178657c24e17192d622be
+#: LABEL/ID_MAFE_cba3917d344178657c24e17192d622be
+msgid "The following variables have been created:<br>"
+msgstr "The following variables have been created:<br>"
+
+# TRANSLATION
+# LABEL/ID_MAFE_6e139990d75202b4688849d505e9f659
+#: LABEL/ID_MAFE_6e139990d75202b4688849d505e9f659
+msgid "Current form."
+msgstr "Current form."
+
+# TRANSLATION
+# LABEL/ID_MAFE_473f81670bcdd9d92624698f43d6a517
+#: LABEL/ID_MAFE_473f81670bcdd9d92624698f43d6a517
+msgid "Empty."
+msgstr "Empty."
+
+# TRANSLATION
+# LABEL/ID_MAFE_c793116b0fc9df6d8761028f4adbe90e
+#: LABEL/ID_MAFE_c793116b0fc9df6d8761028f4adbe90e
+msgid "Execute a trigger when a case is opened"
+msgstr "Execute a trigger when a case is opened"
+
+# TRANSLATION
+# LABEL/ID_GMAIL_NEED_SERVER
+#: LABEL/ID_GMAIL_NEED_SERVER
+msgid "The ProcessMaker address must be passed, it can't be empty"
+msgstr "The ProcessMaker address must be passed, it can't be empty"
+
+# TRANSLATION
+# LABEL/ID_TIME_ZONE_LOGIN_TITLE
+#: LABEL/ID_TIME_ZONE_LOGIN_TITLE
+msgid "Time zone configuration"
+msgstr "Time zone configuration"
+
+# TRANSLATION
+# LABEL/ID_TIME_ZONE_LOGIN_DESCRIPTION1
+#: LABEL/ID_TIME_ZONE_LOGIN_DESCRIPTION1
+msgid "Your local machine time zone does not match your current profile settings."
+msgstr "Your local machine time zone does not match your current profile settings."
+
+# TRANSLATION
+# LABEL/ID_TIME_ZONE_LOGIN_DESCRIPTION2
+#: LABEL/ID_TIME_ZONE_LOGIN_DESCRIPTION2
+msgid "Your time zone profile settings will be updated in accordance to your current location."
+msgstr "Your time zone profile settings will be updated in accordance to your current location."
+
+# TRANSLATION
+# LABEL/ID_TIME_ZONE_LOGIN_DESCRIPTION3
+#: LABEL/ID_TIME_ZONE_LOGIN_DESCRIPTION3
+msgid "This operation will help you avoid date storage issues."
+msgstr "This operation will help you avoid date storage issues."
+
+# TRANSLATION
+# LABEL/ID_TIME_ZONE_LOGIN_DESCRIPTION_DETAILS
+#: LABEL/ID_TIME_ZONE_LOGIN_DESCRIPTION_DETAILS
+msgid "Your current profile time zone: {0}, is going to be updated to: {1}."
+msgstr "Your current profile time zone: {0}, is going to be updated to: {1}."
+
+# TRANSLATION
+# LABEL/ID_MAFE_bebfb2a099450ef06ded421e59c888b2
+#: LABEL/ID_MAFE_bebfb2a099450ef06ded421e59c888b2
+msgid "Format (CSS)"
+msgstr "Format (CSS)"
+
+# TRANSLATION
+# LABEL/ID_MAFE_cabf52523fbbddadbde30994e36845d0
+#: LABEL/ID_MAFE_cabf52523fbbddadbde30994e36845d0
+msgid "Store Result In"
+msgstr "Store Result In"
+
+# TRANSLATION
+# LABEL/ID_MAFE_21037a59373ae01e31ee20ec61555333
+#: LABEL/ID_MAFE_21037a59373ae01e31ee20ec61555333
+msgid "Store result in variable @@myResult"
+msgstr "Store result in variable @@myResult"
+
+# TRANSLATION
+# LABEL/ID_MAFE_b1fcd78a4983c63c73972229b16cb7a6
+#: LABEL/ID_MAFE_b1fcd78a4983c63c73972229b16cb7a6
+msgid "print dynaform"
+msgstr "print dynaform"
+
+# TRANSLATION
+# LABEL/ID_MAFE_4ed131033015697f970660a0cb48ff1e
+#: LABEL/ID_MAFE_4ed131033015697f970660a0cb48ff1e
+msgid "Create variable"
+msgstr "Create variable"
+
+# TRANSLATION
+# LABEL/ID_MAFE_dc45332742bde79337287a115c6422a4
+#: LABEL/ID_MAFE_dc45332742bde79337287a115c6422a4
+msgid "Select variable"
+msgstr "Select variable"
+
+# TRANSLATION
+# LABEL/ID_MAFE_7a21a691b5d03d92a29b79bbeecf706e
+#: LABEL/ID_MAFE_7a21a691b5d03d92a29b79bbeecf706e
+msgid "Custom actions"
+msgstr "Custom actions"
+
+# TRANSLATION
+# LABEL/ID_MAFE_5b37be2f6e6fc0bc307e3146980709ea
+#: LABEL/ID_MAFE_5b37be2f6e6fc0bc307e3146980709ea
+msgid "Please enter only CSS code"
+msgstr "Please enter only CSS code"
+
+# TRANSLATION
+# LABEL/ID_MAFE_bf8252265e26d92c011456899a2d522e
+#: LABEL/ID_MAFE_bf8252265e26d92c011456899a2d522e
+msgid "At least one option must be filled."
+msgstr "At least one option must be filled."
+
+# TRANSLATION
+# LABEL/ID_ACCESS_DENIED
+#: LABEL/ID_ACCESS_DENIED
+msgid "Access Denied!"
+msgstr "Access Denied!"
+
+# TRANSLATION
+# LABEL/ID_LOGIN_TITLE
+#: LABEL/ID_LOGIN_TITLE
+msgid "[LABEL/ID_LOGIN_TITLE] Please enter your credentials below"
+msgstr "Please enter your credentials below"
+
+# TRANSLATION
+# LABEL/ID_LICENCE_LOGIN_TITLE
+#: LABEL/ID_LICENCE_LOGIN_TITLE
+msgid "License"
+msgstr "License"
+
+# TRANSLATION
+# LABEL/ID_PMDRIVE_NO_CONTENT_IN_FILE
+#: LABEL/ID_PMDRIVE_NO_CONTENT_IN_FILE
+msgid "The file doesn't have any content stored on Drive."
+msgstr "The file doesn't have any content stored on Drive."
+
+# TRANSLATION
+# LABEL/ID_PMGMAIL_GENERAL_ERROR
+#: LABEL/ID_PMGMAIL_GENERAL_ERROR
+msgid "An error in processing Gmail requests occurred"
+msgstr "An error in processing Gmail requests occurred"
+
+# TRANSLATION
+# LABEL/ID_NOT_HAVE_BOOKMARKED_PROCESSES
+#: LABEL/ID_NOT_HAVE_BOOKMARKED_PROCESSES
+msgid "You don't have bookmarked processes"
+msgstr "You don't have bookmarked processes"
+
+# TRANSLATION
+# LABEL/ID_MAFE_4bb78cf31aa7936d4031f8de1481d308
+#: LABEL/ID_MAFE_4bb78cf31aa7936d4031f8de1481d308
+msgid "The label is empty"
+msgstr "The label is empty"
+
+# TRANSLATION
+# LABEL/ID_MAFE_0862528079a06dc37cf808953afca073
+#: LABEL/ID_MAFE_0862528079a06dc37cf808953afca073
+msgid "Input Document:"
+msgstr "Input Document:"
+
+# TRANSLATION
+# LABEL/ID_MAFE_e0c9b0646bf818123171ad13d15b48e0
+#: LABEL/ID_MAFE_e0c9b0646bf818123171ad13d15b48e0
+msgid "There are problems removing task"
+msgstr "There are problems removing task"
+
+# TRANSLATION
+# LABEL/ID_MAFE_0778b522479c97b0c98fb221e86f8054
+#: LABEL/ID_MAFE_0778b522479c97b0c98fb221e86f8054
+msgid "Invalid operation, please delete elements individually"
+msgstr "Invalid operation, please delete elements individually"
 
 # additionalTables/additionalTablesData.xml?ADD_TAB_NAME
 # additionalTables/additionalTablesData.xml
@@ -35728,6 +36076,18 @@ msgstr "Test connection"
 #: button - btnCancel
 msgid "[ldapAdvanced/ldapAdvancedEdit.xml?btnCancel] Cancel"
 msgstr "Cancel"
+
+# login/TimeZoneAlert.xml?BROWSER_TIME_ZONE
+# login/TimeZoneAlert.xml
+#: dropdown - BROWSER_TIME_ZONE
+msgid "[login/TimeZoneAlert.xml?BROWSER_TIME_ZONE] "
+msgstr ""
+
+# login/TimeZoneAlert.xml?BTNOK
+# login/TimeZoneAlert.xml
+#: submit - BTNOK
+msgid "[login/TimeZoneAlert.xml?BTNOK] "
+msgstr ""
 
 # login/changePassword.xml?THETITLE
 # login/changePassword.xml

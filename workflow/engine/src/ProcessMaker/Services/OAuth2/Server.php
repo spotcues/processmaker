@@ -357,6 +357,21 @@ class Server implements iAuthenticate
 
                 setcookie($session->getSessionName(), $_COOKIE[$session->getSessionName()], time() + $lifetime, "/", null, false, true);
             }
+
+            //Set User Time Zone
+            $user = \UsersPeer::retrieveByPK(self::$userId);
+
+            if (!is_null($user)) {
+                $userTimeZone = $user->getUsrTimeZone();
+
+                if (trim($userTimeZone) == '') {
+                    $arraySystemConfiguration = \System::getSystemConfiguration('', '', SYS_SYS);
+
+                    $userTimeZone = $arraySystemConfiguration['time_zone'];
+                }
+
+                $_SESSION['USR_TIME_ZONE'] = $userTimeZone;
+            }
         }
 
         return $allowed;

@@ -80,7 +80,7 @@ if (isset( $_POST['category'] ) && $_POST['category'] !== '<reset>') {
 $r = new stdclass();
 $r->memkey = $memkey;
 $r->memcache = $memcacheUsed;
-$r->data = $proData;
+$r->data = \ProcessMaker\Util\DateTime::convertUtcToTimeZone($proData);
 $r->totalCount = $totalCount;
 
 echo G::json_encode( $r );

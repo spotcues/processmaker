@@ -22,10 +22,33 @@
  * Coral Gables, FL, 33134, USA, or email info@colosa.com.
  */
 if (!isset($_SESSION['USER_LOGGED'])) {
-    G::SendTemporalMessage( 'ID_LOGIN_AGAIN', 'warning', 'labels' );
-    die( '<script type="text/javascript">
-              parent.location = "../cases/casesStartPage?action=startCase";
-          </script>');
+	G::SendTemporalMessage( 'ID_LOGIN_AGAIN', 'warning', 'labels' );
+	die( '<script type="text/javascript">
+			var olink = document.location.href;
+			olink = ( olink.search("gmail") == -1 ) ? parent.document.location.href : olink;
+			if(olink.search("gmail") == -1){
+				parent.location = "../cases/casesStartPage?action=startCase";
+			} else {
+				var data = olink.split("?");
+				var odata = data[1].split("&");
+				var appUid = odata[0].split("=");
+
+				var dataToSend = {
+					"action": "credentials",
+					"operation": "refreshPmSession",
+					"type": "processCall",
+					"funParams": [
+					appUid[1],
+					""
+					],
+					"expectReturn": false
+				};
+				var x = parent.postMessage(JSON.stringify(dataToSend), "*");
+				if (x == undefined){
+					x = parent.parent.postMessage(JSON.stringify(dataToSend), "*");
+				}
+			}
+			</script>');
 }
 /* Permissions */
 switch ($RBAC->userCanAccess( 'PM_CASES' )) {
@@ -98,7 +121,20 @@ try {
     $aCurrentDerivation = array ('APP_UID' => $_SESSION['APPLICATION'],'DEL_INDEX' => $_SESSION['INDEX'],'APP_STATUS' => $sStatus,'TAS_UID' => $_SESSION['TASK'],'ROU_TYPE' => $_POST['form']['ROU_TYPE']
     );
 
-    $oDerivation->derivate( $aCurrentDerivation, $_POST['form']['TASKS'] );
+    $arrayDerivationResult = $oDerivation->derivate($aCurrentDerivation, $_POST['form']['TASKS']);
+
+    if (!empty($arrayDerivationResult)) {
+        foreach ($_POST['form']['TASKS'] as $key => $value) {
+            if (isset($value['TAS_UID'])) {
+                foreach ($arrayDerivationResult as $value2) {
+                    if ($value2['TAS_UID'] == $value['TAS_UID']) {
+                        $_POST['form']['TASKS'][$key]['DEL_INDEX'] = $value2['DEL_INDEX'];
+                        break;
+                    }
+                }
+            }
+        }
+    }
 
     $appFields = $oCase->loadCase( $_SESSION['APPLICATION'] ); //refresh appFields, because in derivations should change some values
     $triggers = $oCase->loadTriggers( $_SESSION['TASK'], 'ASSIGN_TASK', - 2, 'AFTER' ); //load the triggers after derivation
@@ -140,7 +176,8 @@ try {
         $oLight = new \ProcessMaker\BusinessModel\Light();
         $nextIndex = $oLight->getInformationDerivatedCase($appFields['APP_UID'], $appFields['DEL_INDEX']);
         $notificationMobile = new \ProcessMaker\BusinessModel\Light\NotificationDevice();
-        $notificationMobile->routeCaseNotification($_SESSION['USER_LOGGED'], $_SESSION['PROCESS'], $_SESSION['TASK'], $appFields, $_POST['form']['TASKS'], $nextIndex);
+        $notificationMobile->routeCaseNotification($_SESSION['USER_LOGGED'], $_SESSION['PROCESS'], $_SESSION['TASK'],
+            $appFields, $_POST['form']['TASKS'], $nextIndex, $appFields['DEL_INDEX']);
     } catch (Exception $e) {
         \G::log(G::loadTranslation( 'ID_NOTIFICATION_ERROR' ) . '|' . $e->getMessage() , PATH_DATA, "mobile.log");
     }
@@ -176,6 +213,8 @@ try {
     if (isset( $_SESSION['user_experience'] )) {
         $aNextStep['PAGE'] = 'casesListExtJsRedirector?ux=' . $_SESSION['user_experience'];
         $debuggerAvailable = false;
+    } else if( isset( $_SESSION['gmail'] )  ){
+    	$aNextStep['PAGE'] = 'casesListExtJsRedirector?gmail='.$_SESSION['gmail'];
     } else {
         $aNextStep['PAGE'] = 'casesListExtJsRedirector';
     }
@@ -187,7 +226,12 @@ try {
         $loc = $aNextStep['PAGE'];
     }
     //Triggers After
-    if (isset( $_SESSION['TRIGGER_DEBUG']['ISSET'] )) {
+    $ieVersion = null;
+    if(preg_match("/^.*\(.*MSIE (\d+)\..+\).*$/", $_SERVER["HTTP_USER_AGENT"], $arrayMatch) || preg_match("/^.*\(.*rv.(\d+)\..+\).*$/", $_SERVER["HTTP_USER_AGENT"], $arrayMatch)){
+        $ieVersion = intval($arrayMatch[1]);
+    }
+
+    if (isset( $_SESSION['TRIGGER_DEBUG']['ISSET'] ) && $ieVersion != 11) {
         if ($_SESSION['TRIGGER_DEBUG']['ISSET'] == 1) {
             $oTemplatePower = new TemplatePower( PATH_TPL . 'cases/cases_Step.html' );
             $oTemplatePower->prepare();
@@ -202,6 +246,21 @@ try {
         } else {
             unset( $_SESSION['TRIGGER_DEBUG'] );
         }
+    }
+
+    //close tab only if IE11
+
+    if($ieVersion == 11 && !isset($_SESSION['__OUTLOOK_CONNECTOR__'])) {
+        $script = "<script type='text/javascript'>
+                       try {
+                           if(top.opener) {
+                               top.opener.location.reload();
+                               top.close();
+                           }
+                       } catch(e) {
+                       }
+                   </script>";
+        die($script);
     }
 
     G::header( "location: $loc" );

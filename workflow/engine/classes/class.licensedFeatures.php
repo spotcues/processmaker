@@ -464,6 +464,108 @@ class PMLicensedFeatures
 
                 "version"        => ""
 
+            ),
+
+            12 => array(
+
+                "description"    => "Integration with Gmail.",
+
+                "enabled"        => false,
+
+                "id"             => "pmGmail",
+
+                "latest_version" => "",
+
+                "log"            => null,
+
+                "name"           => "pmGmail",
+
+                "nick"           => "pmGmail",
+
+                "progress"       => 0,
+
+                "publisher"      => "Colosa",
+
+                "release_type"   => "localRegistry",
+
+                "status"         => "ready",
+
+                "store"          => "00000000000000000000000000010012",
+
+                "type"           => "features",
+
+                "url"            => "",
+
+                "version"        => ""
+
+            ),
+
+            13 => array(
+
+                "description"    => "User-based Language Management.",
+
+                "enabled"        => false,
+
+                "id"             => "userBasedLanguage",
+
+                "latest_version" => "",
+
+                "log"            => null,
+
+                "name"           => "userBasedLanguage",
+
+                "nick"           => "userBasedLanguage",
+
+                "progress"       => 0,
+
+                "publisher"      => "Colosa",
+
+                "release_type"   => "localRegistry",
+
+                "status"         => "ready",
+
+                "store"          => "00000000000000000000000000010013",
+
+                "type"           => "features",
+
+                "url"            => "",
+
+                "version"        => ""
+
+            ),
+
+            14 => array(
+
+                "description"    => "User-based Time Zone Management.",
+
+                "enabled"        => false,
+
+                "id"             => "userBasedTimeZone",
+
+                "latest_version" => "",
+
+                "log"            => null,
+
+                "name"           => "userBasedTimeZone",
+
+                "nick"           => "userBasedTimeZone",
+
+                "progress"       => 0,
+
+                "publisher"      => "Colosa",
+
+                "release_type"   => "localRegistry",
+
+                "status"         => "ready",
+
+                "store"          => "00000000000000000000000000010014",
+
+                "type"           => "features",
+
+                "url"            => "",
+
+                "version"        => ""
+
             )
 
         );

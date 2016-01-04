@@ -1,5 +1,6 @@
 //Ext.BLANK_IMAGE_URL = 'resources/s.gif';
 var startCaseFilter;
+var newCaseNewTab;
 
 Ext.chart.Chart.CHART_URL = '/images/charts.swf';
 Ext.FlashComponent.EXPRESS_INSTALL_URL = '/images/expressinstall.swf';
@@ -444,12 +445,14 @@ Ext.onReady(function() {
 
 function openCaseA(n){
   if (n.attributes.optionType == "startProcess") {
-    Ext.Msg.show({
-      title : '',
-      msg : TRANSLATIONS.ID_STARTING_NEW_CASE  + '<br><br><b>' + n.attributes.text + '</b>',
-      wait:true,
-      waitConfig: {interval:500}
-    });
+    if(ieVersion != 11) {
+      Ext.Msg.show({
+        title : '',
+        msg : TRANSLATIONS.ID_STARTING_NEW_CASE  + '<br><br><b>' + n.attributes.text + '</b>',
+        wait:true,
+        waitConfig: {interval:500}
+      });
+    }
     Ext.Ajax.request({
       url : 'casesStartPage_Ajax.php',
       params : {
@@ -462,7 +465,14 @@ function openCaseA(n){
         try {
           var res = Ext.util.JSON.decode(response.responseText);
           if (res.openCase) {
+            if(ieVersion == 11) {
+              if(newCaseNewTab) {
+                newCaseNewTab.close();
+              }
+                newCaseNewTab = window.open(res.openCase.PAGE);       
+            } else {
               window.location = res.openCase.PAGE;
+            }
           }else if (res.lostSession) {
               Ext.Msg.show({
                        title : TRANSLATIONS.ID_ERROR_CREATING_NEW_CASE, // 'Error creating a new Case',
@@ -575,3 +585,9 @@ Ext.ux.MaskTree = Ext.extend(Ext.tree.TreePanel, {
 }); // end of extend
 
 Ext.reg('masktree', Ext.ux.MaskTree);
+
+Ext.EventManager.on(window, 'beforeunload', function () {
+  if(newCaseNewTab) {
+    newCaseNewTab.close();
+  }
+}); 

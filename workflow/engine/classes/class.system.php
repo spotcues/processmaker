@@ -70,7 +70,8 @@ class System
         'ie_cookie_lifetime' => 1,
         'safari_cookie_lifetime' => 1,
         'error_reporting' => "",
-        'display_errors' => 'On'
+        'display_errors' => 'On',
+        'system_utc_time_zone' => 0
     );
 
     /**
@@ -184,8 +185,8 @@ class System
         * the distro name, such as "CentOS release 5.3 (Final)" or "Ubuntu 10.10"
         */
         $distro = '';
-        if (file_exists("/dev/")){ //Windows does not have this folder 
-          $distro = exec( "lsb_release -d -s 2> /dev/null" );          
+        if (file_exists("/dev/")){ //Windows does not have this folder
+          $distro = exec( "lsb_release -d -s 2> /dev/null" );
         }
 
         /* For distros without lsb_release, we look for *release (such as
@@ -1099,33 +1100,7 @@ class System
 
     public function getAllTimeZones ()
     {
-        $timezones = DateTimeZone::listAbbreviations();
-
-        $cities = array ();
-        foreach ($timezones as $key => $zones) {
-            foreach ($zones as $id => $zone) {
-                /**
-                 * Only get timezones explicitely not part of "Others".
-                 *
-                 * @see http://www.php.net/manual/en/timezones.others.php
-                 */
-                if (preg_match( '/^(America|Antartica|Arctic|Asia|Atlantic|Africa|Europe|Indian|Pacific)\//', $zone['timezone_id'] ) && $zone['timezone_id']) {
-                    $cities[$zone['timezone_id']][] = $key;
-                }
-            }
-        }
-
-        // For each city, have a comma separated list of all possible timezones for that city.
-        foreach ($cities as $key => $value) {
-            $cities[$key] = join( ', ', $value );
-        }
-        // Only keep one city (the first and also most important) for each set of possibilities.
-        $cities = array_unique( $cities );
-
-        // Sort by area/city name.
-        ksort( $cities );
-
-        return $cities;
+        throw new Exception(__METHOD__ . ': The method is deprecated');
     }
 
     public static function getSystemConfiguration ($globalIniFile = '', $wsIniFile = '', $wsName = '')

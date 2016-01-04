@@ -50,6 +50,8 @@ var ids = '';
 
 var winReassignInCasesList;
 
+var casesNewTab;
+
 
 
 function formatAMPM(date, initVal, calendarDate) {
@@ -170,19 +172,21 @@ function openCase(){
 
         var caseTitle = (rowModel.data.APP_TITLE) ? rowModel.data.APP_TITLE : rowModel.data.APP_UID;
 
+        if(ieVersion != 11) {
 
+            Ext.Msg.show({
 
-        Ext.Msg.show({
+                msg: _('ID_OPEN_CASE') + ' ' + caseTitle,
 
-            msg: _('ID_OPEN_CASE') + ' ' + caseTitle,
+                width:300,
 
-            width:300,
+                wait:true,
 
-            wait:true,
+                waitConfig: {interval:200}
 
-            waitConfig: {interval:200}
+            });
 
-        });
+        }
 
         params = '';
 
@@ -258,7 +262,21 @@ function openCase(){
 
         params += '&action=' + action;
 
-        redirect(requestFile + '?' + params);
+        if(ieVersion == 11) {
+
+            if(casesNewTab) {
+
+                casesNewTab.close();
+
+            }
+
+            casesNewTab = window.open(requestFile + '?' + params);
+
+        } else {
+
+            redirect(requestFile + '?' + params);
+
+        }
 
 
 
@@ -1146,7 +1164,7 @@ Ext.onReady ( function() {
 
     full_name = function(v, x, s) {
 
-        if (s.data.USR_UID) {
+        if (s.data.USR_UID && s.data.USR_USERNAME) {
 
             return _FNF(s.data.USR_USERNAME, s.data.USR_FIRSTNAME, s.data.USR_LASTNAME);
 
@@ -1166,11 +1184,23 @@ Ext.onReady ( function() {
 
         if (s.data.PREVIOUS_USR_UID) {
 
-            return _FNF(s.data.PREVIOUS_USR_USERNAME, s.data.PREVIOUS_USR_FIRSTNAME, s.data.PREVIOUS_USR_LASTNAME);
+            switch (s.data.PREVIOUS_USR_UID) {
 
-        }
+                case "SCRIPT-TASK":
 
-        else {
+                    return _("ID_SCRIPT_TASK");
+
+                    break;
+
+                default:
+
+                    return _FNF(s.data.PREVIOUS_USR_USERNAME, s.data.PREVIOUS_USR_FIRSTNAME, s.data.PREVIOUS_USR_LASTNAME);
+
+                    break;
+
+            }
+
+        } else {
 
             return '';
 
@@ -1468,35 +1498,17 @@ Ext.onReady ( function() {
 
 
 
-
-
     // Create HttpProxy instance, all CRUD requests will be directed to single proxy url.
 
-    if (caseListBuilder) {
+    var proxyCasesList = new Ext.data.HttpProxy({
 
-        var proxyCasesList = new Ext.data.HttpProxy({
+        api: {
 
-            api: {
+            read : urlProxy
 
-                read : urlProxy
+        }
 
-            }
-
-        });
-
-    } else {
-
-        var proxyCasesList = new Ext.data.HttpProxy({
-
-            api: {
-
-                read : urlProxy
-
-            }
-
-        });
-
-    }
+    });
 
 
 
@@ -4849,3 +4861,13 @@ function msgBox(title, msg, type){
 }
 
 
+
+Ext.EventManager.on(window, 'beforeunload', function () {
+
+  if(casesNewTab) {
+
+    casesNewTab.close();
+
+  }
+
+});

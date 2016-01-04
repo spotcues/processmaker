@@ -79,5 +79,13 @@ $oHeadPublisher->assign("arrayFlagMenuNewOption", $arrayFlagMenuNewOption);
 $oHeadPublisher->assign("arrayMenuNewOptionPlugin", $arrayMenuNewOptionPlugin);
 $oHeadPublisher->assign("arrayContextMenuOptionPlugin", $arrayContextMenuOptionPlugin);
 
+$oPluginRegistry = & PMPluginRegistry::getSingleton();
+$callBackFile = $oPluginRegistry->getImportProcessCallback();
+$file = false; 
+if(sizeof($callBackFile)) {
+    $file = $callBackFile[0]->callBackFile != "" ? $callBackFile[0]->callBackFile : false;
+}
+$oHeadPublisher->assign("importProcessCallbackFile", $file);
+
 G::RenderPage( 'publish', 'extJs' );
 

@@ -40,10 +40,12 @@ function validateType ($value, $type)
                 $value1 = str_replace(".", "", $value1);
                 $value = $value1.".".$value2;
             } else {
-                $value2 = substr($value, $posPoint+1);
-                $value1 = substr($value, 0, $posPoint);
-                $value1 = str_replace(",", "", $value1);
-                $value = $value1.".".$value2;
+                if($posPoint) {
+                    $value2 = substr($value, $posPoint+1);
+                    $value1 = substr($value, 0, $posPoint);
+                    $value1 = str_replace(",", "", $value1);
+                    $value = $value1.".".$value2;
+                }
             }
             break;
         default:
@@ -751,7 +753,7 @@ class AdditionalTables extends BaseAdditionalTables
                 } else {
                     // grids
                     foreach ($caseData[$dKey] as $dIndex => $dRow) {
-                        if (!is_array($dRow)) {
+                        if (is_array($dRow)) {
                             foreach ($dRow as $k => $v) {
                                 if (trim($v) === '') {
                                     $caseData[$dKey][$dIndex][$k] = null;

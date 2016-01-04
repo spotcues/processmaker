@@ -64,6 +64,10 @@ class AppDocument extends BaseAppDocument
      */
     protected $app_doc_filename = '';
 
+    /*----------------------------------********---------------------------------*/
+    protected $driveDownload = array();
+    /*----------------------------------********---------------------------------*/
+
     /*
      * Load the application document registry
      * @param string $sAppDocUid
@@ -86,6 +90,11 @@ class AppDocument extends BaseAppDocument
                 $aFields['APP_DOC_FILENAME'] = $aContentFields['APP_DOC_FILENAME'];
 
                 $this->fromArray( $aFields, BasePeer::TYPE_FIELDNAME );
+                /*----------------------------------********---------------------------------*/
+                $driveDownload = @unserialize($aFields['APP_DOC_DRIVE_DOWNLOAD']);
+                $driveDownload = $driveDownload !== false ? $driveDownload : array();
+                $oAppDocument->driveDownload = $driveDownload;
+                /*----------------------------------********---------------------------------*/
                 return $aFields;
             } else {
                 throw (new Exception( 'Error loading Document ' . $sAppDocUid . '/' . $iVersion . '. This row doesn\'t exist!' ));
@@ -209,6 +218,9 @@ class AppDocument extends BaseAppDocument
                 $docVersion ++;
             }
 
+            /*----------------------------------********---------------------------------*/
+            $aData['APP_DOC_DRIVE_DOWNLOAD'] = serialize($this->driveDownload);
+            /*----------------------------------********---------------------------------*/
             $oAppDocument->fromArray( $aData, BasePeer::TYPE_FIELDNAME );
             $oAppDocument->setDocVersion( $docVersion );
 
@@ -256,6 +268,14 @@ class AppDocument extends BaseAppDocument
         try {
             $oAppDocument = AppDocumentPeer::retrieveByPK( $aData['APP_DOC_UID'], $aData['DOC_VERSION'] );
             if (! is_null( $oAppDocument )) {
+                /*----------------------------------********---------------------------------*/
+                $driveDownload = @unserialize($oAppDocument->getAppDocDriveDownload());
+                if ($driveDownload !== false) {
+                    $aData['APP_DOC_DRIVE_DOWNLOAD'] = serialize(array_merge($driveDownload, $this->driveDownload));
+                } else {
+                    $aData['APP_DOC_DRIVE_DOWNLOAD'] = serialize($this->driveDownload);
+                }
+                /*----------------------------------********---------------------------------*/
                 $oAppDocument->fromArray( $aData, BasePeer::TYPE_FIELDNAME );
                 if ($oAppDocument->validate()) {
                     $oConnection->begin();
@@ -473,6 +493,23 @@ class AppDocument extends BaseAppDocument
         ;
         return true;
     }
+
+    /*----------------------------------********---------------------------------*/
+    public function setDriveDownload($key, $value)
+    {
+        $this->driveDownload[$key] = $value;
+    }
+
+    public function getDriveDownload($key)
+    {
+        $url = '';
+        if (array_key_exists($key, $this->driveDownload)) {
+            $url = $this->driveDownload[$key];
+        }
+        return $url;
+    }
+
+    /*----------------------------------********---------------------------------*/
 
     public function updateInsertContent ($content, $field, $value)
     {

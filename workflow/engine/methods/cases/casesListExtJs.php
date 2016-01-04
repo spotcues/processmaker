@@ -266,8 +266,6 @@ $oHeadPublisher->assign( 'action', $action ); //sending the action to make
 
 $oHeadPublisher->assign( 'urlProxy', $urlProxy ); //sending the urlProxy to make
 
-$oHeadPublisher->assign( 'caseListBuilder', $caseListBuilder ); //sending the caseListBuilder
-
 $oHeadPublisher->assign( 'PMDateFormat', $dateFormat ); //sending the fields to get from proxy
 
 $oHeadPublisher->assign( 'statusValues', $status ); //Sending the listing of status
@@ -327,6 +325,16 @@ $oHeadPublisher->addExtJsScript( 'cases/casesList', false ); //adding a javascri
 $oHeadPublisher->addContent( 'cases/casesListExtJs' ); //adding a html file  .html.
 
 $oHeadPublisher->assign( 'FORMATS', $c->getFormats() );
+
+$ieVersion = null;
+
+if(preg_match("/^.*\(.*MSIE (\d+)\..+\).*$/", $_SERVER["HTTP_USER_AGENT"], $arrayMatch) || preg_match("/^.*\(.*rv.(\d+)\..+\).*$/", $_SERVER["HTTP_USER_AGENT"], $arrayMatch)){
+
+ $ieVersion = intval($arrayMatch[1]);
+
+}
+
+$oHeadPublisher->assign( 'ieVersion', $ieVersion );
 
 G::RenderPage( 'publish', 'extJs' );
 
@@ -804,7 +812,7 @@ function getAdditionalFields($action, $confCasesList = array())
 
 
 
-            if ($arrayField["fieldType"] != "key") {
+            if ($arrayField["fieldType"] != "key" && $arrayField["name"] != "USR_UID" && $arrayField["name"] != "PREVIOUS_USR_UID") {
 
                 $arrayAux = array();
 

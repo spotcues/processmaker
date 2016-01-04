@@ -340,7 +340,7 @@ switch (WS_IN_LOGIN) {
 
 }
 
-error_log($fileLogin);
+
 
 $G_PUBLISH->AddContent ('xmlform', 'xmlform', $fileLogin, '', $aField, 'sysLogin');
 

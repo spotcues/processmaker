@@ -729,5 +729,28 @@ class Dynaform extends BaseDynaform
         }
         return $flag;
     }
+    
+    /**
+     * verify if a dynaform is assigned some dynaform
+     *
+     * @param string $proUid the uid of the process
+     * @param string $dynUid the uid of the dynaform
+     *
+     * @return array
+     */
+    public function verifyDynaformAssignDynaform ($dynUid, $proUid) 
+    {
+        $res = array();
+        $oCriteria = new Criteria();
+        $oCriteria->addSelectColumn(DynaformPeer::DYN_UID);
+        $oCriteria->add(DynaformPeer::PRO_UID, $proUid);
+        $oCriteria->add(DynaformPeer::DYN_UID, $dynUid, Criteria::NOT_EQUAL);
+        $oCriteria->add(DynaformPeer::DYN_CONTENT, "%" . $dynUid . "%", Criteria::LIKE);
+        $oDataset = DynaformPeer::doSelectRS($oCriteria);
+        $oDataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+        while ($oDataset->next()) {
+            $res[] = $oDataset->getRow();
+        }
+        return $res;
+    }
 }
-

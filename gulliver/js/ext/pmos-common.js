@@ -552,3 +552,8 @@ function stringReplace(strSearch, strReplace, str)
     return str.replace(expression, strReplace);
 }
 
+function getBrowserTimeZoneOffset()
+{
+    return -1 * ((new Date()).getTimezoneOffset() * 60);
+}
+

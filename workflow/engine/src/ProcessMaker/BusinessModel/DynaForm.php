@@ -227,10 +227,19 @@ class DynaForm
                 $messageCaseTracker = "($countSteps) Depends in case traker";
             }
 
+            $dynaformDepends = \Dynaform::verifyDynaformAssignDynaform($dynUid, $proUid);
+            $messageDynaform = '(0) Depends in case traker';
+            if (!empty($dynaformDepends)) {
+                $flagDepend = true;
+                $countSteps = count($dynaformDepends);
+                $messageDynaform = "($countSteps) Depends in dynaform";
+            }
+
             if ($flagDepend) {
                 $message = "You can not delete the dynaform '$dynUid', because it has the following dependencies: \n\n";
                 $message .= $messageSteps . ".\n" . $messageStepsSupervisors . ".\n";
-                $message .= $messageObjectPermission . ".\n" . $messageCaseTracker;
+                $message .= $messageObjectPermission . ".\n" . $messageCaseTracker . "\n";
+                $message .= $messageDynaform;
                 return $message;
             }
             return '';
@@ -1138,4 +1147,70 @@ class DynaForm
             throw $e;
         }
     }
+    
+    /**
+     * Get data of a DynaForm History
+     *
+     * @param string $dynaFormUid Unique id of DynaForm
+     *
+     * return array Return an array with data of a DynaForm History
+     */
+    public function getDynaFormHistory($prj_uid, $dynaFormUid, array $arrayData = array())
+    {
+        try {
+            $filter = "";
+            if (isset($arrayData["filter"])) {
+                $filter = $arrayData["filter"];
+            }
+            $start = 0;
+            if (isset($arrayData["start"])) {
+                $start = $arrayData["start"];
+            }
+            $limit = 50;
+            if (isset($arrayData["limit"])) {
+                $limit = $arrayData["limit"];
+            }
+            $this->throwExceptionIfNotExistsDynaForm($dynaFormUid, "", $this->arrayFieldNameForException["dynaFormUid"]);
+
+            $criteria = new \Criteria("workflow");
+
+            $subcriteria = $criteria->getNewCriterion(\AppHistoryPeer::HISTORY_DATE, "%" . $filter . "%", \Criteria::LIKE);
+
+            $criteria->addSelectColumn(\AppHistoryPeer::DYN_UID);
+            $criteria->addSelectColumn(\AppHistoryPeer::HISTORY_DATA);
+            $criteria->addSelectColumn(\AppHistoryPeer::HISTORY_DATE);
+            $criteria->addAnd(\AppHistoryPeer::DYN_UID, $dynaFormUid, \Criteria::EQUAL);
+            $criteria->addAnd(\AppHistoryPeer::OBJ_TYPE, "DYNAFORM", \Criteria::EQUAL);
+            $criteria->addAnd(\AppHistoryPeer::HISTORY_DATA, "%DYN_CONTENT_HISTORY%", \Criteria::LIKE);
+            $criteria->addAnd($subcriteria);
+
+            $criteria->addDescendingOrderByColumn(\AppHistoryPeer::HISTORY_DATE);
+            $criteria->setOffset($start);
+            $criteria->setLimit($limit);
+
+            $rsCriteria = \AppHistoryPeer::doSelectRS($criteria);
+            $rsCriteria->setFetchmode(\ResultSet::FETCHMODE_ASSOC);
+            $data = array();
+            while ($rsCriteria->next()) {
+                $row = $rsCriteria->getRow();
+                $d = @unserialize($row["HISTORY_DATA"]);
+                $jsonData = "";
+                if (isset($d["DYN_CONTENT_HISTORY"])) {
+                    $decode = base64_decode($d["DYN_CONTENT_HISTORY"], true);
+                    if ($decode !== false) {
+                        $jsonData = $decode;
+                    }
+                }
+                $data[] = array(
+                    "history_date" => $row["HISTORY_DATE"],
+                    "dyn_uid" => $row["DYN_UID"],
+                    "dyn_content_history" => $jsonData
+                );
+            }
+            return $data;
+        } catch (\Exception $e) {
+            throw $e;
+        }
+    }
+
 }

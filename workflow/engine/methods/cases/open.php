@@ -58,6 +58,18 @@
 
 
 
+$tBarGmail = false;
+
+if(isset( $_GET['gmail']) && $_GET['gmail'] == 1){
+
+    $_SESSION['gmail'] = 1;
+
+    $tBarGmail = true;
+
+}
+
+
+
 if (! isset( $_GET['APP_UID'] ) || ! isset( $_GET['DEL_INDEX'] )) {
 
     if (isset( $_GET['APP_NUMBER'] )) {
@@ -105,6 +117,22 @@ $conf = new Configurations();
 
 
 $oHeadPublisher = & headPublisher::getSingleton();
+
+
+
+$urlToRedirectAfterPause = 'casesListExtJs';
+
+
+
+        /*----------------------------------********---------------------------------*/
+
+
+
+
+
+$oHeadPublisher->assign( 'urlToRedirectAfterPause', $urlToRedirectAfterPause );
+
+
 
 
 
@@ -205,6 +233,8 @@ $oHeadPublisher->assign( '_ENV_CURRENT_DATE_NO_FORMAT', date( 'Y-m-d-h-i-A' ) );
 $oHeadPublisher->assign( 'idfirstform', is_null( $oStep ) ? '' : $oStep->getStepUidObj() );
 
 $oHeadPublisher->assign( 'appStatus', $case['APP_STATUS'] );
+
+$oHeadPublisher->assign( 'tbarGmail', $tBarGmail);
 
 
 

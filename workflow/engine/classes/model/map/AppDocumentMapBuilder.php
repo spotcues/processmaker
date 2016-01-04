@@ -95,6 +95,8 @@ class AppDocumentMapBuilder
 
         $tMap->addColumn('APP_DOC_FIELDNAME', 'AppDocFieldname', 'string', CreoleTypes::VARCHAR, false, 150);
 
+        $tMap->addColumn('APP_DOC_DRIVE_DOWNLOAD', 'AppDocDriveDownload', 'string', CreoleTypes::LONGVARCHAR, false, null);
+
         $tMap->addValidator('APP_DOC_UID', 'maxLength', 'propel.validator.MaxLengthValidator', '32', 'Application Document UID can be no larger than 32 in size');
 
         $tMap->addValidator('APP_DOC_UID', 'required', 'propel.validator.RequiredValidator', '', 'Application Document UID is required.');

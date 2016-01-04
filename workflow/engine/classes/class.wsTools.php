@@ -4218,6 +4218,10 @@ class workspaceTools
 
 
 
+        /*
+
+        //Currently this list is not being used, it must be redesigned. Currently the APP_CACHE_VIEW is still used.
+
         //Select and Insert LIST_UNASSIGNED
 
         $unaCriteria = $appCache->getSelAllColumns();
@@ -4249,6 +4253,8 @@ class workspaceTools
         CLI::logging("> Completed table LIST_UNASSIGNED\n");
 
         CLI::logging("> Completed table LIST_UNASSIGNED_GROUP\n");
+
+        */
 
 
 

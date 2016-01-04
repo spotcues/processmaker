@@ -229,6 +229,7 @@ var htmlMessage;
 //var rowLabels = [];
 
 var smodel;
+var newCaseNewTab;
 
 function openCase(){
   var rowModel = consolidatedGrid.getSelectionModel().getSelected();
@@ -236,15 +237,16 @@ function openCase(){
     var appUid    = rowModel.data.APP_UID;
     var delIndex  = rowModel.data.DEL_INDEX;
     var caseTitle = (rowModel.data.APP_TITLE) ? rowModel.data.APP_TITLE : rowModel.data.APP_UID;
-
-    Ext.Msg.show({
-      msg: _("ID_OPEN_CASE") + " " + caseTitle,
-      width:300,
-      wait:true,
-      waitConfig: {
-        interval:200
-      }
-    });
+    if(ieVersion != 11) {
+      Ext.Msg.show({
+        msg: _("ID_OPEN_CASE") + " " + caseTitle,
+        width:300,
+        wait:true,
+        waitConfig: {
+          interval:200
+        }
+      });
+    }
     params = '';
     switch(action){
       case 'consolidated':
@@ -255,15 +257,24 @@ function openCase(){
         break;
     }
     params += '&action=' + 'todo';
-    redirect(requestFile + '?' + params);
-
+    
+    if(ieVersion == 11) {
+      if(newCaseNewTab) {
+        newCaseNewTab.close();
+      }
+        newCaseNewTab = window.open(requestFile + '?' + params);       
+    } else {
+      redirect(requestFile + '?' + params);
+    }
   } else {
       msgBox(_("ID_INFORMATION"), _("ID_SELECT_ONE_AT_LEAST"));
   }
 }
 
 function jumpToCase(appNumber){
-  Ext.MessageBox.show({ msg: _('ID_PROCESSING'), wait:true,waitConfig: {interval:200} });
+  if(ieVersion != 11) {  
+    Ext.MessageBox.show({ msg: _('ID_PROCESSING'), wait:true,waitConfig: {interval:200} });
+  }
   Ext.Ajax.request({
     url: 'cases_Ajax',
     success: function(response) {
@@ -272,7 +283,14 @@ function jumpToCase(appNumber){
         params = 'APP_NUMBER=' + appNumber;
         params += '&action=jump';
         requestFile = '../cases/open';
-        redirect(requestFile + '?' + params);
+        if(ieVersion == 11) {
+          if(newCaseNewTab) {
+            newCaseNewTab.close();
+          }
+            newCaseNewTab = window.open(requestFile + '?' + params);       
+        } else {
+          redirect(requestFile + '?' + params);
+        }
       } else {
         Ext.MessageBox.hide();
         var message = new Array();
@@ -457,6 +475,7 @@ Ext.onReady(function () {
   });
 
   smodel = new Ext.grid.CheckboxSelectionModel({
+    checkOnly:true,
     listeners:{
       selectionchange: function(sm){
         var count_rows = sm.getCount();
@@ -542,36 +561,23 @@ Ext.onReady(function () {
     }
   });
 
-  function enableDisableMenuOption(){
-    var rl = Ext.getCmp(gridId).store.getModifiedRecords();
-    //alert ('-'+rl+'-');
-    var rows = consolidatedGrid.getSelectionModel().getSelections();
-    if (rl.toString()!='') {
-      //alert(rl);
-      optionMenuOpen.setDisabled(true);
-      optionMenuPause.setDisabled(true);
-      buttonProcess.setDisabled(true);
-      return;
-    }
-    switch(action){
-      case 'consolidated':
-        if (rows.length == 0) {
-          optionMenuOpen.setDisabled(true);
-          optionMenuPause.setDisabled(true);
-          buttonProcess.setDisabled(true);
-        } else if( rows.length == 1 ) {
-          optionMenuOpen.setDisabled(false);
-          optionMenuPause.setDisabled(false);
-          buttonProcess.setDisabled(false);
-        } else {
-          optionMenuOpen.setDisabled(true);
-          optionMenuPause.setDisabled(true);
-          buttonProcess.setDisabled(false);
+    function enableDisableMenuOption() {
+        var rl = Ext.getCmp(gridId).store.getModifiedRecords();
+        var rows = consolidatedGrid.getSelectionModel().getSelections();
+        optionMenuOpen.setDisabled(true);
+        optionMenuPause.setDisabled(true);
+        buttonProcess.setDisabled(true);
+        if (action === "consolidated" && rows.length === 1) {
+            optionMenuOpen.setDisabled(false);
+            optionMenuPause.setDisabled(false);
+            buttonProcess.setDisabled(false);
         }
-        break;
+        if (action === "consolidated" && rows.length > 1) {
+            optionMenuOpen.setDisabled(true);
+            optionMenuPause.setDisabled(true);
+            buttonProcess.setDisabled(false);
+        }
     }
-
-  }
 
   toolbarconsolidated = [
   {
@@ -1354,3 +1360,8 @@ function linkRenderer(value)
     return "<a href=\"" + value + "\" onclick=\"window.open('" + value + "', '_blank'); return false;\">" + value + "</a>";
 }
 
+Ext.EventManager.on(window, 'beforeunload', function () {
+  if(newCaseNewTab) {
+    newCaseNewTab.close();
+  }
+});

@@ -72,14 +72,6 @@
 	</div>
 </script>
 
-<!--<script type="text/template" id="tpl-validator">
-	<ul>
-		<% for (var item in message) {%>
-			<li> <span><%= message[item]%> </span> </li>
-		<%}%>
-	</ul>
-</script>-->
-
 <script type="text/template" id="tpl-validator">
 	<div class="alert alert-danger" role="alert">
 		<span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
@@ -90,6 +82,11 @@
 	</div>
 </script>
 
+<script type="text/template" id="tpl-messageWarning">
+	<div class="alert alert-danger" role="alert">
+    	<%=message%>
+  	</div>
+</script>
 <script type="text/template" id="tpl-text">
 	<div id="<%=id%>" name="field-<%=name%>" class="<%=namespace%>-field-<%=type%> <%=namespace%>-<%=mode%>-<%=type%> <%if (group === 'form'){%> form-group col-sm-<%=colSpan%> col-md-<%=colSpan%> col-lg-<%=colSpan%>  pmdynaform-field<%}%>">
         <% if(group === "form") {%>
@@ -192,10 +189,12 @@
 		  		<%} else if (layout === "responsive") {%> 
 		  			class="col-xs-12 col-sm-12 col-md-12 col-lg-12"
 		  		<%}%>>
-			<textarea 	
+			<textarea
 						<% if  ( group === "grid") { %>
 							id = "form<%=id%>"
-							name ="form<%=name%>"
+							<%if(name !== ""){%>
+								name ="form<%=name%>"
+							<%}%>
 						<%} else{%>
 							id = "form[<%=id%>]"
 							name ="form[<%=name%>]"
@@ -273,7 +272,7 @@
 					        		<% if(options[i].selected){%>checked<%}%>
 					        		<% if(disabled === true){%>disabled<%}%>>
 					        		<%if(dataType !== "boolean"){%>
-										<span><%= options[i].label %> </span>
+										<span><%= options[i].label %></span>
 					        		<%}%>
 				        	</label>
 						</div>
@@ -547,8 +546,8 @@
 							id = "form<%=id%>_label"
 							name ="form<%=name%>_label"
 						<%} else {%>
-							id = "form[<%=id%>]"
-							name ="form[<%=name%>]"
+							id = "form[<%=id%>_label]"
+							name ="form[<%=name%>_label]"
 					<%}%>
 				>
 				<div name="button-all" class="btn-group btn-group-justified" style="display: none;">
@@ -743,6 +742,7 @@
 					id = "form[<%=id%>_label]"
 					name ="form[<%=name%>_label]"
 				<%}%>
+			>
 		</div>
 </script>
 
@@ -860,6 +860,18 @@
 				<% } %>
 			</div>
 		</div>
+</script>
+
+<script type='text/template' id='tpl-dropdown-options'>
+    <% for(var i=0; i<options.length; i+=1) { %>
+        <%
+            var value = options[i].value;
+            value = options[i].value.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        %>
+        <option value= "<%=value%>">
+            <%= options[i].label %>
+        </option>
+    <% } %>
 </script>
 <script type="text/template" id="tpl-grid">
 	<div id="<%=id%>" name="field-<%=name%>" class="<%=namespace%>-field-<%=type%> form-group col-sm-<%=colSpan%> col-md-<%=colSpan%> col-lg-<%=colSpan%> <%=namespace%>-<%=mode%>-<%=type%> <%=layout%>">
@@ -1265,7 +1277,7 @@
 
 <script type="text/template" id="tpl-media-audio">
 	<div id="<%=id%>" class="pmdynaform-media-audioContainer">			
-	    <audio id="<%=id%>" preload="auto"  >
+	    <audio id="<%=id%>" preload="auto" src="<%=src%>">
 	    	<source src="<%=src%>" type="audio/mp3">  					
 			<source src="<%=src%>" type="audio/m4a">  								
 	    	<p>Your browser does not support the video tag.</p>

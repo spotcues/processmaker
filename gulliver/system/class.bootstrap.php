@@ -717,7 +717,7 @@ class Bootstrap
      * @param  string lang
      * @return void
      */
-    public function LoadTranslationObject($lang = SYS_LANG)
+    public static function LoadTranslationObject($lang = SYS_LANG)
     {
         $defaultTranslations = Array();
         $foreignTranslations = Array();

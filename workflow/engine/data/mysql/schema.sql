@@ -31,6 +31,7 @@ CREATE TABLE `APPLICATION`
 	`APP_PIN` VARCHAR(32) default '' NOT NULL,
     `APP_DURATION` DOUBLE default 0,
     `APP_DELAY_DURATION` DOUBLE default 0,
+    `APP_DRIVE_FOLDER_UID` VARCHAR(32) DEFAULT '',
 	PRIMARY KEY (`APP_UID`),
 	KEY `indexApp`(`PRO_UID`, `APP_STATUS`, `APP_UID`),
 	KEY `indexAppNumber`(`APP_NUMBER`),
@@ -96,6 +97,7 @@ CREATE TABLE `APP_DOCUMENT`
 	`APP_DOC_STATUS` VARCHAR(32) default 'ACTIVE' NOT NULL,
 	`APP_DOC_STATUS_DATE` DATETIME,
 	`APP_DOC_FIELDNAME` VARCHAR(150),
+  `APP_DOC_DRIVE_DOWNLOAD` MEDIUMTEXT,
 	PRIMARY KEY (`APP_DOC_UID`,`DOC_VERSION`),
 	KEY `indexAppDocument`(`FOLDER_UID`, `APP_DOC_UID`)
 )ENGINE=InnoDB  DEFAULT CHARSET='utf8' COMMENT='Documents in an Application';
@@ -404,11 +406,12 @@ CREATE TABLE `PROCESS`
 	`PRO_TIMEUNIT` VARCHAR(20) default 'DAYS' NOT NULL,
 	`PRO_STATUS` VARCHAR(20) default 'ACTIVE' NOT NULL,
 	`PRO_TYPE_DAY` CHAR(1) default '0' NOT NULL,
-	`PRO_TYPE` VARCHAR(20) default 'NORMAL' NOT NULL,
+	`PRO_TYPE` VARCHAR(256) default 'NORMAL' NOT NULL,
 	`PRO_ASSIGNMENT` VARCHAR(20) default 'FALSE' NOT NULL,
 	`PRO_SHOW_MAP` TINYINT default 1 NOT NULL,
 	`PRO_SHOW_MESSAGE` TINYINT default 1 NOT NULL,
 	`PRO_SUBPROCESS` TINYINT default 0 NOT NULL,
+	`PRO_TRI_OPEN` VARCHAR(32) default '' NOT NULL,
 	`PRO_TRI_DELETED` VARCHAR(32) default '' NOT NULL,
 	`PRO_TRI_CANCELED` VARCHAR(32) default '' NOT NULL,
 	`PRO_TRI_PAUSED` VARCHAR(32) default '' NOT NULL,
@@ -509,6 +512,7 @@ CREATE TABLE `ROUTE`
 	`ROU_FROM_PORT` INTEGER default 2 NOT NULL,
 	`ROU_EVN_UID` VARCHAR(32) default '' NOT NULL,
 	`GAT_UID` VARCHAR(32) default '' NOT NULL,
+	`ROU_ELEMENT_ORIGIN` VARCHAR(32) default '' NOT NULL,
 	PRIMARY KEY (`ROU_UID`)
 )ENGINE=InnoDB  DEFAULT CHARSET='utf8' COMMENT='Differents flows for a flow in business process';
 #-----------------------------------------------------------------------------
@@ -715,6 +719,10 @@ CREATE TABLE `USERS`
 	`USR_TOTAL_UNASSIGNED` INTEGER default 0,
     `USR_COST_BY_HOUR` DECIMAL(7,2) default 0,
     `USR_UNIT_COST` VARCHAR(50) default '',
+    `USR_PMDRIVE_FOLDER_UID` VARCHAR(32) DEFAULT '',
+    `USR_BOOKMARK_START_CASES` MEDIUMTEXT,
+    `USR_TIME_ZONE` VARCHAR(100) default '',
+    `USR_DEFAULT_LANG` VARCHAR(10) default '',
 	PRIMARY KEY (`USR_UID`)
 )ENGINE=InnoDB  DEFAULT CHARSET='utf8' COMMENT='Users';
 #-----------------------------------------------------------------------------
@@ -2628,6 +2636,7 @@ CREATE TABLE `ELEMENT_TASK_RELATION`
 	`ELEMENT_UID` VARCHAR(32)  NOT NULL,
 	`ELEMENT_TYPE` VARCHAR(50) default '' NOT NULL,
 	`TAS_UID` VARCHAR(32)  NOT NULL,
+	`ELEMENT_UID_DEST` VARCHAR(32) default '' NOT NULL,
 	PRIMARY KEY (`ETR_UID`)
 )ENGINE=InnoDB  DEFAULT CHARSET='utf8';
 #-----------------------------------------------------------------------------
@@ -2653,6 +2662,7 @@ CREATE TABLE `ABE_CONFIGURATION`
 	`ABE_UPDATE_DATE` DATETIME,
 	`ABE_SUBJECT_FIELD` VARCHAR(100) default '' NOT NULL,
 	`ABE_MAILSERVER_OR_MAILCURRENT` INTEGER default 0 NOT NULL,
+	`ABE_CUSTOM_GRID` TEXT,
 	PRIMARY KEY (`ABE_UID`)
 )ENGINE=InnoDB  DEFAULT CHARSET='utf8' COMMENT='The plugin table for actionsByEmail';
 #-----------------------------------------------------------------------------
@@ -2913,7 +2923,8 @@ CREATE TABLE `NOTIFICATION_DEVICE`
 	`DEV_TYPE`          VARCHAR(50)  default '',
 	`DEV_CREATE`        DATETIME  NOT NULL,
 	`DEV_UPDATE`        DATETIME  NOT NULL,
-	PRIMARY KEY (`DEV_UID`, `USR_UID`)
+	PRIMARY KEY (`DEV_UID`, `USR_UID`),
+	KEY `indexUserNotification`(`USR_UID`)
 )ENGINE=InnoDB  DEFAULT CHARSET='utf8' COMMENT='Definitions Notification device.';
 # This restores the fkey checks, after having unset them earlier
 # SET FOREIGN_KEY_CHECKS = 1;

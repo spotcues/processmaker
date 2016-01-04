@@ -388,7 +388,7 @@ class FilesManager
             if ($path == '') {
                 throw new \Exception(\G::LoadTranslation("ID_INVALID_VALUE_FOR", array('prf_uid')));
             }
-            $sFile = end(explode(DIRECTORY_SEPARATOR,$path));
+            $sFile = basename($path);
             $sPath = str_replace($sFile,'',$path);
             $sSubDirectory = substr(str_replace($sProcessUID,'',substr($sPath,(strpos($sPath, $sProcessUID)))),0,-1);
             $sMainDirectory = str_replace(substr($sPath, strpos($sPath, $sProcessUID)),'', $sPath);

@@ -6,6 +6,8 @@ use \G;
 use \ProcessMaker\Project\Adapter;
 use \ProcessMaker\Services\Api;
 use \Luracast\Restler\RestException;
+use \ProcessMaker\BusinessModel\Validator;
+use \ProcessMaker\Util\DateTime;
 
 /**
  *
@@ -15,6 +17,16 @@ use \Luracast\Restler\RestException;
  */
 class Light extends Api
 {
+
+    private $arrayFieldIso8601 = [
+        // request lists
+        'newestthan',
+        'oldestthan',
+        //return lists
+        'date',
+        'delegateDate',
+        'dueDate'
+    ];
     /**
      * Get list counters
      * @return array
@@ -115,13 +127,15 @@ class Light extends Api
             $dataList['newestthan']  = $newestthan;
             $dataList['oldestthan']  = $oldestthan;
 
+            Validator::throwExceptionIfDataNotMetIso8601Format($dataList, $this->arrayFieldIso8601);
+            $dataList = DateTime::convertDataToUtc($dataList, $this->arrayFieldIso8601);
             $lists = new \ProcessMaker\BusinessModel\Lists();
             $response = $lists->getList('inbox', $dataList);
             if ($newestthan != '') {
                 $response['data'] = array_reverse($response['data']);
             }
             $result   = $this->parserDataTodo($response['data']);
-            return $result;
+            return DateTime::convertUtcToIso8601($result, $this->arrayFieldIso8601);
         } catch (\Exception $e) {
             throw (new RestException(Api::STAT_APP_EXCEPTION, $e->getMessage()));
         }
@@ -193,13 +207,15 @@ class Light extends Api
             $dataList['newestthan']  = $newestthan;
             $dataList['oldestthan']  = $oldestthan;
 
+            Validator::throwExceptionIfDataNotMetIso8601Format($dataList, $this->arrayFieldIso8601);
+            $dataList = DateTime::convertDataToUtc($dataList, $this->arrayFieldIso8601);
             $oCases   = new \ProcessMaker\BusinessModel\Lists();
             $response = $oCases->getList('inbox', $dataList);
             if ($newestthan != '') {
                 $response['data'] = array_reverse($response['data']);
             }
             $result   = $this->parserDataDraft($response['data']);
-            return $result;
+            return DateTime::convertUtcToIso8601($result, $this->arrayFieldIso8601);
         } catch (\Exception $e) {
             throw (new RestException(Api::STAT_APP_EXCEPTION, $e->getMessage()));
         }
@@ -280,13 +296,15 @@ class Light extends Api
             $dataList['newestthan']  = $newestthan;
             $dataList['oldestthan']  = $oldestthan;
 
+            Validator::throwExceptionIfDataNotMetIso8601Format($dataList, $this->arrayFieldIso8601);
+            $dataList = DateTime::convertDataToUtc($dataList, $this->arrayFieldIso8601);
             $oCases = new \ProcessMaker\BusinessModel\Lists();
             $response = $oCases->getList('participated_last', $dataList);
             if ($newestthan != '') {
                 $response['data'] = array_reverse($response['data']);
             }
             $result = $this->parserDataParticipated($response['data']);
-            return $result;
+            return DateTime::convertUtcToIso8601($result, $this->arrayFieldIso8601);
         } catch (\Exception $e) {
             throw (new RestException(Api::STAT_APP_EXCEPTION, $e->getMessage()));
         }
@@ -365,7 +383,7 @@ class Light extends Api
             $lists = new \ProcessMaker\BusinessModel\Lists();
             $response = $lists->getList('paused', $dataList);
             $result = $this->parserDataParticipated($response['data']);
-            return $result;
+            return DateTime::convertUtcToIso8601($result, $this->arrayFieldIso8601);
         } catch (\Exception $e) {
             throw (new RestException(Api::STAT_APP_EXCEPTION, $e->getMessage()));
         }
@@ -439,10 +457,12 @@ class Light extends Api
             $dataList['search']   = $search;
             $dataList['newestthan']  = $newestthan;
             $dataList['oldestthan']  = $oldestthan;
+            Validator::throwExceptionIfDataNotMetIso8601Format($dataList, $this->arrayFieldIso8601);
+            $dataList = DateTime::convertDataToUtc($dataList, $this->arrayFieldIso8601);
             $oCases   = new \ProcessMaker\BusinessModel\Cases();
             $response = $oCases->getList($dataList);
             $result   = $this->parserDataUnassigned($response);
-            return $result;
+            return DateTime::convertUtcToIso8601($result, $this->arrayFieldIso8601);
         } catch (\Exception $e) {
             throw (new RestException(Api::STAT_APP_EXCEPTION, $e->getMessage()));
         }
@@ -558,9 +578,11 @@ class Light extends Api
     public function doGetCasesListHistory($app_uid)
     {
         try {
+            $arrayFieldIso8601 = array('DEL_DELEGATE_DATE', 'DEL_INIT_DATE', 'DEL_FINISH_DATE');
             $oMobile = new \ProcessMaker\BusinessModel\Light();
             $response         = $oMobile->getCasesListHistory($app_uid);
-            $response['flow'] = $this->parserDataHistory($response['flow']);
+            $response8601     = DateTime::convertUtcToIso8601($response['flow'], $arrayFieldIso8601);
+            $response['flow'] = $this->parserDataHistory($response8601);
             $r             = new \stdclass();
             $r->data       = $response;
             $r->totalCount = count($response['flow']);
@@ -751,11 +773,11 @@ class Light extends Api
             $dynaForm = new \ProcessMaker\BusinessModel\DynaForm();
             $dynaForm->setFormatFieldNameInUppercase(false);
             \G::LoadClass("pmDynaform");
-            $pmDynaForm = new \pmDynaform();
             $_SESSION['PROCESS'] = $prj_uid;
             $return = array();
             foreach ($request_data['formId'] as $dyn_uid) {
                 $response = $dynaForm->getDynaForm($dyn_uid);
+                $pmDynaForm = new \pmDynaform(array("CURRENT_DYNAFORM" => $dyn_uid));
                 $result   = $this->parserDataDynaForm($response);
                 $result['formContent'] = (isset($result['formContent']) && $result['formContent'] != null)?json_decode($result['formContent']):"";
                 $pmDynaForm->jsonr($result['formContent']);
@@ -956,10 +978,13 @@ class Light extends Api
     public function getInformation($type, $app_uid)
     {
         try {
+            $arrayFieldIso8601 = array('caseCreateDate', 'caseUpdateData', 'delDelegateDate', 'delInitDate',
+                'delDueDate', 'delFinishDate');
             $userUid       = $this->getUserId();
             $oMobile = new \ProcessMaker\BusinessModel\Light();
             $response = $oMobile->getInformation($userUid, $type, $app_uid);
             $response = $this->parserGetInformation($response);
+            $response = DateTime::convertUtcToIso8601($response, $arrayFieldIso8601);
         } catch (\Exception $e) {
             throw (new RestException(Api::STAT_APP_EXCEPTION, $e->getMessage()));
         }
@@ -1093,7 +1118,7 @@ class Light extends Api
             $response = $appNotes->getNotesList( $app_uid, '', $start, $limit );
             $response  = $this->parserDataNotes($response['array']['notes']);
 
-            return $response;
+            return DateTime::convertUtcToIso8601($response, array('date'));
         } catch (\Exception $e) {
             throw (new RestException(Api::STAT_APP_EXCEPTION, $e->getMessage()));
         }
@@ -1243,6 +1268,7 @@ class Light extends Api
     public function pauseCase ($app_uid, $request_data)
     {
         try {
+            Validator::throwExceptionIfDataNotMetIso8601Format($request_data, array('unpauseDate'));
             $usr_uid = $this->getUserId();
             $oLight = new \ProcessMaker\BusinessModel\Light();
             $process = $oLight->pauseCase($usr_uid, $app_uid, $request_data);

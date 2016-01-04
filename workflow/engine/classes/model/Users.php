@@ -174,6 +174,10 @@ class Users extends BaseUsers
                 $role = $roles->loadByCode($aFields['USR_ROLE']);
                 $aFields['USR_ROLE_NAME'] = $role['ROL_NAME'];
 
+                $translations = new Language();
+                $translation  = $translations->loadByCode($aFields['USR_DEFAULT_LANG']);
+                $aFields['USR_DEFAULT_LANG_NAME'] = $translation['LANGUAGE_NAME'];
+
                 $result = $aFields;
 
                 return $result;
@@ -480,6 +484,23 @@ class Users extends BaseUsers
                 break;
         }
         return $return;
+    }
+
+    public function userLanguaje ($usrUid = "")
+    {
+        try {
+
+            $oCriteria = new Criteria( 'workflow' );
+            $oCriteria->addSelectColumn( UsersPeer::USR_UID );
+            $oCriteria->addSelectColumn( UsersPeer::USR_DEFAULT_LANG );
+            $oCriteria->add( UsersPeer::USR_UID, $usrUid );
+            $rsCriteria = UsersPeer::doSelectRS( $oCriteria );
+            $rsCriteria->setFetchmode( ResultSet::FETCHMODE_ASSOC );
+
+            return $rsCriteria;
+        } catch (exception $oError) {
+            throw ($oError);
+        }
     }
 }
 

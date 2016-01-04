@@ -512,20 +512,20 @@ class Applications
                 $oCriteria->addAscendingOrderByColumn(FieldsPeer::FLD_INDEX);
 
                 $oDataset = FieldsPeer::doSelectRS($oCriteria);
-                $oDataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
-                $oDataset->next();
-                $row = $oDataset->getRow();
-                if (is_array($row)) {
+
+                if ($oDataset->next()) {
                     $sort = $tableNameAux . "." . $sortTable[1];
                 }
             }
 
-            if ($sort == "") {
-                $sort = $sortBk;
-            }
+            $arraySelectColumn = $Criteria->getSelectColumns();
 
-            if (!in_array($sort, $Criteria->getSelectColumns())) {
-                $sort = AppCacheViewPeer::APP_NUMBER; //DEFAULT VALUE
+            if (!in_array($sort, $arraySelectColumn)) {
+                $sort = $sortBk;
+
+                if (!in_array($sort, $arraySelectColumn)) {
+                    $sort = AppCacheViewPeer::APP_NUMBER; //DEFAULT VALUE
+                }
             }
 
             if ($dir == "DESC") {

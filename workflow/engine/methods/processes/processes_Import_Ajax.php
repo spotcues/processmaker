@@ -76,7 +76,17 @@ if (isset($_FILES["PROCESS_FILENAME"]) &&
 
     try {
 
-        $prjUid = $importer->import();
+        $prjUid = $importer->import(); 
+
+
+
+        G::LoadClass( 'Process' );
+
+        $oProcess = new Process();
+
+        $processData = $oProcess->load( $prjUid );
+
+        $proType = $processData["PRO_TYPE"]; 
 
 
 
@@ -92,7 +102,9 @@ if (isset($_FILES["PROCESS_FILENAME"]) &&
 
             "sNewProUid" => $prjUid,
 
-            "project_type" => "bpmn"
+            "project_type" => "bpmn", 
+
+            "project_type_aux" => $proType
 
         );
 
@@ -204,6 +216,16 @@ if (isset($_POST["PRO_FILENAME"]) &&
 
         $prjUid = $importer->import($option, $optionGroup);
 
+        
+
+        G::LoadClass( 'Process' );
+
+        $oProcess = new Process();
+
+        $processData = $oProcess->load( $prjUid );
+
+        $proType = $processData["PRO_TYPE"];    
+
 
 
         $result = array(
@@ -218,7 +240,9 @@ if (isset($_POST["PRO_FILENAME"]) &&
 
             "sNewProUid" => $prjUid,
 
-            "project_type" => "bpmn"
+            "project_type" => "bpmn", 
+
+            "project_type_aux" => $proType
 
         );
 

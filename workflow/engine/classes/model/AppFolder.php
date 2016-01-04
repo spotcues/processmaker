@@ -293,6 +293,16 @@ class AppFolder extends BaseAppFolder
         //require_once ("classes/model/OutputDocument.php");
         //require_once ("classes/model/Users.php");
 
+        /*----------------------------------********---------------------------------*/
+        $licensedFeatures = &PMLicensedFeatures::getSingleton();
+        $enablePMGmail = false;
+        if ($licensedFeatures->verifyfeature('7qhYmF1eDJWcEdwcUZpT0k4S0xTRStvdz09')) {
+            G::LoadClass( "pmDrive" );
+            $pmDrive = new PMDrive();
+            $enablePMGmail = $pmDrive->getStatusService();
+        }
+        /*----------------------------------********---------------------------------*/
+
         G::LoadClass( 'case' );
         $oCase = new Cases();
         G::LoadClass( 'process' );
@@ -318,6 +328,11 @@ class AppFolder extends BaseAppFolder
         $oCriteria->addSelectColumn( AppDocumentPeer::APP_DOC_STATUS);
         $oCriteria->addSelectColumn( AppDocumentPeer::APP_DOC_STATUS_DATE);
         $oCriteria->addSelectColumn( AppDocumentPeer::APP_DOC_FIELDNAME);
+        /*----------------------------------********---------------------------------*/
+        if ($enablePMGmail) {
+            $oCriteria->addSelectColumn(AppDocumentPeer::APP_DOC_DRIVE_DOWNLOAD);
+        }
+        /*----------------------------------********---------------------------------*/
 
         if ((is_array( $docIdFilter )) && (count( $docIdFilter ) > 0)) {
             //Search by App Doc UID no matter what Folder it is
@@ -418,6 +433,39 @@ class AppFolder extends BaseAppFolder
                 //$filesResult [] = $completeInfo;
 
                 if ($completeInfo['APP_DOC_STATUS'] != "DELETED") {
+                    /*----------------------------------********---------------------------------*/
+                    if ($enablePMGmail) {
+                        $driveDownload = @unserialize($completeInfo['APP_DOC_DRIVE_DOWNLOAD']);
+                        switch ($completeInfo['APP_DOC_TYPE']) {
+                            case 'INPUT':
+                                if ($driveDownload !== false && is_array($driveDownload) && array_key_exists('INPUT',
+                                        $driveDownload)
+                                ) {
+                                    $completeInfo['DOWNLOAD_LINK'] = $driveDownload['INPUT'];
+                                }
+                                break;
+                            case 'ATTACHED':
+                                if ($driveDownload !== false && is_array($driveDownload) && array_key_exists('ATTACHED',
+                                        $driveDownload)
+                                ) {
+                                    $completeInfo['DOWNLOAD_LINK'] = $driveDownload['ATTACHED'];
+                                }
+                                break;
+                            case 'OUTPUT':
+                                if ($driveDownload !== false && is_array($driveDownload) && array_key_exists('OUTPUT_DOC',
+                                        $driveDownload)
+                                ) {
+                                    $completeInfo['DOWNLOAD_LINK1'] = $driveDownload['OUTPUT_DOC'];
+                                }
+                                if ($driveDownload !== false && is_array($driveDownload) && array_key_exists('OUTPUT_PDF',
+                                        $driveDownload)
+                                ) {
+                                    $completeInfo['DOWNLOAD_LINK'] = $driveDownload['OUTPUT_PDF'];
+                                }
+                                break;
+                        }
+                    }
+                    /*----------------------------------********---------------------------------*/
                     if (in_array($row["APP_DOC_UID"], $completeInfo["INPUT_DOCUMENTS"]) || in_array($row["APP_DOC_UID"], $completeInfo["OUTPUT_DOCUMENTS"]) || in_array($completeInfo["USR_UID"], array($_SESSION["USER_LOGGED"], "-1")) || $user == "") {
                         if (count( $docIdFilter ) > 0) {
                             if (in_array( $row['APP_DOC_UID'], $docIdFilter )) {

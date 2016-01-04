@@ -1,30 +1,30 @@
-[5 days ago] d2ec2b6  PM-3747:En todos los browsers el paginador en la ocion de supervisors se encuntra desfado y mas en IE <Richard Yujra>
-[5 days ago] ec53f75  PM-3659:improvements, show text <Richard Yujra>
-[7 days ago] e462605  PM-3659:Uso de interface lenta (supervisores) cuando se tienen varios usuarios (40000) <Richard Yujra>
-[7 days ago] bc6044f  PM-3718 <Roly Rudy Gutierrez Pinto>
-[8 days ago] d8d3ff4  PM-3533 <Roly Rudy Gutierrez Pinto>
-[8 days ago] f651258  PM-2905 <Roly Rudy Gutierrez Pinto>
-[8 days ago] 9a60f5b  PM-2905 <Roly Rudy Gutierrez Pinto>
-[9 days ago] b4e1d82  PM-2905 <Roly Rudy Gutierrez Pinto>
-[13 days ago] 3bcce9c  PM-3554 Documentos generados con seguridad no se pueden abrir <dheeyi>
-[13 days ago] 0f226ac  Error al asignar y desasignar los objetos en los "supervisors" <Emerson Joel Rojas Soliz>
-[13 days ago] adc46f5  PM-3544: No se puede acceder al menu contextual del dise馻dor en FIREFOX <rodrigo quelca>
-[2 weeks ago] 4914b0d  PM-3547: La primera vez que ingresas a properties de time event sale un error sol la primera vez. <rodrigo quelca>
-[3 weeks ago] 3fc51ec  PM-3523: Design>New BPMN>Timer event: cuando colcoas la hora minutos, etc con la opcion de incremento con el mouse no respeta la perimwera vez campo requerido <marcelo.cuiza>
-[3 weeks ago] ee80591  PM-3508: 0018251: Error en Gateway <marcelo.cuiza>
-[3 weeks ago] 6994999  PM-3443 <Roly Rudy Gutierrez Pinto>
-[3 weeks ago] 87bdf00  PM-3678 Cuando se utiliza un gateway entre dos lanes no se puede asignar a las tareas siguientes. <rodrigo quelca>
-[3 weeks ago] 3702021  PM-3568 Se muestra un error al crear ciertos triggers que contienen variables del tipo array <dheeyi>
-[3 weeks ago] 7d8b92c  PM-3687: Include Accepted_language header in REST endpoint calls in ProcessDesigner <rodrigo quelca>
-[3 weeks ago] fa0d23c  PM-3522: Se borra la configuracion de one date/time en timer event al vovler a ingresar a la misma <marcelo.cuiza>
-[3 weeks ago] b86387c  PM-3589: Add Routing Rule>>En el mensaje de error muestra la palabra Undefined y el nombre del elemento <rodrigo quelca>
-[3 weeks ago] cc3088d  PM-2094 0017076: Variable creator in BPMN Designer should not allow variables which start with number, but should allow underscores "_" <dheeyi>
-[3 weeks ago] 755febc  PM-3648 No se guarda las propiedades de un "Step" con Internet Explorer <dheeyi>
-[3 weeks ago] ecb2abc  PM-3534: No te permite conectar un "Task" con un "End Email Event" <rodrigo quelca>
-[3 weeks ago] 2b29d8f  PM-3389: Error de espacio de trabajo / posicion de flujos y elementos <rodrigo quelca>
-[4 weeks ago] 47f342e  PM-3624 Completar traducci贸e labels faltantes para la versi贸.0.1.5 <dheeyi>
-[4 weeks ago] 487e517  PM-3564 <Roly Rudy Gutierrez Pinto>
-[4 weeks ago] 9289d12  PM-3148_PM-3121: mplement Multiple Instance Task/ Task Marker Parallel, Changes in assignment rules in multiple instance tasks <marcelo.cuiza>
-[4 weeks ago] 7febe7f  PM-3341 <Roly Rudy Gutierrez Pinto>
-[4 weeks ago] 55ade5a  PM-3146 Add new variable type "array" <dheeyi>
-[4 weeks ago] ddcf30a  PM-3489 <Roly Rudy Gutierrez Pinto>
+[4 days ago] de8ea76  PM-4503: No deja guardar la configuraci贸n de TimerEvent por 'campos requeridos' que no se usan. <marcelo.cuiza>
+[4 days ago] 80de7cd  PM-4499: TimerEvent > Al presionar el boton "Today" se desaparece el calendario <rodrigo quelca>
+[4 days ago] 97bc541  PM-4486 <Roly Rudy Gutierrez Pinto>
+[6 days ago] fd35ecc  PM-4484 <Roly Rudy Gutierrez Pinto>
+[12 days ago] b328c28  PM-4297 : The row in table TASK doesn鈥檛 exist!  - Valeogit status <jonathan>
+[13 days ago] 12eb886  PM-4393: Quick Tool Bar > Los Gateways no ocultan el quick Tool Bar <rodrigo quelca>
+[2 weeks ago] 6924331  PM-4376:No hay validacion al conectar "MessageEmailEvent" con "StartReceiveMessage" <rodrigo quelca>
+[2 weeks ago] 96d28d4  PM-4313: (Dynaforms) Se debera bloquear la pantalla hasta que el usuario asigne o no una variable al control asignado <marcelo.cuiza>
+[2 weeks ago] b0b50c4  PM-4312 <Roly Rudy Gutierrez Pinto>
+[2 weeks ago] 9f996de  PM-4310 <Roly Rudy Gutierrez Pinto>
+[3 weeks ago] 8a31683  PM-4305 <Roly Rudy Gutierrez Pinto>
+[3 weeks ago] 2ed4360  PM-4304 <Roly Rudy Gutierrez Pinto>
+[3 weeks ago] 7d42fcd  GI-146 ProcessMap no se despliega en la adecuaci贸n... SOLVED <Marco Antonio Nina Mena>
+[3 weeks ago] 5c7d5dc  PM-4279 <Paula V. Quispe>
+[3 weeks ago] ee3b3e2  PM-3767 <Roly Rudy Gutierrez Pinto>
+[3 weeks ago] 7e5f343  PM-4244 <Roly Rudy Gutierrez Pinto>
+[3 weeks ago] 4d6d100  PM-4246 El archivo composer.lock no se encuentra actualizado. <Marco A. Nina Mena>
+[3 weeks ago] 7b85793  PM-4235 <Roly Rudy Gutierrez Pinto>
+[4 weeks ago] 85a6c32  PM-4184 <Paula V. Quispe>
+[4 weeks ago] 6286806  PM-4143 <Roly Rudy Gutierrez Pinto>
+[4 weeks ago] 81b70e2  PM-3115 <Roly Rudy Gutierrez Pinto>
+[4 weeks ago] 93d4da8  PM-3857:En la ventana de Supervisors, la secci髇 Available Objects, se muestra desalineado <rodrigo quelca>
+[4 weeks ago] 3025713  PM-4166: Parallel multiinstance Assignment rule Value based, la lista de usuarios se despliega <marcelo.cuiza>
+[4 weeks ago] 40aa9c1  PM-4084: File Variable, set related input document property as required <marcelo.cuiza>
+[4 weeks ago] 15236d4  PM-4151: CLONE 3.0.1.6- BPMN Designer: La conexi髇 entre un black box pool y un event, hace que no se pueda modificar la posicion del pool <rodrigo quelca>
+[4 weeks ago] 70770a9  PM-4112: A馻dir soporte de variables al campo subject en Intermediate/end email events <marcelo.cuiza>
+[4 weeks ago] 84efdd4  PM-3915: Template dynamico de opciones en el actions by email Branch 3.0.1.x <marcelo.cuiza>
+[5 weeks ago] a057700  PM-4134: Agregar validaci髇 cuando se cambian los markers y se tienen casos unassigned <rodrigo quelca>
+[5 weeks ago] 6660388  PM-4123 <Paula V. Quispe>
+[5 weeks ago] d9fd7db  PM-4128:Can't edit variable option / label <Richard Yujra>

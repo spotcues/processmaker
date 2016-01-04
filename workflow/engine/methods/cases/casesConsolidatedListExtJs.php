@@ -178,6 +178,12 @@ if (count($arrayTabItem) > 0) {
     $headPublisher->assign("FORMATS", $conf->getFormats());
     $headPublisher->assign("urlProxy", $urlProxy);
     $headPublisher->assign('credentials', $clientToken );
+    
+    $ieVersion = null;
+    if(preg_match("/^.*\(.*MSIE (\d+)\..+\).*$/", $_SERVER["HTTP_USER_AGENT"], $arrayMatch) || preg_match("/^.*\(.*rv.(\d+)\..+\).*$/", $_SERVER["HTTP_USER_AGENT"], $arrayMatch)){
+        $ieVersion = intval($arrayMatch[1]);
+    }
+    $oHeadPublisher->assign( 'ieVersion', $ieVersion );
 
     $headPublisher->addExtJsScript("app/main", true);
     $headPublisher->addExtJsScript("cases/casesListConsolidated", false);   //Adding a JavaScript file .js

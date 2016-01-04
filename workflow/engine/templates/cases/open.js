@@ -1256,7 +1256,7 @@ Ext.onReady(function(){
 				}
 				catch (e) {
 				}
-				location.href = 'casesListExtJs';
+				location.href = urlToRedirectAfterPause;
 				} else {
 				PMExt.error(_('ID_ERROR'), req.result.msg);
 				}

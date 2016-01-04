@@ -148,6 +148,12 @@ class Designer extends Controller
 
         $this->setVar("distribution", $distribution);
 
+        $this->setVar("SYS_SYS", SYS_SYS);
+
+        $this->setVar("SYS_LANG", SYS_LANG);
+
+        $this->setVar("SYS_SKIN", SYS_SKIN);
+
 
 
         if ($debug) {
@@ -232,13 +238,55 @@ class Designer extends Controller
 
         }
 
-        
+
 
         $this->setVar('sys_skin', SYS_SKIN);
 
 
 
-        $this->setView('designer/index');
+        //Verify user
+
+        $criteria = new Criteria('workflow');
+
+
+
+        $criteria->addSelectColumn(OauthAccessTokensPeer::ACCESS_TOKEN);
+
+        $criteria->addSelectColumn(OauthAccessTokensPeer::USER_ID);
+
+        $criteria->add(OauthAccessTokensPeer::ACCESS_TOKEN, $clientToken['access_token'], Criteria::EQUAL);
+
+        $rsCriteria = OauthAccessTokensPeer::doSelectRS($criteria);
+
+        $rsCriteria->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+
+
+
+        if ($rsCriteria->next()) {
+
+            $row = $rsCriteria->getRow();
+
+
+
+            $user = new \ProcessMaker\BusinessModel\User();
+
+
+
+            if ($user->checkPermission($row['USER_ID'], 'PM_FACTORY')) {
+
+                $this->setView('designer/index');
+
+            } else {
+
+                $this->setVar('accessDenied', G::LoadTranslation('ID_ACCESS_DENIED'));
+
+                $this->setView('designer/accessDenied');
+
+            }
+
+        }
+
+
 
         $this->render();
 

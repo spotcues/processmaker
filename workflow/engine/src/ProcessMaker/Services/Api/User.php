@@ -11,6 +11,11 @@ use \Luracast\Restler\RestException;
  */
 class User extends Api
 {
+    private $arrayFieldIso8601 = [
+        'usr_create_date',
+        'usr_update_date'
+    ];
+
     /**
      * Constructor of the class
      *
@@ -47,7 +52,7 @@ class User extends Api
 
             $response = $user->getUsers($arrayFilterData, null, null, $start, $limit);
 
-            return $response["data"];
+            return \ProcessMaker\Util\DateTime::convertUtcToIso8601($response['data'], $this->arrayFieldIso8601);
         } catch (\Exception $e) {
             throw new RestException(Api::STAT_APP_EXCEPTION, $e->getMessage());
         }
@@ -65,7 +70,8 @@ class User extends Api
             $user->setFormatFieldNameInUppercase(false);
 
             $response = $user->getUser($usr_uid);
-            return $response;
+
+            return \ProcessMaker\Util\DateTime::convertUtcToIso8601($response, $this->arrayFieldIso8601);
         } catch (\Exception $e) {
             throw (new RestException(Api::STAT_APP_EXCEPTION, $e->getMessage()));
         }
@@ -134,6 +140,44 @@ class User extends Api
             $user->uploadImage($usr_uid);
         } catch (\Exception $e) {
             //response
+            throw new RestException(Api::STAT_APP_EXCEPTION, $e->getMessage());
+        }
+    }
+
+    /**
+     * Save Bookmark start case
+     * @url POST /bookmark/:tas_uid
+     *
+     * @param string $tas_uid {@min 32}{@max 32}
+     *
+     */
+    public function doPostBookmarkStartCase($tas_uid)
+    {
+        try {
+            $userLoggedUid = $this->getUserId();
+            $user = new \ProcessMaker\BusinessModel\User();
+            $user->updateBookmark($userLoggedUid, $tas_uid, 'INSERT');
+            return array('bookmarkedTaskId'=>$tas_uid);
+        } catch (\Exception $e) {
+            throw new RestException(Api::STAT_APP_EXCEPTION, $e->getMessage());
+        }
+    }
+
+    /**
+     * Delete Bookmark start case
+     * @url DELETE /bookmark/:tas_uid
+     *
+     * @param string $tas_uid {@min 32}{@max 32}
+     *
+     */
+    public function doDeleteBookmarkStartCase($tas_uid)
+    {
+        try {
+            $userLoggedUid = $this->getUserId();
+            $user = new \ProcessMaker\BusinessModel\User();
+            $user->updateBookmark($userLoggedUid, $tas_uid, 'DELETE');
+            return array('unbookmarkedTaskId'=>$tas_uid);
+        } catch (\Exception $e) {
             throw new RestException(Api::STAT_APP_EXCEPTION, $e->getMessage());
         }
     }

@@ -10,6 +10,8 @@ var storeCalendar;
 
 var storeRole;
 
+var storeLanguage;
+
 
 
 var storeDefaultMainMenuOption;
@@ -29,6 +31,10 @@ var comboReplacedBy;
 var comboCalendar;
 
 var comboRole;
+
+var cboTimeZone;
+
+var comboLanguage;
 
 
 
@@ -804,6 +810,56 @@ Ext.onReady(function () {
 
 
 
+    cboTimeZone = new Ext.form.ComboBox({
+
+        id: "cboTimeZone",
+
+        name: "USR_TIME_ZONE",
+
+
+
+        valueField: "id",
+
+        displayField: "value",
+
+        value: SYSTEM_TIME_ZONE,
+
+        store: new Ext.data.ArrayStore({
+
+            idIndex: 0,
+
+            fields: ["id", "value"],
+
+            data: TIME_ZONE_DATA
+
+        }),
+
+
+
+        fieldLabel: _("ID_TIME_ZONE"),
+
+
+
+        triggerAction: "all",
+
+        mode: "local",
+
+        editable: false,
+
+        width: 260,
+
+
+
+        hidden: !(__SYSTEM_UTC_TIME_ZONE__ == 1)
+
+    });
+
+
+
+  /*----------------------------------********---------------------------------*/
+
+
+
     var informationFields = new Ext.form.FieldSet({
 
       title : _('ID_PERSONAL_INFORMATION'),
@@ -1022,7 +1078,11 @@ Ext.onReady(function () {
 
         comboStatus,
 
-        comboRole
+        comboRole,
+
+        cboTimeZone
+
+        /*----------------------------------********---------------------------------*/
 
       ]
 
@@ -1796,6 +1856,36 @@ Ext.onReady(function () {
 
         width      : 260
 
+      },
+
+      {
+
+          id: "USR_TIME_ZONE2",
+
+          fieldLabel: _("ID_TIME_ZONE"),
+
+          xtype: "label",
+
+          width: 260,
+
+
+
+          hidden: !(__SYSTEM_UTC_TIME_ZONE__ == 1)
+
+      },
+
+      {
+
+        id         : 'USR_DEFAULT_LANG2',
+
+        fieldLabel : _('ID_DEFAULT_LANGUAGE'),
+
+        xtype      : 'label',
+
+        width      : 260,
+
+        hidden     : !(LANGUAGE_MANAGEMENT == 1)
+
       }
 
     ]
@@ -2536,6 +2626,10 @@ function loadData()
 
 
 
+    /*----------------------------------********---------------------------------*/
+
+
+
     comboDefaultMainMenuOption.store.on("load", function (store) {
 
         comboDefaultMainMenuOption.setValue(store.getAt(0).get("id"));
@@ -2654,6 +2748,8 @@ function loadUserData()
 
                 Ext.getCmp("USR_ROLE2").setText(data.user.USR_ROLE_NAME);
 
+                Ext.getCmp("USR_TIME_ZONE2").setText((data.user.USR_TIME_ZONE != "")? data.user.USR_TIME_ZONE : SYSTEM_TIME_ZONE);
+
                 /*----------------------------------********---------------------------------*/
 
                 Ext.getCmp("USR_CALENDAR2").setText(data.user.CALENDAR_NAME);
@@ -2729,6 +2825,14 @@ function loadUserData()
                 comboRole.setValue(data.user.USR_ROLE);
 
             });
+
+
+
+            cboTimeZone.setValue((data.user.USR_TIME_ZONE != "")? data.user.USR_TIME_ZONE : SYSTEM_TIME_ZONE);
+
+
+
+            /*----------------------------------********---------------------------------*/
 
 
 
@@ -2823,6 +2927,10 @@ function loadUserData()
 
 
             storeRole.load();
+
+
+
+            /*----------------------------------********---------------------------------*/
 
 
 

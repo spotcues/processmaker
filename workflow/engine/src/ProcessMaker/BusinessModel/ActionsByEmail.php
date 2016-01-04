@@ -61,6 +61,7 @@ class ActionsByEmail
             $configuration['ABE_ACTION_FIELD'] = $configuration['ABE_ACTION_FIELD'];
             $configuration['ABE_MAILSERVER_OR_MAILCURRENT'] = $configuration['ABE_MAILSERVER_OR_MAILCURRENT'];
             $configuration['ABE_CASE_NOTE_IN_RESPONSE'] = $configuration['ABE_CASE_NOTE_IN_RESPONSE'] ? '["1"]' : '[]';
+            $configuration['ABE_CUSTOM_GRID'] = unserialize($configuration['ABE_CUSTOM_GRID']);
         }
         $configuration['feature'] = 'ActionsByEmail';
         $configuration['prefix'] = 'abe';

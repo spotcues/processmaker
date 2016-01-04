@@ -135,6 +135,7 @@ class Variable
                 $dbConnection = \DbSourcePeer::retrieveByPK($variable->getVarDbconnection(), $variable->getPrjUid());
 
                 $oldVariable = array(
+                    "VAR_UID" => $variable->getVarUid(),
                     "VAR_NAME" => $variable->getVarName(),
                     "VAR_FIELD_TYPE" => $variable->getVarFieldType(),
                     "VAR_DBCONNECTION" => $variable->getVarDbconnection(),
@@ -182,6 +183,7 @@ class Variable
                     //update dynaforms
                     $dbConnection = \DbSourcePeer::retrieveByPK($variable->getVarDbconnection(), $variable->getPrjUid());
                     $newVariable = array(
+                        "VAR_UID" => $variable->getVarUid(),
                         "VAR_NAME" => $variable->getVarName(),
                         "VAR_FIELD_TYPE" => $variable->getVarFieldType(),
                         "VAR_DBCONNECTION" => $variable->getVarDbconnection(),
@@ -296,14 +298,14 @@ class Variable
             $arrayVariables = array();
 
             while ($aRow = $rsCriteria->getRow()) {
-                
+
                 $VAR_ACCEPTED_VALUES = \G::json_decode($aRow['VAR_ACCEPTED_VALUES'], true);
                 if(sizeof($VAR_ACCEPTED_VALUES)) {
                     $encodeAcceptedValues = preg_replace("/\\\\u([a-f0-9]{4})/e", "iconv('UCS-4LE','UTF-8',pack('V', hexdec('U$1')))", \G::json_encode($VAR_ACCEPTED_VALUES));
                 } else {
                     $encodeAcceptedValues = $aRow['VAR_ACCEPTED_VALUES'];
                 }
-                
+
                 $arrayVariables = array('var_uid' => $aRow['VAR_UID'],
                     'prj_uid' => $aRow['PRJ_UID'],
                     'var_name' => $aRow['VAR_NAME'],
@@ -372,14 +374,14 @@ class Variable
             $arrayVariables = array();
 
             while ($aRow = $rsCriteria->getRow()) {
-                
+
                 $VAR_ACCEPTED_VALUES = \G::json_decode($aRow['VAR_ACCEPTED_VALUES'], true);
                 if(sizeof($VAR_ACCEPTED_VALUES)) {
                     $encodeAcceptedValues = preg_replace("/\\\\u([a-f0-9]{4})/e", "iconv('UCS-4LE','UTF-8',pack('V', hexdec('U$1')))", \G::json_encode($VAR_ACCEPTED_VALUES));
                 } else {
                     $encodeAcceptedValues = $aRow['VAR_ACCEPTED_VALUES'];
                 }
-                
+
                 $arrayVariables[] = array('var_uid' => $aRow['VAR_UID'],
                     'prj_uid' => $aRow['PRJ_UID'],
                     'var_name' => $aRow['VAR_NAME'],
@@ -672,63 +674,35 @@ class Variable
             $process->throwExceptionIfNotExistsProcess($processUid, strtolower("PRJ_UID"));
 
             //Set data
-            $variableDbConnectionUid = "";
-            $variableSql = "";
-            $sqlLimit = "";
-            $variableSqlLimit = "";
-            $sqlConditionLike = "";
-
-            $criteria = new \Criteria("workflow");
-
-            $criteria->addSelectColumn(\ProcessVariablesPeer::VAR_DBCONNECTION);
-            $criteria->addSelectColumn(\ProcessVariablesPeer::VAR_SQL);
-            $criteria->add(\ProcessVariablesPeer::PRJ_UID, $processUid, \Criteria::EQUAL);
-            $criteria->add(\ProcessVariablesPeer::VAR_NAME, $variableName, \Criteria::EQUAL);
-
-            $rsCriteria = \ProcessVariablesPeer::doSelectRS($criteria);
-
-            $rsCriteria->setFetchmode(\ResultSet::FETCHMODE_ASSOC);
-            if ($rsCriteria->next()) {
-                $row = $rsCriteria->getRow();
-
-                $variableDbConnectionUid = $row["VAR_DBCONNECTION"];
-                $variableSql = $row["VAR_SQL"];
-            } else {
-                throw new \Exception(\G::LoadTranslation("ID_PROCESS_VARIABLE_DOES_NOT_EXIST", array(strtolower("VAR_NAME"), $variableName)));
-            }
-
-            //Verify data
-            $this->throwExceptionIfSomeRequiredVariableSqlIsMissingInVariables($variableName, $variableSql, $arrayVariable);
+            \G::LoadClass('pmDynaform');
+            $pmDynaform = new \pmDynaform();
+            $field = $pmDynaform->searchField($arrayVariable["dyn_uid"], $variableName);
+            $variableDbConnectionUid = $field !== null ? $field->dbConnection : "";
+            $variableSql = $field !== null ? $field->sql : "";
 
             //Get data
             $_SESSION["PROCESS"] = $processUid;
 
-            foreach ($arrayVariable as $keyRequest => $valueRequest) {
-                $keyRequest = strtoupper($keyRequest);
-
-                if ($keyRequest == 'LIMIT') {
-                    if (strpos($variableSql, 'LIMIT')) {
-                        $variableSqlLimit = explode("LIMIT", $variableSql);
-                        $sqlLimit = " LIMIT " . $variableSqlLimit[1];
-                        $variableSql = $variableSqlLimit[0];
-                    } else {
-                        $sqlLimit = " LIMIT ". 0 . ", " . $valueRequest;
-                    }
-                } else {
-                    if (strpos($variableSql, 'WHERE')) {
-                        $sqlConditionLike = " AND " . $keyRequest . " LIKE '%" . $valueRequest . "%'";
-                    } else {
-                        $sqlConditionLike = " WHERE " . $keyRequest . " LIKE '%" . $valueRequest . "%'";
-                    }
-                }
-            }
-
-            $sqlQuery = $variableSql . $sqlConditionLike . $sqlLimit;
-
-            $cnn = \Propel::getConnection(($variableDbConnectionUid . "" != "")? $variableDbConnectionUid : "workflow");
+            $cnn = \Propel::getConnection(($variableDbConnectionUid . "" != "") ? $variableDbConnectionUid : "workflow");
             $stmt = $cnn->createStatement();
-            $replaceFields = G::replaceDataField($sqlQuery, $arrayVariable);
 
+            $replaceFields = G::replaceDataField($variableSql, $arrayVariable);
+            
+            $filter = "";
+            if (isset($arrayVariable["filter"])) {
+                $filter = $arrayVariable["filter"];
+            }
+            $start = 0;
+            if (isset($arrayVariable["start"])) {
+                $start = $arrayVariable["start"];
+            }
+            $limit = "";
+            if (isset($arrayVariable["limit"])) {
+                $limit = $arrayVariable["limit"];
+            }
+            $parser = new \PHPSQLParser($replaceFields);
+            $filter = str_replace("'", "''", $filter);
+            $replaceFields = $this->queryModified($parser->parsed, $filter, "*searchtype*", $start, $limit);
             $rs = $stmt->executeQuery($replaceFields, \ResultSet::FETCHMODE_NUM);
 
             while ($rs->next()) {
@@ -736,7 +710,7 @@ class Variable
 
                 $arrayRecord[] = array(
                     strtolower("VALUE") => $row[0],
-                    strtolower("TEXT")  => $row[1]
+                    strtolower("TEXT") => isset($row[1]) ? $row[1] : $row[0]
                 );
             }
 
@@ -746,4 +720,181 @@ class Variable
             throw $e;
         }
     }
+    
+    public function queryModified($sqlParsed, $inputSel = "", $searchType, $start, $limit)
+    {
+        if (!empty($sqlParsed['SELECT'])) {
+            $sqlSelectOptions = (isset($sqlParsed["OPTIONS"]) && count($sqlParsed["OPTIONS"]) > 0) ? implode(" ", $sqlParsed["OPTIONS"]) : null;
+
+            $sqlSelect = "SELECT $sqlSelectOptions ";
+            $aSelect = $sqlParsed["SELECT"];
+
+            $sFieldSel = (count($aSelect) > 1 ) ? $aSelect[1]['base_expr'] : $aSelect[0]['base_expr'];
+            foreach ($aSelect as $key => $value) {
+                if ($key != 0)
+                    $sqlSelect .= ", ";
+                $sAlias = str_replace("`", "", $aSelect[$key]['alias']);
+                $sBaseExpr = $aSelect[$key]['base_expr'];
+                switch ($aSelect[$key]['expr_type']) {
+                    case 'colref' : if ($sAlias === $sBaseExpr)
+                            $sqlSelect .= $sAlias;
+                        else
+                            $sqlSelect .= $sBaseExpr . ' AS ' . $sAlias;
+                        break;
+                    case 'expression' : if ($sAlias === $sBaseExpr)
+                            $sqlSelect .= $sBaseExpr;
+                        else
+                            $sqlSelect .= $sBaseExpr . ' AS ' . $sAlias;
+                        break;
+                    case 'subquery' : if (strpos($sAlias, $sBaseExpr, 0) != 0)
+                            $sqlSelect .= $sAlias;
+                        else
+                            $sqlSelect .= $sBaseExpr . " AS " . $sAlias;
+                        break;
+                    case 'operator' : $sqlSelect .= $sBaseExpr;
+                        break;
+                    default : $sqlSelect .= $sBaseExpr;
+                        break;
+                }
+            }
+
+            $sqlFrom = " FROM ";
+            if (!empty($sqlParsed['FROM'])) {
+                $aFrom = $sqlParsed['FROM'];
+                if (count($aFrom) > 0) {
+                    foreach ($aFrom as $key => $value) {
+                        if ($key == 0) {
+                            $sqlFrom .= $aFrom[$key]['table'] . (($aFrom[$key]['table'] == $aFrom[$key]['alias']) ? "" : " " . $aFrom[$key]['alias']);
+                        } else {
+                            $sqlFrom .= " " . (($aFrom[$key]['join_type'] == 'JOIN') ? "INNER" : $aFrom[$key]['join_type']) . " JOIN " . $aFrom[$key]['table']
+                                    . (($aFrom[$key]['table'] == $aFrom[$key]['alias']) ? "" : " " . $aFrom[$key]['alias']) . " " . $aFrom[$key]['ref_type'] . " " . $aFrom[$key]['ref_clause'];
+                        }
+                    }
+                }
+            }
+
+            $sqlConditionLike = "LIKE '%" . $inputSel . "%'";
+
+            switch ($searchType) {
+                case "searchtype*":
+                    $sqlConditionLike = "LIKE '" . $inputSel . "%'";
+                    break;
+                case "*searchtype":
+                    $sqlConditionLike = "LIKE '%" . $inputSel . "'";
+                    break;
+            }
+
+            if (!empty($sqlParsed['WHERE'])) {
+                $sqlWhere = " WHERE ";
+                $aWhere = $sqlParsed['WHERE'];
+                foreach ($aWhere as $key => $value) {
+                    $sqlWhere .= $value['base_expr'] . " ";
+                }
+                $sqlWhere .= " AND " . $sFieldSel . " " . $sqlConditionLike;
+            } else {
+                $sqlWhere = " WHERE " . $sFieldSel . " " . $sqlConditionLike;
+            }
+
+            $sqlGroupBy = "";
+            if (!empty($sqlParsed['GROUP'])) {
+                $sqlGroupBy = "GROUP BY ";
+                $aGroup = $sqlParsed['GROUP'];
+                foreach ($aGroup as $key => $value) {
+                    if ($key != 0)
+                        $sqlGroupBy .= ", ";
+                    if ($value['direction'] == 'ASC')
+                        $sqlGroupBy .= $value['base_expr'];
+                    else
+                        $sqlGroupBy .= $value['base_expr'] . " " . $value['direction'];
+                }
+            }
+
+            $sqlHaving = "";
+            if (!empty($sqlParsed['HAVING'])) {
+                $sqlHaving = "HAVING ";
+                $aHaving = $sqlParsed['HAVING'];
+                foreach ($aHaving as $key => $value) {
+                    $sqlHaving .= $value['base_expr'] . " ";
+                }
+            }
+
+            $sqlOrderBy = "";
+            if (!empty($sqlParsed['ORDER'])) {
+                $sqlOrderBy = "ORDER BY ";
+                $aOrder = $sqlParsed['ORDER'];
+                foreach ($aOrder as $key => $value) {
+                    if ($key != 0)
+                        $sqlOrderBy .= ", ";
+                    if ($value['direction'] == 'ASC')
+                        $sqlOrderBy .= $value['base_expr'];
+                    else
+                        $sqlOrderBy .= $value['base_expr'] . " " . $value['direction'];
+                }
+            } else {
+                $sqlOrderBy = " ORDER BY " . $sFieldSel;
+            }
+            
+            $sqlLimit = "";
+            if ($start >= 0) {
+                $sqlLimit = " LIMIT " . $start;
+            }
+            if ($limit !== "") {
+                $sqlLimit = " LIMIT " . $start . "," . $limit;
+            }
+            if (!empty($sqlParsed['LIMIT'])) {
+                $sqlLimit = " LIMIT " . $sqlParsed['LIMIT']['start'] . ", " . $sqlParsed['LIMIT']['end'];
+            }
+
+            return $sqlSelect . $sqlFrom . $sqlWhere . $sqlGroupBy . $sqlHaving . $sqlOrderBy . $sqlLimit;
+        }
+        if (!empty($sqlParsed['CALL'])) {
+            $sCall = "CALL ";
+            $aCall = $sqlParsed['CALL'];
+            foreach ($aCall as $key => $value) {
+                $sCall .= $value . " ";
+            }
+            return $sCall;
+        }
+        if (!empty($sqlParsed['EXECUTE'])) {
+            $sCall = "EXECUTE ";
+            $aCall = $sqlParsed['EXECUTE'];
+            foreach ($aCall as $key => $value) {
+                $sCall .= $value . " ";
+            }
+            return $sCall;
+        }
+        if (!empty($sqlParsed[''])) {
+            $sCall = "";
+            $aCall = $sqlParsed[''];
+            foreach ($aCall as $key => $value) {
+                $sCall .= $value . " ";
+            }
+            return $sCall;
+        }
+    }
+    
+    public function getVariableTypeByName($processUid, $variableName)
+    {
+        try {
+            $criteria = new \Criteria("workflow");
+            $criteria->addSelectColumn(\ProcessVariablesPeer::VAR_UID);
+            $criteria->addSelectColumn(\ProcessVariablesPeer::VAR_NAME);
+            $criteria->addSelectColumn(\ProcessVariablesPeer::VAR_FIELD_TYPE);
+            $criteria->addSelectColumn(\ProcessVariablesPeer::VAR_DBCONNECTION);
+            $criteria->addSelectColumn(\ProcessVariablesPeer::VAR_SQL);
+            $criteria->addSelectColumn(\ProcessVariablesPeer::VAR_ACCEPTED_VALUES);
+            $criteria->add(\ProcessVariablesPeer::VAR_NAME, $variableName);
+            $criteria->add(\ProcessVariablesPeer::PRJ_UID, $processUid);
+            $rsCriteria = \ProcessVariablesPeer::doSelectRS($criteria);
+            $rsCriteria->setFetchmode(\ResultSet::FETCHMODE_ASSOC);
+            if ($rsCriteria->next()) {
+                $row = $rsCriteria->getRow();
+                return sizeof($row) ? $row : false;
+            }
+            return false;
+        } catch (\Exception $e) {
+            throw $e;
+        }
+    }
+
 }

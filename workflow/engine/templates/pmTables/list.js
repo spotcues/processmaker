@@ -565,6 +565,10 @@ ImportPMTable = function(){
             xtype: 'hidden',
             name: 'form[TYPE_TABLE]',
             value: (PRO_UID? 'designer' : 'admin')
+        }, {
+            xtype: 'hidden',
+            name: 'form[PRO_UID]',
+            value: (PRO_UID)
         }],
         buttons: [{
             id: 'importPMTableButtonUpload',

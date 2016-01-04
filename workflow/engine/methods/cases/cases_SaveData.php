@@ -27,15 +27,39 @@ if (!isset($_SESSION['USER_LOGGED'])) {
     die( '<script type="text/javascript">
                     try
                       {
-                        prnt = parent.parent;
-                        top.location = top.location;
+    					var olink = document.location.href;
+    					if(olink.search("gmail") != -1){
+    						var data = olink.split("?");
+                            var odata = data[1].split("&");
+                            var appUid = odata[1].split("=");
+    						var proUid = odata[0].split("=");
+
+    						var dataToSend = {
+                    			"action": "credentials",
+                    			"operation": "refreshPmSession",
+                    			"type": "processCall",
+    							"funParams": [
+                                               appUid[1],
+                                               proUid[1]
+                                ],
+                    			"expectReturn": false
+                			};
+    						var x = parent.postMessage(JSON.stringify(dataToSend), "*");
+    						if (x == undefined){
+    							x = parent.parent.postMessage(JSON.stringify(dataToSend), "*");
+    						}
+						}else{
+    						prnt = parent.parent;
+	                        top.location = top.location;
+    					}
                       }
-                    catch (err)
+                      catch (err)
                       {
                         parent.location = parent.location;
                       }
                     </script>');
 }
+
 try {
     if ($_GET['APP_UID'] !== $_SESSION['APPLICATION']) {
         throw new Exception( G::LoadTranslation( 'ID_INVALID_APPLICATION_ID_MSG', array ('<a href=\'' . $_SERVER['HTTP_REFERER'] . '\'>{1}</a>',G::LoadTranslation( 'ID_REOPEN' ) ) ) );
@@ -335,6 +359,92 @@ try {
                     $pathUID = G::getPathFromUID($_SESSION["APPLICATION"]);
                     $sPathName = PATH_DOCUMENT . $pathUID . PATH_SEP;
                     $sFileName = $sAppDocUid . "_" . $iDocVersion . "." . $sExtension;
+
+                    /*----------------------------------********---------------------------------*/
+                    $licensedFeatures = &PMLicensedFeatures::getSingleton();
+                    if ($licensedFeatures->verifyfeature('7qhYmF1eDJWcEdwcUZpT0k4S0xTRStvdz09')) {
+                        G::LoadClass( "pmDrive" );
+                        $pmDrive = new PMDrive();
+                        if ($pmDrive->getStatusService()) {
+                            $app = new Application();
+                            $user = new Users();
+                            $dataUser = $user->load($_SESSION['USER_LOGGED']);
+                            $pmDrive->setDriveUser($dataUser['USR_EMAIL']);
+
+                            $appData = $app->Load($_SESSION['APPLICATION']);
+                            if ($appData['APP_DRIVE_FOLDER_UID'] == null) {
+                                $process = new Process();
+                                $process->setProUid($appData['PRO_UID']);
+
+                                $result = $pmDrive->createFolder($process->getProTitle() . ' - ' . G::LoadTranslation("ID_CASE") . ' #' . $appData['APP_NUMBER'],
+                                    $pmDrive->getFolderIdPMDrive($_SESSION['USER_LOGGED']));
+                                $appData['APP_DRIVE_FOLDER_UID'] = $result->id;
+                                $app->update($appData);
+                            }
+
+                            $result = $pmDrive->uploadFile('application/' . $sExtension, $arrayFileTmpName[$i],
+                                $arrayFileName[$i], $appData['APP_DRIVE_FOLDER_UID']);
+                            $oAppDocument->setDriveDownload('ATTACHED', $result->webContentLink);
+                            $fileIdDrive = $result->id;
+                            $aFields['DOC_VERSION'] = $iDocVersion;
+                            $aFields['APP_DOC_UID'] = $sAppDocUid;
+
+                            $oAppDocument->update($aFields);
+
+                            //add permissions
+                            $criteria = new Criteria('workflow');
+                            $criteria->addSelectColumn(ApplicationPeer::PRO_UID);
+                            $criteria->addSelectColumn(TaskUserPeer::TAS_UID);
+                            $criteria->addSelectColumn(TaskUserPeer::USR_UID);
+                            $criteria->addSelectColumn(TaskUserPeer::TU_RELATION);
+
+                            $criteria->add(ApplicationPeer::APP_UID, $_SESSION['APPLICATION']);
+                            $criteria->addJoin(ApplicationPeer::PRO_UID, TaskPeer::PRO_UID, Criteria::LEFT_JOIN);
+                            $criteria->addJoin(TaskPeer::TAS_UID, TaskUserPeer::TAS_UID, Criteria::LEFT_JOIN);
+
+                            $dataset = TaskUserPeer::doSelectRs($criteria);
+                            $dataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+                            $userPermission = array();
+                            $case = new Cases();
+
+                            while ($dataset->next()) {
+                                $row = $dataset->getRow();
+                                if ($row['TU_RELATION'] == 1) {
+                                    //users
+                                    $dataUser = $user->load($row['USR_UID']);
+                                    if (array_search($dataUser['USR_EMAIL'], $userPermission) === false) {
+                                        $userPermission[] = $dataUser['USR_EMAIL'];
+                                    }
+                                } else {
+                                    //Groups
+                                    $criteria = new Criteria('workflow');
+                                    $criteria->addSelectColumn(UsersPeer::USR_EMAIL);
+                                    $criteria->addSelectColumn(UsersPeer::USR_UID);
+                                    $criteria->add(GroupUserPeer::GRP_UID, $row['USR_UID']);
+                                    $criteria->addJoin(GroupUserPeer::USR_UID, UsersPeer::USR_UID, Criteria::LEFT_JOIN);
+
+                                    $oDataset = AppDelegationPeer::doSelectRs($criteria);
+                                    $oDataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+                                    while ($oDataset->next()) {
+                                        $aRow = $oDataset->getRow();
+                                        if (array_search($aRow['USR_EMAIL'], $userPermission) === false) {
+                                            $userPermission[] = $aRow['USR_EMAIL'];
+                                        }
+
+                                    }
+                                }
+
+                            }
+                            $userPermission = array_unique($userPermission);
+
+                            foreach ($userPermission as $key => $value) {
+                                $pmDrive->setPermission($appData['APP_DRIVE_FOLDER_UID'], $value, 'user', 'writer');
+                                $pmDrive->setPermission($fileIdDrive, $value);
+                            }
+                        }
+                    }
+                    /*----------------------------------********---------------------------------*/
+
                     G::uploadFile( $arrayFileTmpName[$i], $sPathName, $sFileName );
 
                     //Plugin Hook PM_UPLOAD_DOCUMENT for upload document

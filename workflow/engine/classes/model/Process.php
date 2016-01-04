@@ -173,13 +173,13 @@ class Process extends BaseProcess
             $this->setProTimeunit( 'DAYS' );
             $this->setProStatus( 'ACTIVE' );
             $this->setProTypeDay( '' );
-            $this->setProType( 'NORMAL' );
+            $this->setProType((isset($aData["PRO_TYPE"]))? $aData["PRO_TYPE"]: "NORMAL");
             $this->setProAssignment( 'FALSE' );
             $this->setProShowMap( '' );
             $this->setProShowMessage( '' );
             $this->setProShowDelegate( '' );
             $this->setProShowDynaform( '' );
-            $this->setProCategory( $aData['PRO_CATEGORY'] );
+            $this->setProCategory((isset($aData["PRO_CATEGORY"]))? $aData["PRO_CATEGORY"]: "");
             $this->setProSubCategory( '' );
             $this->setProIndustry( '' );
             $this->setProCreateDate( date("Y-m-d H:i:s") );
@@ -923,6 +923,9 @@ class Process extends BaseProcess
         $webBotTrigger = '';
 
         switch ($action) {
+            case 'OPEN':
+                $var = ProcessPeer::PRO_TRI_OPEN;
+                break;
             case 'DELETED':
                 $var = ProcessPeer::PRO_TRI_DELETED;
                 break;
@@ -1029,6 +1032,21 @@ class Process extends BaseProcess
       }else{
         return 1;
       }
+    }
+
+    public function getAllConfiguredCurrencies()
+    {
+        $oCriteria = new Criteria( 'workflow' );
+        $oCriteria->addSelectColumn( ProcessPeer::PRO_UNIT_COST);
+        $oCriteria->setDistinct();
+        $oDataSet = ProcessPeer::doSelectRS( $oCriteria, Propel::getDbConnection('workflow_ro') );
+        $oDataSet->setFetchmode( ResultSet::FETCHMODE_ASSOC );
+        $aProc = Array ();
+        while ($oDataSet->next()) {
+            $row = $oDataSet->getRow();
+            $aProc[$row['PRO_UNIT_COST']] = $row['PRO_UNIT_COST'];
+        }
+        return $aProc;
     }
 }
 

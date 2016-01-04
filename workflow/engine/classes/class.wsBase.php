@@ -1830,7 +1830,9 @@ class wsBase
 
         $delIndex = 0,
 
-        $config = array()
+        $config = array(),
+
+    	$gmail = 0
 
     ) {
 
@@ -1876,9 +1878,15 @@ class wsBase
 
             $oldFields = $oCase->loadCase( $caseId );
 
+            if($gmail == 1){
 
+            	$pathEmail = PATH_DATA_SITE . 'mailTemplates' . PATH_SEP;
 
-            $pathEmail = PATH_DATA_SITE . 'mailTemplates' . PATH_SEP . $oldFields['PRO_UID'] . PATH_SEP;
+            }else {
+
+            	$pathEmail = PATH_DATA_SITE . 'mailTemplates' . PATH_SEP . $oldFields['PRO_UID'] . PATH_SEP;
+
+            }
 
             $fileTemplate = $pathEmail . $sTemplate;
 
@@ -4712,7 +4720,15 @@ class wsBase
 
                         $usrasgdUid = $val['NEXT_TASK']['USER_ASSIGNED']['USR_UID'];
 
-                        $usrasgdUserName = '(' . $val['NEXT_TASK']['USER_ASSIGNED']['USR_USERNAME'] . ')';
+                        if(isset($val['NEXT_TASK']['USER_ASSIGNED']['USR_USERNAME'])){
+
+                          $usrasgdUserName = '(' . $val['NEXT_TASK']['USER_ASSIGNED']['USR_USERNAME'] . ')';
+
+                        }else{
+
+                          $usrasgdUserName = '';
+
+                        }
 
                     }
 
@@ -4954,7 +4970,9 @@ class wsBase
 
                 $notificationMobile = new \ProcessMaker\BusinessModel\Light\NotificationDevice();
 
-                $notificationMobile->routeCaseNotification($userId, $_SESSION["PROCESS"], $appdel['TAS_UID'], $appFields, $nextDelegations, $nextIndex);
+                $notificationMobile->routeCaseNotification($userId, $_SESSION["PROCESS"], $appdel['TAS_UID'],
+
+                    $appFields, $nextDelegations, $nextIndex, $delIndex);
 
             } catch (Exception $e) {
 
@@ -6193,6 +6211,22 @@ class wsBase
                 $g->sessionVarRestore();
 
 
+
+                return $result;
+
+            }
+
+
+
+            $oApplication = new Application();
+
+            $aFields = $oApplication->load($caseUid);
+
+            if($aFields['APP_STATUS'] == 'DRAFT'){
+
+                $result = new wsResponse( 100, G::LoadTranslation( "ID_CASE_IN_STATUS" ). " DRAFT" );
+
+                $g->sessionVarRestore();
 
                 return $result;
 

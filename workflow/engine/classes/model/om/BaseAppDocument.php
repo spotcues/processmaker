@@ -118,6 +118,12 @@ abstract class BaseAppDocument extends BaseObject implements Persistent
     protected $app_doc_fieldname;
 
     /**
+     * The value for the app_doc_drive_download field.
+     * @var        string
+     */
+    protected $app_doc_drive_download;
+
+    /**
      * Flag to prevent endless save loop, if this object is referenced
      * by another object which falls in this transaction.
      * @var        boolean
@@ -336,6 +342,17 @@ abstract class BaseAppDocument extends BaseObject implements Persistent
     {
 
         return $this->app_doc_fieldname;
+    }
+
+    /**
+     * Get the [app_doc_drive_download] column value.
+     * 
+     * @return     string
+     */
+    public function getAppDocDriveDownload()
+    {
+
+        return $this->app_doc_drive_download;
     }
 
     /**
@@ -683,6 +700,28 @@ abstract class BaseAppDocument extends BaseObject implements Persistent
     } // setAppDocFieldname()
 
     /**
+     * Set the value of [app_doc_drive_download] column.
+     * 
+     * @param      string $v new value
+     * @return     void
+     */
+    public function setAppDocDriveDownload($v)
+    {
+
+        // Since the native PHP type for this column is string,
+        // we will cast the input to a string (if it is not).
+        if ($v !== null && !is_string($v)) {
+            $v = (string) $v;
+        }
+
+        if ($this->app_doc_drive_download !== $v) {
+            $this->app_doc_drive_download = $v;
+            $this->modifiedColumns[] = AppDocumentPeer::APP_DOC_DRIVE_DOWNLOAD;
+        }
+
+    } // setAppDocDriveDownload()
+
+    /**
      * Hydrates (populates) the object variables with values from the database resultset.
      *
      * An offset (1-based "start column") is specified so that objects can be hydrated
@@ -729,12 +768,14 @@ abstract class BaseAppDocument extends BaseObject implements Persistent
 
             $this->app_doc_fieldname = $rs->getString($startcol + 14);
 
+            $this->app_doc_drive_download = $rs->getString($startcol + 15);
+
             $this->resetModified();
 
             $this->setNew(false);
 
             // FIXME - using NUM_COLUMNS may be clearer.
-            return $startcol + 15; // 15 = AppDocumentPeer::NUM_COLUMNS - AppDocumentPeer::NUM_LAZY_LOAD_COLUMNS).
+            return $startcol + 16; // 16 = AppDocumentPeer::NUM_COLUMNS - AppDocumentPeer::NUM_LAZY_LOAD_COLUMNS).
 
         } catch (Exception $e) {
             throw new PropelException("Error populating AppDocument object", $e);
@@ -983,6 +1024,9 @@ abstract class BaseAppDocument extends BaseObject implements Persistent
             case 14:
                 return $this->getAppDocFieldname();
                 break;
+            case 15:
+                return $this->getAppDocDriveDownload();
+                break;
             default:
                 return null;
                 break;
@@ -1018,6 +1062,7 @@ abstract class BaseAppDocument extends BaseObject implements Persistent
             $keys[12] => $this->getAppDocStatus(),
             $keys[13] => $this->getAppDocStatusDate(),
             $keys[14] => $this->getAppDocFieldname(),
+            $keys[15] => $this->getAppDocDriveDownload(),
         );
         return $result;
     }
@@ -1093,6 +1138,9 @@ abstract class BaseAppDocument extends BaseObject implements Persistent
                 break;
             case 14:
                 $this->setAppDocFieldname($value);
+                break;
+            case 15:
+                $this->setAppDocDriveDownload($value);
                 break;
         } // switch()
     }
@@ -1177,6 +1225,10 @@ abstract class BaseAppDocument extends BaseObject implements Persistent
             $this->setAppDocFieldname($arr[$keys[14]]);
         }
 
+        if (array_key_exists($keys[15], $arr)) {
+            $this->setAppDocDriveDownload($arr[$keys[15]]);
+        }
+
     }
 
     /**
@@ -1246,6 +1298,10 @@ abstract class BaseAppDocument extends BaseObject implements Persistent
 
         if ($this->isColumnModified(AppDocumentPeer::APP_DOC_FIELDNAME)) {
             $criteria->add(AppDocumentPeer::APP_DOC_FIELDNAME, $this->app_doc_fieldname);
+        }
+
+        if ($this->isColumnModified(AppDocumentPeer::APP_DOC_DRIVE_DOWNLOAD)) {
+            $criteria->add(AppDocumentPeer::APP_DOC_DRIVE_DOWNLOAD, $this->app_doc_drive_download);
         }
 
 
@@ -1339,6 +1395,8 @@ abstract class BaseAppDocument extends BaseObject implements Persistent
         $copyObj->setAppDocStatusDate($this->app_doc_status_date);
 
         $copyObj->setAppDocFieldname($this->app_doc_fieldname);
+
+        $copyObj->setAppDocDriveDownload($this->app_doc_drive_download);
 
 
         $copyObj->setNew(true);

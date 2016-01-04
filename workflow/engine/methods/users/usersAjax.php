@@ -38,7 +38,7 @@ switch ($_POST['action']) {
 
         $c->addAscendingOrderByColumn(IsoCountryPeer::IC_NAME);
 
-        
+
 
         $countries = IsoCountryPeer::doSelect($c);
 
@@ -186,7 +186,7 @@ switch ($_POST['action']) {
 
         print (G::json_encode($aUserInfo));
 
- 
+
 
         break;
 
@@ -249,6 +249,26 @@ switch ($_POST['action']) {
             'USR_ROLE' => $aUserLog['USR_ROLE']
 
         )));
+
+        break;
+
+    case 'languagesList':
+
+        $Translations = new Translation();
+
+        $langs = $Translations->getTranslationEnvironments();
+
+        $oData[] = array('LAN_ID' => '', 'LAN_NAME' => '- ' . G::LoadTranslation('ID_NONE') . ' -');
+
+        foreach ($langs as $lang) {
+
+            $oData[] = array ('LAN_ID' => $lang['LOCALE'],'LAN_NAME' => $lang['LANGUAGE']
+
+            );
+
+        }
+
+        print (G::json_encode($oData));
 
         break;
 
@@ -328,15 +348,19 @@ switch ($_POST['action']) {
 
             $address = $form['USR_ADDRESS'] ? " - Address: ". $form['USR_ADDRESS'] : "";
 
-            $phone = $form['USR_PHONE'] ? " - Phone: ". $form['USR_PHONE'] : "";  
+            $phone = $form['USR_PHONE'] ? " - Phone: ". $form['USR_PHONE'] : "";
 
-            $zipCode = $form['USR_ZIP_CODE'] ? " - Zip Code: ". $form['USR_ZIP_CODE'] : "";  
+            $zipCode = $form['USR_ZIP_CODE'] ? " - Zip Code: ". $form['USR_ZIP_CODE'] : "";
 
-            $position = $form['USR_POSITION'] ? " - Position: ". $form['USR_POSITION'] : "";  
+            $position = $form['USR_POSITION'] ? " - Position: ". $form['USR_POSITION'] : "";
 
             $role = $form['USR_ROLE'] ? " - Role: ". $form['USR_ROLE'] : "";
 
+            $languageDef = $form['USR_DEFAULT_LANG'] ? " - Default Language: ". $form['USR_DEFAULT_LANG'] : "";
+
             /*----------------------------------********---------------------------------*/
+
+            $timeZone = (isset($form['USR_TIME_ZONE']))? ' - Time Zone: ' . $form['USR_TIME_ZONE'] : '';
 
 
 
@@ -416,9 +440,13 @@ switch ($_POST['action']) {
 
                 $aData['USR_ROLE'] = $form['USR_ROLE'];
 
+                $aData['USR_DEFAULT_LANG'] = $form['USR_DEFAULT_LANG'];
+
                 /*----------------------------------********---------------------------------*/
 
                 $aData['USR_REPLACED_BY'] = $form['USR_REPLACED_BY'];
+
+                $aData['USR_TIME_ZONE'] = $form['USR_TIME_ZONE'];
 
 
 
@@ -428,9 +456,9 @@ switch ($_POST['action']) {
 
                 $oUser->create($aData);
 
-                G::auditLog("CreateUser", "User Name: ". $aData['USR_USERNAME']." - User ID: (".$aData['USR_UID'].") ".$firstName.$lastName.$email.$dueDate.$status.$address.$phone.$zipCode.$position.$role );
+                G::auditLog('CreateUser', 'User Name: ' . $aData['USR_USERNAME'] . ' - User ID: (' . $aData['USR_UID'] . ') ' . $firstName . $lastName . $email . $dueDate . $status . $address . $phone . $zipCode . $position . $role . $timeZone . $languageDef);
 
-                
+
 
                 if ($_FILES['USR_PHOTO']['error'] != 1) {
 
@@ -760,6 +788,12 @@ switch ($_POST['action']) {
 
                 }
 
+                if (isset($form['USR_DEFAULT_LANG'])) {
+
+                    $aData['USR_DEFAULT_LANG'] = $form['USR_DEFAULT_LANG'];
+
+                }
+
                 /*----------------------------------********---------------------------------*/
 
                 if (isset($form['USR_REPLACED_BY'])) {
@@ -776,13 +810,21 @@ switch ($_POST['action']) {
 
 
 
+                if (isset($form['USR_TIME_ZONE'])) {
+
+                    $aData['USR_TIME_ZONE'] = $form['USR_TIME_ZONE'];
+
+                }
+
+
+
                 require_once 'classes/model/Users.php';
 
                 $oUser = new Users();
 
                 $oUser->update($aData);
 
-                G::auditLog("UpdateUser", "User Name: ". $aData['USR_USERNAME']." - User ID: (".$aData['USR_UID'].") ".$firstName.$lastName.$email.$dueDate.$status.$address.$phone.$zipCode.$position.$role );
+                G::auditLog('UpdateUser', 'User Name: ' . $aData['USR_USERNAME'] . ' - User ID: (' . $aData['USR_UID'] . ') ' . $firstName . $lastName . $email . $dueDate . $status . $address . $phone . $zipCode . $position . $role . $timeZone . $languageDef);
 
                 if ($_FILES['USR_PHOTO']['error'] != 1) {
 
@@ -1120,7 +1162,7 @@ switch ($_POST['action']) {
 
         $aFields['CASES_MENUSELECTED_NAME'] = $casesMenuSelected;
 
-        
+
 
         require_once 'classes/model/UsersProperties.php';
 
@@ -1130,7 +1172,7 @@ switch ($_POST['action']) {
 
         $aFields['USR_LOGGED_NEXT_TIME'] = $aUserProperty['USR_LOGGED_NEXT_TIME'];
 
-        
+
 
         $result->success = true;
 

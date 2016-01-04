@@ -486,6 +486,8 @@ class AppDelegation extends BaseAppDelegation
 
         $c->addSelectColumn( AppDelegationPeer::DEL_FINISH_DATE );
 
+        $c->addSelectColumn( AppDelegationPeer::DEL_PREVIOUS );
+
 
 
         $c->add( AppDelegationPeer::DEL_THREAD_STATUS, 'OPEN' );
@@ -531,6 +533,8 @@ class AppDelegation extends BaseAppDelegation
             $case['DEL_TASK_DUE_DATE'] = $row['DEL_TASK_DUE_DATE'];
 
             $case['DEL_FINISH_DATE']   = $row['DEL_FINISH_DATE'];
+
+            $case['DEL_PREVIOUS']      = $row['DEL_PREVIOUS'];
 
             $aCases[] = $case;
 

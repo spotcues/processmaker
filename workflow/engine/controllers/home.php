@@ -61,6 +61,9 @@ class Home extends Controller
         $this->setVar( 'msg', $data['m'] );
         $this->setVar( 'usr', $data['u'] );
         $this->setVar( 'pwd', $data['p'] );
+        $this->setVar('timeZoneFailed',  (isset($data['timeZoneFailed']))?  $data['timeZoneFailed'] : 0);
+        $this->setVar('userTimeZone',    (isset($data['userTimeZone']))?    $data['userTimeZone'] : '');
+        $this->setVar('browserTimeZone', (isset($data['browserTimeZone']))? $data['browserTimeZone'] : '');
         $this->setVar( 'skin', $skin );
 
         $this->setView( $this->userUxBaseTemplate . PATH_SEP . $template );

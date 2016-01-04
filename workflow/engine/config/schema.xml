@@ -39,6 +39,7 @@
     <column name="APP_PIN" type="VARCHAR" size="32" required="true" default=""/>
     <column name="APP_DURATION" type="DOUBLE" default="0"/>
     <column name="APP_DELAY_DURATION" type="DOUBLE" default="0"/>
+    <column name="APP_DRIVE_FOLDER_UID" type="VARCHAR" size="32" default="" required="false"/>
     <validator column="APP_STATUS">
       <rule name="validValues" value="DRAFT|TO_DO|PAUSED|COMPLETED|CANCELLED" message="Please select a valid status." />
     </validator>
@@ -180,6 +181,16 @@
     <column name="APP_DOC_STATUS" type="VARCHAR" size="32" required="true" default="ACTIVE"/>
     <column name="APP_DOC_STATUS_DATE" type="TIMESTAMP"/>
     <column name="APP_DOC_FIELDNAME" type="VARCHAR" size="150" />
+    <column name="APP_DOC_DRIVE_DOWNLOAD" type="LONGVARCHAR" required="false">
+        <vendor type="mysql">
+            <parameter name="Field" value="APP_DOC_DRIVE_DOWNLOAD"/>
+            <parameter name="Type" value="MEDIUMTEXT"/>
+            <parameter name="Null" value="YES"/>
+            <parameter name="Key" value=""/>
+            <parameter name="Default" value=""/>
+            <parameter name="Extra" value=""/>
+        </vendor>
+    </column>
     <validator column="APP_DOC_UID">
       <rule name="maxLength" value="32" message="Application Document UID can be no larger than ${value} in size"/>
       <rule name="required" message="Application Document UID is required."/>
@@ -835,11 +846,12 @@
     <column name="PRO_TIMEUNIT" type="VARCHAR" size="20" required="true" null="yes" default="DAYS"/>
     <column name="PRO_STATUS" type="VARCHAR" size="20" required="true" default="ACTIVE"/>
     <column name="PRO_TYPE_DAY" type="CHAR" size="1" required="true" default="0"/>
-    <column name="PRO_TYPE" type="VARCHAR" size="20" required="true" default="NORMAL"/>
+    <column name="PRO_TYPE" type="VARCHAR" size="256" required="true" default="NORMAL"/>
     <column name="PRO_ASSIGNMENT" type="VARCHAR" size="20" required="true" default="FALSE"/>
     <column name="PRO_SHOW_MAP" type="TINYINT" required="true" default="1"/>
     <column name="PRO_SHOW_MESSAGE" type="TINYINT" required="true" default="1"/>
     <column name="PRO_SUBPROCESS" type="TINYINT" required="true" default="0"/>
+    <column name="PRO_TRI_OPEN" type="VARCHAR" size="32" required="true" default=""/>
     <column name="PRO_TRI_DELETED" type="VARCHAR" size="32" required="true" default=""/>
     <column name="PRO_TRI_CANCELED" type="VARCHAR" size="32" required="true" default=""/>
     <column name="PRO_TRI_PAUSED" type="VARCHAR" size="32" required="true" default=""/>
@@ -868,9 +880,6 @@
     </validator>
     <validator column="PRO_STATUS">
       <rule name="validValues" value="ACTIVE|INACTIVE|DISABLED" message="Please select a valid Process Status."/>
-    </validator>
-    <validator column="PRO_TYPE">
-      <rule name="validValues" value="NORMAL" message="Please select a valid Process Type."/>
     </validator>
     <validator column="PRO_ASSIGNMENT">
       <rule name="validValues" value="TRUE|FALSE" message="Please select a valid Process Assignment"/>
@@ -1039,6 +1048,7 @@
     <column name="ROU_FROM_PORT" type="INTEGER" required="true" default="2"/>
     <column name="ROU_EVN_UID" type="VARCHAR" size="32" required="true" default=""/>
     <column name="GAT_UID" type="VARCHAR" size="32" required="true" default=""/>
+    <column name="ROU_ELEMENT_ORIGIN" type="VARCHAR" size="32" required="false" default=""/>
     <validator column="ROU_UID">
       <rule name="maxLength" value="32" message="Route UID can be no larger than ${value} in size"/>
       <rule name="required" message="Route UID is required."/>
@@ -1394,7 +1404,7 @@
       <rule name="required" message="Language is required."/>
     </validator>
     <validator column="TRN_VALUE">
-      <rule name="maxLength" value="200" message="Value can be no larger than ${value} in size"/>
+      <rule name="maxLength" value="1500" message="Value can be no larger than ${value} in size"/>
       <rule name="required" message="Value is required."/>
     </validator>
   </table>
@@ -1485,6 +1495,19 @@
     <column name="USR_TOTAL_UNASSIGNED" type="INTEGER" default="0"/>
     <column name="USR_COST_BY_HOUR" type="DECIMAL" size="7,2" required="false" default="0"/>
     <column name="USR_UNIT_COST" type="VARCHAR" size="50" required="false" default=""/>
+    <column name="USR_PMDRIVE_FOLDER_UID" type="VARCHAR" size="32" default="" required="false"/>
+    <column name="USR_BOOKMARK_START_CASES" type="LONGVARCHAR" required="false">
+        <vendor type="mysql">
+            <parameter name="Field" value="USR_BOOKMARK_START_CASES"/>
+            <parameter name="Type" value="MEDIUMTEXT"/>
+            <parameter name="Null" value="YES"/>
+            <parameter name="Key" value=""/>
+            <parameter name="Default" value=""/>
+            <parameter name="Extra" value=""/>
+        </vendor>
+    </column>
+    <column name="USR_TIME_ZONE" type="VARCHAR" size="100" default="" />
+    <column name="USR_DEFAULT_LANG" type="VARCHAR" size="10" default=""/>
     <validator column="USR_STATUS">
       <rule name="validValues" value="ACTIVE|INACTIVE|VACATION|CLOSED" message="Please select a valid type."/>
       <rule name="required" message="Type is required."/>
@@ -4525,6 +4548,7 @@
         <column name="ELEMENT_UID"  type="VARCHAR" size="32" required="true" />
         <column name="ELEMENT_TYPE" type="VARCHAR" size="50" required="true" default=""/>
         <column name="TAS_UID"      type="VARCHAR" size="32" required="true" />
+        <column name="ELEMENT_UID_DEST"  type="VARCHAR" size="32" required="false" default=""/>
     </table>
     <table name="ABE_CONFIGURATION">
     <vendor type="mysql">
@@ -4673,6 +4697,12 @@
         <parameter name="Key" value=""/>
         <parameter name="Default" value="0"/>
         <parameter name="Extra" value=""/>
+      </vendor>
+    </column>
+    <column name="ABE_CUSTOM_GRID" type="LONGVARCHAR" required="false">
+      <vendor type="mysql">
+        <parameter name="Field" value="ABE_CUSTOM_GRID"/>
+        <parameter name="Default" value=""/>
       </vendor>
     </column>
   </table>
@@ -5190,6 +5220,14 @@
     <column name="DEV_TYPE"         type="VARCHAR" size="50"  required="true"  default=""/>
     <column name="DEV_CREATE"       type="TIMESTAMP"          required="true"  />
     <column name="DEV_UPDATE"       type="TIMESTAMP"          required="true"  />
+    <index name="indexUserNotification">
+      <index-column name="USR_UID"/>
+      <vendor type="mysql">
+        <parameter name="Table" value="NOTIFICATION_DEVICE"/>
+        <parameter name="Non_unique" value="1"/>
+        <parameter name="Key_name" value="indexUserNotification"/>
+        <parameter name="Seq_in_index" value="1"/>
+      </vendor>
+    </index>
   </table>
 </database>
-

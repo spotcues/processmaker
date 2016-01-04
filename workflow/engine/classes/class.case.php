@@ -1944,16 +1944,6 @@ class Cases
 
         try {
 
-            $dynContentHistory = "";
-
-            if (isset($Fields["APP_DATA"]) && isset($Fields["APP_DATA"]["DYN_CONTENT_HISTORY"])) {
-
-                $dynContentHistory = $Fields["APP_DATA"]["DYN_CONTENT_HISTORY"];
-
-                unset($Fields["APP_DATA"]["DYN_CONTENT_HISTORY"]);
-
-            }
-
             $oApplication = new Application;
 
             if (!$oApplication->exists($sAppUid)) {
@@ -2026,6 +2016,18 @@ class Cases
 
                 if ((is_array($FieldsDifference)) && (count($FieldsDifference) > 0)) {
 
+                    $oCurrentDynaform = new Dynaform();
+
+                    try {
+
+                        $currentDynaform = $oCurrentDynaform->Load($Fields['CURRENT_DYNAFORM']);
+
+                    } catch (Exception $e) {
+
+                        $currentDynaform["DYN_CONTENT"] = "";
+
+                    }
+
                     //There are changes
 
                     $Fields['APP_STATUS'] = (isset($Fields['APP_STATUS'])) ? $Fields['APP_STATUS'] : $FieldsBefore['APP_STATUS'];
@@ -2034,7 +2036,7 @@ class Cases
 
                     $aFieldsHistory = $Fields;
 
-                    $FieldsDifference['DYN_CONTENT_HISTORY'] = $dynContentHistory;
+                    $FieldsDifference['DYN_CONTENT_HISTORY'] = base64_encode($currentDynaform["DYN_CONTENT"]);
 
                     $aFieldsHistory['APP_DATA'] = serialize($FieldsDifference);
 
@@ -3874,6 +3876,8 @@ class Cases
 
         try {
 
+            $oApplication = ApplicationPeer::retrieveByPk($sAppUid);
+
             $c = new Criteria();
 
             $c->add(AppDelegationPeer::APP_UID, $sAppUid);
@@ -3907,6 +3911,38 @@ class Cases
                     }
 
                     throw (new PropelException('The row cannot be created!', new PropelException($msg)));
+
+                }
+
+                $taskNext = TaskPeer::retrieveByPK($appDel->getTasUid());
+
+                if($taskNext->getTasType() == 'NORMAL'){
+
+                    if($oApplication->getAppStatus() == "DRAFT"){
+
+                      $sUserUid = $appDel->getUsrUid();
+
+                      /*----------------------------------********---------------------------------*/
+
+                    }else{
+
+                      $sUserUid = $appDel->getUsrUid();
+
+                      /*----------------------------------********---------------------------------*/
+
+                    }
+
+                }else{
+
+                   //When start a case with SCRIPT-TASK WEBENTRYEVENT and the status is DRAFT
+
+                   if($oApplication->getAppStatus() == "DRAFT"){
+
+                      $sUserUid = $appDel->getUsrUid();
+
+                      /*----------------------------------********---------------------------------*/
+
+                    }
 
                 }
 
@@ -4092,6 +4128,82 @@ class Cases
 
 
 
+                G::LoadClass('derivation');
+
+                $oDerivation = new Derivation();
+
+
+
+                //Multiple Instance
+
+                $aUserFields = array();
+
+                $taskAssignType = $task->getTasAssignType();
+
+                $nextTaskAssignVariable = $task->getTasAssignVariable();
+
+                if($taskAssignType == "MULTIPLE_INSTANCE" || $taskAssignType == "MULTIPLE_INSTANCE_VALUE_BASED"){
+
+                    switch ($taskAssignType) {
+
+                       case 'MULTIPLE_INSTANCE':
+
+                            $userFields = $oDerivation->getUsersFullNameFromArray($oDerivation->getAllUsersFromAnyTask($sTasUid));
+
+                            break;
+
+                       default:
+
+                            throw (new Exception( 'Invalid Task Assignment method' ));
+
+                            break;
+
+                    }
+
+                    $userFields = $oDerivation->getUsersFullNameFromArray($oDerivation->getAllUsersFromAnyTask($sTasUid));
+
+                    $count = 0;
+
+                    foreach($userFields as $rowUser){
+
+                        if($rowUser["USR_UID"] != $sUsrUid){
+
+                           //appDelegation
+
+                           $AppDelegation = new AppDelegation;
+
+                           $iAppThreadIndex ++; // Start Thread
+
+                           $iAppDelPrio = 3; // Priority
+
+                           $iDelIndex1 = $AppDelegation->createAppDelegation(
+
+                                   $sProUid, $sAppUid, $sTasUid, $rowUser["USR_UID"], $iAppThreadIndex, $iAppDelPrio, $isSubprocess
+
+                           );
+
+                           //appThread
+
+                           $AppThread = new AppThread;
+
+                           $iAppThreadIndex = $AppThread->createAppThread($sAppUid, $iDelIndex1, 0);
+
+                           //Save Information
+
+                           $aUserFields[$count] = $rowUser;
+
+                           $aUserFields[$count]["DEL_INDEX"] = $iDelIndex1;
+
+                           $count++;
+
+                        }
+
+                    }
+
+                }
+
+
+
                 //DONE: Al ya existir un delegation, se puede "calcular" el caseTitle.
 
                 $Fields = $Application->toArray(BasePeer::TYPE_FIELDNAME);
@@ -4115,10 +4227,6 @@ class Cases
 
 
                 //Update the task last assigned (for web entry and web services)
-
-                G::LoadClass('derivation');
-
-                $oDerivation = new Derivation();
 
                 $oDerivation->setTasLastAssigned($sTasUid, $sUsrUid);
 
@@ -4376,21 +4484,45 @@ class Cases
 
                             }
 
-                            $aNextStep = array(
+                            if(array_key_exists('gmail',$_SESSION) || (array_key_exists('gmail',$_GET) && $_GET['gmail'] == 1)){
 
-                                'TYPE' => $oStep->getStepTypeObj(),
+                            	$aNextStep = array(
 
-                                'UID' => $oStep->getStepUidObj(),
+                            			'TYPE' => $oStep->getStepTypeObj(),
 
-                                'POSITION' => $oStep->getStepPosition(),
+                            			'UID' => $oStep->getStepUidObj(),
 
-                                'PAGE' => 'cases_Step?TYPE=' . $oStep->getStepTypeObj() . '&UID=' .
+                            			'POSITION' => $oStep->getStepPosition(),
 
-                                $oStep->getStepUidObj() . '&POSITION=' . $oStep->getStepPosition() .
+                            			'PAGE' => 'cases_Step?TYPE=' . $oStep->getStepTypeObj() . '&UID=' .
 
-                                '&ACTION=' . $sAction
+                            			$oStep->getStepUidObj() . '&POSITION=' . $oStep->getStepPosition() .
 
-                            );
+                            			'&ACTION=' . $sAction .
+
+                            			'&gmail=1'
+
+                            	);
+
+                            } else{
+
+	                            $aNextStep = array(
+
+	                                'TYPE' => $oStep->getStepTypeObj(),
+
+	                                'UID' => $oStep->getStepUidObj(),
+
+	                                'POSITION' => $oStep->getStepPosition(),
+
+	                                'PAGE' => 'cases_Step?TYPE=' . $oStep->getStepTypeObj() . '&UID=' .
+
+	                                $oStep->getStepUidObj() . '&POSITION=' . $oStep->getStepPosition() .
+
+	                                '&ACTION=' . $sAction
+
+	                            );
+
+                            }
 
                             $iPosition = $iLastStep;
 
@@ -4406,17 +4538,35 @@ class Cases
 
             if (!$aNextStep) {
 
-                $aNextStep = array(
+            	if(array_key_exists('gmail',$_SESSION) || (array_key_exists('gmail',$_GET) && $_GET['gmail'] == 1)){
 
-                    'TYPE' => 'DERIVATION',
+	                $aNextStep = array(
 
-                    'UID' => -1,
+	                    'TYPE' => 'DERIVATION',
 
-                    'POSITION' => ($iLastStep + 1),
+	                    'UID' => -1,
 
-                    'PAGE' => 'cases_Step?TYPE=ASSIGN_TASK&UID=-1&POSITION=10000&ACTION=ASSIGN'
+	                    'POSITION' => ($iLastStep + 1),
 
-                );
+	                    'PAGE' => 'cases_Step?TYPE=ASSIGN_TASK&UID=-1&POSITION=10000&ACTION=ASSIGN&gmail=1'
+
+	                );
+
+            	}else {
+
+            		$aNextStep = array(
+
+            				'TYPE' => 'DERIVATION',
+
+            				'UID' => -1,
+
+            				'POSITION' => ($iLastStep + 1),
+
+            				'PAGE' => 'cases_Step?TYPE=ASSIGN_TASK&UID=-1&POSITION=10000&ACTION=ASSIGN'
+
+            		);
+
+            	}
 
             }
 
@@ -6932,6 +7082,10 @@ class Cases
 
             );
 
+            /*----------------------------------********---------------------------------*/
+
+
+
             while ($aRow = $oDataset->getRow()) {
 
                 $aAux = $oAppDocument->load($aRow['APP_DOC_UID'], $aRow['DOC_VERSION']);
@@ -7049,6 +7203,8 @@ class Cases
                 }
 
                 $aFields['COMMENT'] = $aFields['APP_DOC_COMMENT'];
+
+                /*----------------------------------********---------------------------------*/
 
                 if (($aRow['DOC_VERSION'] == $lastVersion) || ($sAppDocuUID != "")) {
 
@@ -7498,6 +7654,10 @@ class Cases
 
 
 
+        /*----------------------------------********---------------------------------*/
+
+
+
         switch ($option) {
 
             case "xmlform":
@@ -7792,8 +7952,6 @@ class Cases
 
     {
 
-        $this->CloseCurrentDelegation($sApplicationUID, $iDelegation);
-
         $oApplication = new Application();
 
         $aFields = $oApplication->Load($sApplicationUID);
@@ -7827,6 +7985,8 @@ class Cases
         }
 
 
+
+        $this->CloseCurrentDelegation($sApplicationUID, $iDelegation);
 
         //now create a row in APP_DELAY with type PAUSE
 
@@ -7871,6 +8031,10 @@ class Cases
 
 
         $this->getExecuteTriggerProcess($sApplicationUID, 'PAUSED');
+
+
+
+        /*----------------------------------********---------------------------------*/
 
 
 
@@ -8060,6 +8224,10 @@ class Cases
 
         /*----------------------------------********---------------------------------*/
 
+
+
+        /*----------------------------------********---------------------------------*/
+
     }
 
 
@@ -8104,7 +8272,13 @@ class Cases
 
         $oCriteria->add(AppDelegationPeer::DEL_FINISH_DATE, null, Criteria::ISNULL);
 
-        if (AppDelegationPeer::doCount($oCriteria) == 1) {
+        $resAppDel = AppDelegationPeer::doCount($oCriteria);
+
+
+
+        $this->CloseCurrentDelegation($sApplicationUID, $iIndex);
+
+        if ($resAppDel == 1) {
 
             $aFields['APP_STATUS'] = 'CANCELLED';
 
@@ -8125,8 +8299,6 @@ class Cases
             $addtionalTables->updateReportTables($aFields['PRO_UID'], $aFields['APP_UID'], $aFields['APP_NUMBER'], $aFields['APP_DATA'], $aFields['APP_STATUS']);
 
         }
-
-        $this->CloseCurrentDelegation($sApplicationUID, $iIndex);
 
         $oAppDel = new AppDelegation();
 
@@ -8385,6 +8557,8 @@ class Cases
                 $aFieldsDel['PRO_UID'], $aFieldsDel['APP_UID'], $aFieldsDel['TAS_UID'], $aFieldsDel['USR_UID'], $aFieldsDel['DEL_THREAD']
 
         );
+
+        $newDelIndex = $iIndex;
 
         $aData = array();
 
@@ -8752,6 +8926,8 @@ class Cases
 
         $oUser = new Users();
 
+        /*----------------------------------********---------------------------------*/
+
         while ($aRow = $oDataset->getRow()) {
 
             $oCriteria2 = new Criteria('workflow');
@@ -8871,6 +9047,8 @@ class Cases
                 }
 
             }
+
+            /*----------------------------------********---------------------------------*/
 
             if ($lastVersion == $aRow['DOC_VERSION']) {
 
@@ -9026,6 +9204,8 @@ class Cases
 
             $aFields['DOWNLOAD_LINK'] = "cases_ShowDocument?a=" . $aRow['APP_DOC_UID'];
 
+            /*----------------------------------********---------------------------------*/
+
             if ($lastVersion == $aRow['DOC_VERSION']) {
 
                 //Show only last version
@@ -9159,6 +9339,8 @@ class Cases
                 }
 
             }
+
+            /*----------------------------------********---------------------------------*/
 
             if ($lastVersion == $aRow['DOC_VERSION']) {
 
@@ -9374,6 +9556,8 @@ class Cases
 
         $oUser = new Users();
 
+        /*----------------------------------********---------------------------------*/
+
         while ($aRow = $oDataset->getRow()) {
 
             $oCriteria2 = new Criteria('workflow');
@@ -9577,6 +9761,10 @@ class Cases
                     $firstDocLabel = $fileDocLabel;
 
                 }
+
+
+
+                /*----------------------------------********---------------------------------*/
 
 
 
@@ -9912,17 +10100,17 @@ class Cases
 
      * @name sendNotifications
 
-     * @param string $sCurrentTask
+     * @param string $taskUid
 
-     * @param array $aTasks
+     * @param array $arrayTask
 
-     * @param array $aFields
+     * @param array $arrayData
 
-     * @param string $sApplicationUID
+     * @param string $applicationUid
 
-     * @param string $iDelegation
+     * @param string $delIndex
 
-     * @param string $sFrom
+     * @param string $from
 
      * @return void
 
@@ -9930,15 +10118,15 @@ class Cases
 
 
 
-    public function sendNotifications($sCurrentTask, $aTasks, $aFields, $sApplicationUID, $iDelegation, $sFrom = "")
+    public function sendNotifications($taskUid, $arrayTask, $arrayData, $applicationUid, $delIndex, $from = '')
 
     {
 
         try {
 
-            $applicationData = $this->loadCase($sApplicationUID);
+            $arrayApplicationData = $this->loadCase($applicationUid);
 
-            $aFields["APP_NUMBER"] = $applicationData["APP_NUMBER"];
+            $arrayData['APP_NUMBER'] = $arrayApplicationData['APP_NUMBER'];
 
 
 
@@ -9968,7 +10156,7 @@ class Cases
 
             $oTask = new Task();
 
-            $aTaskInfo = $oTask->load($sCurrentTask);
+            $aTaskInfo = $oTask->load($taskUid);
 
 
 
@@ -9980,13 +10168,13 @@ class Cases
 
 
 
-            $sFrom = G::buildFrom($aConfiguration, $sFrom);
+            $from = G::buildFrom($aConfiguration, $from);
 
 
 
             if (isset($aTaskInfo['TAS_DEF_SUBJECT_MESSAGE']) && $aTaskInfo['TAS_DEF_SUBJECT_MESSAGE'] != '') {
 
-                $sSubject = G::replaceDataField($aTaskInfo['TAS_DEF_SUBJECT_MESSAGE'], $aFields);
+                $sSubject = G::replaceDataField($aTaskInfo['TAS_DEF_SUBJECT_MESSAGE'], $arrayData);
 
             } else {
 
@@ -10040,17 +10228,45 @@ class Cases
 
                 if (!file_exists($fileTemplate)) {
 
-                    throw (new Exception("Template file \"$fileTemplate\" does not exist."));
+                    $tempale = PATH_CORE."templates".PATH_SEP."mails".PATH_SEP."alert_message.html";
+
+                    $copied = @copy($tempale,$fileTemplate);
+
+                    if($copied) {
+
+                        $dataTemplate = array("prf_filename"=>$conf["TAS_DEF_MESSAGE_TEMPLATE"],
+
+                                              "prf_path"=>$fileTemplate,
+
+                                              "pro_uid"=>$aTaskInfo["PRO_UID"],
+
+                                              "usr_uid"=>"00000000000000000000000000000001",
+
+                                              "prf_uid"=>G::generateUniqueID(),
+
+                                              "prf_type"=>"file",
+
+                                              "prf_create_date"=>date("Y-m-d H:i:s"));
+
+                        $filesManager = new ProcessMaker\BusinessModel\FilesManager();
+
+                        $filesManager->addProcessFilesManagerInDb($dataTemplate);
+
+                    } else {
+
+                        throw (new Exception("Template file \"$fileTemplate\" does not exist."));
+
+                    }
 
                 }
 
 
 
-                $sBody = G::replaceDataGridField(file_get_contents($fileTemplate), $aFields, false);
+                $sBody = file_get_contents($fileTemplate);
 
             } else {
 
-                $sBody = nl2br(G::replaceDataGridField($aTaskInfo["TAS_DEF_MESSAGE"], $aFields, false));
+                $sBody = nl2br($aTaskInfo['TAS_DEF_MESSAGE']);
 
             }
 
@@ -10072,11 +10288,61 @@ class Cases
 
 
 
-            foreach ($aTasks as $aTask) {
+            foreach ($arrayTask as $aTask) {
 
                 $sTo = null;
 
                 $sCc = null;
+
+
+
+                if (isset($aTask['DEL_INDEX'])) {
+
+                    $arrayData2 = $arrayData;
+
+
+
+                    $appDelegation = AppDelegationPeer::retrieveByPK($applicationUid, $aTask['DEL_INDEX']);
+
+
+
+                    if (!is_null($appDelegation)) {
+
+                        $arrayData2['TAS_TITLE'] = Content::load('TAS_TITLE', '', $appDelegation->getTasUid(), SYS_LANG);
+
+                        $arrayData2['DEL_TASK_DUE_DATE'] = $appDelegation->getDelTaskDueDate();
+
+                    }
+
+                } else {
+
+                    $arrayData2 = $arrayData;
+
+                }
+
+
+
+                if (isset($aTask['USR_UID']) && !empty($aTask['USR_UID'])) {
+
+                    $user = new \ProcessMaker\BusinessModel\User();
+
+
+
+                    $arrayUserData = $user->getUser($aTask['USR_UID'], true);
+
+
+
+                    $arrayData2 = \ProcessMaker\Util\DateTime::convertUtcToTimeZone($arrayData2, (trim($arrayUserData['USR_TIME_ZONE']) != '')? trim($arrayUserData['USR_TIME_ZONE']) : \ProcessMaker\Util\System::getTimeZone());
+
+                } else {
+
+                    $arrayData2 = \ProcessMaker\Util\DateTime::convertUtcToTimeZone($arrayData2);
+
+                }
+
+
+
+                $sBody2 = G::replaceDataGridField($sBody, $arrayData2, false);
 
 
 
@@ -10100,7 +10366,7 @@ class Cases
 
 
 
-                            $sBody = G::replaceDataField(file_get_contents($fileTemplate), $aFields);
+                            $sBody2 = G::replaceDataField(file_get_contents($fileTemplate), $arrayData2);
 
                         }
 
@@ -10214,6 +10480,104 @@ class Cases
 
                         break;
 
+                    case "MULTIPLE_INSTANCE":
+
+                        $to = null;
+
+                        $cc = null;
+
+                        $sw = 1;
+
+                        $oDerivation = new Derivation();
+
+                        $userFields = $oDerivation->getUsersFullNameFromArray($oDerivation->getAllUsersFromAnyTask($aTask["TAS_UID"]));
+
+                        if(isset($userFields)){
+
+                           foreach($userFields as $row){
+
+                                $toAux = (
+
+                                        (($row["USR_FIRSTNAME"] != "") || ($row["USR_LASTNAME"] != "")) ?
+
+                                                $row["USR_FIRSTNAME"] . " " . $row["USR_LASTNAME"] . " " : ""
+
+                                        ) . "<" . $row["USR_EMAIL"] . ">";
+
+                                if ($sw == 1) {
+
+                                    $to = $toAux;
+
+                                    $sw = 0;
+
+                                } else {
+
+                                    $cc = $cc . (($cc != null) ? "," : null) . $toAux;
+
+                                }
+
+                           }
+
+                           $sTo = $to;
+
+                           $sCc = $cc;
+
+                        }
+
+                        break;
+
+                    case "MULTIPLE_INSTANCE_VALUE_BASED":
+
+                        $aTaskNext = $oTask->load($aTask["TAS_UID"]);
+
+                        if(isset($aTaskNext["TAS_ASSIGN_VARIABLE"]) && !empty($aTaskNext["TAS_ASSIGN_VARIABLE"])){
+
+                            $to = null;
+
+                            $cc = null;
+
+                            $sw = 1;
+
+                            $nextTaskAssignVariable = trim($aTaskNext["TAS_ASSIGN_VARIABLE"], " @#");
+
+                            $arrayUsers = $arrayData[$nextTaskAssignVariable];
+
+                            $oDerivation = new Derivation();
+
+                            $userFields = $oDerivation->getUsersFullNameFromArray($arrayUsers);
+
+                            foreach ($userFields as $row) {
+
+                                $toAux = (
+
+                                        (($row["USR_FIRSTNAME"] != "") || ($row["USR_LASTNAME"] != "")) ?
+
+                                                $row["USR_FIRSTNAME"] . " " . $row["USR_LASTNAME"] . " " : ""
+
+                                        ) . "<" . $row["USR_EMAIL"] . ">";
+
+                                if ($sw == 1) {
+
+                                    $to = $toAux;
+
+                                    $sw = 0;
+
+                                } else {
+
+                                    $cc = $cc . (($cc != null) ? "," : null) . $toAux;
+
+                                }
+
+                            }
+
+                            $sTo = $to;
+
+                            $sCc = $cc;
+
+                        }
+
+                        break;
+
                     default:
 
                         if (isset($aTask["USR_UID"]) && !empty($aTask["USR_UID"])) {
@@ -10250,19 +10614,19 @@ class Cases
 
                         "msg_uid" => "",
 
-                        "app_uid" => $sApplicationUID,
+                        'app_uid' => $applicationUid,
 
-                        "del_index" => $iDelegation,
+                        'del_index' => $delIndex,
 
                         "app_msg_type" => "DERIVATION",
 
                         "app_msg_subject" => $sSubject,
 
-                        "app_msg_from" => $sFrom,
+                        'app_msg_from' => $from,
 
                         "app_msg_to" => $sTo,
 
-                        "app_msg_body" => $sBody,
+                        'app_msg_body' => $sBody2,
 
                         "app_msg_cc" => $sCc,
 
@@ -13771,6 +14135,100 @@ class Cases
         return $unserializedData;
 
     }
+
+
+
+    /**
+
+     * This function returns the list of cases (and  their categories) that a user can start.
+
+     * Used by : End Point workflow/engine/src/ProcessMaker/Services/Api/Cases.php  -> doGetCasesListStarCase
+
+     * Observation: This function and the doGetCasesListStarCase end point implements a similar functionality
+
+     * of the mobile light/process/start-case  endpoint. It was decided (Sep 3 2015) the it was necessary to have
+
+     * a ProcessMaker endpoint for this functionality and in the future al the mobile end points will be deprecated
+
+     * and just the ProcessMaker endpoints will exist.
+
+     *
+
+     * @param $usrUid
+
+     * @param $typeView
+
+     * @return array
+
+     */
+
+    public function getProcessListStartCase($usrUid, $typeView)
+
+    {
+
+        $usrUid = empty($usrUid) ? $_SESSION['USER_LOGGED'] : $usrUid;
+
+
+
+        $canStart = $this->canStartCase($usrUid);
+
+        if ($canStart) {
+
+            $processList = array();
+
+            $list = $this->getStartCasesPerType($usrUid, $typeView);
+
+            foreach ($list as $index => $row) {
+
+                if (!empty($row['pro_uid'])) {
+
+                    if ($typeView == 'category') {
+
+                        $processList[] = array(
+
+                            'tas_uid' => $row['uid'],
+
+                            'pro_title' => $row['value'],
+
+                            'pro_uid' => $row['pro_uid'],
+
+                            'pro_category' => $row['cat'],
+
+                            'category_name' => $row['catname']
+
+                        );
+
+                    } else {
+
+                        $processList[] = array(
+
+                            'tas_uid' => $row['uid'],
+
+                            'pro_title' => $row['value'],
+
+                            'pro_uid' => $row['pro_uid']
+
+                        );
+
+                    }
+
+                }
+
+            }
+
+        } else {
+
+            $processList['success'] = 'failure';
+
+            $processList['message'] = G::LoadTranslation('ID_USER_PROCESS_NOT_START');
+
+        }
+
+        return $processList;
+
+    }
+
+
 
 }
 

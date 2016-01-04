@@ -362,10 +362,8 @@ try {
             }
             if (isset($_POST['auth_dn'])) {
                 $auth_dn = $_POST['auth_dn'];
-            } else {
-                $auth_dn = "";
+                $aData['USR_AUTH_USER_DN'] = $auth_dn;
             }
-            $aData['USR_AUTH_USER_DN'] = $auth_dn;
             $RBAC->updateUser($aData);
             G::auditLog("AssignAuthenticationSource", "User Name: ".$aData['USR_USERNAME'].' User ID: ('.$aData['USR_UID'].') assign to '.$aData['USR_AUTH_TYPE']);
             echo '{success: true}';

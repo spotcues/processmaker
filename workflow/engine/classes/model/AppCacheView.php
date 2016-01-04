@@ -160,6 +160,12 @@ class AppCacheView extends BaseAppCacheView
 
         }
 
+        $arrayTaskTypeToExclude = array("WEBENTRYEVENT", "END-MESSAGE-EVENT", "START-MESSAGE-EVENT", "INTERMEDIATE-THROW-MESSAGE-EVENT", "INTERMEDIATE-CATCH-MESSAGE-EVENT");
+
+        $criteria->addJoin(AppCacheViewPeer::TAS_UID, TaskPeer::TAS_UID, Criteria::LEFT_JOIN);
+
+        $criteria->add(TaskPeer::TAS_TYPE, $arrayTaskTypeToExclude, Criteria::NOT_IN);
+
 
 
         return AppCacheViewPeer::doCount($criteria, $distinct);
@@ -1755,6 +1761,10 @@ class AppCacheView extends BaseAppCacheView
 
 
             foreach ($this->confCasesList["second"]["data"] as $fieldData) {
+
+                $fieldData['name'] = ($fieldData['name'] == 'APP_STATUS_LABEL')? 'APP_STATUS' : $fieldData['name'];
+
+
 
                 if (in_array($fieldData["name"], $defaultFields)) {
 

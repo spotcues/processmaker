@@ -228,6 +228,10 @@ if (isset ($_SESSION['USER_LOGGED'])) {
 
 
 
+/*----------------------------------********---------------------------------*/
+
+
+
 //start new session
 
 @session_destroy();
@@ -298,6 +302,8 @@ $availableLangArray = array ();
 
 $availableLangArray [] = array ('LANG_ID' => 'char', 'LANG_NAME' => 'char' );
 
+/*----------------------------------********---------------------------------*/
+
 foreach ($translationsTable as $locale) {
 
     $row['LANG_ID'] = $locale['LOCALE'];
@@ -343,6 +349,8 @@ $oConf->loadConfig($obj, 'ENVIRONMENT_SETTINGS', '');
 if (isset($oConf->aConfig["login_defaultLanguage"]) && $oConf->aConfig["login_defaultLanguage"] != "") {
 
     $aFields["USER_LANG"] = $oConf->aConfig["login_defaultLanguage"];
+
+    /*----------------------------------********---------------------------------*/
 
 } else {
 

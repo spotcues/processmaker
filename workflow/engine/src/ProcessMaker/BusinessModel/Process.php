@@ -16,7 +16,7 @@ class Process
         "PRO_TIMEUNIT"              => array("type" => "string",   "required" => false, "empty" => false, "defaultValues" => array("DAYS"),               "fieldNameAux" => "processTimeunit"),
         "PRO_STATUS"                => array("type" => "string",   "required" => true,  "empty" => false, "defaultValues" => array("ACTIVE", "INACTIVE"), "fieldNameAux" => "processStatus"),
         "PRO_TYPE_DAY"              => array("type" => "string",   "required" => false, "empty" => true,  "defaultValues" => array(),                     "fieldNameAux" => "processTypeDay"),
-        "PRO_TYPE"                  => array("type" => "string",   "required" => false, "empty" => false, "defaultValues" => array("NORMAL"),             "fieldNameAux" => "processType"),
+        "PRO_TYPE"                  => array("type" => "string",   "required" => false, "empty" => false, "defaultValues" => array(), "fieldNameAux" => "processType"),
         "PRO_ASSIGNMENT"            => array("type" => "int",      "required" => false, "empty" => false, "defaultValues" => array(0, 1), "fieldNameAux" => "processAssignment"),
         "PRO_SHOW_MAP"              => array("type" => "int",      "required" => false, "empty" => false, "defaultValues" => array(0, 1), "fieldNameAux" => "processShowMap"),
         "PRO_SHOW_MESSAGE"          => array("type" => "int",      "required" => false, "empty" => false, "defaultValues" => array(0, 1), "fieldNameAux" => "processShowMessage"),
@@ -169,32 +169,32 @@ class Process
     public function throwExceptionIfDataNotMetFieldDefinition($arrayData, $arrayFieldDefinition, $arrayFieldNameForException, $flagValidateRequired = true)
     {
         try {
-
-            \G::LoadSystem('inputfilter');
-            $filter = new \InputFilter();
-
             if ($flagValidateRequired) {
                 foreach ($arrayFieldDefinition as $key => $value) {
                     $fieldName = $key;
 
-                    $fieldNameAux = (isset($arrayFieldNameForException[$arrayFieldDefinition[$fieldName]["fieldNameAux"]]))? $arrayFieldNameForException[$arrayFieldDefinition[$fieldName]["fieldNameAux"]] : "";
+                    $fieldNameAux = (isset($arrayFieldNameForException[$arrayFieldDefinition[$fieldName]['fieldNameAux']]))? $arrayFieldNameForException[$arrayFieldDefinition[$fieldName]['fieldNameAux']] : $fieldName;
 
                     if ($arrayFieldDefinition[$fieldName]["required"] && !isset($arrayData[$fieldName])) {
-                        throw new \Exception(\G::LoadTranslation("ID_UNDEFINED_VALUE_IS_REQUIRED", array($fieldNameAux)));
+                        throw new \Exception(\G::LoadTranslation('ID_UNDEFINED_VALUE_IS_REQUIRED', [$fieldNameAux]));
                     }
                 }
             }
 
-            $arrayType1 = array("int", "integer", "float", "real", "double", "bool", "boolean", "string", "date", "hour", "datetime");
-            $arrayType2 = array("array", "object");
+            $arrayType1 = [
+                'int', 'integer', 'float', 'real', 'double',
+                'bool', 'boolean',
+                'string',
+                'date', 'hour', 'datetime'
+            ];
+            $arrayType2 = ['array', 'object'];
 
             foreach ($arrayData as $key => $value) {
                 $fieldName = $key;
                 $fieldValue = $value;
 
-
                 if (isset($arrayFieldDefinition[$fieldName])) {
-                    $fieldNameAux = (isset($arrayFieldNameForException[$arrayFieldDefinition[$fieldName]["fieldNameAux"]]))? $arrayFieldNameForException[$arrayFieldDefinition[$fieldName]["fieldNameAux"]] : "";
+                    $fieldNameAux = (isset($arrayFieldNameForException[$arrayFieldDefinition[$fieldName]['fieldNameAux']]))? $arrayFieldNameForException[$arrayFieldDefinition[$fieldName]['fieldNameAux']] : $fieldName;
 
                     $arrayFieldDefinition[$fieldName]["type"] = strtolower($arrayFieldDefinition[$fieldName]["type"]);
 
@@ -205,38 +205,43 @@ class Process
                     switch ($optionType) {
                         case 1:
                             //empty
-                            if (!$arrayFieldDefinition[$fieldName]["empty"] && trim($fieldValue) . "" == "") {
-                                throw new \Exception(\G::LoadTranslation("ID_INVALID_VALUE_CAN_NOT_BE_EMPTY", array($fieldNameAux)));
+                            if (!$arrayFieldDefinition[$fieldName]['empty'] && trim($fieldValue) == '') {
+                                throw new \Exception(\G::LoadTranslation('ID_INVALID_VALUE_CAN_NOT_BE_EMPTY', [$fieldNameAux]));
                             }
 
                             //defaultValues
-                            if (count($arrayFieldDefinition[$fieldName]["defaultValues"]) > 0 && !in_array($fieldValue, $arrayFieldDefinition[$fieldName]["defaultValues"], true)) {
-                                throw new \Exception(\G::LoadTranslation("ID_INVALID_VALUE_ONLY_ACCEPTS_VALUES", array($fieldNameAux, implode("|", $arrayFieldDefinition[$fieldName]["defaultValues"]))));
+                            if (isset($arrayFieldDefinition[$fieldName]['defaultValues']) &&
+                                !empty($arrayFieldDefinition[$fieldName]['defaultValues']) &&
+                                !in_array($fieldValue, $arrayFieldDefinition[$fieldName]['defaultValues'], true)
+                            ) {
+                                throw new \Exception(\G::LoadTranslation('ID_INVALID_VALUE_ONLY_ACCEPTS_VALUES', [$fieldNameAux, implode('|', $arrayFieldDefinition[$fieldName]['defaultValues'])]));
                             }
 
                             //type
-                            $fieldValue = (!is_array($fieldValue)) ? $fieldValue : '';
+                            $fieldValue = (!is_array($fieldValue))? $fieldValue : '';
+
                             if ($arrayFieldDefinition[$fieldName]["empty"] && $fieldValue . "" == "") {
                                 //
                             } else {
-                                $regexpDate = "[1-9]\d{3}\-(?:0[1-9]|1[012])\-(?:[0][1-9]|[12][0-9]|3[01])";
-                                $regexpHour = "(?:[0-1]\d|2[0-3])\:(?:[0-5]\d)(?:\:[0-5]\d)?";
-                                $regexpDatetime = $regexpDate . "\s" . $regexpHour;
+                                $regexpDate = \ProcessMaker\Util\DateTime::REGEXPDATE;
+                                $regexpTime = \ProcessMaker\Util\DateTime::REGEXPTIME;
+
+                                $regexpDatetime = $regexpDate . '\s' . $regexpTime;
 
                                 switch ($arrayFieldDefinition[$fieldName]["type"]) {
                                     case "date":
                                         if (!preg_match("/^" . $regexpDate . "$/", $fieldValue)) {
-                                            throw new \Exception(\G::LoadTranslation("ID_INVALID_VALUE", array($fieldNameAux)));
+                                            throw new \Exception(\G::LoadTranslation('ID_INVALID_VALUE', [$fieldNameAux]));
                                         }
                                         break;
                                     case "hour":
-                                        if (!preg_match("/^" . $regexpHour . "$/", $fieldValue)) {
-                                            throw new \Exception(\G::LoadTranslation("ID_INVALID_VALUE", array($fieldNameAux)));
+                                        if (!preg_match('/^' . $regexpTime . '$/', $fieldValue)) {
+                                            throw new \Exception(\G::LoadTranslation('ID_INVALID_VALUE', [$fieldNameAux]));
                                         }
                                         break;
                                     case "datetime":
                                         if (!preg_match("/^" . $regexpDatetime . "$/", $fieldValue)) {
-                                            throw new \Exception(\G::LoadTranslation("ID_INVALID_VALUE", array($fieldNameAux)));
+                                            throw new \Exception(\G::LoadTranslation('ID_INVALID_VALUE', [$fieldNameAux]));
                                         }
                                         break;
                                 }
@@ -251,7 +256,7 @@ class Process
                                     //type
                                     if (!is_array($fieldValue)) {
                                         if ($fieldValue != "" && !preg_match("/^" . $regexpArray1 . ".*" . $regexpArray2 . "$/", $fieldValue)) {
-                                            throw new \Exception(\G::LoadTranslation("ID_INVALID_VALUE_THIS_MUST_BE_ARRAY", array($fieldNameAux)));
+                                            throw new \Exception(\G::LoadTranslation('ID_INVALID_VALUE_THIS_MUST_BE_ARRAY', [$fieldNameAux]));
                                         }
                                     }
 
@@ -263,37 +268,38 @@ class Process
                                             $arrayAux = $fieldValue;
                                         }
 
-                                        if (is_string($fieldValue) && trim($fieldValue) . "" != "") {
+                                        if (is_string($fieldValue) && trim($fieldValue) != '') {
                                             //eval("\$arrayAux = $fieldValue;");
 
                                             if (preg_match("/^" . $regexpArray1 . "(.*)" . $regexpArray2 . "$/", $fieldValue, $arrayMatch)) {
                                                 if (trim($arrayMatch[1], " ,") != "") {
-                                                    $arrayAux = array(0);
+                                                    $arrayAux = [0];
                                                 }
                                             }
                                         }
 
-                                        if (count($arrayAux) == 0) {
-                                            throw new \Exception(\G::LoadTranslation("ID_INVALID_VALUE_CAN_NOT_BE_EMPTY", array($fieldNameAux)));
+                                        if (empty($arrayAux)) {
+                                            throw new \Exception(\G::LoadTranslation('ID_INVALID_VALUE_CAN_NOT_BE_EMPTY', [$fieldNameAux]));
                                         }
                                     }
 
                                     //defaultValues
-                                    if (count($arrayFieldDefinition[$fieldName]["defaultValues"]) > 0) {
-                                        $arrayAux = array();
+                                    if (isset($arrayFieldDefinition[$fieldName]['defaultValues']) &&
+                                        !empty($arrayFieldDefinition[$fieldName]['defaultValues'])
+                                    ) {
+                                        $arrayAux = [];
 
                                         if (is_array($fieldValue)) {
                                             $arrayAux = $fieldValue;
                                         }
 
-                                        if (is_string($fieldValue) && trim($fieldValue) . "" != "") {
-                                            $fieldValue = $filter->validateInput($fieldValue);
+                                        if (is_string($fieldValue) && trim($fieldValue) != '') {
                                             eval("\$arrayAux = $fieldValue;");
                                         }
 
                                         foreach ($arrayAux as $value) {
                                             if (!in_array($value, $arrayFieldDefinition[$fieldName]["defaultValues"], true)) {
-                                                throw new \Exception(\G::LoadTranslation("ID_INVALID_VALUE_ONLY_ACCEPTS_VALUES", array($fieldNameAux, implode("|", $arrayFieldDefinition[$fieldName]["defaultValues"]))));
+                                                throw new \Exception(\G::LoadTranslation('ID_INVALID_VALUE_ONLY_ACCEPTS_VALUES', [$fieldNameAux, implode('|', $arrayFieldDefinition[$fieldName]['defaultValues'])]));
                                             }
                                         }
                                     }
@@ -320,10 +326,10 @@ class Process
     {
         try {
             foreach ($arrayData as $key => $value) {
-                $nameForException = (isset($arrayFieldNameForException[$key]))? $arrayFieldNameForException[$key] : "";
+                $nameForException = (isset($arrayFieldNameForException[$key]))? $arrayFieldNameForException[$key] : $key;
 
                 if (!is_null($value) && ($value . "" == "" || !preg_match("/^(?:\+|\-)?(?:0|[1-9]\d*)$/", $value . "") || (int)($value) < 0)) {
-                    throw new \Exception(\G::LoadTranslation("ID_INVALID_VALUE_EXPECTING_POSITIVE_INTEGER", array($nameForException)));
+                    throw new \Exception(\G::LoadTranslation('ID_INVALID_VALUE_EXPECTING_POSITIVE_INTEGER', [$nameForException]));
                 }
             }
         } catch (\Exception $e) {
