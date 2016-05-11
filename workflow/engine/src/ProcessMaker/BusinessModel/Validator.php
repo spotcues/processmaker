@@ -374,5 +374,38 @@ class Validator
             throw $e;
         }
     }
+
+    /**
+     * Validate pager data
+     *
+     * @param array $arrayData                     Data
+     * @param array $arrayVariableNameForException Variable name for exception
+     *
+     * @return mixed Returns TRUE when pager data is valid, Message Error otherwise
+     */
+    public static function validatePagerDataByPagerDefinition($arrayPagerData, $arrayVariableNameForException)
+    {
+        try {
+            foreach ($arrayPagerData as $key => $value) {
+                $nameForException = (isset($arrayVariableNameForException[$key]))?
+                    $arrayVariableNameForException[$key] : $key;
+
+                if (!is_null($value) &&
+                    (
+                        (string)($value) == '' ||
+                        !preg_match('/^(?:\+|\-)?(?:0|[1-9]\d*)$/', $value . '') ||
+                        (int)($value) < 0
+                    )
+                ) {
+                    return \G::LoadTranslation('ID_INVALID_VALUE_EXPECTING_POSITIVE_INTEGER', [$nameForException]);
+                }
+            }
+
+            //Return
+            return true;
+        } catch (\Exception $e) {
+            throw $e;
+        }
+    }
 }
 

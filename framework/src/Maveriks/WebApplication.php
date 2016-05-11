@@ -280,10 +280,6 @@ class WebApplication
 
 
 
-                Util\Logger::log("REST API Dispatching url: ".$_SERVER["REQUEST_METHOD"]." ".$request["uri"]);
-
-
-
                 if (isset($_SERVER["HTTP_X_REQUESTED_WITH"]) && strtoupper($_SERVER["HTTP_X_REQUESTED_WITH"]) == 'MULTIPART') {
 
                     $this->dispatchMultipleApiRequest($request["uri"], $request["version"]);
@@ -294,7 +290,7 @@ class WebApplication
 
                 }
 
-                Util\Logger::log("API::End Dispatch");
+
 
                 break;
 

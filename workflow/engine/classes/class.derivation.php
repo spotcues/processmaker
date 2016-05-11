@@ -98,6 +98,10 @@ class Derivation
 
     var $case;
 
+    protected $flagControl;
+
+    protected $flagControlMulInstance;
+
 
 
     /**
@@ -596,19 +600,15 @@ class Derivation
 
             if (empty($arrayNextTask)) {
 
-              $oProcess = new Process();
+                $bpmn = new \ProcessMaker\Project\Bpmn();
 
-              $oProcessFieds = $oProcess->Load( $_SESSION['PROCESS'] );
 
-              if(isset($oProcessFieds['PRO_BPMN']) && $oProcessFieds['PRO_BPMN'] == 1){
 
-                throw new Exception(G::LoadTranslation("ID_NO_DERIVATION_BPMN_RULE"));
+                throw new Exception(G::LoadTranslation(
 
-              }else{
+                    'ID_NO_DERIVATION_' . (($bpmn->exists($arrayApplicationData['PRO_UID']))? 'BPMN_RULE' : 'RULE')
 
-                throw new Exception(G::LoadTranslation("ID_NO_DERIVATION_RULE"));
-
-              }
+                ));
 
             }
 
@@ -1274,23 +1274,17 @@ class Derivation
 
     {
 
-        //Here the uid to next user
+        $user = new \ProcessMaker\BusinessModel\User();
 
-        $oC = new Criteria();
 
-        $oC->addSelectColumn( UsersPeer::USR_REPORTS_TO );
 
-        $oC->add( UsersPeer::USR_UID, $USR_UID );
+        $manager = $user->getUsersManager($USR_UID);
 
-        $oDataset = UsersPeer::doSelectRS( $oC );
 
-        $oDataset->setFetchmode( ResultSet::FETCHMODE_ASSOC );
 
-        $oDataset->next();
+        //Return
 
-        $aRow = $oDataset->getRow();
-
-        return $aRow['USR_REPORTS_TO'] != '' ? $aRow['USR_REPORTS_TO'] : $USR_UID;
+        return ($manager !== false)? $manager : $USR_UID;
 
     }
 
@@ -1460,7 +1454,43 @@ class Derivation
 
 
 
-            if($elementDestUid == "-1" || count($arrayElement) == 0){
+            //Search next is INTERMEDIATE and MESSAGECATCH
+
+            $searchMessageCatch = false;
+
+            if($elementDestType === 'bpmnEvent'){
+
+                $c = new Criteria("workflow");
+
+                $c->addSelectColumn(BpmnEventPeer::EVN_TYPE);
+
+                $c->addSelectColumn(BpmnEventPeer::EVN_MARKER);
+
+                $c->add(BpmnEventPeer::EVN_UID, $elementDestUid);
+
+                $c->add(BpmnEventPeer::PRJ_UID, $arrayApplicationData["PRO_UID"]);
+
+                $rsC = RoutePeer::doSelectRS($c);
+
+                $rsC->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+
+
+
+                if($rsC->next()){
+
+                    $row = $rsC->getRow();
+
+                    if($row['EVN_TYPE'] === 'INTERMEDIATE' && $row['EVN_MARKER'] === 'MESSAGECATCH'){
+
+                        $searchMessageCatch = true;
+
+                    }
+
+                }
+
+            }
+
+            if($elementDestUid === '-1' || count($arrayElement) === 0 || $searchMessageCatch){
 
                $arrayElement = $this->throwElementToEnd($elementOriginUid, $rouCondition);
 
@@ -1472,7 +1502,7 @@ class Derivation
 
                 switch ($value[1]) {
 
-                    case "bpmnEvent":
+                    case 'bpmnEvent':
 
                         if ($arrayEventExecute[$positionEventExecute]) {
 
@@ -1482,7 +1512,7 @@ class Derivation
 
                             if (!is_null($event)) {
 
-                                if (preg_match("/^(?:END|INTERMEDIATE)$/", $event->getEvnType()) && $event->getEvnMarker() == "MESSAGETHROW") {
+                                if (preg_match("/^(?:END|INTERMEDIATE)$/", $event->getEvnType()) && $event->getEvnMarker() === 'MESSAGETHROW') {
 
                                     //Message-Application throw
 
@@ -1492,7 +1522,7 @@ class Derivation
 
 
 
-                                if (preg_match("/^(?:END|INTERMEDIATE)$/", $event->getEvnType()) && $event->getEvnMarker() == "EMAIL") {
+                                if (preg_match("/^(?:END|INTERMEDIATE)$/", $event->getEvnType()) && $event->getEvnMarker() === 'EMAIL') {
 
                                     //Email-Event throw
 
@@ -1506,9 +1536,9 @@ class Derivation
 
                         break;
 
-                    case "bpmnGateway":
+                    case 'bpmnGateway':
 
-                        $positionEventExecute = "AFTER";
+                        $positionEventExecute = 'AFTER';
 
                         break;
 
@@ -2048,7 +2078,7 @@ class Derivation
 
                             //Throw Events
 
-                            $this->throwEventsBetweenElementOriginAndElementDest($currentDelegation["TAS_UID"], $nextDel["TAS_UID_DUMMY"], $appFields, $flagFirstIteration, true);
+                            $this->throwEventsBetweenElementOriginAndElementDest($currentDelegation["TAS_UID"], $nextDel["TAS_UID_DUMMY"], $appFields, $flagFirstIteration, true, $nextDel['ROU_CONDITION']);
 
                         } else {
 
@@ -2150,9 +2180,31 @@ class Derivation
 
                                     $arrayOpenThread = ($flagTaskIsMultipleInstance && $flagTaskAssignTypeIsMultipleInstance)? $this->case->searchOpenPreviousTasks($currentDelegation["TAS_UID"], $currentDelegation["APP_UID"]) : array();
 
-                                    $arrayOpenThread = array_merge($arrayOpenThread, $this->case->getOpenSiblingThreads($nextDel["TAS_UID"], $currentDelegation["APP_UID"], $currentDelegation["DEL_INDEX"], $currentDelegation["TAS_UID"]));
+                                    $arraySiblings = $this->case->getOpenSiblingThreads($nextDel["TAS_UID"], $currentDelegation["APP_UID"], $currentDelegation["DEL_INDEX"], $currentDelegation["TAS_UID"]);
+
+                                    if(is_array($arrayOpenThread) && is_array($arraySiblings)){
+
+                                        $arrayOpenThread = array_merge($arrayOpenThread, $arraySiblings);
+
+                                    }
 
                                     $canDerivate = empty($arrayOpenThread);
+
+                                    if($canDerivate){
+
+                                        if($flagTaskIsMultipleInstance && $flagTaskAssignTypeIsMultipleInstance){
+
+                                            $this->flagControlMulInstance = true;
+
+                                        }else{
+
+                                            $this->flagControl = true;
+
+                                        }
+
+                                    }
+
+
 
                                     break;
 
@@ -2186,9 +2238,17 @@ class Derivation
 
                     if ($canDerivate) {
 
+                        $rouCondition = '';
+
+                        if(isset($nextDel['ROU_CONDITION'])){
+
+                            $rouCondition = $nextDel['ROU_CONDITION'];
+
+                        }
+
                         //Throw Events
 
-                        $this->throwEventsBetweenElementOriginAndElementDest($currentDelegation["TAS_UID"], $nextDel["TAS_UID"], $appFields, $flagFirstIteration, true);
+                        $this->throwEventsBetweenElementOriginAndElementDest($currentDelegation["TAS_UID"], $nextDel["TAS_UID"], $appFields, $flagFirstIteration, true, $rouCondition);
 
 
 
@@ -2252,9 +2312,11 @@ class Derivation
 
                                 $iNewDelIndex = $this->doDerivation($currentDelegation, $nextDel, $appFields, $aSP);
 
+                                if($iNewDelIndex !== 0){
 
+                                    $arrayDerivationResult[] = ['DEL_INDEX' => $iNewDelIndex, 'TAS_UID' => $nextDel['TAS_UID'], 'USR_UID' => (isset($nextDel['USR_UID']))? $nextDel['USR_UID'] : ''];
 
-                                $arrayDerivationResult[] = ['DEL_INDEX' => $iNewDelIndex, 'TAS_UID' => $nextDel['TAS_UID'], 'USR_UID' => (isset($nextDel['USR_UID']))? $nextDel['USR_UID'] : ''];
+                                }
 
                                 break;
 
@@ -2644,9 +2706,31 @@ class Derivation
 
             default:
 
+                $delPrevious = 0;
+
+                if($this->flagControlMulInstance){
+
+                    $criteriaMulti = new Criteria("workflow");
+
+                    $criteriaMulti->addSelectColumn(AppDelegationPeer::DEL_PREVIOUS);
+
+                    $criteriaMulti->add(AppDelegationPeer::TAS_UID, $currentDelegation['TAS_UID'], Criteria::EQUAL);
+
+                    $criteriaMultiR = AppDelegationPeer::doSelectRS($criteriaMulti);
+
+                    $criteriaMultiR->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+
+                    $criteriaMultiR->next();
+
+                    $row = $criteriaMultiR->getRow();
+
+                    $delPrevious = $row['DEL_PREVIOUS'];
+
+                }
+
                 // Create new delegation
 
-                $iNewDelIndex = $this->case->newAppDelegation( $appFields['PRO_UID'], $currentDelegation['APP_UID'], $nextDel['TAS_UID'], (isset( $nextDel['USR_UID'] ) ? $nextDel['USR_UID'] : ''), $currentDelegation['DEL_INDEX'], $nextDel['DEL_PRIORITY'], $delType, $iAppThreadIndex, $nextDel );
+                $iNewDelIndex = $this->case->newAppDelegation( $appFields['PRO_UID'], $currentDelegation['APP_UID'], $nextDel['TAS_UID'], (isset( $nextDel['USR_UID'] ) ? $nextDel['USR_UID'] : ''), $currentDelegation['DEL_INDEX'], $nextDel['DEL_PRIORITY'], $delType, $iAppThreadIndex, $nextDel, $this->flagControl, $this->flagControlMulInstance, $delPrevious);
 
                 break;
 

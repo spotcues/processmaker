@@ -118,7 +118,9 @@ class TimerEvent extends Api
     public function doPutTimerEvent($prj_uid, $tmrevn_uid, array $request_data)
     {
         try {
-            $arrayData = $this->timerEvent->update($tmrevn_uid, $request_data);
+            \ProcessMaker\BusinessModel\Validator::throwExceptionIfDataNotMetIso8601Format($request_data, $this->arrayFieldIso8601);
+
+            $arrayData = $this->timerEvent->update($tmrevn_uid, \ProcessMaker\Util\DateTime::convertDataToUtc($request_data, $this->arrayFieldIso8601));
         } catch (\Exception $e) {
             throw new RestException(Api::STAT_APP_EXCEPTION, $e->getMessage());
         }

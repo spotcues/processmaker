@@ -24,6 +24,10 @@ if ($RBAC->userCanAccess( 'PM_EDITPERSONALINFO' ) == 1) { //he has permitions fo
 
 }
 
+$canEditCalendar = $RBAC->userCanAccess('PM_EDITPERSONALINFO') == 1 &&
+
+        $RBAC->userCanAccess('PM_EDITPERSONALINFO_CALENDAR') == 1;
+
 
 
 //calculating the max upload file size;
@@ -77,6 +81,8 @@ $oHeadPublisher->assign( 'infoMode', true );
 $oHeadPublisher->assign( 'EDITPROFILE', 1);
 
 $oHeadPublisher->assign( 'canEdit', $canEdit );
+
+$oHeadPublisher->assign('canEditCalendar', $canEditCalendar);
 
 $oHeadPublisher->assign( 'MAX_FILES_SIZE', ' (' . $UPLOAD_MAX_SIZE . ') ' );
 

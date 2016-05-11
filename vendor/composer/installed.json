@@ -46,14 +46,14 @@
     },
     {
         "name": "colosa/pmUI",
-        "version": "3.0.1.7-dev",
-        "version_normalized": "3.0.1.7-dev",
+        "version": "3.0.1.8-dev",
+        "version_normalized": "3.0.1.8-dev",
         "source": {
             "type": "git",
             "url": "git@bitbucket.org:colosa/pmui.git",
-            "reference": "4b43a3747d8e70788c1163b166d08e5ae81f968d"
+            "reference": "851ee86a1006df111ee8b281bf2b033cdbcc6f0b"
         },
-        "time": "2015-11-25 14:03:05",
+        "time": "2016-02-26 21:41:50",
         "type": "library",
         "installation-source": "source",
         "description": "JS UI Library",
@@ -64,17 +64,17 @@
     },
     {
         "name": "colosa/MichelangeloFE",
-        "version": "3.0.1.7-dev",
-        "version_normalized": "3.0.1.7-dev",
+        "version": "3.0.1.8-dev",
+        "version_normalized": "3.0.1.8-dev",
         "source": {
             "type": "git",
             "url": "git@bitbucket.org:colosa/michelangelofe.git",
-            "reference": "4e32cb2a2dce6e0dbe697634f9b1abaa4c1dae62"
+            "reference": "7e889f23a7e8397c052a4d9ae6331334b57c9d48"
         },
         "require": {
-            "colosa/pmui": "3.0.1.7-dev"
+            "colosa/pmui": "3.0.1.8-dev"
         },
-        "time": "2015-11-30 23:51:44",
+        "time": "2016-03-09 20:18:44",
         "type": "library",
         "installation-source": "source",
         "description": "ProcessMaker Michelangelo Front End",
@@ -85,20 +85,69 @@
     },
     {
         "name": "colosa/pmDynaform",
-        "version": "3.0.1.7-dev",
-        "version_normalized": "3.0.1.7-dev",
+        "version": "3.0.1.8-dev",
+        "version_normalized": "3.0.1.8-dev",
         "source": {
             "type": "git",
             "url": "git@bitbucket.org:colosa/pmdynaform.git",
-            "reference": "a785a3322788a09c403e9d21cb1629e34582da23"
+            "reference": "c2008027bd721ac42e4a7d98cc773f82ac25921e"
         },
-        "time": "2015-11-30 22:02:05",
+        "time": "2016-03-15 17:46:33",
         "type": "library",
         "installation-source": "source",
         "description": "JS Library to render ProcessMaker Dynaforms",
         "homepage": "http://processmaker.com",
         "keywords": [
             "js lib ProcessMaker Dynaforms"
+        ]
+    },
+    {
+        "name": "dapphp/securimage",
+        "version": "3.6.4",
+        "version_normalized": "3.6.4.0",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/dapphp/securimage.git",
+            "reference": "2ed50264ae5541fec8d8c79e4c9b6235a7cfd506"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/dapphp/securimage/zipball/2ed50264ae5541fec8d8c79e4c9b6235a7cfd506",
+            "reference": "2ed50264ae5541fec8d8c79e4c9b6235a7cfd506",
+            "shasum": ""
+        },
+        "require": {
+            "ext-gd": "*",
+            "php": ">=5.2.0"
+        },
+        "suggest": {
+            "ext-pdo": "For database storage support",
+            "ext-pdo_mysql": "For MySQL database support",
+            "ext-pdo_sqlite": "For SQLite3 database support"
+        },
+        "time": "2016-03-04 21:08:00",
+        "type": "library",
+        "installation-source": "dist",
+        "autoload": {
+            "classmap": [
+                "securimage.php"
+            ]
+        },
+        "notification-url": "http://packagist.org/downloads/",
+        "license": [
+            "BSD"
+        ],
+        "authors": [
+            {
+                "name": "Drew Phillips",
+                "email": "drew@drew-phillips.com"
+            }
+        ],
+        "description": "PHP CAPTCHA Library",
+        "homepage": "https://www.phpcaptcha.org",
+        "keywords": [
+            "captcha",
+            "security"
         ]
     },
     {

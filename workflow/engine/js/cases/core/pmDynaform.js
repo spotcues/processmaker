@@ -7,6 +7,19 @@ function ajax_post(action, form, method, callback, asynchronous) {
 function dynaFormChanged(frm) {
     return false;
 }
+/**
+ * Create fake submit button to force send data formpost action
+ * and after this is destryed
+ * @param formStep
+ */
+function submitNextStep(formStep) {
+    var btnSubmit = $('<button>');
+    btnSubmit.attr("type","submit");
+    btnSubmit.hide();
+    $(formStep).append(btnSubmit);
+    btnSubmit.click();
+    btnSubmit.remove();
+}
 $(window).load(function () {
     if (pm_run_outside_main_app === 'true') {
         if (parent.showCaseNavigatorPanel) {
@@ -44,7 +57,7 @@ $(window).load(function () {
         		action = "cases_SaveData?UID=" + dyn_uid + "&APP_UID=" + app_uid;
         	}
             url = location.protocol + '//' + location.host;
-            
+
             url += '/sys' + workspace + '/en/neoclassic/cases/' + action;
             method = 'POST';
         }
@@ -55,7 +68,7 @@ $(window).load(function () {
         };
     }
     var data = jsondata;
-    window.project = new PMDynaform.core.Project({
+    window.dynaform = new PMDynaform.core.Project({
         data: data,
         onBeforePrintHandler : function () {
             var nodeClone = $(".pmdynaform-container").clone();
@@ -71,46 +84,52 @@ $(window).load(function () {
         },
         formAjax: loadAjaxParams(),
         keys: {
-            server: location.host,
+            server: httpServerHostname,
             projectId: prj_uid,
             workspace: workspace
         },
         token: credentials,
         submitRest: false,
         onLoad: function () {
-            var dynaformname = document.createElement("input");
+            var dynaformname = document.createElement("input"),
+                appuid,
+                arrayRequired,
+                form,
+                dyn_forward;
             dynaformname.type = "hidden";
             dynaformname.name = "__DynaformName__";
             dynaformname.value = __DynaformName__;
-            var appuid = document.createElement("input");
+            appuid = document.createElement("input");
             appuid.type = "hidden";
             appuid.name = "APP_UID";
             appuid.value = app_uid;
-            var arrayRequired = document.createElement("input");
+            arrayRequired = document.createElement("input");
             arrayRequired.type = "hidden";
             arrayRequired.name = "DynaformRequiredFields";
             arrayRequired.value = fieldsRequired;
-            var form = document.getElementsByTagName("form")[0];
-            if(sesi.search("gmail") != -1){
-            	form.action = filePost ? filePost : "cases_SaveData?UID=" + dyn_uid + "&APP_UID=" + app_uid + "&gmail=1";
-            } else {
-            	form.action = filePost ? filePost : "cases_SaveData?UID=" + dyn_uid + "&APP_UID=" + app_uid;
-            }
-            form.method = "post";
-            form.setAttribute("encType", "multipart/form-data");
-            form.appendChild(dynaformname);
-            form.appendChild(appuid);
-            form.appendChild(arrayRequired);
-            var dyn_forward = document.getElementById("dyn_forward");
-            dyn_forward.onclick = function () {
-                if (window.project.getForms()[0].isValid()) {
-                    form.submit();
+            form = document.getElementsByTagName("form")[0];
+            if (form) {
+                if(sesi.search("gmail") != -1){
+                    form.action = filePost ? filePost : "cases_SaveData?UID=" + dyn_uid + "&APP_UID=" + app_uid + "&gmail=1";
+                } else {
+                    form.action = filePost ? filePost : "cases_SaveData?UID=" + dyn_uid + "&APP_UID=" + app_uid;
                 }
-                return false;
-            };
-            if (triggerDebug === true) {
-                showdebug();
+                form.method = "post";
+                form.setAttribute("encType", "multipart/form-data");
+                form.appendChild(dynaformname);
+                form.appendChild(appuid);
+                form.appendChild(arrayRequired);
+                dyn_forward = document.getElementById("dyn_forward");
+                dyn_forward.onclick = function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    submitNextStep(form);
+                };
+                if (triggerDebug === true) {
+                    showdebug();
+                }
             }
+
         }
     });
 });

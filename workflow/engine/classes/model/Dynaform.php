@@ -173,6 +173,28 @@ class Dynaform extends BaseDynaform
 
             if (isset($aData["DYN_CONTENT"])) {
                 $this->setDynContent($aData["DYN_CONTENT"]);
+            } else {
+                $this->setDynContent(G::json_encode(array(
+                            "name" => $aData["DYN_TITLE"],
+                            "description" => $aData["DYN_DESCRIPTION"],
+                            "items" => array(array(
+                                    "type" => "form",
+                                    "variable" => "",
+                                    "var_uid" => "",
+                                    "dataType" => "",
+                                    "id" => $this->getDynUid(),
+                                    "name" => $aData["DYN_TITLE"],
+                                    "description" => $aData["DYN_DESCRIPTION"],
+                                    "mode" => "edit",
+                                    "script" => "",
+                                    "language" => "en",
+                                    "externalLibs" => "",
+                                    "printable" => false,
+                                    "items" => array(),
+                                    "variables" => array()
+                                )
+                            )
+                )));
             }
             if (isset($aData["DYN_LABEL"])) {
                 $this->setDynLabel($aData["DYN_LABEL"]);
@@ -181,10 +203,6 @@ class Dynaform extends BaseDynaform
                 $aData['DYN_VERSION'] = 0;
             }
             $this->setDynVersion( $aData['DYN_VERSION'] );
-            if (!isset($aData['DYN_CONTENT'])) {
-                $aData['DYN_CONTENT'] = "{}";
-            }
-            $this->setDynContent( $aData['DYN_CONTENT'] );
             if ($this->validate()) {
                 $con->begin();
                 $res = $this->save();

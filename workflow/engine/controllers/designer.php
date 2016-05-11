@@ -132,9 +132,9 @@ class Designer extends Controller
 
 
 
-        $this->setVar('prj_uid', $proUid);
+        $this->setVar('prj_uid', htmlspecialchars($proUid));
 
-        $this->setVar('app_uid', $appUid);
+        $this->setVar('app_uid', htmlspecialchars($appUid));
 
         $this->setVar('consolidated', $consolidated);
 
@@ -153,6 +153,8 @@ class Designer extends Controller
         $this->setVar("SYS_LANG", SYS_LANG);
 
         $this->setVar("SYS_SKIN", SYS_SKIN);
+
+        $this->setVar('HTTP_SERVER_HOSTNAME', System::getHttpServerHostnameRequestsFrontEnd());
 
 
 
@@ -272,15 +274,15 @@ class Designer extends Controller
 
 
 
-            if ($user->checkPermission($row['USER_ID'], 'PM_FACTORY')) {
+            if ($user->checkPermission($row['USER_ID'], 'PM_FACTORY') || $proReadOnly == 'true') {
 
                 $this->setView('designer/index');
 
             } else {
 
-                $this->setVar('accessDenied', G::LoadTranslation('ID_ACCESS_DENIED'));
+                G::header('Location: /errors/error403.php');
 
-                $this->setView('designer/accessDenied');
+                die();
 
             }
 

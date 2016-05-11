@@ -71,7 +71,8 @@ class System
         'safari_cookie_lifetime' => 1,
         'error_reporting' => "",
         'display_errors' => 'On',
-        'system_utc_time_zone' => 0
+        'system_utc_time_zone' => 0,
+        'server_hostname_requests_frontend' => ''
     );
 
     /**
@@ -1163,6 +1164,29 @@ class System
         return $config;
     }
 
+    /*
+    * Get information about the queries permitted and tables we can modified
+    * @access public
+    * @param string $globalIniFile
+    * @return array of execute query Black list
+    */
+    public static function getQueryBlackList($globalIniFile = ''){
+        $config = array();
+        if (empty($globalIniFile)) {
+            $blackListIniFile = PATH_CONFIG . 'execute-query-blacklist.ini';
+            $sysTablesIniFile = PATH_CONFIG . 'system-tables.ini';
+        }
+        // read the global execute-query-blacklist.ini configuration file
+        if(file_exists($blackListIniFile)){
+            $config = @parse_ini_file($blackListIniFile);
+        }
+        if(file_exists($sysTablesIniFile)){
+            $systemTables = @parse_ini_file($sysTablesIniFile);
+            $config['tables'] = $systemTables['tables'];
+        }
+        return $config;
+    }
+
     public function updateIndexFile ($conf)
     {
         if (! file_exists( PATH_HTML . 'index.html' )) {
@@ -1228,6 +1252,26 @@ class System
         }
 
         return self::$debug;
+    }
+
+    /**
+     * Get the complete name of the server host configured for requests Front-End (e.g. https://127.0.0.1:81)
+     *
+     * @return string Returns an string with the complete name of the server host configured for requests Front-End
+     */
+    public static function getHttpServerHostnameRequestsFrontEnd()
+    {
+        try {
+            $arraySystemConfiguration = self::getSystemConfiguration();
+
+            $serverHostname = $arraySystemConfiguration['server_hostname_requests_frontend'];
+            $serverHostname = ($serverHostname != '')? $serverHostname : $_SERVER['HTTP_HOST'];
+
+            //Return
+            return ((G::is_https())? 'https://' : 'http://') . $serverHostname;
+        } catch (Exception $e) {
+            throw $e;
+        }
     }
 }
 // end System class

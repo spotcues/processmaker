@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <dynaForm enabletemplate="1" name="cases_Resume" type="xmlform" width="500px" labelWidth="100px">
-  <IE_VERSION type="hidden" />  
+  <isIE type="hidden" />
   <TITLE1 type="title">
     <en><![CDATA[Claim Case]]></en>
   </TITLE1>
@@ -42,7 +42,7 @@
   </BTN_CANCEL>
   <JS type="javascript"> <![CDATA[
     var dynaformOnload = function() {
-        if(getField("IE_VERSION").value == 11) {
+        if(getField("isIE").value == "true") {
             getField("BTN_CANCEL").setAttribute("onclick","");
             getField("BTN_CANCEL").onclick = function(){;
                 try {

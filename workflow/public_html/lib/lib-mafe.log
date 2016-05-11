@@ -1,30 +1,30 @@
-[4 days ago] de8ea76  PM-4503: No deja guardar la configuraciÃ³n de TimerEvent por 'campos requeridos' que no se usan. <marcelo.cuiza>
-[4 days ago] 80de7cd  PM-4499: TimerEvent > Al presionar el boton "Today" se desaparece el calendario <rodrigo quelca>
-[4 days ago] 97bc541  PM-4486 <Roly Rudy Gutierrez Pinto>
-[6 days ago] fd35ecc  PM-4484 <Roly Rudy Gutierrez Pinto>
-[12 days ago] b328c28  PM-4297 : The row in table TASK doesnâ€™t exist!  - Valeogit status <jonathan>
-[13 days ago] 12eb886  PM-4393: Quick Tool Bar > Los Gateways no ocultan el quick Tool Bar <rodrigo quelca>
-[2 weeks ago] 6924331  PM-4376:No hay validacion al conectar "MessageEmailEvent" con "StartReceiveMessage" <rodrigo quelca>
-[2 weeks ago] 96d28d4  PM-4313: (Dynaforms) Se debera bloquear la pantalla hasta que el usuario asigne o no una variable al control asignado <marcelo.cuiza>
-[2 weeks ago] b0b50c4  PM-4312 <Roly Rudy Gutierrez Pinto>
-[2 weeks ago] 9f996de  PM-4310 <Roly Rudy Gutierrez Pinto>
-[3 weeks ago] 8a31683  PM-4305 <Roly Rudy Gutierrez Pinto>
-[3 weeks ago] 2ed4360  PM-4304 <Roly Rudy Gutierrez Pinto>
-[3 weeks ago] 7d42fcd  GI-146 ProcessMap no se despliega en la adecuaciÃ³n... SOLVED <Marco Antonio Nina Mena>
-[3 weeks ago] 5c7d5dc  PM-4279 <Paula V. Quispe>
-[3 weeks ago] ee3b3e2  PM-3767 <Roly Rudy Gutierrez Pinto>
-[3 weeks ago] 7e5f343  PM-4244 <Roly Rudy Gutierrez Pinto>
-[3 weeks ago] 4d6d100  PM-4246 El archivo composer.lock no se encuentra actualizado. <Marco A. Nina Mena>
-[3 weeks ago] 7b85793  PM-4235 <Roly Rudy Gutierrez Pinto>
-[4 weeks ago] 85a6c32  PM-4184 <Paula V. Quispe>
-[4 weeks ago] 6286806  PM-4143 <Roly Rudy Gutierrez Pinto>
-[4 weeks ago] 81b70e2  PM-3115 <Roly Rudy Gutierrez Pinto>
-[4 weeks ago] 93d4da8  PM-3857:En la ventana de Supervisors, la sección Available Objects, se muestra desalineado <rodrigo quelca>
-[4 weeks ago] 3025713  PM-4166: Parallel multiinstance Assignment rule Value based, la lista de usuarios se despliega <marcelo.cuiza>
-[4 weeks ago] 40aa9c1  PM-4084: File Variable, set related input document property as required <marcelo.cuiza>
-[4 weeks ago] 15236d4  PM-4151: CLONE 3.0.1.6- BPMN Designer: La conexión entre un black box pool y un event, hace que no se pueda modificar la posicion del pool <rodrigo quelca>
-[4 weeks ago] 70770a9  PM-4112: Añadir soporte de variables al campo subject en Intermediate/end email events <marcelo.cuiza>
-[4 weeks ago] 84efdd4  PM-3915: Template dynamico de opciones en el actions by email Branch 3.0.1.x <marcelo.cuiza>
-[5 weeks ago] a057700  PM-4134: Agregar validación cuando se cambian los markers y se tienen casos unassigned <rodrigo quelca>
-[5 weeks ago] 6660388  PM-4123 <Paula V. Quispe>
-[5 weeks ago] d9fd7db  PM-4128:Can't edit variable option / label <Richard Yujra>
+[2 hours ago] 5dbaad0  HOR-969: Translation text changed as requested. <Gustavo Adolfo Cruz Laura>
+[5 days ago] 63aa65b  OM-666: No es posible jalar un intermediate timer event al lane de un pool en 3.0.1.8 (build 28) <Rodrigo Quelca>
+[11 days ago] 6eb3371  Gateway Exclusive Convergente: Debe tener la condificional true <richardnoel>
+[13 days ago] 549f450  OM-508: TaskPropierties> No se muestra mensaje de campo requerido al tener otro(s) campo(s) requerido(s) en otra pestaÃ±a <duhnnie>
+[13 days ago] 0bacda4  HOR-872 <Roly Rudy Gutierrez Pinto>
+[2 weeks ago] ce6d348  OM-598: Mensaje de campo requerido, innecesario. <duhnnie>
+[3 weeks ago] fc01543  BY-249 Fields Average y SDV aun se muestran <Marco A. Nina Mena>
+[3 weeks ago] 72feec1  OM-582 <richardnoel>
+[3 weeks ago] da79bca  HOR-785 <Roly Rudy Gutierrez Pinto>
+[3 weeks ago] 2b7dec8  OM-577: No se puede editar la propiedades del gateway inclusivo <Rodrigo Quelca>
+[4 weeks ago] f28f136  OM-557:[ProcessDesign] La corona del shape end se muestra desfazada si se crea en 50% <richardnoel>
+[4 weeks ago] a7e31ee  HOR-768 <Roly Rudy Gutierrez Pinto>
+[4 weeks ago] 826a03f  OM-552: Cambio en el mensaje de error, cuando un task o subprocess tiene espacios en blanco <alex_santos>
+[4 weeks ago] effb77b  OM-546: [Process Designer] Al poner y sacar un elemento del pool las flechas que unen los elementos BPMN se ven mal <Rodrigo Quelca>
+[4 weeks ago] e8581ae  OM-551:Activity allows white-space character(s) in the whole string as its name. <richardnoel>
+[4 weeks ago] 539e1e2  OM-548:Process Designer: After moving any shape on canvas it is necessary two click on it twice to select it. <richardnoel>
+[4 weeks ago] 76dda3a  OM-544: [processDesigner] Cuando se Suelta un elemeto dentro de un "LANE" se redimemsiona el contenedor <Rodrigo Quelca>
+[4 weeks ago] 801e39c  OM-383:Error de un gateway de tipo Inclusive Converging <richardnoel>
+[4 weeks ago] 969683c  OM-536:Date fields autopopulated <richardnoel>
+[5 weeks ago] 722f29b  MT-115: Selective Import/Export - Add license key to include it only in enterprise/enterprise edition <mcuiza>
+[5 weeks ago] f9245fc  OM-518: (WSSO) No permite hacer download de las templetas y public files <Rodrigo Quelca>
+[5 weeks ago] c02ad26  BY-242 Verificar variables windows.distribution - se cambio variable a window.enterprise <Marco A. Nina Mena>
+[5 weeks ago] 52a3f38  MT-106: Fix the component load for import and export processes. <Gustavo Adolfo Cruz Laura>
+[5 weeks ago] 0b86947  HOR-696 <Roly Rudy Gutierrez Pinto>
+[5 weeks ago] 92cf4b0  OM-511:No se visualiza bien la pantalla de 'Editor de HTML' <richardnoel>
+[5 weeks ago] c501811  (origin/MT-10, composer/MT-10) Removing the download dorpdown icon. <Gustavo Adolfo Cruz Laura>
+[5 weeks ago] 21e9f63  HOR-679 <Roly Rudy Gutierrez Pinto>
+[5 weeks ago] 99edcf9  MT10 <Gustavo Adolfo Cruz>
+[5 weeks ago] f4b4d64  MT-10 Marcas para version Enterprise. <dheeyi>
+[6 weeks ago] bf1f6b4  OM-493:Redireccion diferente al refrescar la pagina del diseÃ±ador <richardnoel>

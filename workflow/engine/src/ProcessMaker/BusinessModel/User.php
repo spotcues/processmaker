@@ -654,7 +654,71 @@ class User
 
     /**
 
-     * Get data of a from a record
+     * Get User record
+
+     *
+
+     * @param string $userUid                       Unique id of User
+
+     * @param array  $arrayVariableNameForException Variable name for exception
+
+     * @param bool   $throwException Flag to throw the exception if the main parameters are invalid or do not exist
+
+     *                               (TRUE: throw the exception; FALSE: returns FALSE)
+
+     *
+
+     * @return array Returns an array with User record, ThrowTheException/FALSE otherwise
+
+     */
+
+    public function getUserRecordByPk($userUid, array $arrayVariableNameForException, $throwException = true)
+
+    {
+
+        try {
+
+            $obj = \UsersPeer::retrieveByPK($userUid);
+
+
+
+            if (is_null($obj)) {
+
+                if ($throwException) {
+
+                    throw new \Exception(\G::LoadTranslation(
+
+                        'ID_USER_DOES_NOT_EXIST', [$arrayVariableNameForException['$userUid'], $userUid]
+
+                    ));
+
+                } else {
+
+                    return false;
+
+                }
+
+            }
+
+
+
+            //Return
+
+            return $obj->toArray(\BasePeer::TYPE_FIELDNAME);
+
+        } catch (\Exception $e) {
+
+            throw $e;
+
+        }
+
+    }
+
+
+
+    /**
+
+     * Get custom record
 
      *
 
@@ -662,11 +726,11 @@ class User
 
      *
 
-     * return array Return an array with data User
+     * @return array Return an array with custom record
 
      */
 
-    public function getUserDataFromRecord(array $record)
+    private function __getUserCustomRecordFromRecord(array $record)
 
     {
 
@@ -1526,7 +1590,7 @@ class User
 
             //Return
 
-            return (!$flagGetRecord)? $this->getUserDataFromRecord($row) : $row;
+            return (!$flagGetRecord)? $this->__getUserCustomRecordFromRecord($row) : $row;
 
         } catch (\Exception $e) {
 
@@ -2078,25 +2142,45 @@ class User
 
      *
 
-     * @param array  $arrayFilterData Data of the filters
+     * @param array  $arrayWhere     Where (Condition and filters)
 
-     * @param string $sortField       Field name to sort
+     * @param string $sortField      Field name to sort
 
-     * @param string $sortDir         Direction of sorting (ASC, DESC)
+     * @param string $sortDir        Direction of sorting (ASC, DESC)
 
-     * @param int    $start           Start
+     * @param int    $start          Start
 
-     * @param int    $limit           Limit
+     * @param int    $limit          Limit
+
+     * @param bool   $flagRecord     Flag that set the "getting" of record
+
+     * @param bool   $throwException Flag to throw the exception (This only if the parameters are invalid)
+
+     *                               (TRUE: throw the exception; FALSE: returns FALSE)
 
      *
 
-     * return array Return an array with all Users
+     * @return array Return an array with all Users, ThrowTheException/FALSE otherwise
 
      */
 
-    public function getUsers($arrayFilterData = null, $sortField = null, $sortDir = null, $start = null, $limit = null)
+    public function getUsers(
 
-    {
+        array $arrayWhere = null,
+
+        $sortField = null,
+
+        $sortDir = null,
+
+        $start = null,
+
+        $limit = null,
+
+        $flagRecord = true,
+
+        $throwException = true
+
+    ) {
 
         try {
 
@@ -2108,13 +2192,39 @@ class User
 
 
 
-            //Verify data
+            //Verify data and Set variables
 
-            $process = new \ProcessMaker\BusinessModel\Process();
+            $flag = !is_null($arrayWhere) && is_array($arrayWhere);
+
+            $flagCondition = $flag && isset($arrayWhere['condition']);
+
+            $flagFilter    = $flag && isset($arrayWhere['filter']);
 
 
 
-            $process->throwExceptionIfDataNotMetPagerVarDefinition(array("start" => $start, "limit" => $limit), array("start" => "start", "limit" => "limit"));
+            $result = \ProcessMaker\BusinessModel\Validator::validatePagerDataByPagerDefinition(
+
+                ['$start' => $start, '$limit' => $limit],
+
+                ['$start' => '$start', '$limit' => '$limit']
+
+            );
+
+
+
+            if ($result !== true) {
+
+                if ($throwException) {
+
+                    throw new \Exception($result);
+
+                } else {
+
+                    return false;
+
+                }
+
+            }
 
 
 
@@ -2124,7 +2234,7 @@ class User
 
 
 
-            if (!is_null($arrayFilterData) && is_array($arrayFilterData) && isset($arrayFilterData["filter"])) {
+            if ($flagFilter) {
 
                 $arrayAux = array(
 
@@ -2138,7 +2248,11 @@ class User
 
 
 
-                $filterName = $arrayAux[(isset($arrayFilterData["filterOption"]))? $arrayFilterData["filterOption"] : ""];
+                $filterName = $arrayAux[
+
+                    (isset($arrayWhere['filterOption']))? $arrayWhere['filterOption'] : ''
+
+                ];
 
             }
 
@@ -2146,7 +2260,7 @@ class User
 
             //Get data
 
-            if (!is_null($limit) && $limit . "" == "0") {
+            if (!is_null($limit) && (string)($limit) == '0') {
 
                 //Return
 
@@ -2158,7 +2272,7 @@ class User
 
                     "limit"     => (int)((!is_null($limit))? $limit : 0),
 
-                    $filterName => (!is_null($arrayFilterData) && is_array($arrayFilterData) && isset($arrayFilterData["filter"]))? $arrayFilterData["filter"] : "",
+                    $filterName => ($flagFilter)? $arrayWhere['filter'] : '',
 
                     "data"      => $arrayUser
 
@@ -2174,21 +2288,41 @@ class User
 
 
 
-            if (!is_null($arrayFilterData) && is_array($arrayFilterData) && isset($arrayFilterData["filter"]) && trim($arrayFilterData["filter"]) != "") {
+            if ($flagCondition && !empty($arrayWhere['condition'])) {
 
-                $arraySearch = array(
+                foreach ($arrayWhere['condition'] as $value) {
 
-                    ""      => "%" . $arrayFilterData["filter"] . "%",
+                    $criteria->add($value[0], $value[1], $value[2]);
 
-                    "LEFT"  => $arrayFilterData["filter"] . "%",
+                }
 
-                    "RIGHT" => "%" . $arrayFilterData["filter"]
+            } else {
 
-                );
+                $criteria->add(\UsersPeer::USR_STATUS, 'ACTIVE', \Criteria::EQUAL);
+
+            }
 
 
 
-                $search = $arraySearch[(isset($arrayFilterData["filterOption"]))? $arrayFilterData["filterOption"] : ""];
+            if ($flagFilter && trim($arrayWhere['filter']) != '') {
+
+                $arraySearch = [
+
+                    ''      => '%' . $arrayWhere['filter'] . '%',
+
+                    'LEFT'  => $arrayWhere['filter'] . '%',
+
+                    'RIGHT' => '%' . $arrayWhere['filter']
+
+                ];
+
+
+
+                $search = $arraySearch[
+
+                    (isset($arrayWhere['filterOption']))? $arrayWhere['filterOption'] : ''
+
+                ];
 
 
 
@@ -2206,39 +2340,19 @@ class User
 
 
 
-            $criteria->add(\UsersPeer::USR_STATUS, "ACTIVE", \Criteria::EQUAL);
-
-
-
             //Number records total
 
-            $criteriaCount = clone $criteria;
-
-
-
-            $criteriaCount->clearSelectColumns();
-
-            $criteriaCount->addSelectColumn("COUNT(" . \UsersPeer::USR_UID . ") AS NUM_REC");
-
-
-
-            $rsCriteriaCount = \UsersPeer::doSelectRS($criteriaCount);
-
-            $rsCriteriaCount->setFetchmode(\ResultSet::FETCHMODE_ASSOC);
-
-
-
-            $result = $rsCriteriaCount->next();
-
-            $row = $rsCriteriaCount->getRow();
-
-
-
-            $numRecTotal = (int)($row["NUM_REC"]);
+            $numRecTotal = \UsersPeer::doCount($criteria);
 
 
 
             //Query
+
+            $conf = new \Configurations();
+
+            $sortFieldDefault = \UsersPeer::TABLE_NAME . '.' . $conf->userNameFormatGetFirstFieldByUsersTable();
+
+
 
             if (!is_null($sortField) && trim($sortField) != "") {
 
@@ -2252,13 +2366,13 @@ class User
 
                 } else {
 
-                    $sortField = \UsersPeer::USR_FIRSTNAME;
+                    $sortField = $sortFieldDefault;
 
                 }
 
             } else {
 
-                $sortField = \UsersPeer::USR_FIRSTNAME;
+                $sortField = $sortFieldDefault;
 
             }
 
@@ -2300,11 +2414,11 @@ class User
 
             while ($rsCriteria->next()) {
 
-                $row = $rsCriteria->getRow();
+                $record = $rsCriteria->getRow();
 
 
 
-                $arrayUser[] = $this->getUserDataFromRecord($row);
+                $arrayUser[] = ($flagRecord)? $record : $this->__getUserCustomRecordFromRecord($record);
 
             }
 
@@ -2320,7 +2434,7 @@ class User
 
                 "limit"     => (int)((!is_null($limit))? $limit : 0),
 
-                $filterName => (!is_null($arrayFilterData) && is_array($arrayFilterData) && isset($arrayFilterData["filter"]))? $arrayFilterData["filter"] : "",
+                $filterName => ($flagFilter)? $arrayWhere['filter'] : '',
 
                 "data"      => $arrayUser
 
@@ -2551,6 +2665,134 @@ class User
             //Return
 
             return $timeZone;
+
+        } catch (\Exception $e) {
+
+            throw $e;
+
+        }
+
+    }
+
+
+
+    /**
+
+     * Get the User's Manager
+
+     *
+
+     * @param string $userUid        Unique id of User
+
+     * @param bool   $throwException Flag to throw the exception if the main parameters are invalid or do not exist
+
+     *                               (TRUE: throw the exception; FALSE: returns FALSE)
+
+     *
+
+     * @return string Returns an string with Unique id of User (Manager), ThrowTheException/FALSE otherwise
+
+     */
+
+    public function getUsersManager($userUid, $throwException = true)
+
+    {
+
+        try {
+
+            //Verify data and Set variables
+
+            $arrayUserData = $this->getUserRecordByPk($userUid, ['$userUid' => '$userUid'], $throwException);
+
+
+
+            if ($arrayUserData === false) {
+
+                return false;
+
+            }
+
+
+
+            //Set variables
+
+            $department = new \ProcessMaker\BusinessModel\Department();
+
+
+
+            //Get Manager
+
+            if ((string)($arrayUserData['USR_REPORTS_TO']) == '' ||
+
+                (string)($arrayUserData['USR_REPORTS_TO']) == $userUid
+
+            ) {
+
+                if ((string)($arrayUserData['DEP_UID']) != '') {
+
+                    $departmentUid = $arrayUserData['DEP_UID'];
+
+
+
+                    do {
+
+                        $flagd = false;
+
+
+
+                        $arrayDepartmentData = $department->getDepartmentRecordByPk(
+
+                            $departmentUid, ['$departmentUid' => '$departmentUid'], $throwException
+
+                        );
+
+
+
+                        if ($arrayDepartmentData === false) {
+
+                            return false;
+
+                        }
+
+
+
+                        if ((string)($arrayDepartmentData['DEP_MANAGER']) == '' ||
+
+                            (string)($arrayDepartmentData['DEP_MANAGER']) == $userUid
+
+                        ) {
+
+                            if ((string)($arrayDepartmentData['DEP_PARENT']) != '') {
+
+                                $departmentUid = $arrayDepartmentData['DEP_PARENT'];
+
+                                $flagd = true;
+
+                            } else {
+
+                                return false;
+
+                            }
+
+                        } else {
+
+                            return $arrayDepartmentData['DEP_MANAGER'];
+
+                        }
+
+                    } while ($flagd);
+
+                } else {
+
+                    return false;
+
+                }
+
+            } else {
+
+                return $arrayUserData['USR_REPORTS_TO'];
+
+            }
 
         } catch (\Exception $e) {
 

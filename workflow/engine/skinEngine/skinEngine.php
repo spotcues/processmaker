@@ -275,8 +275,8 @@ class SkinEngine
     	//Get the IE version
     	if(preg_match("/^.*\(.*MSIE (\d+)\..+\).*$/", $_SERVER["HTTP_USER_AGENT"], $arrayMatch) || preg_match("/^.*\(.*rv.(\d+)\..+\).*$/", $_SERVER["HTTP_USER_AGENT"], $arrayMatch)){
     		$ie = intval($arrayMatch[1]);
-    		$ieVersion = $ie;
     	}
+        $isIE = Bootstrap::isIE();
 
         $swTrident = (preg_match("/^.*Trident.*$/", $_SERVER["HTTP_USER_AGENT"]))? 1 : 0; //Trident only in IE8+
 
@@ -296,7 +296,7 @@ class SkinEngine
             $meta    = "<meta http-equiv=\"X-UA-Compatible\" content=\"IE=$ie\" />";
 
             if (SYS_COLLECTION == 'cases') {
-                if($ieVersion == 11) {
+                if($isIE) {
                     $meta = "<meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\" />";
                 }
             }
@@ -434,11 +434,6 @@ class SkinEngine
         G::LoadClass( "configuration" );
         $conf = new Configurations();
         $conf->getFormats();
-        if (defined('SYS_SYS')) {
-            $smarty->assign('udate', $conf->getSystemDate(date('Y-m-d H:i:s')));
-        } else {
-            $smarty->assign('udate', G::getformatedDate(date('Y-m-d'), 'M d, yyyy', SYS_LANG));
-        }
         $name = $conf->userNameFormat(isset($_SESSION['USR_USERNAME']) ? $_SESSION['USR_USERNAME']: '', isset($_SESSION['USR_FULLNAME']) ? htmlentities($_SESSION['USR_FULLNAME'] , ENT_QUOTES, 'UTF-8'): '', isset($_SESSION['USER_LOGGED']) ? $_SESSION['USER_LOGGED'] : '');
         $smarty->assign('user',$name);
       }
@@ -758,11 +753,6 @@ class SkinEngine
         G::LoadClass( "configuration" );
         $conf = new Configurations();
         $conf->getFormats();
-        if ( defined('SYS_SYS')) {
-            $smarty->assign('udate', $conf->getSystemDate(\ProcessMaker\Util\DateTime::convertUtcToTimeZone(date('Y-m-d H:i:s'))));
-        } else {
-            $smarty->assign('udate', G::getformatedDate(\ProcessMaker\Util\DateTime::convertUtcToTimeZone(date('Y-m-d H:i:s')), 'M d, yyyy', SYS_LANG));
-        }
         $name = $conf->userNameFormat(isset($_SESSION['USR_USERNAME']) ? $_SESSION['USR_USERNAME']: '', isset($_SESSION['USR_FULLNAME']) ? htmlentities($_SESSION['USR_FULLNAME'] , ENT_QUOTES, 'UTF-8'): '', isset($_SESSION['USER_LOGGED']) ? $_SESSION['USER_LOGGED'] : '');
         $smarty->assign('user',$name);
       }

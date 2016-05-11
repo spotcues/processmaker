@@ -355,7 +355,7 @@ abstract class BaseRoute extends BaseObject implements Persistent
 
     /**
      * Get the [rou_element_origin] column value.
-     *
+     * 
      * @return     string
      */
     public function getRouElementOrigin()
@@ -762,7 +762,7 @@ abstract class BaseRoute extends BaseObject implements Persistent
 
     /**
      * Set the value of [rou_element_origin] column.
-     *
+     * 
      * @param      string $v new value
      * @return     void
      */

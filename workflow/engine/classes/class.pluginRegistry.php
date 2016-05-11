@@ -1010,6 +1010,7 @@ class PMPluginRegistry
      */
     public function executeTriggers ($triggerId, $oData)
     {
+        G::LoadThirdParty( "pear", "PEAR" );
         foreach ($this->_aTriggers as $row => $detail) {
             if ($triggerId == $detail->sTriggerId) {
                 //review all folders registered for this namespace
@@ -1116,8 +1117,9 @@ class PMPluginRegistry
      */
     public function &getPlugin ($sNamespace)
     {
+        $oPlugin = null;
         if (array_key_exists( $sNamespace, $this->_aPlugins )) {
-            return $this->_aPlugins[$sNamespace];
+            $oPlugin = $this->_aPlugins[$sNamespace];
         }
         /*
         $aDetails = KTUtil::arrayGet($this->_aPluginDetails, $sNamespace);
@@ -1133,6 +1135,7 @@ class PMPluginRegistry
         $this->_aPlugins[$sNamespace] =& $oPlugin;
         return $oPlugin;
         */
+        return $oPlugin;
     }
 
     /**

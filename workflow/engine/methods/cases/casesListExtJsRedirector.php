@@ -26,9 +26,7 @@ if (isset( $_GET['ux'] )) {
 
     }
 
-} else if( key_exists('gmail', $_SESSION) && $_SESSION['gmail'] == 1 && !empty($enablePMGmail) && $enablePMGmail==1 ){
-
-    $url = 'derivatedGmail';
+/*----------------------------------********---------------------------------*/
 
 } else {
 

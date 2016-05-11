@@ -46,6 +46,21 @@ class Cases
     }
 
     /**
+     * Throw the exception "The Case doesn't exist"
+     *
+     * @param string $applicationUid        Unique id of Case
+     * @param string $fieldNameForException Field name for the exception
+     *
+     * @return void
+     */
+    private function throwExceptionCaseDoesNotExist($applicationUid, $fieldNameForException)
+    {
+        throw new \Exception(\G::LoadTranslation(
+            'ID_CASE_DOES_NOT_EXIST2', [$fieldNameForException, $applicationUid]
+        ));
+    }
+
+    /**
      * Verify if does not exist the Case in table APPLICATION
      *
      * @param string $applicationUid        Unique id of Case
@@ -68,8 +83,130 @@ class Cases
             }
 
             if ($flag) {
-                throw new \Exception(\G::LoadTranslation("ID_CASE_DOES_NOT_EXIST2", array($fieldNameForException, $applicationUid)));
+                $this->throwExceptionCaseDoesNotExist($applicationUid, $fieldNameForException);
             }
+        } catch (\Exception $e) {
+            throw $e;
+        }
+    }
+
+    /**
+     * Get Application record
+     *
+     * @param string $applicationUid                Unique id of Case
+     * @param array  $arrayVariableNameForException Variable name for exception
+     * @param bool   $throwException Flag to throw the exception if the main parameters are invalid or do not exist
+     *                               (TRUE: throw the exception; FALSE: returns FALSE)
+     *
+     * @return array Returns an array with Application record, ThrowTheException/FALSE otherwise
+     */
+    public function getApplicationRecordByPk(
+        $applicationUid,
+        array $arrayVariableNameForException,
+        $throwException = true
+    ) {
+        try {
+            $obj = \ApplicationPeer::retrieveByPK($applicationUid);
+
+            if (is_null($obj)) {
+                if ($throwException) {
+                    $this->throwExceptionCaseDoesNotExist(
+                        $applicationUid, $arrayVariableNameForException['$applicationUid']
+                    );
+                } else {
+                    return false;
+                }
+            }
+
+            //Return
+            return $obj->toArray(\BasePeer::TYPE_FIELDNAME);
+        } catch (\Exception $e) {
+            throw $e;
+        }
+    }
+
+    /**
+     * Get AppDelegation record
+     *
+     * @param string $applicationUid                Unique id of Case
+     * @param int    $delIndex                      Delegation index
+     * @param array  $arrayVariableNameForException Variable name for exception
+     * @param bool   $throwException Flag to throw the exception if the main parameters are invalid or do not exist
+     *                               (TRUE: throw the exception; FALSE: returns FALSE)
+     *
+     * @return array Returns an array with AppDelegation record, ThrowTheException/FALSE otherwise
+     */
+    public function getAppDelegationRecordByPk(
+        $applicationUid,
+        $delIndex,
+        array $arrayVariableNameForException,
+        $throwException = true
+    ) {
+        try {
+            $obj = \AppDelegationPeer::retrieveByPK($applicationUid, $delIndex);
+
+            if (is_null($obj)) {
+                if ($throwException) {
+                    throw new \Exception(\G::LoadTranslation(
+                        'ID_CASE_DEL_INDEX_DOES_NOT_EXIST',
+                        [
+                            $arrayVariableNameForException['$applicationUid'],
+                            $applicationUid,
+                            $arrayVariableNameForException['$delIndex'],
+                            $delIndex
+                        ]
+                    ));
+                } else {
+                    return false;
+                }
+            }
+
+            //Return
+            return $obj->toArray(\BasePeer::TYPE_FIELDNAME);
+        } catch (\Exception $e) {
+            throw $e;
+        }
+    }
+
+    /**
+     * Get list counters
+     *
+     * @param string $userUid   Unique id of User
+     * @param array  $arrayType Type lists
+     *
+     * @return array Return the list counters
+     */
+    public function getListCounters($userUid, array $arrayType)
+    {
+        try {
+            $solrEnabled = false;
+            $solrConf = \System::solrEnv();
+
+            if ($solrConf !== false) {
+                $ApplicationSolrIndex = new \AppSolr(
+                    $solrConf['solr_enabled'],
+                    $solrConf['solr_host'],
+                    $solrConf['solr_instance']
+                );
+
+                if ($ApplicationSolrIndex->isSolrEnabled() && $solrConf['solr_enabled'] == true) {
+                    $solrEnabled = true;
+                }
+            }
+
+            $appCacheView = new \AppCacheView();
+
+            if ($solrEnabled) {
+                $arrayListCounter = array_merge(
+                    $ApplicationSolrIndex->getCasesCount($userUid),
+                    $appCacheView->getAllCounters(['completed', 'cancelled'], $userUid)
+                );
+            } else {
+                $arrayListCounter = $appCacheView->getAllCounters($arrayType, $userUid);
+            }
+
+            //Return
+            return $arrayListCounter;
         } catch (\Exception $e) {
             throw $e;
         }
@@ -113,6 +250,8 @@ class Cases
         $type = "extjs";
         $dateFrom = (!empty( $dataList["dateFrom"] )) ? substr( $dataList["dateFrom"], 0, 10 ) : "";
         $dateTo = (!empty( $dataList["dateTo"] )) ? substr( $dataList["dateTo"], 0, 10 ) : "";
+        $newerThan = (!empty($dataList['newerThan']))? $dataList['newerThan'] : '';
+        $oldestThan = (!empty($dataList['oldestthan']))? $dataList['oldestthan'] : '';
         $first = isset( $dataList["first"] ) ? true :false;
 
         $u = new \ProcessMaker\BusinessModel\User();
@@ -154,7 +293,7 @@ class Cases
         }
         $dir = G::toUpper($dir);
         if (!($dir == 'DESC' || $dir == 'ASC')) {
-            $dir = 'DESC';
+            $dir = 'ASC';
         }
         if ($process != '') {
             Validator::proUid($process, '$pro_uid');
@@ -246,7 +385,9 @@ class Cases
                 (strpos($sort, ".") !== false)? $sort : "APP_CACHE_VIEW." . $sort,
                 $category,
                 true,
-                $paged
+                $paged,
+                $newerThan,
+                $oldestThan
             );
         }
         if (!empty($result['data'])) {
@@ -1042,15 +1183,6 @@ class Cases
             //$oPluginRegistry      = & PMPluginRegistry::getSingleton();
             $listing = $oPluginRegistry->executeTriggers(PM_CASE_DOCUMENT_LIST, $folderData);
         }
-        /*----------------------------------********---------------------------------*/
-        $licensedFeatures = &\PMLicensedFeatures::getSingleton();
-        $enablePMGmail = false;
-        if ($licensedFeatures->verifyfeature('7qhYmF1eDJWcEdwcUZpT0k4S0xTRStvdz09')) {
-            G::LoadClass( "pmDrive" );
-            $pmDrive = new \PMDrive();
-            $enablePMGmail = $pmDrive->getStatusService();
-        }
-        /*----------------------------------********---------------------------------*/
         $aObjectPermissions = $cases->getAllObjects($sProcessUID, $sApplicationUID, $sTasKUID, $sUserUID);
         if (!is_array($aObjectPermissions)) {
             $aObjectPermissions = array(
@@ -1126,12 +1258,15 @@ class Cases
             $aAux = $oAppDocument->load($aRow['APP_DOC_UID'], $aRow['DOC_VERSION']);
             $lastVersion = $oAppDocument->getLastAppDocVersion($aRow['APP_DOC_UID'], $sApplicationUID);
 
-            try {
-                $aAux1 = $oUser->load($aAux['USR_UID']);
+            if ($aAux['USR_UID'] !== "-1") {
+                try {
+                    $aAux1 = $oUser->load($aAux['USR_UID']);
 
-                $sUser = $conf->usersNameFormatBySetParameters($confEnvSetting["format"], $aAux1["USR_USERNAME"], $aAux1["USR_FIRSTNAME"], $aAux1["USR_LASTNAME"]);
-            } catch (Exception $oException) {
-                //$sUser = '(USER DELETED)';
+                    $sUser = $conf->usersNameFormatBySetParameters($confEnvSetting["format"], $aAux1["USR_USERNAME"], $aAux1["USR_FIRSTNAME"], $aAux1["USR_LASTNAME"]);
+                } catch (Exception $oException) {
+                    $sUser = '***';
+                }
+            } else {
                 $sUser = '***';
             }
             $aFields = array(
@@ -1167,15 +1302,6 @@ class Cases
                     }
                 }
             }
-            /*----------------------------------********---------------------------------*/
-            //change donwload link - drive
-            $driveDownload = @unserialize($aRow['APP_DOC_DRIVE_DOWNLOAD']);
-            if ($driveDownload !== false && is_array($driveDownload) && array_key_exists('INPUT',
-                    $driveDownload) && $enablePMGmail
-            ) {
-                $aFields['DOWNLOAD_LINK'] = $driveDownload['INPUT'];
-            }
-            /*----------------------------------********---------------------------------*/
             if ($lastVersion == $aRow['DOC_VERSION']) {
                 //Show only last version
                 $aInputDocuments[] = $aFields;
@@ -1247,15 +1373,7 @@ class Cases
             }
             $aFields['DOWNLOAD_LABEL'] = G::LoadTranslation('ID_DOWNLOAD');
             $aFields['DOWNLOAD_LINK'] = "cases/cases_ShowDocument?a=" . $aRow['APP_DOC_UID'];
-            /*----------------------------------********---------------------------------*/
-            //change donwload link - drive
-            $driveDownload = @unserialize($aRow['APP_DOC_DRIVE_DOWNLOAD']);
-            if ($driveDownload !== false && is_array($driveDownload) && array_key_exists('ATTACHED',
-                    $driveDownload) && $enablePMGmail
-            ) {
-                $aFields['DOWNLOAD_LINK'] = $driveDownload['ATTACHED'];
-            }
-            /*----------------------------------********---------------------------------*/
+
             if ($lastVersion == $aRow['DOC_VERSION']) {
                 //Show only last version
                 $aInputDocuments[] = $aFields;
@@ -1319,15 +1437,7 @@ class Cases
                     }
                 }
             }
-            /*----------------------------------********---------------------------------*/
-            //change donwload link - drive
-            $driveDownload = @unserialize($aRow['APP_DOC_DRIVE_DOWNLOAD']);
-            if ($driveDownload !== false && is_array($driveDownload) && array_key_exists('INPUT',
-                    $driveDownload) && $enablePMGmail
-            ) {
-                $aFields['DOWNLOAD_LINK'] = $driveDownload['INPUT'];
-            }
-            /*----------------------------------********---------------------------------*/
+
             if ($lastVersion == $aRow['DOC_VERSION']) {
                 //Show only last version
                 $aInputDocuments[] = $aFields;
@@ -1371,15 +1481,6 @@ class Cases
             //$oPluginRegistry = & PMPluginRegistry::getSingleton();
             $listing = $oPluginRegistry->executeTriggers(PM_CASE_DOCUMENT_LIST, $folderData);
         }
-        /*----------------------------------********---------------------------------*/
-        $licensedFeatures = &\PMLicensedFeatures::getSingleton();
-        $enablePMGmail = false;
-        if ($licensedFeatures->verifyfeature('7qhYmF1eDJWcEdwcUZpT0k4S0xTRStvdz09')) {
-            G::LoadClass( "pmDrive" );
-            $pmDrive = new \PMDrive();
-            $enablePMGmail = $pmDrive->getStatusService();
-        }
-        /*----------------------------------********---------------------------------*/
         $aObjectPermissions = $cases->getAllObjects($sProcessUID, $sApplicationUID, $sTasKUID, $sUserUID);
         if (!is_array($aObjectPermissions)) {
             $aObjectPermissions = array('DYNAFORMS' => array(-1),'INPUT_DOCUMENTS' => array(-1),'OUTPUT_DOCUMENTS' => array(-1));
@@ -1525,20 +1626,6 @@ class Cases
                 } catch (\Exception $oException) {
                     $sUser = '(USER DELETED)';
                 }
-                /*----------------------------------********---------------------------------*/
-                //change donwload link - drive
-                $driveDownload = @unserialize($aRow['APP_DOC_DRIVE_DOWNLOAD']);
-                if ($driveDownload !== false && is_array($driveDownload) && array_key_exists('OUTPUT_DOC',
-                        $driveDownload) && $enablePMGmail
-                ) {
-                    $fileDoc = $driveDownload['OUTPUT_DOC'];
-                }
-                if ($driveDownload !== false && is_array($driveDownload) && array_key_exists('OUTPUT_PDF',
-                        $driveDownload) && $enablePMGmail
-                ) {
-                    $filePdf = $driveDownload['OUTPUT_PDF'];
-                }
-                /*----------------------------------********---------------------------------*/
                 //if both documents were generated, we choose the pdf one, only if doc was
                 //generate then choose the doc file.
                 $firstDocLink = $filePdf;
@@ -1641,12 +1728,13 @@ class Cases
      * @param string $app_uid, Uid for case
      * @param array $app_data, Data for case variables
      * @param string $dyn_uid, Uid for dynaform
+     * @param string $del_index, Index for case
      * @param string $usr_uid, Uid for user
      *
      * @author Brayan Pereyra (Cochalo) <brayan@colosa.com>
      * @copyright Colosa - Bolivia
      */
-    public function setCaseVariables($app_uid, $app_data, $dyn_uid = null, $usr_uid)
+    public function setCaseVariables($app_uid, $app_data, $dyn_uid = null, $usr_uid ,$del_index = 0)
     {
         Validator::isString($app_uid, '$app_uid');
         Validator::appUid($app_uid, '$app_uid');
@@ -1684,7 +1772,7 @@ class Cases
         $_SESSION['USER_LOGGED'] = $usr_uid;
 
         $case = new \Cases();
-        $fields = $case->loadCase($app_uid);
+        $fields = $case->loadCase($app_uid, $del_index);
         $_POST['form'] = $app_data;
 
         if (!is_null($dyn_uid) && $dyn_uid != '') {
@@ -1696,6 +1784,17 @@ class Cases
             }
         }
 
+        if (!is_null($dyn_uid) && $del_index > 0) {
+            //save data
+            $data = array();
+            $data['APP_NUMBER'] = $fields['APP_NUMBER'];
+            $data['APP_DATA'] = $fields['APP_DATA'];
+            $data['DEL_INDEX'] = $del_index;
+            $data['TAS_UID'] = $fields['TAS_UID'];;
+            $data['CURRENT_DYNAFORM'] = $dyn_uid;
+            $data['USER_UID'] = $usr_uid;
+            $data['PRO_UID'] = $fields['PRO_UID'];
+        }
         $data['APP_DATA'] = array_merge($fields['APP_DATA'], $_POST['form']);
         $case->updateCase($app_uid, $data);
     }
@@ -2477,4 +2576,188 @@ class Cases
             throw (new RestException(Api::STAT_APP_EXCEPTION, $e->getMessage()));
         }
     }
+
+    /**
+     * Get Users to reassign
+     *
+     * @param string $userUid         Unique id of User (User logged)
+     * @param string $taskUid         Unique id of Task
+     * @param array  $arrayFilterData Data of the filters
+     * @param string $sortField       Field name to sort
+     * @param string $sortDir         Direction of sorting (ASC, DESC)
+     * @param int    $start           Start
+     * @param int    $limit           Limit
+     *
+     * @return array Return Users to reassign
+     */
+    public function getUsersToReassign($userUid, $taskUid, $arrayFilterData = null, $sortField = null, $sortDir = null, $start = null, $limit = null)
+    {
+        try {
+            $arrayUser = [];
+
+            $numRecTotal = 0;
+
+            //Set variables
+            $task = \TaskPeer::retrieveByPK($taskUid);
+
+            $processUid = $task->getProUid();
+
+            $user  = new \ProcessMaker\BusinessModel\User();
+            $task  = new \Tasks();
+            $group = new \Groups();
+
+            //Set variables
+            $filterName = 'filter';
+
+            if (!is_null($arrayFilterData) && is_array($arrayFilterData) && isset($arrayFilterData['filter'])) {
+                $arrayAux = [
+                    ''      => 'filter',
+                    'LEFT'  => 'lfilter',
+                    'RIGHT' => 'rfilter'
+                ];
+
+                $filterName = $arrayAux[(isset($arrayFilterData['filterOption']))? $arrayFilterData['filterOption'] : ''];
+            }
+
+            //Get data
+            if (!is_null($limit) && $limit . '' == '0') {
+                //Return
+                return [
+                    'total'     => $numRecTotal,
+                    'start'     => (int)((!is_null($start))? $start : 0),
+                    'limit'     => (int)((!is_null($limit))? $limit : 0),
+                    $filterName => (!is_null($arrayFilterData) && is_array($arrayFilterData) && isset($arrayFilterData['filter']))? $arrayFilterData['filter'] : '',
+                    'data'      => $arrayUser
+                ];
+            }
+
+            //Set variables
+            $processSupervisor = new \ProcessMaker\BusinessModel\ProcessSupervisor();
+
+            $arrayResult = $processSupervisor->getProcessSupervisors($processUid, 'ASSIGNED', null, null, null, 'group');
+
+            $arrayGroupUid = array_merge(
+                array_map(function ($value) { return $value['GRP_UID']; }, $task->getGroupsOfTask($taskUid, 1)), //Groups
+                array_map(function ($value) { return $value['GRP_UID']; }, $task->getGroupsOfTask($taskUid, 2)), //AdHoc Groups
+                array_map(function ($value) { return $value['grp_uid']; }, $arrayResult['data'])                 //ProcessSupervisor Groups
+            );
+
+            $sqlTaskUser = '
+            SELECT ' . \TaskUserPeer::USR_UID . '
+            FROM   ' . \TaskUserPeer::TABLE_NAME . '
+            WHERE  ' . \TaskUserPeer::TAS_UID . ' = \'%s\' AND
+                   ' . \TaskUserPeer::TU_TYPE . ' IN (1, 2) AND
+                   ' . \TaskUserPeer::TU_RELATION . ' = 1
+            ';
+
+            $sqlGroupUser = '
+            SELECT ' . \GroupUserPeer::USR_UID . '
+            FROM   ' . \GroupUserPeer::TABLE_NAME . '
+            WHERE  ' . \GroupUserPeer::GRP_UID . ' IN (%s)
+            ';
+
+            $sqlProcessSupervisor = '
+            SELECT ' . \ProcessUserPeer::USR_UID . '
+            FROM   ' . \ProcessUserPeer::TABLE_NAME . '
+            WHERE  ' . \ProcessUserPeer::PRO_UID . ' = \'%s\' AND
+                   ' . \ProcessUserPeer::PU_TYPE . ' = \'%s\'
+            ';
+
+            $sqlUserToReassign = '(' . sprintf($sqlTaskUser, $taskUid) . ')';
+
+            if (!empty($arrayGroupUid)) {
+                $sqlUserToReassign .= ' UNION (' . sprintf($sqlGroupUser, '\'' . implode('\', \'', $arrayGroupUid) . '\'') . ')';
+            }
+
+            $sqlUserToReassign .= ' UNION (' . sprintf($sqlProcessSupervisor, $processUid, 'SUPERVISOR') . ')';
+
+            //Query
+            $criteria = new \Criteria('workflow');
+
+            $criteria->addSelectColumn(\UsersPeer::USR_UID);
+            $criteria->addSelectColumn(\UsersPeer::USR_USERNAME);
+            $criteria->addSelectColumn(\UsersPeer::USR_FIRSTNAME);
+            $criteria->addSelectColumn(\UsersPeer::USR_LASTNAME);
+
+            $criteria->addAlias('USER_TO_REASSIGN', '(' . $sqlUserToReassign . ')');
+
+            $criteria->addJoin(\UsersPeer::USR_UID, 'USER_TO_REASSIGN.USR_UID', \Criteria::INNER_JOIN);
+
+            if (!is_null($arrayFilterData) && is_array($arrayFilterData) && isset($arrayFilterData['filter']) && trim($arrayFilterData['filter']) != '') {
+                $arraySearch = [
+                    ''      => '%' . $arrayFilterData['filter'] . '%',
+                    'LEFT'  => $arrayFilterData['filter'] . '%',
+                    'RIGHT' => '%' . $arrayFilterData['filter']
+                ];
+
+                $search = $arraySearch[(isset($arrayFilterData['filterOption']))? $arrayFilterData['filterOption'] : ''];
+
+                $criteria->add(
+                    $criteria->getNewCriterion(\UsersPeer::USR_USERNAME,  $search, \Criteria::LIKE)->addOr(
+                    $criteria->getNewCriterion(\UsersPeer::USR_FIRSTNAME, $search, \Criteria::LIKE))->addOr(
+                    $criteria->getNewCriterion(\UsersPeer::USR_LASTNAME,  $search, \Criteria::LIKE))
+                );
+            }
+
+            $criteria->add(\UsersPeer::USR_STATUS, 'ACTIVE', \Criteria::EQUAL);
+
+            if (!$user->checkPermission($userUid, 'PM_SUPERVISOR')) {
+                $criteria->add(\UsersPeer::USR_UID, $userUid, \Criteria::NOT_EQUAL);
+            }
+
+            //Number records total
+            $numRecTotal = \UsersPeer::doCount($criteria);
+
+            //Query
+            $conf = new \Configurations();
+            $sortFieldDefault = \UsersPeer::TABLE_NAME . '.' . $conf->userNameFormatGetFirstFieldByUsersTable();
+
+            if (!is_null($sortField) && trim($sortField) != '') {
+                $sortField = strtoupper($sortField);
+
+                if (in_array(\UsersPeer::TABLE_NAME . '.' . $sortField, $criteria->getSelectColumns())) {
+                    $sortField = \UsersPeer::TABLE_NAME . '.' . $sortField;
+                } else {
+                    $sortField = $sortFieldDefault;
+                }
+            } else {
+                $sortField = $sortFieldDefault;
+            }
+
+            if (!is_null($sortDir) && trim($sortDir) != '' && strtoupper($sortDir) == 'DESC') {
+                $criteria->addDescendingOrderByColumn($sortField);
+            } else {
+                $criteria->addAscendingOrderByColumn($sortField);
+            }
+
+            if (!is_null($start)) {
+                $criteria->setOffset((int)($start));
+            }
+
+            if (!is_null($limit)) {
+                $criteria->setLimit((int)($limit));
+            }
+
+            $rsCriteria = \UsersPeer::doSelectRS($criteria);
+            $rsCriteria->setFetchmode(\ResultSet::FETCHMODE_ASSOC);
+
+            while ($rsCriteria->next()) {
+                $row = $rsCriteria->getRow();
+
+                $arrayUser[] = $row;
+            }
+
+            //Return
+            return [
+                'total'     => $numRecTotal,
+                'start'     => (int)((!is_null($start))? $start : 0),
+                'limit'     => (int)((!is_null($limit))? $limit : 0),
+                $filterName => (!is_null($arrayFilterData) && is_array($arrayFilterData) && isset($arrayFilterData['filter']))? $arrayFilterData['filter'] : '',
+                'data'      => $arrayUser
+            ];
+        } catch (\Exception $e) {
+            throw $e;
+        }
+    }
 }
+

@@ -61,7 +61,7 @@ abstract class BaseElementTaskRelation extends BaseObject implements Persistent
      * The value for the element_uid_dest field.
      * @var        string
      */
-    protected $element_uid_dest;
+    protected $element_uid_dest = '';
 
     /**
      * Flag to prevent endless save loop, if this object is referenced
@@ -134,7 +134,7 @@ abstract class BaseElementTaskRelation extends BaseObject implements Persistent
 
     /**
      * Get the [element_uid_dest] column value.
-     *
+     * 
      * @return     string
      */
     public function getElementUidDest()
@@ -255,7 +255,7 @@ abstract class BaseElementTaskRelation extends BaseObject implements Persistent
 
     /**
      * Set the value of [element_uid_dest] column.
-     *
+     * 
      * @param      string $v new value
      * @return     void
      */
@@ -268,7 +268,7 @@ abstract class BaseElementTaskRelation extends BaseObject implements Persistent
             $v = (string) $v;
         }
 
-        if ($this->element_uid_dest !== $v) {
+        if ($this->element_uid_dest !== $v || $v === '') {
             $this->element_uid_dest = $v;
             $this->modifiedColumns[] = ElementTaskRelationPeer::ELEMENT_UID_DEST;
         }
@@ -309,7 +309,7 @@ abstract class BaseElementTaskRelation extends BaseObject implements Persistent
             $this->setNew(false);
 
             // FIXME - using NUM_COLUMNS may be clearer.
-            return $startcol + 5; // 5 = ElementTaskRelationPeer::NUM_COLUMNS - ElementTaskRelationPeer::NUM_LAZY_LOAD_COLUMNS).
+            return $startcol + 6; // 6 = ElementTaskRelationPeer::NUM_COLUMNS - ElementTaskRelationPeer::NUM_LAZY_LOAD_COLUMNS).
 
         } catch (Exception $e) {
             throw new PropelException("Error populating ElementTaskRelation object", $e);

@@ -49,6 +49,7 @@ class ListParticipatedLast extends BaseListParticipatedLast
                 $data['DEL_CURRENT_USR_USERNAME']  = $aRow['USR_USERNAME'];
                 $data['DEL_CURRENT_USR_FIRSTNAME'] = $aRow['USR_FIRSTNAME'];
                 $data['DEL_CURRENT_USR_LASTNAME']  = $aRow['USR_LASTNAME']; 
+                $data['DEL_CURRENT_TAS_TITLE'] = $data['APP_TAS_TITLE'];
 
                 $users = new Users();
                 $users->refreshTotal($data['USR_UID'], 'add', 'participated');
@@ -147,6 +148,11 @@ class ListParticipatedLast extends BaseListParticipatedLast
             $criteriaSet->add(ListParticipatedLastPeer::DEL_CURRENT_USR_USERNAME, $aRow['USR_USERNAME']);
             $criteriaSet->add(ListParticipatedLastPeer::DEL_CURRENT_USR_FIRSTNAME, $aRow['USR_FIRSTNAME']);
             $criteriaSet->add(ListParticipatedLastPeer::DEL_CURRENT_USR_LASTNAME, $aRow['USR_LASTNAME']);
+
+            if (isset($data['APP_TAS_TITLE'])) {
+                $criteriaSet->add(ListParticipatedLastPeer::DEL_CURRENT_TAS_TITLE, $data['APP_TAS_TITLE']);
+            }            
+
             BasePeer::doUpdate($criteriaWhere, $criteriaSet, Propel::getConnection("workflow"));
 
         }
@@ -308,6 +314,7 @@ class ListParticipatedLast extends BaseListParticipatedLast
         $criteria->addSelectColumn(ListParticipatedLastPeer::DEL_CURRENT_USR_USERNAME);
         $criteria->addSelectColumn(ListParticipatedLastPeer::DEL_CURRENT_USR_FIRSTNAME);
         $criteria->addSelectColumn(ListParticipatedLastPeer::DEL_CURRENT_USR_LASTNAME);
+        $criteria->addSelectColumn(ListParticipatedLastPeer::DEL_CURRENT_TAS_TITLE);
         $criteria->addSelectColumn(ListParticipatedLastPeer::DEL_DELEGATE_DATE);
         $criteria->addSelectColumn(ListParticipatedLastPeer::DEL_INIT_DATE);
         $criteria->addSelectColumn(ListParticipatedLastPeer::DEL_DUE_DATE);

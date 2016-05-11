@@ -167,7 +167,7 @@ class Admin extends Controller
     public function pmLogo ($httpData)
     {
         global $RBAC;
-        $RBAC->requirePermissions( 'PM_SETUP_ADVANCE' );
+        $RBAC->requirePermissions( 'PM_SETUP_ADVANCE', 'PM_SETUP_LOGO');
 
         G::LoadClass( 'configuration' );
         $c = new Configurations();

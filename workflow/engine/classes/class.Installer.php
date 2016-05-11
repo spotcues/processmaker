@@ -174,7 +174,23 @@ class Installer
 
     {
 
-        return file_exists(PATH_DATA . "sites/" . $name);
+        $pathSites = PATH_DATA . 'sites/'. '*';
+
+        $directories = glob($pathSites, GLOB_ONLYDIR);
+
+        foreach ($directories as $directory){
+
+            $site = basename($directory);
+
+            if(strtolower($site) === strtolower($name)){
+
+                return true;
+
+            }
+
+        }
+
+        return false;
 
     }
 

@@ -2,13 +2,13 @@ var saveButton;
 var testButton;
 var storeUsers;
 var disableAll;
-var changeType;
-Ext.onReady(function(){
+var enableInterfazCertificate;
+Ext.onReady(function() {
     Ext.QuickTips.init();
 
     testButton = new Ext.Action({
         text : _('ID_TEST_CONNECTION'),
-        disabled : !enablePMGmail,
+        disabled : true,
         handler : testSettings
     });
 
@@ -19,59 +19,30 @@ Ext.onReady(function(){
     });
 
     disableAll = function () {
-        Ext.getCmp('typeAuthentication').disable();
-        Ext.getCmp('email_service_account').disable();
-        Ext.getCmp('file_p12').disable();
-        Ext.getCmp('labelFileP12').disable();
-        Ext.getCmp('file_json').disable();
-        Ext.getCmp('fileJson').disable();
+        Ext.getCmp('emailServiceAccount').disable();
+        Ext.getCmp('googleCertificate').disable();
+        Ext.getCmp('labelFileGoogleCertificate').disable();
         testButton.disable();
         saveButton.disable();
 
-        Ext.getCmp('typeAuthentication').hide();
-        Ext.getCmp('email_service_account').hide();
-        Ext.getCmp('file_p12').hide();
-        Ext.getCmp('labelFileP12').hide();
-
-        Ext.getCmp('file_json').hide();
-        Ext.getCmp('fileJson').hide();
+        Ext.getCmp('emailServiceAccount').hide();
+        Ext.getCmp('googleCertificate').hide();
+        Ext.getCmp('labelFileGoogleCertificate').hide();
 
         Ext.getCmp('listUsers').hide();
         Ext.getCmp('testPMGmail').hide();
     };
 
-    var enableTypeP12 = function () {
-        Ext.getCmp('typeAuthentication').enable();
-        Ext.getCmp('email_service_account').enable();
-        Ext.getCmp('file_p12').enable();
-        Ext.getCmp('labelFileP12').enable();
+    enableInterfazCertificate = function () {
+        Ext.getCmp('emailServiceAccount').enable();
+        Ext.getCmp('googleCertificate').enable();
+        Ext.getCmp('labelFileGoogleCertificate').enable();
 
-        Ext.getCmp('typeAuthentication').show();
-        Ext.getCmp('email_service_account').show();
-        Ext.getCmp('file_p12').show();
-        Ext.getCmp('labelFileP12').show();
+        Ext.getCmp('emailServiceAccount').show();
+        Ext.getCmp('googleCertificate').show();
+        Ext.getCmp('labelFileGoogleCertificate').show();
 
         testButton.enable();
-    };
-
-    var enableTypeJson = function () {
-        Ext.getCmp('typeAuthentication').enable();
-        Ext.getCmp('file_json').enable();
-        Ext.getCmp('fileJson').enable();
-
-        Ext.getCmp('typeAuthentication').show();
-        Ext.getCmp('file_json').show();
-        Ext.getCmp('fileJson').show();
-        testButton.enable();
-    };
-
-    changeType = function () {
-        var type = Ext.getCmp('typeAuthentication').getValue();
-        if (type == 'webApplication') {
-            enableTypeJson();
-        } else {
-            enableTypeP12();
-        }
     };
 
     var configurationPMGmail = new Ext.form.FieldSet({
@@ -79,30 +50,31 @@ Ext.onReady(function(){
         items: [
             {
                 xtype: 'checkbox',
-                id: 'status_pmgmail',
-                name: 'status_pmgmail',
+                id: 'serviceGmailStatus',
+                name: 'serviceGmailStatus',
                 boxLabel: _('ID_ENABLE_PMGMAIL'),
                 value: 0,
                 inputValue: 1,
                 uncheckedValue: 0,
+                disabled: disableGmail,
                 listeners   : {
                     check : function(that, checked) {
                         disableAll();
                         if (checked) {
-                            Ext.getCmp('typeAuthentication').enable();
-                            Ext.getCmp('typeAuthentication').show();
-                            Ext.getCmp('typeAuthentication').clearValue();
+                            enableInterfazCertificate();
                         } else {
                             Ext.MessageBox.confirm(
                                 _('ID_CONFIRM'),
                                 _('ID_PMGMAIL_DISABLE'),
                                 function (btn, text) {
                                     if (btn == "yes") {
-                                        saveSettings();
+                                        if (Ext.getCmp('serviceDriveStatus').getValue()) {
+                                            enableInterfazCertificate();
+                                        }
+                                        saveButton.enable();
                                     } else {
-                                        changeType();
-                                        Ext.getCmp('status_pmgmail').setValue(1);
-                                        return false;
+                                        enableInterfazCertificate();
+                                        Ext.getCmp('serviceGmailStatus').setValue(1);
                                     }
                                 }
                             );
@@ -111,48 +83,61 @@ Ext.onReady(function(){
                 }
             },
             {
-                xtype   : 'combo',
-                id      : 'typeAuthentication',
-                name    : 'typeAuthentication',
-                xtype   : 'combo',
-                fieldLabel  : _('GMAIL_TYPE_AUTH'),
-                hiddenName: 'typeAuth',
-                mode          : 'local',
-                triggerAction : 'all',
-                forceSelection: true,
-                store: new Ext.data.SimpleStore({
-                    fields: ['value','type'],
-                    data: [['webApplication','Web Application'],['serviceAccount', 'Service Account']],
-                    autoLoad: true
-                }),
-                submitValue : true,
-                value: typeAuthentication,
-                valueField: 'value',
-                displayField: 'type',
-                width: 250,
-                editable: false,
-                listeners:{
-                    afterRender: function () {
+                xtype       : 'label',
+                labelAlign  : 'right',
+                fieldLabel  : '',
+                text        : _('ID_GMAIL_HELP_ENABLE'),
+                style       : "padding-left:180px; display: inline-block;"
+            },
+            {
+                xtype: 'checkbox',
+                id: 'serviceDriveStatus',
+                name: 'serviceDriveStatus',
+                boxLabel: _('ID_ENABLE_PMDRIVE'),
+                value: 0,
+                inputValue: 1,
+                uncheckedValue: 0,
+                disabled: disableDrive,
+                listeners   : {
+                    check : function(that, checked) {
                         disableAll();
-                        if (Ext.getCmp('status_pmgmail').checked) {
-                            changeType();
+                        if (checked) {
+                            enableInterfazCertificate();
+                        } else {
+                            Ext.MessageBox.confirm(
+                                _('ID_CONFIRM'),
+                                _('ID_PMDRIVE_DISABLE'),
+                                function (btn, text) {
+                                    if (btn == "yes") {
+                                        if (Ext.getCmp('serviceGmailStatus').getValue()) {
+                                            enableInterfazCertificate();
+                                        }
+                                        saveButton.enable();
+                                    } else {
+                                        enableInterfazCertificate();
+                                        Ext.getCmp('serviceDriveStatus').setValue(1);
+                                    }
+                                }
+                            );
                         }
-                    },
-                    select: function(combo){
-                        disableAll();
-                        changeType();
                     }
                 }
             },
             {
+                xtype       : 'label',
+                labelAlign  : 'right',
+                fieldLabel  : '',
+                text        : _('ID_DRIVE_HELP_ENABLE'),
+                style       : "padding-left:180px; display: inline-block;"
+            },
+            {
                 xtype       : 'textfield',
-                id          : 'email_service_account',
-                name        : 'email_service_account',
+                id          : 'emailServiceAccount',
+                name        : 'emailServiceAccount',
                 fieldLabel  : _('ID_PMG_EMAIL'),
                 width       : 400,
                 allowBlank  : false,
                 value       : accountEmail,
-                disabled    : !enablePMGmail,
                 listeners   : {
                     change: function(){
                         changeSettings();
@@ -168,49 +153,12 @@ Ext.onReady(function(){
             },
             {
                 xtype       : 'fileuploadfield',
-                id          : 'file_p12',
+                id          : 'googleCertificate',
                 emptyText   : _('ID_PMG_SELECT_FILE'),
                 fieldLabel  : _('ID_PMG_FILE'),
-                name        : 'file_p12',
+                name        : 'googleCertificate',
                 buttonText  : '',
                 width       : 400,
-                disabled    : !enablePMGmail,
-                buttonCfg   : {
-                    iconCls : 'upload-icon'
-                },
-                listeners:{
-                    change  : function(){
-                        changeSettings();
-                    },
-                    afterrender:function(cmp){
-                        changeSettings();
-                        cmp.fileInput.set({
-                            accept:'*/p12'
-                        });
-                    }
-                },
-                regex       : /(.)+((\.p12)(\w)?)$/i,
-                regexText   : _('ID_PMG_TYPE_ACCEPT')
-            },
-            {
-                xtype       : 'label',
-                id          : 'labelFileP12',
-                name        : 'labelFileP12',
-                labelAlign  : 'right',
-                fieldLabel  : '',
-                text        : fileP12,
-                width       : 400,
-                style       : "padding-left:180px;"
-            },
-            {
-                xtype       : 'fileuploadfield',
-                id          : 'file_json',
-                emptyText   : _('ID_PMG_SELECT_FILE_JSON'),
-                fieldLabel  : _('ID_PMG_FILE_JSON'),
-                name        : 'file_json',
-                buttonText  : '',
-                width       : 400,
-                disabled    : !enablePMGmail,
                 buttonCfg   : {
                     iconCls : 'upload-icon'
                 },
@@ -230,11 +178,11 @@ Ext.onReady(function(){
             },
             {
                 xtype       : 'label',
-                id          : 'fileJson',
-                name        : 'fileJson',
+                id          : 'labelFileGoogleCertificate',
+                name        : 'labelFileGoogleCertificate',
                 labelAlign  : 'right',
                 fieldLabel  : '',
-                text        : fileJson,
+                text        : googleCertificate,
                 width       : 400,
                 style       : "padding-left:180px;"
             }
@@ -361,11 +309,14 @@ Ext.onReady(function(){
         ]
     });
 
-    Ext.getCmp('status_pmgmail').checked = enablePMGmail;
-    Ext.getCmp('status_pmgmail').setValue(enablePMGmail);
-    if (enablePMGmail){
-        changeType();
+    Ext.getCmp('serviceGmailStatus').checked = statusGmail;
+    Ext.getCmp('serviceGmailStatus').setValue(statusGmail);
+    Ext.getCmp('serviceDriveStatus').checked = statusDrive;
+    Ext.getCmp('serviceDriveStatus').setValue(statusDrive);
+    if (statusGmail || statusDrive){
+        enableInterfazCertificate();
     }
+
 });
 
 var testSettings = function ()
@@ -432,7 +383,7 @@ var saveSettings = function ()
 var changeSettings = function()
 {
     disableAll();
-    if (Ext.getCmp('status_pmgmail').checked) {
-        changeType();
+    if (Ext.getCmp('serviceGmailStatus').checked || Ext.getCmp('serviceDriveStatus').checked) {
+        enableInterfazCertificate();
     }
 };

@@ -60,6 +60,33 @@ if (!isset($_SESSION['USER_LOGGED'])) {
                     </script>');
 }
 
+/**
+ * If you can, you may want to set post_max_size to a low value (say 1M) to make 
+ * testing easier. First test to see how your script behaves. Try uploading a file 
+ * that is larger than post_max_size. If you do you will get a message like this 
+ * in your error log:
+ * 
+ * [09-Jun-2010 19:28:01] PHP Warning:  POST Content-Length of 30980857 bytes exceeds 
+ * the limit of 2097152 bytes in Unknown on line 0
+ * 
+ * This makes the script is not completed.
+ * 
+ * Solving the problem:
+ * The PHP documentation http://php.net/manual/en/ini.core.php#ini.post-max-size
+ * provides a hack to solve this problem:
+ * 
+ * If the size of post data is greater than post_max_size, the $_POST and $_FILES 
+ * superglobals are empty.
+ */
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && empty($_POST) && empty($_FILES) && $_SERVER['CONTENT_LENGTH'] > 0) {
+    $aMessage = array();
+    $aMessage['MESSAGE'] = G::loadTranslation('ID_UPLOAD_ERR_INI_SIZE');
+    $G_PUBLISH = new Publisher();
+    $G_PUBLISH->AddContent('xmlform', 'xmlform', 'login/showMessage', '', $aMessage);
+    G::RenderPage('publish', 'blank');
+    die();
+}
+
 try {
     if ($_GET['APP_UID'] !== $_SESSION['APPLICATION']) {
         throw new Exception( G::LoadTranslation( 'ID_INVALID_APPLICATION_ID_MSG', array ('<a href=\'' . $_SERVER['HTTP_REFERER'] . '\'>{1}</a>',G::LoadTranslation( 'ID_REOPEN' ) ) ) );
@@ -90,6 +117,13 @@ try {
     $Fields = $oCase->loadCase( $_SESSION["APPLICATION"] );
 
     if ($swpmdynaform) {
+        $dataFields = $Fields["APP_DATA"];
+        $dataFields["CURRENT_DYNAFORM"] = $_GET['UID'];
+
+        G::LoadClass('pmDynaform');
+        $oPmDynaform = new pmDynaform($dataFields);
+        $pmdynaform = $oPmDynaform->validatePost($pmdynaform);
+
         $Fields["APP_DATA"] = array_merge( $Fields["APP_DATA"], $pmdynaform );
     }
 
@@ -360,92 +394,12 @@ try {
                     $sPathName = PATH_DOCUMENT . $pathUID . PATH_SEP;
                     $sFileName = $sAppDocUid . "_" . $iDocVersion . "." . $sExtension;
 
-                    /*----------------------------------********---------------------------------*/
-                    $licensedFeatures = &PMLicensedFeatures::getSingleton();
-                    if ($licensedFeatures->verifyfeature('7qhYmF1eDJWcEdwcUZpT0k4S0xTRStvdz09')) {
-                        G::LoadClass( "pmDrive" );
-                        $pmDrive = new PMDrive();
-                        if ($pmDrive->getStatusService()) {
-                            $app = new Application();
-                            $user = new Users();
-                            $dataUser = $user->load($_SESSION['USER_LOGGED']);
-                            $pmDrive->setDriveUser($dataUser['USR_EMAIL']);
-
-                            $appData = $app->Load($_SESSION['APPLICATION']);
-                            if ($appData['APP_DRIVE_FOLDER_UID'] == null) {
-                                $process = new Process();
-                                $process->setProUid($appData['PRO_UID']);
-
-                                $result = $pmDrive->createFolder($process->getProTitle() . ' - ' . G::LoadTranslation("ID_CASE") . ' #' . $appData['APP_NUMBER'],
-                                    $pmDrive->getFolderIdPMDrive($_SESSION['USER_LOGGED']));
-                                $appData['APP_DRIVE_FOLDER_UID'] = $result->id;
-                                $app->update($appData);
-                            }
-
-                            $result = $pmDrive->uploadFile('application/' . $sExtension, $arrayFileTmpName[$i],
-                                $arrayFileName[$i], $appData['APP_DRIVE_FOLDER_UID']);
-                            $oAppDocument->setDriveDownload('ATTACHED', $result->webContentLink);
-                            $fileIdDrive = $result->id;
-                            $aFields['DOC_VERSION'] = $iDocVersion;
-                            $aFields['APP_DOC_UID'] = $sAppDocUid;
-
-                            $oAppDocument->update($aFields);
-
-                            //add permissions
-                            $criteria = new Criteria('workflow');
-                            $criteria->addSelectColumn(ApplicationPeer::PRO_UID);
-                            $criteria->addSelectColumn(TaskUserPeer::TAS_UID);
-                            $criteria->addSelectColumn(TaskUserPeer::USR_UID);
-                            $criteria->addSelectColumn(TaskUserPeer::TU_RELATION);
-
-                            $criteria->add(ApplicationPeer::APP_UID, $_SESSION['APPLICATION']);
-                            $criteria->addJoin(ApplicationPeer::PRO_UID, TaskPeer::PRO_UID, Criteria::LEFT_JOIN);
-                            $criteria->addJoin(TaskPeer::TAS_UID, TaskUserPeer::TAS_UID, Criteria::LEFT_JOIN);
-
-                            $dataset = TaskUserPeer::doSelectRs($criteria);
-                            $dataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
-                            $userPermission = array();
-                            $case = new Cases();
-
-                            while ($dataset->next()) {
-                                $row = $dataset->getRow();
-                                if ($row['TU_RELATION'] == 1) {
-                                    //users
-                                    $dataUser = $user->load($row['USR_UID']);
-                                    if (array_search($dataUser['USR_EMAIL'], $userPermission) === false) {
-                                        $userPermission[] = $dataUser['USR_EMAIL'];
-                                    }
-                                } else {
-                                    //Groups
-                                    $criteria = new Criteria('workflow');
-                                    $criteria->addSelectColumn(UsersPeer::USR_EMAIL);
-                                    $criteria->addSelectColumn(UsersPeer::USR_UID);
-                                    $criteria->add(GroupUserPeer::GRP_UID, $row['USR_UID']);
-                                    $criteria->addJoin(GroupUserPeer::USR_UID, UsersPeer::USR_UID, Criteria::LEFT_JOIN);
-
-                                    $oDataset = AppDelegationPeer::doSelectRs($criteria);
-                                    $oDataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
-                                    while ($oDataset->next()) {
-                                        $aRow = $oDataset->getRow();
-                                        if (array_search($aRow['USR_EMAIL'], $userPermission) === false) {
-                                            $userPermission[] = $aRow['USR_EMAIL'];
-                                        }
-
-                                    }
-                                }
-
-                            }
-                            $userPermission = array_unique($userPermission);
-
-                            foreach ($userPermission as $key => $value) {
-                                $pmDrive->setPermission($appData['APP_DRIVE_FOLDER_UID'], $value, 'user', 'writer');
-                                $pmDrive->setPermission($fileIdDrive, $value);
-                            }
-                        }
-                    }
-                    /*----------------------------------********---------------------------------*/
-
                     G::uploadFile( $arrayFileTmpName[$i], $sPathName, $sFileName );
+
+                    //set variable for APP_DOC_UID
+                    $aData["APP_DATA"][$oAppDocument->getAppDocFieldname()] = G::json_encode([$oAppDocument->getAppDocUid()]);
+                    $aData["APP_DATA"][$oAppDocument->getAppDocFieldname() . "_label"] = G::json_encode([$oAppDocument->getAppDocFilename()]);
+                    $oCase->updateCase($_SESSION['APPLICATION'], $aData);
 
                     //Plugin Hook PM_UPLOAD_DOCUMENT for upload document
                     $oPluginRegistry = &PMPluginRegistry::getSingleton();

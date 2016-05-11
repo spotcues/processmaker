@@ -194,9 +194,19 @@ try {
 
     $columnsList = $listpeer::getFieldNames(BasePeer::TYPE_FIELDNAME);
 
+
+
     if (!(in_array($filters['sort'], $columnsList))) {
 
-        $filters['sort'] = '';
+        if ($filters['sort'] == 'APP_CURRENT_USER' && ($listName == 'participated' || $listName == 'participated_last')) {
+
+            $filters['sort'] = 'DEL_CURRENT_USR_LASTNAME';
+
+        } else {
+
+            $filters['sort'] = '';
+
+        }
 
     }
 
@@ -303,6 +313,14 @@ try {
                     $record["USR_LASTNAME"]    = $record["DEL_CURRENT_USR_LASTNAME"];
 
                     $record["APP_UPDATE_DATE"] = $record["DEL_DELEGATE_DATE"];
+
+                }
+
+
+
+                if (isset($record['DEL_CURRENT_TAS_TITLE'])) {
+
+                    $record['APP_TAS_TITLE'] = $record['DEL_CURRENT_TAS_TITLE'];
 
                 }
 

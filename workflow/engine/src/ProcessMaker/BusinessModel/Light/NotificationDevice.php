@@ -2,10 +2,23 @@
 
 namespace ProcessMaker\BusinessModel\Light;
 
+use \ProcessMaker\Services\Api;
 use G;
 
 class NotificationDevice
 {
+    
+    
+    public function checkMobileNotifications()
+    {
+        $conf = \System::getSystemConfiguration('', '', SYS_SYS);
+        $activeNotifications = true;
+        if (isset($conf['mobileNotifications'])) {
+            $activeNotifications = $conf['mobileNotifications'] == 1 ? true : false;
+        }
+        return $activeNotifications;
+    }
+    
     /**
      * Post Create register device with userUid
      *
@@ -135,7 +148,7 @@ class NotificationDevice
             }
 
         } catch (\Exception $e) {
-            throw new \Exception(\Api::STAT_APP_EXCEPTION, $e->getMessage());
+            throw new \Exception($e->getMessage(), Api::STAT_APP_EXCEPTION);
         }
         return $response;
     }
@@ -152,11 +165,13 @@ class NotificationDevice
     {
         try {
             $response = array();
+            $typeList = 'todo';
             foreach ($aTasks as $aTask) {
                 $arrayTaskUser = array();
                 switch ($aTask["TAS_ASSIGN_TYPE"]) {
                     case "SELF_SERVICE":
                         $arrayTaskUser = $this->getTaskUserSelfService($aTask["TAS_UID"], $appFields);
+                        $typeList = 'unassigned';
                         break;
                     default:
                         if (isset($aTask["USR_UID"]) && !empty($aTask["USR_UID"])) {
@@ -181,7 +196,7 @@ class NotificationDevice
                     'caseId' => $appFields['APP_UID'],
                     'caseTitle' => $appFields['APP_TITLE'],
                     'delIndex' => $delIndex,
-                    'typeList' => 'todo'
+                    'typeList' => $typeList
                 );
 
                 if ($userIds) {
@@ -227,8 +242,9 @@ class NotificationDevice
                 }
             }
         } catch (\Exception $e) {
-            throw new \Exception(\Api::STAT_APP_EXCEPTION, $e->getMessage());
+            throw new \Exception($e->getMessage(), Api::STAT_APP_EXCEPTION);
         }
+        
         return $response;
     }
 

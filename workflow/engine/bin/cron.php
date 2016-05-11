@@ -71,8 +71,11 @@ try {
     $classLoader->add(PATH_TRUNK . 'workflow' . PATH_SEP . 'engine' . PATH_SEP . 'src' . PATH_SEP, 'ProcessMaker');
     $classLoader->add(PATH_TRUNK . 'workflow' . PATH_SEP . 'engine' . PATH_SEP . 'src' . PATH_SEP);
 
+    $classLoader->addModelClassPath(PATH_TRUNK . 'workflow' . PATH_SEP . 'engine' . PATH_SEP . 'classes' . PATH_SEP . 'model' . PATH_SEP);
     //Load classes
+    G::LoadThirdParty('propel', 'Propel');
     G::LoadClass('system');
+    G::LoadClass('tasks');
 
     $arraySystemConfiguration = System::getSystemConfiguration();
 

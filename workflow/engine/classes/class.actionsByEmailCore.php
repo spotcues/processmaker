@@ -45,19 +45,24 @@ class actionsByEmailCoreClass extends PMPlugin
                     throw new Exception('The parameter $data->USR_UID is null.');
                 }
 
-                if ($data->TAS_UID == '') {
+                if ($data->TAS_UID === '') {
                     throw new Exception('The parameter $data->TAS_UID is empty.');
                 }
 
-                if ($data->APP_UID == '') {
+                if ($data->APP_UID === '') {
                     throw new Exception('The parameter $data->APP_UID is empty.');
                 }
 
-                if ($data->DEL_INDEX == '') {
+                if ($data->DEL_INDEX === '') {
                     throw new Exception('The parameter $data->DEL_INDEX is empty.');
                 }
 
-                if ($data->USR_UID == '') {
+                if ($data->DEL_INDEX === 1) {
+                    error_log('The parameter $data->DEL_INDEX is 1, you can not use ActionsByEmail in the initial task', 0);
+                    return;
+                }
+
+                if ($data->USR_UID === '') {
                     error_log('The parameter $data->USR_UID is empty, the routed task may be a self-service type, actions by email does not work with self-service task types.', 0);
                 }
             } catch(Exception $e) {
@@ -193,7 +198,7 @@ class actionsByEmailCoreClass extends PMPlugin
                                         if(isset($variables['items'][0]['items'])){
                                             $fields = $variables['items'][0]['items'];
                                             foreach ($fields as $key => $value) {
-                                                foreach($value as $var){ G::pr($var);
+                                                foreach($value as $var){
                                                     if(isset($var['variable'])){
                                                         if ($var['variable'] == $actionField) {
                                                              $field->label = $var['label'];
@@ -215,6 +220,7 @@ class actionsByEmailCoreClass extends PMPlugin
                                         $__ABE__ .= '<strong>' . $field->label . '</strong><br /><table align="left" border="0"><tr>';
                                         switch ($field->type) {
                                             case 'dropdown':
+                                            case 'radio':
                                             case 'radiogroup':
                                                 $index = 1;
                                                 $__ABE__.='<br /><td><table align="left" cellpadding="2"><tr>';

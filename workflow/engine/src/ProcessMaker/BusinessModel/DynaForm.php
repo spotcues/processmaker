@@ -269,6 +269,21 @@ class DynaForm
     }
 
     /**
+     * Throw the exception "The DynaForm doesn't exist"
+     *
+     * @param string $dynaFormUid           Unique id of DynaForm
+     * @param string $fieldNameForException Field name for the exception
+     *
+     * @return void
+     */
+    private function throwExceptionDynaFormDoesNotExist($dynaFormUid, $fieldNameForException)
+    {
+        throw new \Exception(\G::LoadTranslation(
+            'ID_DYNAFORM_DOES_NOT_EXIST', [$fieldNameForException, $dynaFormUid]
+        ));
+    }
+
+    /**
      * Verify if doesn't exists the DynaForm in table DYNAFORM
      *
      * @param string $dynaFormUid           Unique id of DynaForm
@@ -293,7 +308,7 @@ class DynaForm
             $rsCriteria = \DynaformPeer::doSelectRS($criteria);
 
             if (!$rsCriteria->next()) {
-                throw new \Exception(\G::LoadTranslation("ID_DYNAFORM_DOES_NOT_EXIST", array($fieldNameForException, $dynaFormUid)));
+                $this->throwExceptionDynaFormDoesNotExist($dynaFormUid, $fieldNameForException);
             }
         } catch (\Exception $e) {
             throw $e;
@@ -340,6 +355,38 @@ class DynaForm
             if ($arrayDynaFormData["DYN_TYPE"] != "grid") {
                 throw new \Exception(\G::LoadTranslation("ID_DYNAFORM_IS_NOT_GRID", array($fieldNameForException, $dynaFormUid)));
             }
+        } catch (\Exception $e) {
+            throw $e;
+        }
+    }
+
+    /**
+     * Get DynaForm record
+     *
+     * @param string $dynaFormUid                   Unique id of DynaForm
+     * @param array  $arrayVariableNameForException Variable name for exception
+     * @param bool   $throwException Flag to throw the exception if the main parameters are invalid or do not exist
+     *                               (TRUE: throw the exception; FALSE: returns FALSE)
+     *
+     * @return array Returns an array with DynaForm record, ThrowTheException/FALSE otherwise
+     */
+    public function getDynaFormRecordByPk($dynaFormUid, array $arrayVariableNameForException, $throwException = true)
+    {
+        try {
+            $obj = \DynaformPeer::retrieveByPK($dynaFormUid);
+
+            if (is_null($obj)) {
+                if ($throwException) {
+                    $this->throwExceptionDynaFormDoesNotExist(
+                        $dynaFormUid, $arrayVariableNameForException['$dynaFormUid']
+                    );
+                } else {
+                    return false;
+                }
+            }
+
+            //Return
+            return $obj->toArray(\BasePeer::TYPE_FIELDNAME);
         } catch (\Exception $e) {
             throw $e;
         }
@@ -553,7 +600,7 @@ class DynaForm
             $this->throwExceptionIfNotExistsDynaForm($dynaFormUidCopyImport, $processUidCopyImport, $this->getFieldNameByFormatFieldName("COPY_IMPORT.DYN_UID"));
 
             //Copy/Import
-            
+
             //Copy content if version is 2
             if ($arrayData["DYN_VERSION"] === 2) {
                 $dynaFormOld = new \Dynaform();
@@ -562,7 +609,7 @@ class DynaForm
 
                 $arrayData["DYN_CONTENT"] = $arrayDynaFormData["DYN_CONTENT"];
             }
-            
+
             //Create
             $arrayData = $this->create($processUid, $arrayData);
 
@@ -976,7 +1023,7 @@ class DynaForm
             if ($record["DYN_VERSION"] == 0) {
                 $record["DYN_VERSION"] = 1;
             }
-            
+
             $record["DYN_CONTENT"] = preg_replace("/\\\\u([a-f0-9]{4})/e", "iconv('UCS-4LE','UTF-8',pack('V', hexdec('U$1')))", $record["DYN_CONTENT"]);
 
             return array(
@@ -1147,7 +1194,7 @@ class DynaForm
             throw $e;
         }
     }
-    
+
     /**
      * Get data of a DynaForm History
      *

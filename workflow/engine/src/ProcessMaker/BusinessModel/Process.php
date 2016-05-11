@@ -325,12 +325,12 @@ class Process
     public function throwExceptionIfDataNotMetPagerVarDefinition($arrayData, $arrayFieldNameForException)
     {
         try {
-            foreach ($arrayData as $key => $value) {
-                $nameForException = (isset($arrayFieldNameForException[$key]))? $arrayFieldNameForException[$key] : $key;
+            $result = \ProcessMaker\BusinessModel\Validator::validatePagerDataByPagerDefinition(
+                $arrayData, $arrayFieldNameForException
+            );
 
-                if (!is_null($value) && ($value . "" == "" || !preg_match("/^(?:\+|\-)?(?:0|[1-9]\d*)$/", $value . "") || (int)($value) < 0)) {
-                    throw new \Exception(\G::LoadTranslation('ID_INVALID_VALUE_EXPECTING_POSITIVE_INTEGER', [$nameForException]));
-                }
+            if ($result !== true) {
+                throw new \Exception($result);
             }
         } catch (\Exception $e) {
             throw $e;
@@ -538,20 +538,42 @@ class Process
 
             $trigger = new \ProcessMaker\BusinessModel\Trigger();
 
+            /**
+             * Try catch block is added to escape the exception and continue editing 
+             * the properties of the process, otherwise there is no way to edit 
+             * the properties that the exception is thrown: trigger nonexistent. 
+             * The same goes for the similar blocks.
+             */
             if (isset($arrayData["PRO_TRI_DELETED"]) && $arrayData["PRO_TRI_DELETED"] . "" != "") {
-                $trigger->throwExceptionIfNotExistsTrigger($arrayData["PRO_TRI_DELETED"], $processUid, $this->arrayFieldNameForException["processTriDeleted"]);
+                try {
+                    $trigger->throwExceptionIfNotExistsTrigger($arrayData["PRO_TRI_DELETED"], $processUid, $this->arrayFieldNameForException["processTriDeleted"]);
+                } catch (\Exception $e) {
+                    
+                }
             }
 
             if (isset($arrayData["PRO_TRI_CANCELED"]) && $arrayData["PRO_TRI_CANCELED"] . "" != "") {
-                $trigger->throwExceptionIfNotExistsTrigger($arrayData["PRO_TRI_CANCELED"], $processUid, $this->arrayFieldNameForException["processTriCanceled"]);
+                try {
+                    $trigger->throwExceptionIfNotExistsTrigger($arrayData["PRO_TRI_CANCELED"], $processUid, $this->arrayFieldNameForException["processTriCanceled"]);
+                } catch (\Exception $e) {
+                    
+                }
             }
 
             if (isset($arrayData["PRO_TRI_PAUSED"]) && $arrayData["PRO_TRI_PAUSED"] . "" != "") {
-                $trigger->throwExceptionIfNotExistsTrigger($arrayData["PRO_TRI_PAUSED"], $processUid, $this->arrayFieldNameForException["processTriPaused"]);
+                try {
+                    $trigger->throwExceptionIfNotExistsTrigger($arrayData["PRO_TRI_PAUSED"], $processUid, $this->arrayFieldNameForException["processTriPaused"]);
+                } catch (\Exception $e) {
+                    
+                }
             }
 
             if (isset($arrayData["PRO_TRI_REASSIGNED"]) && $arrayData["PRO_TRI_REASSIGNED"] . "" != "") {
-                $trigger->throwExceptionIfNotExistsTrigger($arrayData["PRO_TRI_REASSIGNED"], $processUid, $this->arrayFieldNameForException["processTriReassigned"]);
+                try {
+                    $trigger->throwExceptionIfNotExistsTrigger($arrayData["PRO_TRI_REASSIGNED"], $processUid, $this->arrayFieldNameForException["processTriReassigned"]);
+                } catch (\Exception $e) {
+                    
+                }
             }
 
             if (isset($arrayData["PRO_PARENT"])) {
@@ -562,6 +584,12 @@ class Process
                 $this->throwExceptionIfNotExistsUser($arrayData["PRO_CREATE_USER"], $this->arrayFieldNameForException["processCreateUser"]);
             }
 
+            //Update name in table Bpmn_Project and Bpmn_Process
+            $oProject = new BpmnProject();
+            $oProject->update($processUid, array('PRJ_NAME'=>$arrayData['PRO_TITLE']));
+            $oProcess = new BpmnProcess();
+            //The relationship Bpmn_Project with Bpmn_Process is 1:n
+            $oProcess->updateAllProcessesByProject($processUid, array('PRO_NAME'=>$arrayData['PRO_TITLE']));
             //Update
             $process = new \Process();
 

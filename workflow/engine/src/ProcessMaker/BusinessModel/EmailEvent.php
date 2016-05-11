@@ -247,16 +247,16 @@ class EmailEvent
     {
         try {
             //Verify data
-            if($passValidation) {
+            if ($passValidation) {
                 $this->verifyIfEmailEventExists($emailEventUid);
 
                 //Delete file
                 $filesManager = new \ProcessMaker\BusinessModel\FilesManager();
                 $arrayData = $this->getEmailEventDataByUid($pro_uid, $emailEventUid);
                 $arrayData = array_change_key_case($arrayData, CASE_UPPER);
-                if(sizeof($arrayData)) {
+                if (sizeof($arrayData)) {
                     $prfUid = $arrayData['PRF_UID'];
-                    $filesManager->deleteProcessFilesManager($pro_uid,$prfUid);
+                    $filesManager->deleteProcessFilesManager($pro_uid, $prfUid, true);
                 }
             }
             //Delete Email event

@@ -136,6 +136,8 @@ try {
 
     G::LoadThirdParty('smarty/libs', 'Smarty.class');
 
+    G::LoadThirdParty('propel', 'Propel');
+
     G::LoadSystem('error');
 
     G::LoadSystem('dbconnection');
@@ -173,6 +175,8 @@ try {
     G::LoadSystem('httpProxyController');
 
     G::LoadClass('system');
+
+    G::LoadClass('tasks');
 
 
 
@@ -221,8 +225,6 @@ try {
     define('MEMCACHED_ENABLED',  $arraySystemConfiguration['memcached']);
 
     define('MEMCACHED_SERVER',   $arraySystemConfiguration['memcached_server']);
-
-    define('TIME_ZONE',          ini_get('date.timezone'));
 
 
 
@@ -505,6 +507,26 @@ try {
         }
 
 
+
+        //Set Time Zone
+
+        $systemUtcTimeZone = false;
+
+
+
+        /*----------------------------------********---------------------------------*/
+
+
+
+        ini_set('date.timezone', ($systemUtcTimeZone)? 'UTC' : $arraySystemConfiguration['time_zone']); //Set Time Zone
+
+
+
+        define('TIME_ZONE', ini_get('date.timezone'));
+
+
+
+        //Processing
 
         eprintln('Processing workspace: ' . $workspace, 'green');
 
@@ -1655,5 +1677,3 @@ function setExecutionResultMessage($m, $t='')
 
 
 /*----------------------------------********---------------------------------*/
-
-

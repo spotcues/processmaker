@@ -3548,4 +3548,6 @@ return array(
     'Google_Utils_URITemplate' => $vendorDir . '/google/apiclient/src/Google/Utils/URITemplate.php',
     'Google_Verifier_Abstract' => $vendorDir . '/google/apiclient/src/Google/Verifier/Abstract.php',
     'Google_Verifier_Pem' => $vendorDir . '/google/apiclient/src/Google/Verifier/Pem.php',
+    'Securimage' => $vendorDir . '/dapphp/securimage/securimage.php',
+    'Securimage_Color' => $vendorDir . '/dapphp/securimage/securimage.php',
 );

@@ -717,7 +717,7 @@ class BpmnWorkflow extends Project\Bpmn
     }
     */
 
-    public function createTaskByElement($elementUid, $elementType, $key, $elementUidDest="")
+    public function createTaskByElement($elementUid, $elementType, $key, $elementUidDest="", $routeType = '')
     {
         try {
             $flagElementTaskRelation = false;
@@ -735,7 +735,8 @@ class BpmnWorkflow extends Project\Bpmn
                     $flagElementTaskRelation = false;
                 }
             }
-            if ($flagElementTaskRelation) {
+            if ($flagElementTaskRelation || (isset($this->arrayElementTaskRelation[$elementUid]) && $routeType ===
+                    'SEC-JOIN')) {
                 $taskUid = $this->arrayElementTaskRelation[$elementUid];
             } else {
                 $taskPosX = 0;
@@ -816,7 +817,10 @@ class BpmnWorkflow extends Project\Bpmn
                 }
 
                 if($elementUidDest != ""){
-                    $aElement[$elementUid][$elementUidDest] = $elementUidDest;
+                    $aElement[$elementUid] = $elementUidDest;
+                    if($routeType === 'SEC-JOIN'){
+                        $this->arrayElementTaskRelation[$elementUid] = $taskUid;
+                    }else
                     $this->arrayElementTaskRelation = $aElement;
                 }else {
                     //Array - Add element
@@ -911,7 +915,8 @@ class BpmnWorkflow extends Project\Bpmn
                             $gatewayUid,
                             "bpmnGateway",
                             "gateway-to-gateway",
-                            $arrayFlowData["FLO_ELEMENT_DEST"]
+                            $arrayFlowData["FLO_ELEMENT_DEST"],
+                            $routeType
                         );
 
                         $result = $this->wp->addRoute($activityUid, $taskUid, $routeType, $routeCondition, $routeDefault);
@@ -1212,10 +1217,10 @@ class BpmnWorkflow extends Project\Bpmn
         }
     }
 
-    public function remove($flagForceRemoveProject = false, $flagRemoveCases = true)
+    public function remove($flagForceRemoveProject = false, $flagRemoveCases = true, $onlyDiagram = false)
     {
         parent::remove($flagForceRemoveProject);
-        $this->wp->remove($flagRemoveCases);
+        $this->wp->remove($flagRemoveCases, $onlyDiagram);
     }
 
     public static function createFromStruct(array $projectData, $generateUid = true)

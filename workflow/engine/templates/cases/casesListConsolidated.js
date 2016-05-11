@@ -237,7 +237,7 @@ function openCase(){
     var appUid    = rowModel.data.APP_UID;
     var delIndex  = rowModel.data.DEL_INDEX;
     var caseTitle = (rowModel.data.APP_TITLE) ? rowModel.data.APP_TITLE : rowModel.data.APP_UID;
-    if(ieVersion != 11) {
+    if(!isIE) {
       Ext.Msg.show({
         msg: _("ID_OPEN_CASE") + " " + caseTitle,
         width:300,
@@ -258,11 +258,13 @@ function openCase(){
     }
     params += '&action=' + 'todo';
     
-    if(ieVersion == 11) {
+    if(isIE) {
       if(newCaseNewTab) {
         newCaseNewTab.close();
       }
-        newCaseNewTab = window.open(requestFile + '?' + params);       
+
+      newCaseNewTab = window.open(requestFile + '?' + params);
+      newCaseNewTab.name = PM.Sessions.getCookie('PM-TabPrimary');
     } else {
       redirect(requestFile + '?' + params);
     }
@@ -272,22 +274,24 @@ function openCase(){
 }
 
 function jumpToCase(appNumber){
-  if(ieVersion != 11) {  
+  if(!isIE) {
     Ext.MessageBox.show({ msg: _('ID_PROCESSING'), wait:true,waitConfig: {interval:200} });
   }
   Ext.Ajax.request({
     url: 'cases_Ajax',
     success: function(response) {
-      var res = Ext.decode(response.responseText);
+      var res = Ext.decode(response.responseText),
+          nameTab;
       if (res.exists === true) {
         params = 'APP_NUMBER=' + appNumber;
         params += '&action=jump';
         requestFile = '../cases/open';
-        if(ieVersion == 11) {
+        if(isIE) {
           if(newCaseNewTab) {
             newCaseNewTab.close();
           }
-            newCaseNewTab = window.open(requestFile + '?' + params);       
+          nameTab = PM.Sessions.getCookie('PM-TabPrimary') + '_openCase';
+            newCaseNewTab = window.open(requestFile + '?' + params, nameTab);
         } else {
           redirect(requestFile + '?' + params);
         }
@@ -421,27 +425,27 @@ Ext.onReady(function () {
   });
 
   var buttonProcess = new Ext.Action({
-    text: "Derivate",
+    text: _("ID_DERIVATED"),
     //iconCls: 'ICON_CASES_PAUSED',
     handler : function (){
-      Ext.Msg.confirm('Confirm Routing', 'Route cases per batch?',
+      Ext.Msg.confirm(_("ID_CONFIRM_ROUTING"), _("ID_ROUTE_BATCH_ROUTING"),
         function(btn, text){
-          if (btn=='yes'){
-              htmlMessage = "";
-              var selectedRow = Ext.getCmp(gridId).getSelectionModel().getSelections();
-              var maxLenght = selectedRow.length;
-              for (var i in selectedRow) {
-                rowGrid = selectedRow[i].data
-                for (fieldGrid in rowGrid){
-                  if(fieldGrid != 'APP_UID' && fieldGrid != 'APP_NUMBER' && fieldGrid != 'APP_TITLE' && fieldGrid != 'DEL_INDEX' ){
-                       fieldGridGral = fieldGrid;
-                       fieldGridGralVal = rowGrid[fieldGrid];
-                  }
-                }
-                if (selectedRow[i].data) {
-                    ajaxDerivationRequest(selectedRow[i].data["APP_UID"], selectedRow[i].data["DEL_INDEX"], maxLenght, selectedRow[i].data["APP_NUMBER"],fieldGridGral, fieldGridGralVal);
+          if (btn == 'yes') {
+            htmlMessage = "";
+            var selectedRow = Ext.getCmp(gridId).getSelectionModel().getSelections();
+            var maxLenght = selectedRow.length;
+            for (var i in selectedRow) {
+              rowGrid = selectedRow[i].data
+              for (fieldGrid in rowGrid) {
+                if (fieldGrid != 'APP_UID' && fieldGrid != 'APP_NUMBER' && fieldGrid != 'APP_TITLE' && fieldGrid != 'DEL_INDEX') {
+                  fieldGridGral = fieldGrid;
+                  fieldGridGralVal = rowGrid[fieldGrid];
                 }
               }
+              if (selectedRow[i].data) {
+                ajaxDerivationRequest(selectedRow[i].data["APP_UID"], selectedRow[i].data["DEL_INDEX"], maxLenght, selectedRow[i].data["APP_NUMBER"], fieldGridGral, fieldGridGralVal);
+              }
+            }
           }
          }
       );
@@ -1321,7 +1325,7 @@ function ajaxDerivationRequest(appUid, delIndex, maxLenght, appNumber, fieldGrid
 
       if (index == maxLenght) {
         Ext.MessageBox.show({
-          title: "Derivation Result",
+          title: _("ID_DERIVATION_RESULT"),
           msg: htmlMessage,
 
           fn: function (btn, text, opt) {

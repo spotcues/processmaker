@@ -311,7 +311,7 @@ class AdditionalTables extends BaseAdditionalTables
         $pmTable->remove();
     }
 
-    public function getPHPName($sName)
+    public static function getPHPName($sName)
     {
         $sName = trim($sName);
         $aAux = explode('_', $sName);
@@ -964,6 +964,31 @@ class AdditionalTables extends BaseAdditionalTables
         }
     }
 
+    /**
+     * @param $proUid
+     * @return array
+     */
+    public function getReportTables($proUid)
+    {
+        $reportTables = array();
+        $oCriteria = new Criteria('workflow');
+        $oCriteria->addSelectColumn(AdditionalTablesPeer::ADD_TAB_UID);
+        $oCriteria->addSelectColumn(AdditionalTablesPeer::ADD_TAB_NAME);
+        $oCriteria->addSelectColumn(AdditionalTablesPeer::ADD_TAB_DESCRIPTION);
+        $oCriteria->addSelectColumn(AdditionalTablesPeer::ADD_TAB_TYPE);
+        $oCriteria->addSelectColumn(AdditionalTablesPeer::ADD_TAB_TAG);
+        $oCriteria->addSelectColumn(AdditionalTablesPeer::PRO_UID);
+        $oCriteria->addSelectColumn(AdditionalTablesPeer::DBS_UID);
+        $oCriteria->add(AdditionalTablesPeer::PRO_UID, $proUid, Criteria::EQUAL);
+        $dt = ContentPeer::doSelectRS($oCriteria);
+        $dt->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+        while ($dt->next()) {
+            $row = $dt->getRow();
+            array_push($reportTables, $row);
+        }
+        return $reportTables;
+    }
+    
     public function getAll($start = 0, $limit = 20, $filter = '', $process = null)
     {
         $oCriteria = new Criteria('workflow');

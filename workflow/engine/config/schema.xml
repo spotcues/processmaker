@@ -90,6 +90,9 @@
       </vendor>
     </index>
   </table>
+  <table name="APP_SEQUENCE" idMethod="native">
+    <column name="ID" type="INTEGER" required="true" primaryKey="true"/>
+  </table>
   <table name="APP_DELEGATION">
     <vendor type="mysql">
       <parameter name="Name" value="APP_DELEGATION"/>
@@ -191,6 +194,18 @@
             <parameter name="Extra" value=""/>
         </vendor>
     </column>
+    <column name="SYNC_WITH_DRIVE" type="VARCHAR" size="32" required="true" default="UNSYNCHRONIZED"/>
+    <column name="SYNC_PERMISSIONS" type="LONGVARCHAR" required="false">
+        <vendor type="mysql">
+            <parameter name="Field" value="SYNC_PERMISSIONS"/>
+            <parameter name="Type" value="MEDIUMTEXT"/>
+            <parameter name="Null" value="YES"/>
+            <parameter name="Key" value=""/>
+            <parameter name="Default" value=""/>
+            <parameter name="Extra" value=""/>
+        </vendor>
+    </column>
+
     <validator column="APP_DOC_UID">
       <rule name="maxLength" value="32" message="Application Document UID can be no larger than ${value} in size"/>
       <rule name="required" message="Application Document UID is required."/>
@@ -221,6 +236,10 @@
     <validator column="APP_DOC_STATUS">
       <rule name="validValues" value="ACTIVE|DELETED" message="Please select a valid document status (ACTIVE|DELETED)."/>
       <rule name="required" message="Application Document Status is required."/>
+    </validator>
+    <validator column="SYNC_WITH_DRIVE">
+        <rule name="validValues" value="SYNCHRONIZED|UNSYNCHRONIZED|NO_EXIST_FILE_PM" message="Please select a valid type."/>
+        <rule name="required" message="Type is required."/>
     </validator>
 
     <index name="indexAppDocument">
@@ -280,7 +299,7 @@
     <column name="APP_MSG_ATTACH" type="LONGVARCHAR" required="false"/>
     <column name="APP_MSG_SEND_DATE" type="TIMESTAMP" required="true"/>
     <column name="APP_MSG_SHOW_MESSAGE" type="TINYINT" required="true" default="1"/>
-    <column name="APP_MSG_ERROR" type="LONGVARCHAR" required="false" default=""/>
+    <column name="APP_MSG_ERROR" type="LONGVARCHAR" required="false"/>
   </table>
   <table name="APP_OWNER">
     <vendor type="mysql">
@@ -365,6 +384,16 @@
       <rule name="maxLength" value="5" message="Language can be no larger than ${value} in size"/>
       <rule name="required" message="Language is required."/>
     </validator>
+    <index name="indexUidLang">
+      <index-column name="CON_ID"/>
+      <index-column name="CON_LANG"/>
+    </index>
+    <index name="indexCatParUidLang">
+      <index-column name="CON_CATEGORY"/>
+      <index-column name="CON_PARENT"/>
+      <index-column name="CON_ID"/>
+      <index-column name="CON_LANG"/>
+    </index>
     <index name="indexUid">
       <index-column name="CON_ID"/>
       <index-column name="CON_CATEGORY"/>
@@ -502,7 +531,7 @@
       <parameter name="Create_options" value=""/>
       <parameter name="Comment" value=""/>
     </vendor>
-    <column name="GRP_UID" type="VARCHAR" size="32" required="true" primaryKey="true" default=""/>
+    <column name="GRP_UID" type="VARCHAR" size="32" required="true" primaryKey="true"/>
     <column name="GRP_STATUS" type="CHAR" size="8" required="true" default="ACTIVE"/>
     <column name="GRP_LDAP_DN" type="VARCHAR" size="255" required="true" default=""/>
     <column name="GRP_UX" type="VARCHAR" size="128" default="NORMAL"/>
@@ -1264,6 +1293,9 @@
     <column name="TAS_SELFSERVICE_TIME_UNIT" type="VARCHAR" size="15" default=""/>
     <column name="TAS_SELFSERVICE_TRIGGER_UID" type="VARCHAR" size="32" default=""/>
     <column name="TAS_SELFSERVICE_EXECUTION" type="VARCHAR" size="15" default="EVERY_TIME"/>
+    <index name="indexTasUid">
+      <index-column name="TAS_UID"/>
+    </index>
 
     <validator column="TAS_TYPE">
         <rule name="validValues" value="NORMAL|ADHOC|SUBPROCESS|HIDDEN|GATEWAYTOGATEWAY|WEBENTRYEVENT|END-MESSAGE-EVENT|START-MESSAGE-EVENT|INTERMEDIATE-THROW-MESSAGE-EVENT|INTERMEDIATE-CATCH-MESSAGE-EVENT|SCRIPT-TASK|START-TIMER-EVENT|INTERMEDIATE-CATCH-TIMER-EVENT|END-EMAIL-EVENT" message="Please set a valid value for TAS_TYPE" />
@@ -1508,6 +1540,9 @@
     </column>
     <column name="USR_TIME_ZONE" type="VARCHAR" size="100" default="" />
     <column name="USR_DEFAULT_LANG" type="VARCHAR" size="10" default=""/>
+    <index name="indexUsrUid">
+      <index-column name="USR_UID"/>
+    </index>
     <validator column="USR_STATUS">
       <rule name="validValues" value="ACTIVE|INACTIVE|VACATION|CLOSED" message="Please select a valid type."/>
       <rule name="required" message="Type is required."/>
@@ -2487,6 +2522,27 @@
     <column name="APP_FINISH_DATE" type="TIMESTAMP" required="false"/>
     <column name="APP_UPDATE_DATE" type="TIMESTAMP" required="true"/>
     <column name="APP_OVERDUE_PERCENTAGE" type="DOUBLE" required="true"/>
+    <index name="indexAppUid">
+      <index-column name="APP_UID"/>
+    </index>
+    <index name="indexTasUid">
+      <index-column name="TAS_UID"/>
+    </index>
+    <index name="indexUsrUid">
+      <index-column name="USR_UID"/>
+    </index>
+    <index name="indexPrevUsrUid">
+      <index-column name="PREVIOUS_USR_UID"/>
+    </index>
+    <index name="indexProUid">
+      <index-column name="PRO_UID"/>
+      <vendor type="mysql">
+          <parameter name="Table" value="APP_CACHE_VIEW"/>
+          <parameter name="Non_unique" value="1"/>
+          <parameter name="Key_name" value="indexProUid"/>
+          <parameter name="Seq_in_index" value="1"/>
+      </vendor>
+    </index>
     <index name="indexAppNumber">
       <index-column name="APP_NUMBER"/>
       <vendor type="mysql">
@@ -2520,6 +2576,15 @@
         <parameter name="Table" value="APP_CACHE_VIEW"/>
         <parameter name="Non_unique" value="1"/>
         <parameter name="Key_name" value="tastitle"/>
+        <parameter name="Seq_in_index" value="1"/>
+      </vendor>
+    </index>
+    <index name="taskUid">
+      <index-column name="TAS_UID"/>
+      <vendor type="mysql">
+        <parameter name="Table" value="APP_CACHE_VIEW"/>
+        <parameter name="Non_unique" value="1"/>
+        <parameter name="Key_name" value="taskUid"/>
         <parameter name="Seq_in_index" value="1"/>
       </vendor>
     </index>
@@ -3951,7 +4016,7 @@
         <column name="DEL_INDEX" type="INTEGER" required="true" default="0" />
         <column name="PRO_UID"   type="VARCHAR" size="32" required="true" />
         <column name="TAS_UID"   type="VARCHAR" size="32" required="true" />
-        <column name="GRP_UID"   type="LONGVARCHAR" required="true" default="" />
+        <column name="GRP_UID"   type="LONGVARCHAR" required="true" />
     </table>
 
     <table name="LIST_INBOX">
@@ -3995,6 +4060,15 @@
         <column name="DEL_DUE_DATE" type="TIMESTAMP" required="false"/>
         <column name="DEL_RISK_DATE" type="TIMESTAMP" required="false" />
         <column name="DEL_PRIORITY" type="VARCHAR" size="32" required="true" default="3"/>
+        <index name="indexUser">
+          <index-column name="USR_UID"/>
+          <vendor type="mysql">
+            <parameter name="Table" value="LIST_INBOX"/>
+            <parameter name="Non_unique" value="1"/>
+            <parameter name="Key_name" value="indexUser"/>
+            <parameter name="Seq_in_index" value="1"/>
+          </vendor>
+        </index>
         <index name="indexInboxUser">
             <index-column name="USR_UID"/>
             <index-column name="DEL_DELEGATE_DATE"/>
@@ -4107,6 +4181,7 @@
         <column name="DEL_CURRENT_USR_USERNAME" type="VARCHAR" size="100" default=""/>
         <column name="DEL_CURRENT_USR_FIRSTNAME" type="VARCHAR" size="50" default=""/>
         <column name="DEL_CURRENT_USR_LASTNAME" type="VARCHAR" size="50" default=""/>
+        <column name="DEL_CURRENT_TAS_TITLE" type="VARCHAR" size="255" required="true" default=""/>
         <column name="DEL_DELEGATE_DATE" type="TIMESTAMP" required="true"/>
         <column name="DEL_INIT_DATE" type="TIMESTAMP" required="false"/>
         <column name="DEL_DUE_DATE" type="TIMESTAMP" required="false"/>
@@ -4152,7 +4227,7 @@
         <column name="APP_PRO_TITLE" type="VARCHAR" size="255" required="false" default=""/>
         <column name="APP_TAS_TITLE" type="VARCHAR" size="255" required="false" default=""/>
         <column name="APP_CREATE_DATE" type="TIMESTAMP" required="false"/>
-        <column name="APP_FINISH_DATE" type="TIMESTAMP" required="true"/>
+        <column name="APP_FINISH_DATE" type="TIMESTAMP" required="false"/>
         <column name="DEL_INDEX" type="INTEGER" required="true" default="0"/>
         <column name="DEL_PREVIOUS_USR_UID" type="VARCHAR" size="32" default=""/>
         <column name="DEL_CURRENT_USR_USERNAME" type="VARCHAR" size="100" default=""/>
@@ -5097,7 +5172,7 @@
         <column name="CAT_LABEL_ID"     type="VARCHAR" size="100" required="true"  default=""/>
         <column name="CAT_TYPE"         type="VARCHAR" size="100" required="true"  primaryKey="true" default=""/>
         <column name="CAT_FLAG"         type="VARCHAR" size="50"  required="false" default=""/>
-        <column name="CAT_OBSERVATION"  type="LONGVARCHAR"        required="false" default=""/>
+        <column name="CAT_OBSERVATION"  type="LONGVARCHAR"        required="false" />
         <column name="CAT_CREATE_DATE"  type="TIMESTAMP"          required="true" />
         <column name="CAT_UPDATE_DATE"  type="TIMESTAMP"          required="false" />
         <index name="indexType">
@@ -5164,7 +5239,7 @@
         <column name="TMREVN_DAY"                 type="VARCHAR" size="5" required="true" default="" />
         <column name="TMREVN_HOUR"                type="VARCHAR" size="5" required="true" default="" />
         <column name="TMREVN_MINUTE"              type="VARCHAR" size="5" required="true" default="" />
-        <column name="TMREVN_CONFIGURATION_DATA"  type="LONGVARCHAR" required="true" default="" />
+        <column name="TMREVN_CONFIGURATION_DATA"  type="LONGVARCHAR" required="true" />
         <column name="TMREVN_NEXT_RUN_DATE"       type="TIMESTAMP" required="false" />
         <column name="TMREVN_LAST_RUN_DATE"       type="TIMESTAMP" required="false" />
         <column name="TMREVN_LAST_EXECUTION_DATE" type="TIMESTAMP" required="false" />
@@ -5230,4 +5305,31 @@
       </vendor>
     </index>
   </table>
+
+    <table name="GMAIL_RELABELING">
+        <vendor type="mysql">
+        <parameter name="Name" value="GMAIL_RELABELING"/>
+          <parameter name="Engine" value="InnoDB" />
+          <parameter name="Version" value="10" />
+          <parameter name="Row_format" value="Dynamic" />
+          <parameter name="Data_free" value="0" />
+          <parameter name="Auto_increment" value="" />
+          <parameter name="Check_time" value="" />
+          <parameter name="Collation" value="utf8_general_ci" />
+          <parameter name="Checksum" value="" />
+          <parameter name="Create_options" value="" />
+          <parameter name="Comment" value="Task for label relabaling"/>
+        </vendor>
+        <column name="LABELING_UID" type="VARCHAR" size="32" required="true"  primaryKey="true"/>
+        <column name="CREATE_DATE" type="TIMESTAMP" required="true"/>
+        <column name="APP_UID" type="VARCHAR" size="32" required="true"  default=""/>
+        <column name="DEL_INDEX" type="INTEGER" required="true"   default="0"/>
+        <column name="CURRENT_LAST_INDEX" type="INTEGER" required="true"  default="0"/>
+        <column name="UNASSIGNED" type="INTEGER" required="true"  default="0"/>
+        <column name="STATUS" type="VARCHAR" size="32" required="true"  default="pending"/>
+        <column name="MSG_ERROR" type="LONGVARCHAR"/>
+        <index name="indexStatus">
+            <index-column name="STATUS"/>
+        </index>
+    </table>
 </database>

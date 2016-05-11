@@ -70,6 +70,8 @@ try {
 
     if (!$RBAC->singleSignOn) {
 
+        setcookie("singleSignOn", '0', time() + (24 * 60 * 60), '/');
+
         if (!isset($_POST['form']) ) {
 
             G::SendTemporalMessage ('ID_USER_HAVENT_RIGHTS_SYSTEM', 'error');
@@ -335,6 +337,8 @@ try {
         $_SESSION['USR_USERNAME'] = $usr;
 
     } else {
+
+        setcookie("singleSignOn", '1', time() + (24 * 60 * 60), '/');
 
         $uid = $RBAC->userObj->fields['USR_UID'];
 
@@ -737,6 +741,18 @@ try {
         G::RenderPage('publish');
 
         die;
+
+    }
+
+
+
+    $configS = System::getSystemConfiguration('', '', SYS_SYS);
+
+    $activeSession = isset($configS['session_block']) ? !(int)$configS['session_block']:true;
+
+    if ($activeSession){
+
+        setcookie("PM-TabPrimary", 101010010, time() + (24 * 60 * 60), '/');
 
     }
 

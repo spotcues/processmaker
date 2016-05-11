@@ -236,9 +236,13 @@ class Server implements iAuthenticate
      *
      * @format JsonFormat,UploadFormat
      */
-    public function postAuthorize($authorize = null, $userId = null, $returnResponse = false)
+    public function postAuthorize($authorize = null, $userId = null, $returnResponse = false, $cacheSessionValue = array())
     {
         @session_start();
+
+        foreach ($cacheSessionValue as $key => $value) {
+            $_SESSION[$key] = $value;
+        }
 
         if (! isset($_SESSION['USER_LOGGED'])) {
             throw new RestException(400, "Local Authentication Error, user session is not started.");

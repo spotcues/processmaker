@@ -28,6 +28,21 @@ SELECT LANG_ID, LANG_NAME FROM langOptions
   </FORGOT_PASWORD_LINK>
   <JS type="javascript"><![CDATA[
 
+//validate iframe login
+if(inIframe()) {
+  if (PM.Sessions.getCookie('PM-TabPrimary') !== '101010010'
+      && (window.location.pathname.indexOf("login/login") !== -1
+      || window.location.pathname.indexOf("sysLogin") !== -1)) {
+      window.top.location.href = window.location.pathname;
+  }
+}
+function inIframe () {
+    try {
+        return window.self !== window.top;
+    } catch (e) {
+        return true;
+    }
+};
 function getElementsByClassNameIE8(node, classname) {
     var a = [];
     var re = new RegExp('(^| )'+classname+'( |$)');

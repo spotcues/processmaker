@@ -521,7 +521,7 @@ class PMScript
         $searchTypes = array ('checkgroup','dropdown','suggest');
         $processVariables = $pmTablesProxy->getDynaformVariables($_SESSION['PROCESS'],$searchTypes,false);
         $variables = $this->affected_fields;
-        $variables = array_unique($variables);
+        $variables = (is_array($variables))? array_unique($variables) : $variables;
         $newFields = array();
         $arrayValues = array();
         $arrayLabels = array();

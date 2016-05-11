@@ -121,7 +121,9 @@ class Consolidated
         $response["casesNumRec"] = \Library::getCasesNumRec($usr_uid);
 
         if (is_array($res)) {
-            $response ["message"] = "<b>" . G::LoadTranslation("ID_CASE") . " " . $app_number . "</b> Summary of Derivations: <br> " . $messageDerivateCase;
+            $response ["message"] = "<b>" . G::LoadTranslation("ID_CASE") . " " . $app_number . "</b> " .
+                G::LoadTranslation("ID_SUMMARY_DERIVATION_BATCH_ROUTING") . ' :' . " <br> " .
+                $messageDerivateCase;
         } else {
             $response ["message"] = G::LoadTranslation("ID_CASE") . " " . $app_number . " " . $res->message;
         }

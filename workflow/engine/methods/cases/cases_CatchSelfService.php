@@ -100,11 +100,7 @@ $oHeadPublisher->addScriptCode( '
 $oHeadPublisher = & headPublisher::getSingleton();
 $oHeadPublisher->addScriptFile( '/jscore/cases/core/cases_Step.js' );
 
-$ieVersion = '';
-if(preg_match("/^.*\(.*MSIE (\d+)\..+\).*$/", $_SERVER["HTTP_USER_AGENT"], $arrayMatch) || preg_match("/^.*\(.*rv.(\d+)\..+\).*$/", $_SERVER["HTTP_USER_AGENT"], $arrayMatch)){
-    $ieVersion = intval($arrayMatch[1]);
-}
-$Fields['IE_VERSION'] = $ieVersion;
+$Fields['isIE'] = Bootstrap::isIE();
 
 $G_PUBLISH = new Publisher();
 $G_PUBLISH->AddContent( 'xmlform', 'xmlform', 'cases/cases_CatchSelfService.xml', '', $Fields, 'cases_CatchExecute' );

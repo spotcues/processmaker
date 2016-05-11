@@ -402,9 +402,17 @@ class ListInbox extends BaseListInbox
 
         if ($search != '') {
             $criteria->add(
-                $criteria->getNewCriterion( ListInboxPeer::APP_TITLE, '%' . $search . '%', Criteria::LIKE )->
-                addOr( $criteria->getNewCriterion( ListInboxPeer::APP_TAS_TITLE, '%' . $search . '%', Criteria::LIKE )->
-                addOr( $criteria->getNewCriterion( ListInboxPeer::APP_NUMBER, $search, Criteria::LIKE ) ) ) );
+                $criteria->getNewCriterion( ListInboxPeer::APP_TITLE, '%' . $search . '%', Criteria::LIKE )
+                ->addOr(
+                    $criteria->getNewCriterion( ListInboxPeer::APP_TAS_TITLE, '%' . $search . '%', Criteria::LIKE )
+                    ->addOr(
+                        $criteria->getNewCriterion( ListInboxPeer::APP_NUMBER, $search, Criteria::LIKE )
+                        ->addOr(
+                            $criteria->getNewCriterion( ListInboxPeer::APP_PRO_TITLE, '%' . $search . '%', Criteria::LIKE )
+                        )
+                    )
+                )
+            );
         }
 
         if ($process != '') {
@@ -482,6 +490,13 @@ class ListInbox extends BaseListInbox
         return (int)$total;
     }
 
+    /**
+     * @param $usr_uid
+     * @param array $filters
+     * @param null $callbackRecord
+     * @return array
+     * @throws PropelException
+     */
     public function loadList($usr_uid, $filters = array(), $callbackRecord = null)
     {
         $criteria = new Criteria();
@@ -505,6 +520,12 @@ class ListInbox extends BaseListInbox
         $criteria->addSelectColumn(ListInboxPeer::DEL_INIT_DATE);
         $criteria->addSelectColumn(ListInboxPeer::DEL_DUE_DATE);
         $criteria->addSelectColumn(ListInboxPeer::DEL_PRIORITY);
+        $criteria->addSelectColumn(ListInboxPeer::DEL_RISK_DATE);
+        $criteria->addSelectColumn(UsersPeer::USR_UID);
+        $criteria->addSelectColumn(UsersPeer::USR_FIRSTNAME);
+        $criteria->addSelectColumn(UsersPeer::USR_LASTNAME);
+        $criteria->addSelectColumn(UsersPeer::USR_USERNAME);
+        $criteria->addJoin( ListInboxPeer::USR_UID, UsersPeer::USR_UID, Criteria::LEFT_JOIN );
         $criteria->add( ListInboxPeer::USR_UID, $usr_uid, Criteria::EQUAL );
         self::loadFilters($criteria, $filters);
 

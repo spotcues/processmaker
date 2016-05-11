@@ -124,6 +124,18 @@ abstract class BaseAppDocument extends BaseObject implements Persistent
     protected $app_doc_drive_download;
 
     /**
+     * The value for the sync_with_drive field.
+     * @var        string
+     */
+    protected $sync_with_drive = 'UNSYNCHRONIZED';
+
+    /**
+     * The value for the sync_permissions field.
+     * @var        string
+     */
+    protected $sync_permissions;
+
+    /**
      * Flag to prevent endless save loop, if this object is referenced
      * by another object which falls in this transaction.
      * @var        boolean
@@ -353,6 +365,28 @@ abstract class BaseAppDocument extends BaseObject implements Persistent
     {
 
         return $this->app_doc_drive_download;
+    }
+
+    /**
+     * Get the [sync_with_drive] column value.
+     * 
+     * @return     string
+     */
+    public function getSyncWithDrive()
+    {
+
+        return $this->sync_with_drive;
+    }
+
+    /**
+     * Get the [sync_permissions] column value.
+     * 
+     * @return     string
+     */
+    public function getSyncPermissions()
+    {
+
+        return $this->sync_permissions;
     }
 
     /**
@@ -722,6 +756,50 @@ abstract class BaseAppDocument extends BaseObject implements Persistent
     } // setAppDocDriveDownload()
 
     /**
+     * Set the value of [sync_with_drive] column.
+     * 
+     * @param      string $v new value
+     * @return     void
+     */
+    public function setSyncWithDrive($v)
+    {
+
+        // Since the native PHP type for this column is string,
+        // we will cast the input to a string (if it is not).
+        if ($v !== null && !is_string($v)) {
+            $v = (string) $v;
+        }
+
+        if ($this->sync_with_drive !== $v || $v === 'UNSYNCHRONIZED') {
+            $this->sync_with_drive = $v;
+            $this->modifiedColumns[] = AppDocumentPeer::SYNC_WITH_DRIVE;
+        }
+
+    } // setSyncWithDrive()
+
+    /**
+     * Set the value of [sync_permissions] column.
+     * 
+     * @param      string $v new value
+     * @return     void
+     */
+    public function setSyncPermissions($v)
+    {
+
+        // Since the native PHP type for this column is string,
+        // we will cast the input to a string (if it is not).
+        if ($v !== null && !is_string($v)) {
+            $v = (string) $v;
+        }
+
+        if ($this->sync_permissions !== $v) {
+            $this->sync_permissions = $v;
+            $this->modifiedColumns[] = AppDocumentPeer::SYNC_PERMISSIONS;
+        }
+
+    } // setSyncPermissions()
+
+    /**
      * Hydrates (populates) the object variables with values from the database resultset.
      *
      * An offset (1-based "start column") is specified so that objects can be hydrated
@@ -770,12 +848,16 @@ abstract class BaseAppDocument extends BaseObject implements Persistent
 
             $this->app_doc_drive_download = $rs->getString($startcol + 15);
 
+            $this->sync_with_drive = $rs->getString($startcol + 16);
+
+            $this->sync_permissions = $rs->getString($startcol + 17);
+
             $this->resetModified();
 
             $this->setNew(false);
 
             // FIXME - using NUM_COLUMNS may be clearer.
-            return $startcol + 16; // 16 = AppDocumentPeer::NUM_COLUMNS - AppDocumentPeer::NUM_LAZY_LOAD_COLUMNS).
+            return $startcol + 18; // 18 = AppDocumentPeer::NUM_COLUMNS - AppDocumentPeer::NUM_LAZY_LOAD_COLUMNS).
 
         } catch (Exception $e) {
             throw new PropelException("Error populating AppDocument object", $e);
@@ -1027,6 +1109,12 @@ abstract class BaseAppDocument extends BaseObject implements Persistent
             case 15:
                 return $this->getAppDocDriveDownload();
                 break;
+            case 16:
+                return $this->getSyncWithDrive();
+                break;
+            case 17:
+                return $this->getSyncPermissions();
+                break;
             default:
                 return null;
                 break;
@@ -1063,6 +1151,8 @@ abstract class BaseAppDocument extends BaseObject implements Persistent
             $keys[13] => $this->getAppDocStatusDate(),
             $keys[14] => $this->getAppDocFieldname(),
             $keys[15] => $this->getAppDocDriveDownload(),
+            $keys[16] => $this->getSyncWithDrive(),
+            $keys[17] => $this->getSyncPermissions(),
         );
         return $result;
     }
@@ -1141,6 +1231,12 @@ abstract class BaseAppDocument extends BaseObject implements Persistent
                 break;
             case 15:
                 $this->setAppDocDriveDownload($value);
+                break;
+            case 16:
+                $this->setSyncWithDrive($value);
+                break;
+            case 17:
+                $this->setSyncPermissions($value);
                 break;
         } // switch()
     }
@@ -1229,6 +1325,14 @@ abstract class BaseAppDocument extends BaseObject implements Persistent
             $this->setAppDocDriveDownload($arr[$keys[15]]);
         }
 
+        if (array_key_exists($keys[16], $arr)) {
+            $this->setSyncWithDrive($arr[$keys[16]]);
+        }
+
+        if (array_key_exists($keys[17], $arr)) {
+            $this->setSyncPermissions($arr[$keys[17]]);
+        }
+
     }
 
     /**
@@ -1302,6 +1406,14 @@ abstract class BaseAppDocument extends BaseObject implements Persistent
 
         if ($this->isColumnModified(AppDocumentPeer::APP_DOC_DRIVE_DOWNLOAD)) {
             $criteria->add(AppDocumentPeer::APP_DOC_DRIVE_DOWNLOAD, $this->app_doc_drive_download);
+        }
+
+        if ($this->isColumnModified(AppDocumentPeer::SYNC_WITH_DRIVE)) {
+            $criteria->add(AppDocumentPeer::SYNC_WITH_DRIVE, $this->sync_with_drive);
+        }
+
+        if ($this->isColumnModified(AppDocumentPeer::SYNC_PERMISSIONS)) {
+            $criteria->add(AppDocumentPeer::SYNC_PERMISSIONS, $this->sync_permissions);
         }
 
 
@@ -1397,6 +1509,10 @@ abstract class BaseAppDocument extends BaseObject implements Persistent
         $copyObj->setAppDocFieldname($this->app_doc_fieldname);
 
         $copyObj->setAppDocDriveDownload($this->app_doc_drive_download);
+
+        $copyObj->setSyncWithDrive($this->sync_with_drive);
+
+        $copyObj->setSyncPermissions($this->sync_permissions);
 
 
         $copyObj->setNew(true);

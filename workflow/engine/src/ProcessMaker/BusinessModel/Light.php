@@ -46,6 +46,30 @@ class Light
 
         try {
 
+            // getting bpmn projects
+
+            $c = new Criteria('workflow');
+
+            $c->addSelectColumn(\BpmnProjectPeer::PRJ_UID);
+
+            $ds = \ProcessPeer::doSelectRS($c, \Propel::getDbConnection('workflow_ro'));
+
+            $ds->setFetchmode(\ResultSet::FETCHMODE_ASSOC);
+
+            $bpmnProjects = array();
+
+
+
+            while ($ds->next()) {
+
+                $row = $ds->getRow();
+
+                $bpmnProjects[] = $row['PRJ_UID'];
+
+            }
+
+            
+
             $oProcess = new \Process();
 
             $oCase    = new \Cases();
@@ -132,7 +156,7 @@ class Light
 
                     $webEntryEventStart = $webEntryEvent->getWebEntryEvents($processInfoChild['pro_uid']);
 
-                    if(empty($webEntryEventStart)){
+                    if (empty($webEntryEventStart) && in_array($processInfoChild['pro_uid'], $bpmnProjects)) {
 
                         $tempTreeChild['text']      = $keyChild; //ellipsis ( $keyChild, 50 );
 
@@ -1342,7 +1366,11 @@ class Light
 
             case 'jpeg':
 
-                $imgTmp = imagecreatefromjpeg($path);
+                ini_set('gd.jpeg_ignore_warning', 1);
+
+                error_reporting(0);
+
+                $imgTmp = @imagecreatefromjpeg($path);
 
                 break;
 
@@ -1760,53 +1788,51 @@ class Light
 
         $response = array();
 
-        if (count( $request_data ) > 0) {
+        if (is_array($request_data)) {
 
             foreach ($request_data as $k => $file) {
 
-                $indocUid = null;
-
-                $fieldName = null;
-
                 $oCase = new \Cases();
 
-                $DEL_INDEX = $oCase->getCurrentDelegation( $app_uid, $userUid );
+                $delIndex = $oCase->getCurrentDelegation($app_uid, $userUid);
 
+                $docUid = !empty($file['docUid']) ? $file['docUid'] : -1;
 
+                $appDocType = !empty($file['appDocType']) ? $file['appDocType'] : "ATTACHED";
 
-                $aFields = array (
+                $fieldName = !empty($file['fieldName']) ? $file['fieldName'] : null;
 
-                    "APP_UID"             => $app_uid,
+                $aFields = array(
 
-                    "DEL_INDEX"           => $DEL_INDEX,
+                    "APP_UID" => $app_uid,
 
-                    "USR_UID"             => $userUid,
+                    "DEL_INDEX" => $delIndex,
 
-                    "DOC_UID"             => - 1,
+                    "USR_UID" => $userUid,
 
-                    "APP_DOC_TYPE"        => "ATTACHED",
+                    "DOC_UID" => $docUid,
 
-                    "APP_DOC_CREATE_DATE" => date( "Y-m-d H:i:s" ),
+                    "APP_DOC_TYPE" => $appDocType,
 
-                    "APP_DOC_COMMENT"     => "",
+                    "APP_DOC_CREATE_DATE" => date("Y-m-d H:i:s"),
 
-                    "APP_DOC_TITLE"       => "",
+                    "APP_DOC_COMMENT" => "",
 
-                    "APP_DOC_FILENAME"    => $file['name'],
+                    "APP_DOC_TITLE" => "",
 
-                    "APP_DOC_FIELDNAME"   => $fieldName
+                    "APP_DOC_FILENAME" => $file['name'],
+
+                    "APP_DOC_FIELDNAME" => $fieldName
 
                 );
 
-
-
                 $oAppDocument = new \AppDocument();
 
-                $oAppDocument->create( $aFields );
+                $oAppDocument->create($aFields);
 
                 $response[$k]['docVersion'] = $iDocVersion = $oAppDocument->getDocVersion();
 
-                $response[$k]['appDocUid'] =   $sAppDocUid = $oAppDocument->getAppDocUid();
+                $response[$k]['appDocUid'] = $sAppDocUid = $oAppDocument->getAppDocUid();
 
             }
 
@@ -2468,19 +2494,25 @@ class Light
 
      */
 
-    public function getConfiguration()
+    public function getConfiguration($params)
 
     {
 
-        $sysConf = \System::getSystemConfiguration('', '', SYS_SYS);
+        $sysConf = \Bootstrap::getSystemConfiguration('','',SYS_SYS);
 
-        $offset = timezone_offset_get( new \DateTimeZone( $sysConf['time_zone'] ), new \DateTime() );
+        $multiTimeZone = false;
+
+        //Set Time Zone
+
+        /*----------------------------------********---------------------------------*/
+
+        $tz = isset($_SESSION['USR_TIME_ZONE'])?$_SESSION['USR_TIME_ZONE']:$sysConf['time_zone'];
+
+        $offset = timezone_offset_get( new \DateTimeZone( $tz ), new \DateTime() );
 
         $response['timeZone'] = sprintf( "GMT%s%02d:%02d", ( $offset >= 0 ) ? '+' : '-', abs( $offset / 3600 ), abs( ($offset % 3600) / 60 ) );
 
-        $response['multiTimeZone'] = (isset($sysConf['system_utc_time_zone']) && $sysConf['system_utc_time_zone'])
-
-            ?true:false;
+        $response['multiTimeZone'] = $multiTimeZone;
 
         $fields = \System::getSysInfo();
 
@@ -2548,7 +2580,63 @@ class Light
 
         $response['listLanguage'] = $languagesList;
 
+        if (isset($params['fileLimit']) && $params['fileLimit']) {
+
+            $postMaxSize = $this->return_bytes(ini_get('post_max_size'));
+
+            $uploadMaxFileSize = $this->return_bytes(ini_get('upload_max_filesize'));
+
+            if ($postMaxSize < $uploadMaxFileSize){
+
+                $uploadMaxFileSize = $postMaxSize;
+
+            }
+
+            $response['fileLimit'] = $uploadMaxFileSize;
+
+        }
+
+        if (isset($params['tz']) && $params['tz']) {
+
+            $response['tz'] = isset($_SESSION['USR_TIME_ZONE'])?$_SESSION['USR_TIME_ZONE']:$sysConf['time_zone'];
+
+        }
+
         return $response;
+
+    }
+
+
+
+    public function return_bytes($size_str)
+
+    {
+
+        switch (substr($size_str, -1)) {
+
+            case 'M':
+
+            case 'm':
+
+                return (int)$size_str * 1048576;
+
+            case 'K':
+
+            case 'k':
+
+                return (int)$size_str * 1024;
+
+            case 'G':
+
+            case 'g':
+
+                return (int)$size_str * 1073741824;
+
+            default:
+
+                return $size_str;
+
+        }
 
     }
 

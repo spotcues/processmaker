@@ -445,7 +445,7 @@ Ext.onReady(function() {
 
 function openCaseA(n){
   if (n.attributes.optionType == "startProcess") {
-    if(ieVersion != 11) {
+    if(!isIE) {
       Ext.Msg.show({
         title : '',
         msg : TRANSLATIONS.ID_STARTING_NEW_CASE  + '<br><br><b>' + n.attributes.text + '</b>',
@@ -461,15 +461,16 @@ function openCaseA(n){
         taskId : n.attributes.tas_uid
       },
       success : function(response) {
-
+        var nameTab;
         try {
           var res = Ext.util.JSON.decode(response.responseText);
           if (res.openCase) {
-            if(ieVersion == 11) {
+            if(isIE) {
               if(newCaseNewTab) {
                 newCaseNewTab.close();
               }
-                newCaseNewTab = window.open(res.openCase.PAGE);       
+              nameTab = PM.Sessions.getCookie('PM-TabPrimary') + '_openCase';
+              newCaseNewTab = window.open(res.openCase.PAGE, nameTab);
             } else {
               window.location = res.openCase.PAGE;
             }

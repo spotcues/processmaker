@@ -80,6 +80,8 @@ var userRoleLoad = '';
 
 var PROCESSMAKER_ADMIN = 'PROCESSMAKER_ADMIN';
 
+var usertmp;
+
 
 
 global.IC_UID        = '';
@@ -560,7 +562,13 @@ Ext.onReady(function () {
 
 
 
-      baseParams: {"action": "usersList", "USR_UID": USR_UID, "addNone": 1},
+      baseParams: {
+
+          "action": "usersList",
+
+          "USR_UID": USR_UID
+
+      },
 
 
 
@@ -582,31 +590,39 @@ Ext.onReady(function () {
 
   comboReplacedBy = new Ext.form.ComboBox({
 
-    fieldLabel    : _("ID_REPLACED_BY"),
+      id: "USR_REPLACED_BY",
 
-    hiddenName    : "USR_REPLACED_BY",
+      hiddenName: "USR_REPLACED_BY",
 
-    id            : "USR_REPLACED_BY",
 
-    readOnly      : readMode,
 
-    store         : storeReplacedBy,
+      store: storeReplacedBy,
 
-    valueField    : "USR_UID",
+      valueField: "USR_UID",
 
-    displayField  : "USER_FULLNAME",
+      displayField: "USER_FULLNAME",
 
-    emptyText     : (readMode)? ' ': TRANSLATIONS.ID_SELECT,
 
-    width         : 180,
 
-    selectOnFocus : true,
+      queryParam: "filter",
 
-    editable      : false,
 
-    triggerAction: "all",
 
-    mode: "local"
+      fieldLabel: _("ID_REPLACED_BY"),
+
+      emptyText: "- " + _("ID_NONE") + " -",
+
+      readOnly: readMode,
+
+      minChars: 1,
+
+      hideTrigger: true,
+
+
+
+      width: 260,
+
+      triggerAction: "all"
 
   });
 
@@ -2142,7 +2158,25 @@ function editUser()
 
     frmSumary.hide();
 
+
+
+    if (typeof(usertmp) != "undefined") {
+
+        frmDetails.getForm().findField("USR_REPLACED_BY").setValue(usertmp.USR_REPLACED_BY);
+
+        frmDetails.getForm().findField("USR_REPLACED_BY").setRawValue(usertmp.REPLACED_NAME);
+
+    }
+
+
+
     frmDetails.show();
+
+    if (window.canEditCalendar === true) {
+
+        comboCalendar.setReadOnly(false);
+
+    }
 
 }
 
@@ -2227,6 +2261,20 @@ function validateUserName() {
 function userFrmEditSubmit()
 
 {
+
+    if (typeof(usertmp) != "undefined" &&
+
+        usertmp.REPLACED_NAME == frmDetails.getForm().findField("USR_REPLACED_BY").getRawValue()
+
+    ) {
+
+        frmDetails.getForm().findField("USR_REPLACED_BY").setValue(usertmp.USR_REPLACED_BY);
+
+        frmDetails.getForm().findField("USR_REPLACED_BY").setRawValue(usertmp.REPLACED_NAME);
+
+    }
+
+
 
     Ext.getCmp("USR_STATUS").setDisabled(readMode);
 
@@ -2578,29 +2626,7 @@ function loadData()
 
 {
 
-
-
     comboCountry.store.load();
-
-
-
-
-
-    //comboRegion
-
-
-
-
-
-    //comboLocation
-
-
-
-
-
-    comboReplacedBy.store.load();
-
-
 
 
 
@@ -2679,6 +2705,10 @@ function loadUserData()
         success: function (r, o) {
 
             var data = Ext.util.JSON.decode(r.responseText);
+
+
+
+            usertmp = data.user;
 
 
 
@@ -2802,13 +2832,13 @@ function loadUserData()
 
 
 
-            comboReplacedBy.store.on("load", function (store) {
+            if (data.user.USR_REPLACED_BY != "") {
 
                 comboReplacedBy.setValue(data.user.USR_REPLACED_BY);
 
                 comboReplacedBy.setRawValue(data.user.REPLACED_NAME);
 
-            });
+            }
 
 
 
@@ -2915,10 +2945,6 @@ function loadUserData()
                 }
 
             });
-
-
-
-            storeReplacedBy.load();
 
 
 

@@ -78,17 +78,17 @@ if (! isset( $_GET['APP_UID'] ) || ! isset( $_GET['DEL_INDEX'] )) {
 
         $oCase = new Cases();
 
-        $_GET['APP_UID'] = $oCase->getApplicationUIDByNumber( $_GET['APP_NUMBER'] );
+        $appUid = $oCase->getApplicationUIDByNumber( htmlspecialchars($_GET['APP_NUMBER']) );
 
-        $_GET['DEL_INDEX'] = $oCase->getCurrentDelegation( $_GET['APP_UID'], $_SESSION['USER_LOGGED'] );
+        $delIndex = $oCase->getCurrentDelegation( $appUid, $_SESSION['USER_LOGGED'] );
 
-        if (is_null( $_GET['APP_UID'] )) {
+        if (is_null( $appUid )) {
 
             throw new Exception( G::LoadTranslation( 'ID_CASE_DOES_NOT_EXISTS' ) );
 
         }
 
-        if (is_null( $_GET['DEL_INDEX'] )) {
+        if (is_null( $delIndex )) {
 
             throw new Exception( G::LoadTranslation( 'ID_CASE_IS_CURRENTLY_WITH_ANOTHER_USER' ) );
 
@@ -99,6 +99,12 @@ if (! isset( $_GET['APP_UID'] ) || ! isset( $_GET['DEL_INDEX'] )) {
         throw new Exception( "Application ID or Delegation Index is missing!. The System can't open the case." );
 
     }
+
+} else { 
+
+    $appUid = htmlspecialchars($_GET['APP_UID']);
+
+    $delIndex = htmlspecialchars($_GET['DEL_INDEX']);
 
 }
 
@@ -124,7 +130,7 @@ $urlToRedirectAfterPause = 'casesListExtJs';
 
 
 
-        /*----------------------------------********---------------------------------*/
+/*----------------------------------********---------------------------------*/
 
 
 
@@ -152,15 +158,13 @@ foreach ($_GET as $k => $v) {
 
 
 
-//$case = $oCase->loadCase( $_GET['APP_UID'], $_GET['DEL_INDEX'] );
-
 if( isset($_GET['action']) && ($_GET['action'] == 'jump') ) {
 
-    $case = $oCase->loadCase( $_GET['APP_UID'], $_GET['DEL_INDEX'], $_GET['action']);
+    $case = $oCase->loadCase( $appUid, $delIndex, $_GET['action']);
 
 } else {
 
-    $case = $oCase->loadCase( $_GET['APP_UID'], $_GET['DEL_INDEX'] );
+    $case = $oCase->loadCase( $appUid, $delIndex );
 
 }
 
@@ -173,10 +177,6 @@ if (! isset( $_GET['to_revise'] )) {
 } else {
 
     $script = 'cases_OpenToRevise?';
-
-    $delIndex = $_GET['DEL_INDEX'];
-
-    $appUid = $_GET['APP_UID'];
 
     $oHeadPublisher->assign( 'treeToReviseTitle', G::loadtranslation( 'ID_STEP_LIST' ) );
 
@@ -224,7 +224,7 @@ $oHeadPublisher->assign( '_PROJECT_TYPE', in_array($case['PRO_UID'], $bpmnProjec
 
 $oHeadPublisher->assign( '_PRO_UID', $case['PRO_UID']);
 
-$oHeadPublisher->assign( '_APP_UID', $_GET['APP_UID']);
+$oHeadPublisher->assign( '_APP_UID', $appUid);
 
 $oHeadPublisher->assign( '_ENV_CURRENT_DATE', $conf->getSystemDate( date( 'Y-m-d' ) ) );
 
@@ -246,19 +246,9 @@ if(!isset($_SESSION['APPLICATION']) || !isset($_SESSION['TASK']) || !isset($_SES
 
     $_SESSION['INDEX'] = $case['DEL_INDEX'];
 
-} 
-
-$_SESSION['TASK'] = ($_GET['action'] == "unassigned" || $_GET['action'] == "sent" ) ? -1 : $_SESSION['TASK'];
-
-if($_GET['action'] == "todo" || $_GET['action'] == "draft") {
-
-    if (isset($_SESSION['bNoShowSteps'])) {
-
-        unset($_SESSION['bNoShowSteps']);
-
-    }
-
 }
+
+$_SESSION['actionCaseOptions'] = (isset($_REQUEST['action'])) ? $_REQUEST['action'] : '';
 
 G::RenderPage( 'publish', 'extJs' );
 

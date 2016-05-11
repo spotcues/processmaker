@@ -91,6 +91,17 @@ class Users extends BaseUsers
                 throw (new Exception(G::LoadTranslation("ID_USER_UID_DOESNT_EXIST", SYS_LANG, array("USR_UID" => $UsrUid))));
             }
         } catch (PropelException $e) {
+            if(empty($oRow)) {
+                error_log(\G::LoadTranslation('ID_CONTACT_ADMIN'));
+                error_log($e->getTraceAsString());
+                $oError = new \Exception(
+                    \G::LoadTranslation('ID_ERROR_IN_SERVER').".\n"
+                    .\G::LoadTranslation('ID_CONTACT_ADMIN'),
+                    0,
+                    $e
+                );
+                throw ($oError);
+            }
             //capture invalid birthday date and replace by null
             $msg = $e->getMessage();
             if (strpos( 'Unable to parse value of [usr_birthday]', $msg ) != - 1) {
