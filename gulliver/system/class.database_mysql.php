@@ -82,12 +82,15 @@ class database extends database_base
                     } else {
                         $sSQL .= ' NOT NULL'; 
                     }
+                    if (isset( $aParameters['AutoIncrement'] ) && $aParameters['AutoIncrement']) {
+                        $sSQL .= ' AUTO_INCREMENT PRIMARY KEY';
+                    }
                     if (isset( $aParameters['Key'] ) && $aParameters['Key'] == 'PRI') {
                         $sKeys .= $this->sQuoteCharacter . $sColumnName . $this->sQuoteCharacter . ',';
                     }
 
-                    if (isset( $aParameters['Default'] ) && $aParameters['Default'] != '') {
-                        $sSQL .= " DEFAULT '" . $aParameters['Default'] . "'";
+                    if (isset( $aParameters['Default'] )) {
+                        $sSQL .= " DEFAULT '" . trim($aParameters['Default']) . "'";
                     }
 
                     $sSQL .= ',';
@@ -140,6 +143,52 @@ class database extends database_base
     }
 
     /**
+     * This method has to refactor
+     * @param $sTable
+     * @param $sColumn
+     * @param $aParameters
+     * @return string
+     */
+    public function generateCheckAddColumnSQL($sTable, $sColumn, $aParameters)
+    {
+        $sSQL = 'ALTER TABLE ' . $this->sQuoteCharacter . $sTable . $this->sQuoteCharacter . ' DROP PRIMARY KEY ';
+        $sSQL .= $this->sEndLine;
+        return $sSQL;
+    }
+
+    /**
+     * This method has to refactor
+     * @param $sTable
+     * @param $sColumn
+     * @param $aParameters
+     * @return string
+     */
+    public function deleteAllIndexesIntable($sTable, $sColumn, $aParameters)
+    {
+        $sSQL = 'ALTER TABLE ' . $this->sQuoteCharacter . $sTable . $this->sQuoteCharacter . ' DROP INDEX indexLoginLog ';
+        $sSQL .= $this->sEndLine;
+        return $sSQL;
+    }
+
+    /**
+     * This method is used exclusively to verify if it was made changes in the DB to solve the HOR-1787 issue, later
+     * a generic method which covers all the possible similar problems found in the HOR-1787 issue will be generated.
+     * @param $sTable
+     * @param $sColumn
+     * @param $aParameters
+     * @return bool
+     */
+    public function checkPatchHor1787($sTable, $sColumn, $aParameters)
+    {
+        if (isset($aParameters['AutoIncrement']) && $aParameters['AutoIncrement'] && $sTable == 'LOGIN_LOG') {
+            return true;
+        }
+        return false;
+    }
+
+
+
+    /**
      * generate an add column sentence
      *
      * @param $sTable table name
@@ -157,10 +206,17 @@ class database extends database_base
                 $sSQL .= ' NOT NULL';
             }
         }
-        /*if ($aParameters['Key'] == 'PRI') {
-         $sKeys .= 'ALTER TABLE ' . $this->sQuoteCharacter . $sTable . $this->sQuoteCharacter .
-                ' ADD PRIMARY KEY (' . $this->sQuoteCharacter . $sColumn . $this->sQuoteCharacter . ')' . $this->sEndLine;
-         }*/
+        if (isset( $aParameters['AutoIncrement'] ) && $aParameters['AutoIncrement']) {
+            $sSQL .= ' AUTO_INCREMENT';
+        }
+        if (isset( $aParameters['PrimaryKey'] ) && $aParameters['PrimaryKey']) {
+            $sSQL .= ' PRIMARY KEY';
+        }
+        if (isset( $aParameters['Unique'] ) && $aParameters['Unique']) {
+            $sSQL .= ' UNIQUE';
+        }
+
+        //we need to check the property AI
         if (isset( $aParameters['AI'] )) {
             if ($aParameters['AI'] == 1) {
                 $sSQL .= ' AUTO_INCREMENT';

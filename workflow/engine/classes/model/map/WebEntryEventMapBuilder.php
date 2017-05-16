@@ -67,6 +67,10 @@ class WebEntryEventMapBuilder
 
         $tMap->addPrimaryKey('WEE_UID', 'WeeUid', 'string', CreoleTypes::VARCHAR, true, 32);
 
+        $tMap->addColumn('WEE_TITLE', 'WeeTitle', 'string', CreoleTypes::LONGVARCHAR, true, null);
+
+        $tMap->addColumn('WEE_DESCRIPTION', 'WeeDescription', 'string', CreoleTypes::LONGVARCHAR, true, null);
+
         $tMap->addColumn('PRJ_UID', 'PrjUid', 'string', CreoleTypes::VARCHAR, true, 32);
 
         $tMap->addColumn('EVN_UID', 'EvnUid', 'string', CreoleTypes::VARCHAR, true, 32);

@@ -26,7 +26,7 @@ try {
     G::LoadSystem('inputfilter');
     $filter = new InputFilter();
     $_POST = $filter->xssFilterHard($_POST);
-    
+
     G::LoadInclude( 'ajax' );
     if (isset( $_POST['form'] )) {
         $_POST = $_POST['form'];
@@ -147,14 +147,10 @@ try {
 
             $oCriteria = new Criteria( 'workflow' );
             //$oCriteria->addSelectColumn('COUNT('.ContentPeer::CON_CATEGORY.')');
-            $oCriteria->addSelectColumn( ContentPeer::CON_CATEGORY );
-            $oCriteria->addSelectColumn( ContentPeer::CON_VALUE );
-            $oCriteria->add( ContentPeer::CON_LANG, $locale );
-            $oCriteria->add( ContentPeer::CON_CATEGORY, 'APP_TITLE', Criteria::EQUAL );
-            $oDataset = ContentPeer::doSelectRS( $oCriteria );
-
+            $oCriteria->addSelectColumn(ApplicationPeer::APP_TITLE);
+            $oDataset = ApplicationPeer::doSelectRS( $oCriteria );
+            $oDataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
             $oDataset->next();
-            $oContent = new Content();
             $aRow = $oDataset->getRow();
 
             if($locale != "en"){ //Default Lengage 'en'
@@ -166,7 +162,9 @@ try {
             				$trn->removeTranslationEnvironment( $locale );
             				echo G::LoadTranslation( 'ID_LANGUAGE_DELETED_SUCCESSFULLY' );
             			} catch (Exception $e) {
-            				echo $e->getMessage();
+            				$token = strtotime("now");
+                            PMException::registerErrorLog($e, $token);
+                            G::outRes( G::LoadTranslation("ID_EXCEPTION_LOG_INTERFAZ", array($token)) );
             			}
             		} else {
             			echo str_replace( '{0}', $aRow[0], G::LoadTranslation( 'ID_LANGUAGE_CANT_DELETE' ) );
@@ -180,6 +178,8 @@ try {
             break;
     }
 } catch (Exception $oException) {
-    die( $oException->getMessage() );
+    $token = strtotime("now");
+    PMException::registerErrorLog($oException, $token);
+    G::outRes( G::LoadTranslation("ID_EXCEPTION_LOG_INTERFAZ", array($token)) );
 }
 

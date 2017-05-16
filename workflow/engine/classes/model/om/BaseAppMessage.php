@@ -133,7 +133,7 @@ abstract class BaseAppMessage extends BaseObject implements Persistent
      * The value for the app_msg_error field.
      * @var        string
      */
-    protected $app_msg_error = '';
+    protected $app_msg_error;
 
     /**
      * Flag to prevent endless save loop, if this object is referenced
@@ -792,7 +792,7 @@ abstract class BaseAppMessage extends BaseObject implements Persistent
             $v = (string) $v;
         }
 
-        if ($this->app_msg_error !== $v || $v === '') {
+        if ($this->app_msg_error !== $v) {
             $this->app_msg_error = $v;
             $this->modifiedColumns[] = AppMessagePeer::APP_MSG_ERROR;
         }

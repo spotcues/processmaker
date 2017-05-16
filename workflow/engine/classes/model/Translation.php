@@ -192,7 +192,9 @@ class Translation extends BaseTranslation
             $res['rowsJS'] = count( $translationJS );
             return $res;
         } catch (Exception $e) {
-            echo $e->getMessage();
+            $token = strtotime("now");
+            PMException::registerErrorLog($e, $token);
+            G::outRes( G::LoadTranslation("ID_EXCEPTION_LOG_INTERFAZ", array($token)) );
         }
     }
 
@@ -239,7 +241,9 @@ class Translation extends BaseTranslation
             $res['rowsMafeJS'] = count( $translation );
             return $res;
         } catch (Exception $e) {
-            echo $e->getMessage();
+            $token = strtotime("now");
+            PMException::registerErrorLog($e, $token);
+            G::outRes( G::LoadTranslation("ID_EXCEPTION_LOG_INTERFAZ", array($token)) );
         }
     }
 
@@ -362,7 +366,9 @@ class Translation extends BaseTranslation
             $res['rowsJS'] = count( $translationJS );
             return $res;
         } catch (Exception $e) {
-            echo $e->getMessage();
+            $token = strtotime("now");
+            PMException::registerErrorLog($e, $token);
+            G::outRes( G::LoadTranslation("ID_EXCEPTION_LOG_INTERFAZ", array($token)) );
         }
     }
 
@@ -492,7 +498,7 @@ class Translation extends BaseTranslation
             }
         }
 
-        return $environments;
+        return $this->sortByColumn($environments, 'LANGUAGE');
 
         /*
         G::LoadSystem('dbMaintenance');
@@ -512,6 +518,31 @@ class Translation extends BaseTranslation
         $s = Array('ISO_COUNTRY'=>$r, 'LANGUAGE'=>$r2);
         file_put_contents($translationsPath . 'pmos-translations.meta', serialize($s));
         */
+    }
+
+    /**
+     * Sorts an array according to a specified column
+     * Params : array  $table
+     *          string $colname
+     *          bool   $numeric
+     **/
+    public function sortByColumn($table, $colname) {
+        $tn = $ts = $temp_num = $temp_str = array();
+        foreach ($table as $key => $row) {
+            if(is_numeric(substr($row[$colname], 0, 1))) {
+                $tn[$key] = $row[$colname];
+                $temp_num[$key] = $row;
+            }
+            else {
+                $ts[$key] = $row[$colname];
+                $temp_str[$key] = $row;
+            }
+        }
+        unset($table);
+
+        array_multisort($tn, SORT_ASC, SORT_NUMERIC, $temp_num);
+        array_multisort($ts, SORT_ASC, SORT_STRING, $temp_str);
+        return array_merge($temp_num, $temp_str);
     }
 
     public function getInfoFromPOFile ($file)

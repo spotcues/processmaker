@@ -55,8 +55,8 @@ try {
         $userFields = $oUser->toArray( BasePeer::TYPE_FIELDNAME );
         $aFields['USR_REPORTS_TO'] = $userFields['USR_FIRSTNAME'] . ' ' . $userFields['USR_LASTNAME'];
         try {
-            $depFields = $oDepInfo->load( $userFields['DEP_UID'] . 'xy<' );
-            $aFields['USR_REPORTS_TO'] .= " (" . $depFields['DEPO_TITLE'] . ")";
+            $depFields = $oDepInfo->Load( $userFields['DEP_UID'] . 'xy<' );
+            $aFields['USR_REPORTS_TO'] .= " (" . $depFields['DEP_TITLE'] . ")";
         } catch (Exception $e) {
         }
     } else {
@@ -64,8 +64,8 @@ try {
     }
 
     try {
-        $depFields = $oDepInfo->load( $aFields['DEP_UID'] );
-        $aFields['USR_DEPARTMENT'] = $depFields['DEPO_TITLE'];
+        $depFields = $oDepInfo->Load( $aFields['DEP_UID'] );
+        $aFields['USR_DEPARTMENT'] = $depFields['DEP_TITLE'];
     } catch (Exception $e) {
         $oUser = UsersPeer::retrieveByPk( $_SESSION['USER_LOGGED'] );
         $oUser->setDepUid( '' );
@@ -163,6 +163,9 @@ try {
 
     G::RenderPage( 'publish' );
 } catch (Exception $oException) {
-    die( $oException->getMessage() );
+    $token = strtotime("now");
+    PMException::registerErrorLog($oException, $token);
+    G::outRes( G::LoadTranslation("ID_EXCEPTION_LOG_INTERFAZ", array($token)) );
+    die;
 }
 

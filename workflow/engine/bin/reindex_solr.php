@@ -168,7 +168,6 @@ if (! defined ('PATH_HOME')) {
   G::LoadSystem ('form');
   G::LoadSystem ('menu');
   G::LoadSystem ("xmlMenu");
-  G::LoadSystem ('dvEditor');
   G::LoadSystem ('table');
   G::LoadSystem ('pagedTable');
   G::LoadClass ('system');
@@ -294,7 +293,9 @@ if (! defined ('SYS_SYS')) {
         processWorkspace ();
       }
       catch (Exception $e) {
-        echo $e->getMessage ();
+        $token = strtotime("now");
+        PMException::registerErrorLog($e, $token);
+        G::outRes( G::LoadTranslation("ID_EXCEPTION_LOG_INTERFAZ", array($token)) );
         eprintln ("Problem in workspace: " . $sObject . ' it was omitted.', 'red');
       }
       eprintln ();

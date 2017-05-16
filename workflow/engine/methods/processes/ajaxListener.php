@@ -27,6 +27,26 @@
  * @author Erik Amaru Ortiz <erik@colosa.com>
  * @date Jan 10th, 2010
  */
+
+/**
+ * verify user authentication, case tracker.
+ */
+if (!isset($_SESSION['PIN'])) {
+    global $RBAC;
+    switch ($RBAC->userCanAccess('PM_LOGIN')) {
+        case -2:
+            G::SendTemporalMessage('ID_USER_HAVENT_RIGHTS_SYSTEM', 'error', 'labels');
+            G::header('location: ../login/login');
+            die();
+            break;
+        case -1:
+            G::SendTemporalMessage('ID_USER_HAVENT_RIGHTS_PAGE', 'error', 'labels');
+            G::header('location: ../login/login');
+            die();
+            break;
+    }
+}
+
 $action = $_REQUEST['action'];
 unset($_REQUEST['action']);
 

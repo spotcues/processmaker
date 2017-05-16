@@ -150,8 +150,12 @@ class Table
      *
      * @return array
      */
-    public function getTableData($tab_uid, $pro_uid = '', $reportFlag = false)
+    public function getTableData($tab_uid, $pro_uid = '', $filter = null, $reportFlag = false, $search = '')
     {
+        //Validation
+        $inputFilter = new \InputFilter();
+        $filter = $inputFilter->sanitizeInputValue($filter, 'nosql');
+
         //VALIDATION
         if ($reportFlag) {
             $pro_uid = $this->validateProUid($pro_uid);
@@ -160,7 +164,7 @@ class Table
 
         $additionalTables = new AdditionalTables();
         $table  = $additionalTables->load($tab_uid, true);
-        $result = $additionalTables->getAllData($tab_uid);
+        $result = $additionalTables->getAllData($tab_uid, null, null, null, $filter, false, $search);
         $primaryKeys = $additionalTables->getPrimaryKeys();
         if (is_array($result['rows'])) {
             foreach ($result['rows'] as $i => $row) {

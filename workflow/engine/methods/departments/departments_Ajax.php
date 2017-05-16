@@ -72,7 +72,7 @@ switch ($_POST['action']) {
     case 'showUsers':
         global $G_PUBLISH;
         $oDept = new Department();
-        $aFields = $oDept->load( $_POST['sDptoUID'] );
+        $aFields = $oDept->Load( $_POST['sDptoUID'] );
         $G_PUBLISH = new Publisher();
         $G_PUBLISH->AddContent( 'xmlform', 'xmlform', 'departments/departments_Edit', '', $aFields, '' );
 
@@ -82,7 +82,7 @@ switch ($_POST['action']) {
         //$G_PUBLISH->AddContent('propeltable', 'paged-table', 'departments/departments_UsersList', $criteria, $aFields);
 
         $oHeadPublisher = & headPublisher::getSingleton();
-        $oHeadPublisher->addScriptCode( "groupname='{$aFields["DEPO_TITLE"]}';" );
+        $oHeadPublisher->addScriptCode( "groupname='{$aFields["DEP_TITLE"]}';" );
         $oHeadPublisher->addScriptCode( "depUid='{$aFields["DEP_UID"]}';" );
 
         G::RenderPage( 'publish', 'raw' );
@@ -153,13 +153,9 @@ switch ($_POST['action']) {
         $oCriteria = new Criteria( 'workflow' );
 
         $oCriteria->clearSelectColumns();
-        $oCriteria->addSelectColumn( ContentPeer::CON_CATEGORY );
-        $oCriteria->addSelectColumn( ContentPeer::CON_VALUE );
         $oCriteria->addSelectColumn( DepartmentPeer::DEP_PARENT );
-        $oCriteria->add( ContentPeer::CON_CATEGORY, 'DEPO_TITLE' );
-        $oCriteria->addJoin( ContentPeer::CON_ID, DepartmentPeer::DEP_UID, Criteria::LEFT_JOIN );
-        $oCriteria->add( ContentPeer::CON_VALUE, $dep_name );
-        $oCriteria->add( ContentPeer::CON_LANG, SYS_LANG );
+        $oCriteria->addSelectColumn( DepartmentPeer::DEP_TITLE );
+        $oCriteria->add( DepartmentPeer::DEP_TITLE, $dep_name );
         $oCriteria->add( DepartmentPeer::DEP_PARENT, $parent );
 
         $oDataset = DepartmentPeer::doSelectRS( $oCriteria );

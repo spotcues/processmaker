@@ -228,8 +228,6 @@ class dynaformEditor extends WebResource
         $G_PUBLISH->AddContent('panel-close');
         $oHeadPublisher->addScriptFile("/js/maborak/core/maborak.loader.js",2);
         $oHeadPublisher->addScriptFile('/jscore/dynaformEditor/core/dynaformEditor.js');
-        //$oHeadPublisher->addScriptFile('/js/dveditor/core/dveditor.js');
-        //$oHeadPublisher->addScriptFile('/codepress/codepress.js',1);
 
         $oHeadPublisher->addScriptFile('/js/codemirrorOld/js/codemirror.js',1);
 

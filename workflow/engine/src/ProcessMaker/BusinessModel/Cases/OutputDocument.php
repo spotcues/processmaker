@@ -282,6 +282,127 @@ class OutputDocument
     }
 
     /**
+     * Get Ouput Document generated
+     *
+     * @param string $appDocumentUid Unique id of Documents in an Application
+     * @param string $applicationUid Unique id of Case
+     * @param array  $arrayVariableNameForException Variable name for exception
+     * @param bool   $throwException Flag to throw the exception if the main parameters are invalid or do not exist
+     *                               (TRUE: throw the exception; FALSE: returns FALSE)
+     *
+     * @return array Returns an array with Ouput Document generated to record, ThrowTheException/FALSE otherwise
+     */
+    public function getOuputDocumentRecordByPk($appDocumentUid, $applicationUid, array $arrayVariableNameForException, $throwException = true)
+    {
+        $criteria = new \Criteria('workflow');
+
+        $criteria->add(\AppDocumentPeer::APP_DOC_UID, $appDocumentUid, \Criteria::EQUAL);
+        $criteria->add(\AppDocumentPeer::APP_UID, $applicationUid, \Criteria::EQUAL);
+        $criteria->add(\AppDocumentPeer::APP_DOC_TYPE, 'OUTPUT', \Criteria::EQUAL);
+
+        $rsCriteria = \AppDocumentPeer::doSelectRS($criteria);
+        $rsCriteria->setFetchmode(\ResultSet::FETCHMODE_ASSOC);
+
+        if (!$rsCriteria->next()) {
+            if ($throwException) {
+                throw new \Exception(\G::LoadTranslation('ID_CASE_OUTPUT_DOCUMENT_DOES_NOT_EXIST', [$arrayVariableNameForException['$appDocumentUid'], $appDocumentUid]));
+            } else {
+                return false;
+            }
+        }
+
+        $record = $rsCriteria->getRow();
+
+        //Return
+        return $record;
+    }
+
+    /**
+     * Stream file (OutputDocument)
+     *
+     * @param string $appDocumentUid Unique id of Documents in an Application
+     * @param string $applicationUid Unique id of Case
+     * @param string $extension      Extension (pdf, doc)
+     *
+     * @return string Returns a string (string of bytes)
+     */
+    public function streamFile($appDocumentUid, $applicationUid, $extension)
+    {
+        //Verify data and Set variables
+        $arrayAppDocumentData = $this->getOuputDocumentRecordByPk($appDocumentUid, $applicationUid, ['$appDocumentUid' => '$appDocumentUid']);
+
+        $appDocument = new \AppDocument();
+
+        $appDocument->Fields = $appDocument->load(
+            $appDocumentUid,
+            $appDocument->getLastDocVersion($appDocumentUid, $applicationUid)
+        );
+
+        $outputDocument = \OutputDocumentPeer::retrieveByPK($arrayAppDocumentData['DOC_UID']);
+        $outdocDocGenerate = $outputDocument->getOutDocGenerate();
+
+        $ext = '';
+
+        if (!is_null($extension)) {
+            if (!preg_match('/^(?:PDF|DOC)$/', strtoupper($extension))) {
+                throw new \Exception(\G::LoadTranslation('ID_OUTPUT_DOCUMENT_INVALID_EXTENSION'));
+            }
+
+            if ($outdocDocGenerate != 'BOTH' && strtoupper($extension) != $outdocDocGenerate) {
+                throw new \Exception(\G::LoadTranslation('ID_OUTPUT_DOCUMENT_CONFIG_NOT_SUPPORT_EXTENSION'));
+            }
+
+            $ext = $extension;
+        } else {
+            $ext = ($outdocDocGenerate != 'BOTH')? strtolower($outdocDocGenerate) : 'pdf';
+        }
+
+        //Stream file (OutputDocument)
+        $appDocUid = $appDocument->getAppDocUid();
+        $docUid = $appDocument->Fields['DOC_UID'];
+
+        $outputDocument = new \OutputDocument();
+
+        $outputDocument->Fields = $outputDocument->getByUid($docUid);
+
+        $download = $outputDocument->Fields['OUT_DOC_OPEN_TYPE'];
+
+        $pathInfo = pathinfo($appDocument->getAppDocFilename());
+
+        $extensionDoc = $ext;
+
+        $versionDoc =  '_' . $arrayAppDocumentData['DOC_VERSION'];
+
+        $realPath = PATH_DOCUMENT . \G::getPathFromUID($appDocument->Fields['APP_UID']) . '/outdocs/' . $appDocUid . $versionDoc . '.' . $extensionDoc;
+        $realPath1 = PATH_DOCUMENT . \G::getPathFromUID($appDocument->Fields['APP_UID']) . '/outdocs/' . $pathInfo['basename'] . $versionDoc . '.' . $extensionDoc;
+        $realPath2 = PATH_DOCUMENT . \G::getPathFromUID($appDocument->Fields['APP_UID']) . '/outdocs/' . $pathInfo['basename'] . '.' . $extensionDoc;
+
+        $flagFileExists = false;
+
+        if (file_exists($realPath)) {
+            $flagFileExists = true;
+        } else {
+            if (file_exists($realPath1)) {
+                $flagFileExists = true;
+                $realPath = $realPath1;
+            } else {
+                if (file_exists($realPath2)) {
+                    $flagFileExists = true;
+                    $realPath = $realPath2;
+                }
+            }
+        }
+
+        if ($flagFileExists) {
+            $nameFile = $pathInfo['basename'] . $versionDoc . '.' . $extensionDoc;
+
+            \G::streamFile($realPath, true, $nameFile); //download
+        } else {
+            throw new \Exception(\G::LoadTranslation('ID_NOT_EXISTS_FILE'));
+        }
+    }
+
+    /**
      * Delete OutputDocument
      *
      * @param string $applicationDocumentUid
@@ -803,7 +924,7 @@ class OutputDocument
         }
         copy($sPath . $sFilename . '.html', PATH_OUTPUT_FILE_DIRECTORY . $sFilename . '.html');
         try {
-            $status = $pipeline->process(((isset($_SERVER['HTTPS'])) && ($_SERVER['HTTPS'] == 'on') ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . '/files/' . $sApplication . '/outdocs/' . $sFilename . '.html', $g_media);
+            $status = $pipeline->process((\G::is_https() ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . '/files/' . $sApplication . '/outdocs/' . $sFilename . '.html', $g_media);
             copy(PATH_OUTPUT_FILE_DIRECTORY . $sFilename . '.pdf', $sPath . $sFilename . '.pdf');
             unlink(PATH_OUTPUT_FILE_DIRECTORY . $sFilename . '.pdf');
             unlink(PATH_OUTPUT_FILE_DIRECTORY . $sFilename . '.html');
@@ -820,5 +941,69 @@ class OutputDocument
             }
         }
     }
-}
 
+    /**
+     * Check of user has permission of process
+     *
+     * @param string $applicationUid Unique id of Case
+     * @param string $delIndex       Delegation index
+     * @param string $userUid        Unique id of User
+     * @param string $appDocumentUid Unique id of Documents in an Application
+     * @param string $action
+     *
+     * @return bool Return
+     */
+    public function checkProcessPermission($applicationUid, $delIndex, $userUid, $appDocumentUid, $action = 'VIEW')
+    {
+        $delIndex = (!is_null($delIndex))? $delIndex : 0;
+
+        $case = new \ProcessMaker\BusinessModel\Cases();
+        $arrayApplicationData = $case->getApplicationRecordByPk($applicationUid, [], false);
+
+        $processUid = $arrayApplicationData['PRO_UID'];
+
+        $case = new \Cases();
+        $arrayAllObjectsFrom = $case->getAllObjectsFrom($processUid, $applicationUid, null, $userUid, $action, $delIndex);
+
+        if (array_key_exists('OUTPUT_DOCUMENTS', $arrayAllObjectsFrom) && !empty($arrayAllObjectsFrom['OUTPUT_DOCUMENTS'])) {
+            foreach($arrayAllObjectsFrom['OUTPUT_DOCUMENTS'] as $value) {
+                if ($value == $appDocumentUid) {
+                    return true;
+                }
+            }
+        }
+
+        //Return
+        return false;
+    }
+
+    /**
+     * Check of user
+     *
+     * @param string $applicationUid Unique id of Case
+     * @param string $appDocumentUid Unique id of Documents in an Application
+     * @param string $userUid        Unique id of User
+     *
+     * @return bool Return
+     */
+    public function checkUser($applicationUid, $appDocumentUid, $userUid)
+    {
+        $criteria = new \Criteria('workflow');
+
+        $criteria->addSelectColumn(\AppDocumentPeer::DOC_UID);
+
+        $criteria->add(\AppDocumentPeer::APP_UID, $applicationUid, \Criteria::EQUAL);
+        $criteria->add(\AppDocumentPeer::APP_DOC_UID, $appDocumentUid, \Criteria::EQUAL);
+        $criteria->add(\AppDocumentPeer::APP_DOC_TYPE, 'OUTPUT', \Criteria::EQUAL);
+        $criteria->add(\AppDocumentPeer::USR_UID, $userUid, \Criteria::EQUAL);
+
+        $rsCriteria = \AppDocumentPeer::doSelectRS($criteria);
+
+        if ($rsCriteria->next()) {
+            return true;
+        }
+
+        //Return
+        return false;
+    }
+}

@@ -526,7 +526,7 @@ class PHPMailer {
     if ($this->Debugoutput == "error_log") {
         error_log($str);
     } else {
-        echo $str;
+        error_log($str);
     }
   }
 

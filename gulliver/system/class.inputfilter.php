@@ -661,4 +661,35 @@ class InputFilter
         $sanitizefilteredPath = mb_ereg_replace("(^~)", '', $sanitizefilteredPath);
         return $sanitizefilteredPath;
     }
+
+    /**
+     * Filter only characters valids by regular expression
+     *
+     * @param mixed $data  Data
+     * @param mixed $regex Regular expression
+     *
+     * @return mixed Returns data with the characters valids by regular expression
+     */
+    function xssRegexFilter($data, $regex)
+    {
+        try {
+            switch (gettype($data)) {
+                case 'array':
+                    foreach ($data as $key => $value) {
+                        $data[$key] = $this->xssRegexFilter($value, (is_array($regex))? ((isset($regex[$key]))? $regex[$key] : '') : $regex);
+                    }
+                    break;
+                default:
+                    if ($regex != '') {
+                        $data = (preg_match_all($regex, $data, $arrayMatch))? implode('', $arrayMatch[0]) : '';
+                    }
+                    break;
+            }
+
+            //Return
+            return $data;
+        } catch (Exception $e) {
+            throw $e;
+        }
+    }
 }

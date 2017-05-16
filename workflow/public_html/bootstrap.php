@@ -223,12 +223,14 @@
   // the request correspond to valid php page, now parse the URI
   G::parseURI(getenv("REQUEST_URI"), $isRestRequest);
 
-  if(G::isPMUnderUpdating())
-  {
-      header("location: /update/updating.php");
-      if ( DEBUG_TIME_LOG ) G::logTimeByPage();
-      die;
-  }
+    $arrayUpdating = G::isPMUnderUpdating();
+    if ($arrayUpdating['action']) {
+        if ($arrayUpdating['workspace'] == "true" || $arrayUpdating['workspace'] == SYS_TEMP) {
+            header("location: /update/updating.php");
+            if (DEBUG_TIME_LOG) G::logTimeByPage();
+            die;
+        }
+    }
 
   // verify if index.html exists
   if (!file_exists(PATH_HTML . 'index.html')) { // if not, create it from template
@@ -263,7 +265,6 @@
   G::LoadSystem('form');
   G::LoadSystem('menu');
   G::LoadSystem("xmlMenu");
-  G::LoadSystem('dvEditor');
   G::LoadSystem('wysiwygEditor');
   G::LoadSystem('controller');
   G::LoadSystem('httpProxyController');
@@ -628,15 +629,9 @@
       $noLoginFiles[] = 'dbInfo';
       $noLoginFiles[] = 'sysLoginVerify';
       $noLoginFiles[] = 'processes_Ajax';
-      $noLoginFiles[] = 'updateTranslation';
-      $noLoginFiles[] = 'autoinstallProcesses';
-      $noLoginFiles[] = 'autoinstallPlugins';
-      $noLoginFiles[] = 'heartbeatStatus';
       $noLoginFiles[] = 'showLogoFile';
       $noLoginFiles[] = 'forgotPassword';
       $noLoginFiles[] = 'retrivePassword';
-      $noLoginFiles[] = 'defaultAjaxDynaform';
-      $noLoginFiles[] = 'dynaforms_checkDependentFields';
       $noLoginFiles[] = 'genericAjax';
 
       $noLoginFolders[] = 'services';

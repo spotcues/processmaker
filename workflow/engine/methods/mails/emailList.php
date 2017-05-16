@@ -48,6 +48,10 @@ $status = array(
     array("pending", G::LoadTranslation('ID_PENDING'))
 );
 
+$pluginRegistry = PMPluginRegistry::getSingleton();
+$statusER = $pluginRegistry->getStatusPlugin('externalRegistration');
+$flagER = (preg_match('/^enabled$/', $statusER))? 1 : 0;
+
 $processes = getProcessArray($userUid);
 
 $G_PUBLISH = new Publisher();
@@ -58,6 +62,7 @@ $oHeadPublisher->addContent('mails/emailList'); //adding a html file  .html.
 //sending the columns to display in grid
 $oHeadPublisher->assign('statusValues', $status);
 $oHeadPublisher->assign('processValues', $processes);
+$oHeadPublisher->assign('flagER', $flagER);
 
 function getProcessArray($userUid) {
     global $oAppCache;

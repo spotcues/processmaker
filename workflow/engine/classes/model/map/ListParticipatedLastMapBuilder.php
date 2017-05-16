@@ -111,6 +111,14 @@ class ListParticipatedLastMapBuilder
 
         $tMap->addColumn('DEL_THREAD_STATUS', 'DelThreadStatus', 'string', CreoleTypes::VARCHAR, true, 32);
 
+        $tMap->addColumn('PRO_ID', 'ProId', 'int', CreoleTypes::INTEGER, false, null);
+
+        $tMap->addColumn('USR_ID', 'UsrId', 'int', CreoleTypes::INTEGER, false, null);
+
+        $tMap->addColumn('TAS_ID', 'TasId', 'int', CreoleTypes::INTEGER, false, null);
+
+        $tMap->addColumn('APP_STATUS_ID', 'AppStatusId', 'int', CreoleTypes::TINYINT, false, null);
+
     } // doBuild()
 
 } // ListParticipatedLastMapBuilder

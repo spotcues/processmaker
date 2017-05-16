@@ -83,7 +83,6 @@ switch ($_POST['action']) {
     case 'groupsList':
         require_once 'classes/model/Groupwf.php';
         require_once 'classes/model/TaskUser.php';
-        require_once 'classes/model/GroupUser.php';
         G::LoadClass( 'configuration' );
         $co = new Configurations();
         $config = $co->getConfiguration( 'groupList', 'pageSize', '', $_SESSION['USER_LOGGED'] );
@@ -103,15 +102,12 @@ switch ($_POST['action']) {
         $tasks = new TaskUser();
         $aTask = $tasks->getCountAllTaksByGroups();
 
-        $members = new GroupUser();
-        $aMembers = $members->getCountAllUsersByGroup();
-
         require_once PATH_CONTROLLERS . 'adminProxy.php';
         $uxList = adminProxy::getUxTypesList();
 
         $groups = new Groupwf();
 
-        $data = $groups->getAllGroup( $start, $limit, $filter, $sortField, $sortDir);
+        $data = $groups->getAllGroup( $start, $limit, $filter, $sortField, $sortDir, true);
         $result = $data['rows'];
 
         $totalRows = 0;
@@ -122,7 +118,6 @@ switch ($_POST['action']) {
             ), array ("&lt;","&gt;"
             ), $results['GRP_TITLE'] );
             $results['GRP_TASKS'] = isset( $aTask[$results['GRP_UID']] ) ? $aTask[$results['GRP_UID']] : 0;
-            $results['GRP_USERS'] = isset( $aMembers[$results['GRP_UID']] ) ? $aMembers[$results['GRP_UID']] : 0;
             $arrData[] = $results;
         }
 

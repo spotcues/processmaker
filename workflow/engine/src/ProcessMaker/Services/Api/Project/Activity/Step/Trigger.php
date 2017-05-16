@@ -197,12 +197,12 @@ class StepTriggerPostStructure
     public $tri_uid;
 
     /**
-     * @var string
+     * @var string {@required false}
      */
     public $st_condition;
 
     /**
-     * @var int {@from body}{@min 1}
+     * @var int {@from body}{@min 1} {@required false}
      */
     public $st_position;
 }
@@ -215,12 +215,12 @@ class StepTriggerPutStructure
     public $st_type;
 
     /**
-     * @var string
+     * @var string {@required false}
      */
     public $st_condition;
 
     /**
-     * @var int {@from body}{@min 1}
+     * @var int {@from body}{@min 1} {@required false}
      */
     public $st_position;
 }
@@ -238,12 +238,12 @@ class StepAssignTaskTriggerPostStructure
     public $tri_uid;
 
     /**
-     * @var string
+     * @var string {@required false}
      */
     public $st_condition;
 
     /**
-     * @var int {@from body}{@min 1}
+     * @var int {@from body}{@min 1} {@required false}
      */
     public $st_position;
 }
@@ -256,12 +256,12 @@ class StepAssignTaskTriggerPutStructure
     public $st_type;
 
     /**
-     * @var string
+     * @var string {@required false}
      */
     public $st_condition;
 
     /**
-     * @var int {@from body}{@min 1}
+     * @var int {@from body}{@min 1} {@required false}
      */
     public $st_position;
 }

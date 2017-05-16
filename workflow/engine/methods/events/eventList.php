@@ -42,18 +42,18 @@ $G_ID_SUB_MENU_SELECTED = 'EVENT';
 
 //get values for the comboBoxes
 $userUid = (isset($_SESSION['USER_LOGGED']) && $_SESSION['USER_LOGGED'] != '') ? $_SESSION['USER_LOGGED'] : null;
-$status = array(array('', G::LoadTranslation('ID_ALL')
-), array("PENDING", G::LoadTranslation('ID_OPEN')
-), array("COMPLETED", G::LoadTranslation('ID_CLOSE')
-)
+$status = array(
+    array('', G::LoadTranslation('ID_ALL')),
+    array("PENDING", G::LoadTranslation('ID_OPEN')),
+    array("COMPLETED", G::LoadTranslation('ID_CLOSE'))
 );
-$type = array(array('', G::LoadTranslation('ID_ALL')
-), array('SEND_MESSAGE', G::LoadTranslation('ID_EVENT_MESSAGE')
-), array('EXECUTE_TRIGGER', G::LoadTranslation('ID_EVENT_TIMER')
-), array('EXECUTE_CONDITIONAL_TRIGGER', G::LoadTranslation('ID_EVENT_CONDITIONAL')
-)
+$type = array(
+    array('', G::LoadTranslation('ID_ALL')),
+    array('SEND_MESSAGE', G::LoadTranslation('ID_EVENT_MESSAGE')),
+    array('EXECUTE_TRIGGER', G::LoadTranslation('ID_EVENT_TIMER')),
+    array('EXECUTE_CONDITIONAL_TRIGGER', G::LoadTranslation('ID_EVENT_CONDITIONAL'))
 );
-$processes = getProcessArray( $userUid );
+$processes = getProcessArray($userUid);
 
 $G_PUBLISH = new Publisher();
 
@@ -65,27 +65,28 @@ $oHeadPublisher->assign('typeValues', $type);
 $oHeadPublisher->assign('statusValues', $status);
 $oHeadPublisher->assign('processValues', $processes);
 
-function getProcessArray($userUid) {
-    global $oAppCache;
-    require_once("classes/model/AppCacheView.php");
-
+/**
+ * Get all process and order by name
+ *
+ * @param  string $userUid Uid of the user
+ * @return array $processes
+ */
+function getProcessArray($userUid)
+{
     $processes = array();
     $processes[] = array('', G::LoadTranslation('ID_ALL_PROCESS'));
 
     $cProcess = new Criteria('workflow');
     $cProcess->clearSelectColumns();
-    $cProcess->addSelectColumn(AppCacheViewPeer::PRO_UID);
-    $cProcess->addSelectColumn(AppCacheViewPeer::APP_PRO_TITLE);
-    $cProcess->setDistinct(AppCacheViewPeer::PRO_UID);
-
-    $cProcess->addAscendingOrderByColumn(AppCacheViewPeer::APP_PRO_TITLE);
-
-    $oDataset = AppCacheViewPeer::doSelectRS($cProcess);
+    $cProcess->addSelectColumn(ProcessPeer::PRO_UID);
+    $cProcess->addSelectColumn(ProcessPeer::PRO_TITLE);
+    $cProcess->addAscendingOrderByColumn(ProcessPeer::PRO_TITLE);
+    $oDataset = ProcessPeer::doSelectRS($cProcess);
     $oDataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
-    $oDataset->next();
 
+    $oDataset->next();
     while ($aRow = $oDataset->getRow()) {
-        $processes[] = array($aRow['PRO_UID'], $aRow['APP_PRO_TITLE']);
+        $processes[] = array($aRow['PRO_UID'], $aRow['PRO_TITLE']);
         $oDataset->next();
     }
 

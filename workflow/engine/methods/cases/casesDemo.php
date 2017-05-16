@@ -79,7 +79,9 @@ try {
     $Fields['APP_PIN'] = $appFields['APP_PIN'];
     $Fields['APP_PROC_CODE'] = $appFields['APP_PROC_CODE'];
 
-    $Fields['PRO_TITLE'] = Content::load( 'PRO_TITLE', '', $appFields['PRO_UID'], SYS_LANG );
+    $objProc = new Process();
+    $aProc = $objProc->load($appFields['PRO_UID']);
+    $Fields['PRO_TITLE'] = $aProc['PRO_TITLE'];
     $oUser = new Users();
     $oUser->load( $appFields['APP_CUR_USER'] );
     $Fields['CUR_USER'] = $oUser->getUsrFirstname() . ' ' . $oUser->getUsrLastname();
@@ -91,8 +93,10 @@ try {
     $Fields['CANT_APP_DATA'] = count( $Fields['APP_DATA'] );
     $delegations = $oCase->GetAllDelegations( $appFields['APP_UID'] );
     foreach ($delegations as $key => $val) {
-        $delegations[$key]['TAS_TITLE'] = Content::load( 'TAS_TITLE', '', $val['TAS_UID'], SYS_LANG );
-        if ($val['USR_UID'] != - 1) {
+        $objTask = new Task();
+        $aTask = $objTask->load($val['TAS_UID']);
+        $delegations[$key]['TAS_TITLE'] = $aTask['TAS_TITLE'];
+        if ($val['USR_UID'] != - 1 && $val['USR_UID'] != '') {
             $oUser->load( $val['USR_UID'] );
             $delegations[$key]['USR_NAME'] = $oUser->getUsrFirstname() . ' ' . $oUser->getUsrLastname();
         } else {

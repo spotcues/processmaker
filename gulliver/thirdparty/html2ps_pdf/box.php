@@ -494,7 +494,8 @@ function &create_pdf_pseudoelement($root, $pe_type, &$pipeline) {
                                         $pipeline);
     break;
   default:
-    die('Unsupported "display" value: '.$display_handler->get($css_state->getState()));
+    error_log('Unsupported display value: '.$display_handler->get($css_state->getState()));
+    die;
   }
 
   // Check if this box needs a block wrapper (for example, floating button)

@@ -88,9 +88,9 @@ class Configurations // extends Configuration
         }
     }
 
-    public function exists($cfgID)
+    public function exists($cfgID,$objID='')
     {
-        return $this->Configuration->exists($cfgID,"",'','','');
+        return $this->Configuration->exists($cfgID,$objID,'','','');
     }
 
     /**
@@ -264,13 +264,14 @@ class Configurations // extends Configuration
      * @param string $app
      * @return void
      */
-    public function getConfiguration($cfg, $obj, $pro = '', $usr = '', $app = '')
+    public function getConfiguration($cfg, $obj, $pro = '', $usr = '', $app = '', &$outResult = array())
     {
         try {
             $oCfg = ConfigurationPeer::retrieveByPK($cfg, $obj, $pro, $usr, $app);
             if (!is_null($oCfg)) {
                 $row = $oCfg->toArray(BasePeer::TYPE_FIELDNAME);
                 $result = unserialize($row['CFG_VALUE']);
+                $outResult = $result;
                 if (is_array($result) && sizeof($result) == 1) {
                     $arrayKeys = Array_keys($result);
                     return $result[$arrayKeys[0]];

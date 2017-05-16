@@ -55,45 +55,55 @@ if (isset( $_FILES ) && $_FILES["ATTACH_FILE"]["error"] == 0) {
 
         $oAppDocument = new AppDocument();
 
-        if (isset( $_POST["APP_DOC_UID"] ) && trim( $_POST["APP_DOC_UID"] ) != "") {
+        if (isset($_POST["APP_DOC_UID"]) && trim($_POST["APP_DOC_UID"]) != "") {
             //Update
             echo "[update]";
             $aFields["APP_DOC_UID"] = $_POST["APP_DOC_UID"];
             $aFields["DOC_VERSION"] = $_POST["DOC_VERSION"];
             $aFields["APP_DOC_FILENAME"] = $_FILES["ATTACH_FILE"]["name"];
 
-            if (isset( $_POST["APPLICATION"] )) {
+            if (isset($_POST["APPLICATION"])) {
                 $aFields["APP_UID"] = $_POST["APPLICATION"];
             }
 
-            if (isset( $_POST["INDEX"] )) {
+            if (isset($_POST["INDEX"])) {
                 $aFields["DEL_INDEX"] = $_POST["INDEX"];
             }
 
-            if (isset( $_POST["USR_UID"] )) {
+            if (isset($_POST["USR_UID"])) {
                 $aFields["USR_UID"] = $_POST["USR_UID"];
             }
 
-            if (isset( $_POST["DOC_UID"] )) {
+            if (isset($_POST["DOC_UID"])) {
                 $aFields["DOC_UID"] = $_POST["DOC_UID"];
             }
 
-            if (isset( $_POST["APP_DOC_TYPE"] )) {
+            if (isset($_POST["APP_DOC_TYPE"])) {
                 $aFields["APP_DOC_TYPE"] = $_POST["APP_DOC_TYPE"];
             }
 
-            $aFields["APP_DOC_CREATE_DATE"] = date( "Y-m-d H:i:s" );
-            $aFields["APP_DOC_COMMENT"] = (isset( $_POST["COMMENT"] )) ? $_POST["COMMENT"] : "";
-            $aFields["APP_DOC_TITLE"] = (isset( $_POST["TITLE"] )) ? $_POST["TITLE"] : "";
+            $aFields["APP_DOC_CREATE_DATE"] = date("Y-m-d H:i:s");
+            $aFields["APP_DOC_COMMENT"] = (isset($_POST["COMMENT"])) ? $_POST["COMMENT"] : "";
+            $aFields["APP_DOC_TITLE"] = (isset($_POST["TITLE"])) ? $_POST["TITLE"] : "";
 
             //$aFields["FOLDER_UID"] = $folderId,
             //$aFields["APP_DOC_TAGS"] = $fileTags
 
-
             $aFields["APP_DOC_FIELDNAME"] = $_POST["APP_DOC_FIELDNAME"];
         } else {
             //New record
-            $aFields = array ("APP_UID" => $_POST["APPLICATION"],"DEL_INDEX" => $_POST["INDEX"],"USR_UID" => $_POST["USR_UID"],"DOC_UID" => $_POST["DOC_UID"],"APP_DOC_TYPE" => $_POST["APP_DOC_TYPE"],"APP_DOC_CREATE_DATE" => date( "Y-m-d H:i:s" ),"APP_DOC_COMMENT" => (isset( $_POST["COMMENT"] )) ? $_POST["COMMENT"] : "","APP_DOC_TITLE" => (isset( $_POST["TITLE"] )) ? $_POST["TITLE"] : "","APP_DOC_FILENAME" => (isset( $_FILES["ATTACH_FILE"]["name"] )) ? $_FILES["ATTACH_FILE"]["name"] : "","FOLDER_UID" => $folderId,"APP_DOC_TAGS" => $fileTags,"APP_DOC_FIELDNAME" => (isset($_POST["APP_DOC_FIELDNAME"])) ? $_POST["APP_DOC_FIELDNAME"] : ( (isset( $_FILES["ATTACH_FILE"]["name"] )) ? $_FILES["ATTACH_FILE"]["name"] : "")
+            $aFields = array(
+                "APP_UID" => $_POST["APPLICATION"],
+                "DEL_INDEX" => $_POST["INDEX"],
+                "USR_UID" => $_POST["USR_UID"],
+                "DOC_UID" => $_POST["DOC_UID"],
+                "APP_DOC_TYPE" => $_POST["APP_DOC_TYPE"],
+                "APP_DOC_CREATE_DATE" => date("Y-m-d H:i:s"),
+                "APP_DOC_COMMENT" => (isset($_POST["COMMENT"])) ? $_POST["COMMENT"] : "",
+                "APP_DOC_TITLE" => (isset($_POST["TITLE"])) ? $_POST["TITLE"] : "",
+                "APP_DOC_FILENAME" => (isset($_FILES["ATTACH_FILE"]["name"])) ? $_FILES["ATTACH_FILE"]["name"] : "",
+                "FOLDER_UID" => $folderId, "APP_DOC_TAGS" => $fileTags,
+                "APP_DOC_FIELDNAME" => (isset($_POST["APP_DOC_FIELDNAME"])) ? $_POST["APP_DOC_FIELDNAME"] : ((isset($_FILES["ATTACH_FILE"]["name"])) ? $_FILES["ATTACH_FILE"]["name"] : "")
             );
         }
 
@@ -151,7 +161,9 @@ if (isset( $_FILES ) && $_FILES["ATTACH_FILE"]["error"] == 0) {
         }
         //End plugin
     } catch (Exception $e) {
-        print ($e->getMessage()) ;
+        $token = strtotime("now");
+        PMException::registerErrorLog($e, $token);
+        G::outRes( G::LoadTranslation("ID_EXCEPTION_LOG_INTERFAZ", array($token)) );
     }
 }
 

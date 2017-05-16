@@ -27,6 +27,10 @@ foreach ($aTriggers as $aTrigger) {
             $geshi->set_line_style( 'background: #f0f0f0;' );
 
             $triggersList[$i]['code'] = $geshi->parse_code(); //$aTrigger['TRIGGERS_VALUES'][$index]['TRI_WEBBOT'];
+
+            $triggerUid = $aTrigger['TRIGGERS_VALUES'][$index]['TRI_UID'];
+            $triggersList[$i]['script_execution_time'] = $aTrigger['TRIGGERS_EXECUTION_TIME'][$triggerUid];
+
             $i ++;
         }
     } else {

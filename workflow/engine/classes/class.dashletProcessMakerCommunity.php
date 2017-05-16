@@ -103,7 +103,7 @@ class dashletProcessMakerCommunity implements DashletInterface
       <div class=\"description\">
         <strong>FORUM - </strong><a href=\"http://forum.processmaker.com/\" target=\"_blank\" title=\"http://forum.processmaker.com\">http://forum.processmaker.com</a>
         <br />
-       Discuss Processker issues, interact with the PMOS community, and get support from fellow developers and community members in the ProcessMaker Forum.
+       Discuss ProcessMaker issues, interact with the PMOS community, and get support from fellow developers and community members in the ProcessMaker Forum.
       </div>
       <div class=\"clearf\"></div>
 

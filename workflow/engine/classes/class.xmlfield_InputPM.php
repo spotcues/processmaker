@@ -407,7 +407,7 @@ function getDynaformsVars ($sProcessUID, $typeVars = 'all', $bIncMulSelFields = 
             $oCriteria->addSelectColumn(ProcessVariablesPeer::VAR_NAME);
             $oCriteria->addSelectColumn(ProcessVariablesPeer::VAR_FIELD_TYPE);
             $oCriteria->add(ProcessVariablesPeer::PRJ_UID, $sProcessUID);
-            $oDataset = DynaformPeer::doSelectRS($oCriteria);
+            $oDataset = ProcessVariablesPeer::doSelectRS($oCriteria);
             $oDataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
             while ($oDataset->next()) {
                 $row = $oDataset->getRow();

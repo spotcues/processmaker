@@ -39,6 +39,7 @@ class PmTable
     private $dom = null;
     private $schemaFile = '';
     private $tableName;
+    private $oldTableName = null;
     private $columns;
     private $primaryKey= array();
     private $baseDir = '';
@@ -62,6 +63,16 @@ class PmTable
         }
 
         $this->dbConfig = new StdClass();
+    }
+
+    /**
+     * Set oldTableName to pmTable
+     * 
+     * @param string $oldTableName
+     */
+    public function setOldTableName($oldTableName)
+    {
+        $this->oldTableName = $oldTableName;
     }
 
     /**
@@ -612,7 +623,7 @@ class PmTable
             $queryStack['drop'] = substr( $queryStack['drop'], 0, strrpos( $queryStack['drop'], ";" ) );
             $queryStack['create'] = substr( $queryStack['create'], 0, strrpos( $queryStack['create'], ";" ) );
             $queryStack['alter'] = substr( $queryStack['alter'], 0, strrpos( $queryStack['alter'], ";" ) );
-            $queryIfExistTable = "SELECT TABLE_NAME FROM USER_TABLES WHERE TABLE_NAME = '" . $this->tableName . "'";
+            $queryIfExistTable = "SELECT TABLE_NAME FROM USER_TABLES WHERE TABLE_NAME = '" . $table . "'";
 
             $rs = $stmt->executeQuery( $queryIfExistTable );
 
@@ -635,27 +646,41 @@ class PmTable
             if (isset( $queryStack['create'] )) {
                 // first at all we need to verify if we have a valid schema defined,
                 // so we verify that creating a dummy table
-                $swapQuery = str_replace( $this->tableName, $this->tableName . '_TMP', $queryStack['create'] );
+                $swapQuery = str_replace( $table, $table . '_TMP', $queryStack['create'] );
 
                 // if there is a problem with user defined table schema executeQuery() will throw a sql exception
                 $stmt->executeQuery( $swapQuery );
 
                 // if there was not problem above proceced deleting the dummy table and drop and create the target table
-                $stmt->executeQuery( "DROP TABLE {$this->tableName}_TMP" );
+                $stmt->executeQuery( "DROP TABLE {$table}_TMP" );
                 if (! isset( $queryStack['drop'] )) {
-                    $queryStack['drop'] = "DROP TABLE {$this->tableName}";
+                    $queryStack['drop'] = "DROP TABLE {$table}";
                 }
                 if (! isset( $queryStack['create'] )) {
                     throw new Exception( 'A problem occurred resolving the schema to update for this table' );
                 }
 
                 if ($this->keepData && $sqlTableBackup != null) {
-                    //Delete backup if exists
-                    $rs = $stmt->executeQuery(str_replace($table, $tableBackup, $queryStack["drop"]));
+                    if ($this->oldTableName === $this->tableName) {
+                        //Delete backup if exists
+                        $rs = $stmt->executeQuery(str_replace($table, $tableBackup, $queryStack["drop"]));
 
-                    //Create backup
-                    $rs = $stmt->executeQuery($sqlTableBackup, ResultSet::FETCHMODE_ASSOC);
-                    $swTableBackup = 1;
+                        //Create backup
+                        $rs = $stmt->executeQuery($sqlTableBackup, ResultSet::FETCHMODE_ASSOC);
+                        $swTableBackup = 1;
+                    } else {
+                        $table = $this->oldTableName;
+                        $tableBackup = str_replace($this->tableName, $this->oldTableName, $tableBackup);
+                        $sqlTableBackup = str_replace($this->tableName, $this->oldTableName, $sqlTableBackup);
+                        
+                        //Delete backup if exists
+                        $rs = $stmt->executeQuery(str_replace($table, $tableBackup, $queryStack["drop"]));
+
+                        //Create backup
+                        $rs = $stmt->executeQuery($sqlTableBackup, ResultSet::FETCHMODE_ASSOC);
+                        $swTableBackup = 1;
+                        $table = $this->tableName;
+                    }
                 }
 
                 $stmt->executeQuery( $queryStack['drop'] );
@@ -909,6 +934,66 @@ class PmTable
         $m = new pmPhing();
         $m->execute( $args );
         $m->runBuild();
+    }
+
+    public function addPMFieldsToList($action)
+    {
+        $conf = new Configurations();
+        $confCasesList = $conf->getConfiguration('casesList', $action);
+
+        if (!class_exists('AdditionalTables')) {
+            require_once ("classes/model/AdditionalTables.php");
+        }
+
+        $oCriteria = new Criteria('workflow');
+        $oCriteria->clearSelectColumns();
+
+        //If there is PMTable for this case list
+        if (is_array($confCasesList) && count($confCasesList) > 0 && isset($confCasesList["PMTable"]) && trim($confCasesList["PMTable"]) != "") {
+            //Getting the table name
+            $additionalTableUid = $confCasesList["PMTable"];
+
+            $additionalTable = AdditionalTablesPeer::retrieveByPK($additionalTableUid);
+            $tableName = $additionalTable->getAddTabName();
+
+            $additionalTable = new AdditionalTables();
+            $tableData = $additionalTable->load($additionalTableUid, true);
+
+            $tableField = array();
+
+            foreach ($tableData["FIELDS"] as $arrayField) {
+                $tableField[] = $arrayField["FLD_NAME"];
+            }
+
+            foreach ($confCasesList["second"]["data"] as $fieldData) {
+                $fieldData['name'] = ($fieldData['name'] == 'APP_STATUS_LABEL')? 'APP_STATUS' : $fieldData['name'];
+                if (in_array($fieldData["name"], $tableField)) {
+                    $fieldTable = $fieldData["name"];
+                    $fieldName = $tableName . "." . $fieldTable;
+                    $oCriteria->addSelectColumn($fieldName);
+                }
+            }
+
+            switch ($action) {
+                case "sent":
+                    $listTablePeer = 'ListParticipatedLastPeer';
+                    break;
+                case "selfservice":
+                case "unassigned":
+                    $listTablePeer = 'ListUnassignedPeer';
+                    break;
+                case "paused":
+                    $listTablePeer = 'ListPausedPeer';
+                    break;
+                case "todo":
+                case 'draft':
+                    $listTablePeer = 'ListInboxPeer';
+                    break;
+            }
+            
+            $oCriteria->addJoin($listTablePeer::APP_UID, $tableName.'.APP_UID', Criteria::LEFT_JOIN);
+        }
+        return $oCriteria;
     }
 }
 

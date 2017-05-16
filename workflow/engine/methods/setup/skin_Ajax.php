@@ -192,12 +192,12 @@ function newSkin ($baseSkin = 'classic')
         $response['success'] = true;
         $response['message'] = G::LoadTranslation( 'ID_SKIN_SUCCESS_CREATE' );
         G::auditLog("CreateSkin", "Skin Name: ".$skinName);
-        print_r( G::json_encode( $response ) );
+        G::outRes( G::json_encode( $response ) );
     } catch (Exception $e) {
         $response['success'] = false;
         $response['message'] = $e->getMessage();
         $response['error'] = $e->getMessage();
-        print_r( G::json_encode( $response ) );
+        G::outRes( G::json_encode( $response ) );
     }
 }
 
@@ -308,12 +308,12 @@ function importSkin ()
         $response['success'] = true;
         $response['message'] = G::LoadTranslation( 'ID_SKIN_SUCCESSFUL_IMPORTED' );
         G::auditLog("ImportSkin", "Skin Name: ".$skinName);
-        print_r( G::json_encode( $response ) );
+        G::outRes( G::json_encode( $response ) );
     } catch (Exception $e) {
         $response['success'] = false;
         $response['message'] = $e->getMessage();
         $response['error'] = $e->getMessage();
-        print_r( G::json_encode( $response ) );
+        G::outRes( G::json_encode( $response ) );
     }
 }
 

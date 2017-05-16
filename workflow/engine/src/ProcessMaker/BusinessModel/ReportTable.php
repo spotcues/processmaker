@@ -348,10 +348,44 @@ class ReportTable
         $result = new \stdClass();
 
         try {
+            $additionalTableUid = $arrayData['REP_TAB_UID'];
+            $flagNew = 0;
+
+            $additionalTables = \AdditionalTablesPeer::retrieveByPK($arrayData['REP_TAB_UID']);
+
+            if (!is_null($additionalTables)){
+                $arrayData['REP_TAB_NAME'] = 'PMT_' . trim($arrayData['REP_TAB_NAME']);
+
+                if ($additionalTables->getAddTabName() != $arrayData['REP_TAB_NAME']) {
+                    $arrayData['REP_TAB_UID'] = '';
+                    $flagNew = 1;
+                }
+            }
+
             ob_start();
 
             $arrayData['PRO_UID'] = trim($arrayData['PRO_UID']);
             $arrayData['columns'] = \G::json_decode(stripslashes($arrayData['columns'])); //Decofing data columns
+
+            if ($flagNew == 1) {
+                $arrayNewColumn = [];
+                $counter = 0;
+
+                foreach ($arrayData['columns'] as $value) {
+                    $column = $value;
+
+                    if (!preg_match('/^(?:APP_UID|APP_NUMBER|APP_STATUS|ROW)$/', $column->field_name)) {
+                        $column->uid = '';
+                        $column->_index = $counter;
+
+                        $arrayNewColumn[] = $column;
+
+                        $counter++;
+                    }
+                }
+
+                $arrayData['columns'] = $arrayNewColumn;
+            }
 
             $additionalTable = new \AdditionalTables();
 
@@ -431,6 +465,9 @@ class ReportTable
             $pmTable->setDataSource($arrayData['REP_TAB_CONNECTION']);
             $pmTable->setColumns($columns);
             $pmTable->setAlterTable($flagAlterTable);
+            if (isset($arrayData['REP_TAB_NAME_OLD_NAME'])) {
+                $pmTable->setOldTableName($arrayData['REP_TAB_NAME_OLD_NAME']);
+            }
 
             if (isset($arrayData['keepData']) && $arrayData['keepData'] == 1) {
                 //PM Table
@@ -438,7 +475,7 @@ class ReportTable
             }
 
             $pmTable->build();
-
+            
             $buildResult = ob_get_contents();
 
             ob_end_clean();
@@ -531,6 +568,18 @@ class ReportTable
 
             $result->success = true;
             $result->message = $result->msg = $buildResult;
+
+            require_once(PATH_CORE . 'controllers/pmTablesProxy.php');
+
+            if ($flagNew == 1) {
+                $pmTablesProxy = new \pmTablesProxy();
+
+                $obj = new \stdClass();
+                $obj->rows = \G::json_encode([['id' => $additionalTableUid, 'type' => '']]);
+
+                //Delete Report Table
+                $resultDeleteReportTable = $pmTablesProxy->delete($obj);
+            }
         } catch (\Exception $e) {
             $buildResult = ob_get_contents();
 

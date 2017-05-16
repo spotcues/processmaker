@@ -238,7 +238,7 @@ class Assignee extends Api
     public function doGetActivityAssigneesAll($prjUid, $actUid, $filter = null, $start = null, $limit = null, $type = null)
     {
         try {
-            $arrayData = $this->task->getTaskAssigneesAll($prjUid, $actUid, $filter, $start, $limit, $type);
+            $response = $this->task->getTaskAssigneesAll($prjUid, $actUid, $filter, $start, $limit, $type);
 
             return $response;
         } catch (\Exception $e) {

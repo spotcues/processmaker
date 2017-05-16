@@ -83,7 +83,7 @@ class ListCompletedMapBuilder
 
         $tMap->addColumn('APP_CREATE_DATE', 'AppCreateDate', 'int', CreoleTypes::TIMESTAMP, false, null);
 
-        $tMap->addColumn('APP_FINISH_DATE', 'AppFinishDate', 'int', CreoleTypes::TIMESTAMP, true, null);
+        $tMap->addColumn('APP_FINISH_DATE', 'AppFinishDate', 'int', CreoleTypes::TIMESTAMP, false, null);
 
         $tMap->addColumn('DEL_INDEX', 'DelIndex', 'int', CreoleTypes::INTEGER, true, null);
 
@@ -94,6 +94,12 @@ class ListCompletedMapBuilder
         $tMap->addColumn('DEL_CURRENT_USR_FIRSTNAME', 'DelCurrentUsrFirstname', 'string', CreoleTypes::VARCHAR, false, 50);
 
         $tMap->addColumn('DEL_CURRENT_USR_LASTNAME', 'DelCurrentUsrLastname', 'string', CreoleTypes::VARCHAR, false, 50);
+
+        $tMap->addColumn('PRO_ID', 'ProId', 'int', CreoleTypes::INTEGER, false, null);
+
+        $tMap->addColumn('USR_ID', 'UsrId', 'int', CreoleTypes::INTEGER, false, null);
+
+        $tMap->addColumn('TAS_ID', 'TasId', 'int', CreoleTypes::INTEGER, false, null);
 
     } // doBuild()
 

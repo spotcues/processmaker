@@ -121,9 +121,9 @@ try {
               $enable = 'enable';
             }else{
               $enable = 'disable';
-            }  
+            }
             G::auditLog("ConditionsEditorDynaform", "Dynaform Title: " .$aDYN['DYNAFORM_NAME']. ", Condition Editor: [Function: ".$_POST['function']. ", Fields: ".$_POST['fields_selected']. ", Conditions: ".$_POST['condition']. ", Events: ".$_POST['events']. ", Event Owner: ".$_POST['event_owner_selected']. ", Status: ".$enable."]");
-                
+
             break;
         case 'delete':
             require_once 'classes/model/FieldCondition.php';
@@ -134,7 +134,9 @@ try {
             break;
     }
 } catch (Exception $e) {
-    print ($e->getMessage()) ;
+    $token = strtotime("now");
+    PMException::registerErrorLog($e, $token);
+    G::outRes( G::LoadTranslation("ID_EXCEPTION_LOG_INTERFAZ", array($token)) );
 }
 
 /*

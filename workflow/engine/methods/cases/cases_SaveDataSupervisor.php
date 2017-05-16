@@ -208,5 +208,5 @@ if (isset( $_FILES["form"]["name"] ) && count( $_FILES["form"]["name"] ) > 0) {
 
 //go to the next step
 $aNextStep = $oCase->getNextSupervisorStep( $_SESSION['PROCESS'], $_SESSION['STEP_POSITION'] );
-G::header( 'location: cases_StepToRevise?DYN_UID=' . $aNextStep['UID'] . '&APP_UID=' . $_SESSION['APPLICATION'] . '&DEL_INDEX=' . $_SESSION['INDEX'] );
-
+G::header( 'Location: cases_StepToRevise?type=DYNAFORM&ex=' . $_GET['ex'] . '&PRO_UID=' . $_SESSION['PROCESS'] . '&DYN_UID=' . $aNextStep['UID'] . '&APP_UID=' . $_SESSION['APPLICATION'] . '&position=' . $aNextStep['POSITION'] . '&DEL_INDEX=' . $_SESSION['INDEX'] );
+die();

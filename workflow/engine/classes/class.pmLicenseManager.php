@@ -318,7 +318,7 @@ class pmLicenseManager
             $infoO = $this->getLicenseInfo();
             $infoText = $infoO['infoText'];
             $js = (EnterpriseUtils::skinIsUx() == 1)? "Ext.MessageBox.show({title: '', msg: '$infoText', buttons: Ext.MessageBox.OK, icon: Ext.MessageBox.INFO});" : "msgBox('$infoText');";
-            $linkText = $linkText . "<a href=\"javascript:;\" onclick=\"$js return (false);\"><span style=\"color: red;\">" . G::LoadTranslation('ID_EXPIRES_IN') ." " . $this->getExpireIn () . " " . G::LoadTranslation('ID_DAYS') ."</span></a>";
+            $linkText = $linkText . "<span style=\"color: red;\">" . G::LoadTranslation('ID_EXPIRES_IN') . " " . $this->getExpireIn () . " " . G::LoadTranslation('ID_DAYS') . "</span>";
         } else {
             if ($this->getExpireIn() != "NEVER" && (int)$this->getExpireIn() <= 0) {
                 $infoO = $this->getLicenseInfo();
@@ -446,7 +446,7 @@ class pmLicenseManager
             G::LoadSystem('inputfilter');
             $filter = new InputFilter();
             $path = $filter->xssFilterHard($path, 'path');
-                
+
             $handle = fopen ( $path, "r" );
             $contents = fread ( $handle, filesize ( $path ) );
             fclose ( $handle );

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <dynaForm type="xmlform" name="login/TimeZoneAlert" enabletemplate="1">
     <BROWSER_TIME_ZONE_OFFSET type="hidden" />
+    <URL type="hidden" />
 
     <USR_USERNAME type="hidden" />
     <USR_PASSWORD type="hidden" />

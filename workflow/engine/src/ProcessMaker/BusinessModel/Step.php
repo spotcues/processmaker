@@ -699,7 +699,7 @@ class Step
 
             $criteria->add(\TriggersPeer::TRI_UID, $arrayUid, \Criteria::NOT_IN);
             $criteria->add(\TriggersPeer::PRO_UID, $processUid, \Criteria::EQUAL);
-            $criteria->addAscendingOrderByColumn("TRI_TITLE");
+            $criteria->addAscendingOrderByColumn(\TriggersPeer::TRI_TITLE);
 
             $rsCriteria = \TriggersPeer::doSelectRS($criteria);
             $rsCriteria->setFetchmode(\ResultSet::FETCHMODE_ASSOC);

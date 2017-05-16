@@ -24,7 +24,9 @@ class Process
         "PRO_TRI_DELETED"           => array("type" => "string",   "required" => false, "empty" => true,  "defaultValues" => array(),     "fieldNameAux" => "processTriDeleted"),
         "PRO_TRI_CANCELED"          => array("type" => "string",   "required" => false, "empty" => true,  "defaultValues" => array(),     "fieldNameAux" => "processTriCanceled"),
         "PRO_TRI_PAUSED"            => array("type" => "string",   "required" => false, "empty" => true,  "defaultValues" => array(),     "fieldNameAux" => "processTriPaused"),
+        "PRO_TRI_UNPAUSED"          => array("type" => "string",   "required" => false, "empty" => true,  "defaultValues" => array(),     "fieldNameAux" => "processTriUnpaused"),
         "PRO_TRI_REASSIGNED"        => array("type" => "string",   "required" => false, "empty" => true,  "defaultValues" => array(),     "fieldNameAux" => "processTriReassigned"),
+        "PRO_TRI_CREATE"            => array("type" => "string",   "required" => false, "empty" => true,  "defaultValues" => array(),     "fieldNameAux" => "processTriCreate"),
         "PRO_SHOW_DELEGATE"         => array("type" => "int",      "required" => false, "empty" => false, "defaultValues" => array(0, 1), "fieldNameAux" => "processShowDelegate"),
         "PRO_SHOW_DYNAFORM"         => array("type" => "int",      "required" => false, "empty" => false, "defaultValues" => array(0, 1), "fieldNameAux" => "processShowDynaform"),
         "PRO_CATEGORY"              => array("type" => "string",   "required" => false, "empty" => true,  "defaultValues" => array(),     "fieldNameAux" => "processCategory"),
@@ -129,20 +131,13 @@ class Process
             $criteria = new \Criteria("workflow");
 
             $criteria->addSelectColumn(\ProcessPeer::PRO_UID);
-
-            $criteria->addAlias("CT", \ContentPeer::TABLE_NAME);
-
-            $arrayCondition = array();
-            $arrayCondition[] = array(\ProcessPeer::PRO_UID, "CT.CON_ID", \Criteria::EQUAL);
-            $arrayCondition[] = array("CT.CON_CATEGORY", $delimiter . "PRO_TITLE" . $delimiter, \Criteria::EQUAL);
-            $arrayCondition[] = array("CT.CON_LANG", $delimiter . SYS_LANG . $delimiter, \Criteria::EQUAL);
-            $criteria->addJoinMC($arrayCondition, \Criteria::LEFT_JOIN);
+            $criteria->addSelectColumn(\ProcessPeer::PRO_TITLE);
 
             if ($processUidExclude != "") {
                 $criteria->add(\ProcessPeer::PRO_UID, $processUidExclude, \Criteria::NOT_EQUAL);
             }
 
-            $criteria->add("CT.CON_VALUE", $processTitle, \Criteria::EQUAL);
+            $criteria->add(\ProcessPeer::PRO_TITLE, $processTitle, \Criteria::EQUAL);
 
             $rsCriteria = \ProcessPeer::doSelectRS($criteria);
 
@@ -235,7 +230,13 @@ class Process
                                         }
                                         break;
                                     case "hour":
-                                        if (!preg_match('/^' . $regexpTime . '$/', $fieldValue)) {
+                                        $regexpTime = '/^' . $regexpTime . '$/';
+
+                                        if (array_key_exists('regexp', $arrayFieldDefinition[$fieldName])) {
+                                            $regexpTime = $arrayFieldDefinition[$fieldName]['regexp'];
+                                        }
+
+                                        if (!preg_match($regexpTime, $fieldValue)) {
                                             throw new \Exception(\G::LoadTranslation('ID_INVALID_VALUE', [$fieldNameAux]));
                                         }
                                         break;
@@ -539,16 +540,16 @@ class Process
             $trigger = new \ProcessMaker\BusinessModel\Trigger();
 
             /**
-             * Try catch block is added to escape the exception and continue editing 
-             * the properties of the process, otherwise there is no way to edit 
-             * the properties that the exception is thrown: trigger nonexistent. 
+             * Try catch block is added to escape the exception and continue editing
+             * the properties of the process, otherwise there is no way to edit
+             * the properties that the exception is thrown: trigger nonexistent.
              * The same goes for the similar blocks.
              */
             if (isset($arrayData["PRO_TRI_DELETED"]) && $arrayData["PRO_TRI_DELETED"] . "" != "") {
                 try {
                     $trigger->throwExceptionIfNotExistsTrigger($arrayData["PRO_TRI_DELETED"], $processUid, $this->arrayFieldNameForException["processTriDeleted"]);
                 } catch (\Exception $e) {
-                    
+
                 }
             }
 
@@ -556,7 +557,7 @@ class Process
                 try {
                     $trigger->throwExceptionIfNotExistsTrigger($arrayData["PRO_TRI_CANCELED"], $processUid, $this->arrayFieldNameForException["processTriCanceled"]);
                 } catch (\Exception $e) {
-                    
+
                 }
             }
 
@@ -564,7 +565,15 @@ class Process
                 try {
                     $trigger->throwExceptionIfNotExistsTrigger($arrayData["PRO_TRI_PAUSED"], $processUid, $this->arrayFieldNameForException["processTriPaused"]);
                 } catch (\Exception $e) {
-                    
+
+                }
+            }
+
+            if (isset($arrayData["PRO_TRI_UNPAUSED"]) && $arrayData["PRO_TRI_UNPAUSED"] . "" != "") {
+                try {
+                    $trigger->throwExceptionIfNotExistsTrigger($arrayData["PRO_TRI_UNPAUSED"], $processUid, $this->arrayFieldNameForException["processTriUnpaused"]);
+                } catch (\Exception $e) {
+
                 }
             }
 
@@ -572,7 +581,7 @@ class Process
                 try {
                     $trigger->throwExceptionIfNotExistsTrigger($arrayData["PRO_TRI_REASSIGNED"], $processUid, $this->arrayFieldNameForException["processTriReassigned"]);
                 } catch (\Exception $e) {
-                    
+
                 }
             }
 
@@ -1422,7 +1431,7 @@ class Process
             $criteria = $dynaForm->getDynaFormCriteria();
 
             $criteria->add(\DynaformPeer::PRO_UID, $processUid, \Criteria::EQUAL);
-            $criteria->addAscendingOrderByColumn("DYN_TITLE");
+            $criteria->addAscendingOrderByColumn(\DynaformPeer::DYN_TITLE);
 
             $rsCriteria = \DynaformPeer::doSelectRS($criteria);
             $rsCriteria->setFetchmode(\ResultSet::FETCHMODE_ASSOC);
@@ -1463,7 +1472,7 @@ class Process
             $criteria = $inputDocument->getInputDocumentCriteria();
 
             $criteria->add(\InputDocumentPeer::PRO_UID, $processUid, \Criteria::EQUAL);
-            $criteria->addAscendingOrderByColumn("INP_DOC_TITLE");
+            $criteria->addAscendingOrderByColumn(\InputDocumentPeer::INP_DOC_TITLE);
 
             $rsCriteria = \InputDocumentPeer::doSelectRS($criteria);
             $rsCriteria->setFetchmode(\ResultSet::FETCHMODE_ASSOC);
@@ -1841,4 +1850,3 @@ class Process
     }
 
 }
-

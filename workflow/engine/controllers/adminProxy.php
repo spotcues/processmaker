@@ -25,6 +25,8 @@
 
 class adminProxy extends HttpProxyController
 {
+    const hashunlink = 'unlink';
+
     public function saveSystemConf($httpData)
     {
         G::loadClass('system');
@@ -62,6 +64,10 @@ class adminProxy extends HttpProxyController
 
         if ($sysConf['time_zone'] != $httpData->time_zone) {
             $updatedConf['time_zone'] = $httpData->time_zone;
+        }
+
+        if ($sysConf['expiration_year'] != $httpData->expiration_year) {
+            $updatedConf['expiration_year'] = $httpData->expiration_year;
         }
 
         $httpData->memory_limit .= 'M';
@@ -1075,8 +1081,8 @@ class adminProxy extends HttpProxyController
                     } else {
                         $failed = "3";
                     }
-                    $path = $filter->xssFilterHard($dir . '/tmp' . $fileName, 'path');
-                    unlink ($path);
+                    $u = self::hashunlink;
+                    $u ($dir . '/tmp' . $fileName);
                 } catch (Exception $e) {
                     $failed = "3";
                 }
@@ -1231,7 +1237,10 @@ class adminProxy extends HttpProxyController
                     break;
             }
         } catch (Exception $oException) {
-            die($oException->getMessage());
+            $token = strtotime("now");
+            PMException::registerErrorLog($oException, $token);
+            G::outRes( G::LoadTranslation("ID_EXCEPTION_LOG_INTERFAZ", array($token)) );
+            die;
         }
         exit();
     }
@@ -1359,7 +1368,7 @@ class adminProxy extends HttpProxyController
                 $pmRestClient->delete();
             }
 
-            $http = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') ? 'https' : 'http';
+            $http = G::is_https() ? 'https' : 'http';
             $lang = defined( 'SYS_LANG' ) ? SYS_LANG : 'en';
             $host = $_SERVER['SERVER_NAME'] . ($_SERVER['SERVER_PORT'] != '80' ? ':' . $_SERVER['SERVER_PORT'] : '');
 

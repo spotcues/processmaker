@@ -65,6 +65,9 @@ try {
     $oUser->update( $aFields );
     G::header( 'location: users_List' );
 } catch (Exception $oException) {
-    die( $oException->getMessage() );
+    $token = strtotime("now");
+    PMException::registerErrorLog($oException, $token);
+    G::outRes( G::LoadTranslation("ID_EXCEPTION_LOG_INTERFAZ", array($token)) );
+    die;
 }
 

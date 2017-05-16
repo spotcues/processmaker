@@ -13,13 +13,13 @@ function postNote($httpData)
     $noteContent = addslashes($httpData->noteText);
 
     $result = $appNotes->postNewNote($appUid, $usrUid, $noteContent, false);
-    //return true;
 
-    //die();
+
+
     //send the response to client
     @ini_set('implicit_flush', 1);
     ob_start();
-    //echo G::json_encode($result);
+
     @ob_flush();
     @flush();
     @ob_end_flush();
@@ -33,7 +33,9 @@ function postNote($httpData)
     $p = $oCase->getUsersParticipatedInCase($appUid);
 
     foreach ($p['array'] as $key => $userParticipated) {
-        $noteRecipientsList[] = $key;
+        if(!empty($key)){
+            $noteRecipientsList[] = $key;
+        }
     }
 
     $noteRecipients = implode(",", $noteRecipientsList);

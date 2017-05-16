@@ -98,9 +98,10 @@ class AppProxy extends HttpProxyController
         $appNotes = new AppNotes();
         $response = $appNotes->getNotesList( $appUid, '', $httpData->start, $httpData->limit );
 
-        require_once ("classes/model/Content.php");
-        $content = new Content();
-        $response['array']['appTitle'] = $content->load('APP_TITLE', '', $appUid, SYS_LANG);
+        require_once ("classes/model/Application.php");
+        $oApplication = new Application();
+        $aApplication = $oApplication->Load($appUid);
+        $response['array']['appTitle'] = $aApplication['APP_TITLE'];
 
         return $response['array'];
     }
@@ -292,7 +293,9 @@ class AppProxy extends HttpProxyController
 
         // note added by krlos pacha carlos[at]colosa[dot]com
         //getting this field if it doesn't exist. Related 7994 bug
-        $taskData['TAS_TITLE'] = (array_key_exists( 'TAS_TITLE', $taskData )) ? $taskData['TAS_TITLE'] : Content::Load( "TAS_TITLE", "", $applicationFields['TAS_UID'], SYS_LANG );
+        $oTask = new \Task();
+        $aTasks = $oTask->load($applicationFields['TAS_UID']);
+        $taskData['TAS_TITLE'] = (array_key_exists( 'TAS_TITLE', $taskData )) ? $taskData['TAS_TITLE'] : $aTasks["TAS_TITLE"];
         $data[] = array ("label" => $labelsCurrentTaskProperties["TAS_TITLE"], "value" => htmlentities($taskData["TAS_TITLE"], ENT_QUOTES, "UTF-8"), "section" => $labelTitleCurrentTasks["TITLE2"]);
         $data[] = array ('label' => $labelsCurrentTaskProperties['CURRENT_USER'],'value' => $currentUser,'section' => $labelTitleCurrentTasks['TITLE2']);
         $data[] = array ('label' => $labelsCurrentTaskProperties['DEL_DELEGATE_DATE'],'value' => $applicationFields['DEL_DELEGATE_DATE'],'section' => $labelTitleCurrentTasks['TITLE2']);

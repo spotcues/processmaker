@@ -72,7 +72,10 @@ try {
 
     echo $oTree->render();
 } catch (Exception $e) {
-    die($e->getMessage());
+    $token = strtotime("now");
+    PMException::registerErrorLog($e, $token);
+    G::outRes( G::LoadTranslation("ID_EXCEPTION_LOG_INTERFAZ", array($token)) );
+    die;
 }
 
 unset($_SESSION["PROCESS"]);

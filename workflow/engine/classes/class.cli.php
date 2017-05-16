@@ -290,14 +290,18 @@ EOT;
                 $taskOpts[$validOpts[$optName]] = $optArg;
             }
         } catch (Exception $e) {
-            echo self::error( "Invalid options: " . $e->getMessage() ) . "\n\n";
+            $token = strtotime("now");
+            PMException::registerErrorLog($e, $token);
+            echo self::error( G::LoadTranslation("ID_EXCEPTION_LOG_INTERFAZ", array($token)) );
             self::help( $taskName );
             return;
         }
         try {
             call_user_func( $taskData['function'], $arguments, $taskOpts );
         } catch (Exception $e) {
-            echo self::error( "\n  Error executing '$taskName':\n\n  {$e->getMessage()}\n" ) . "\n";
+            $token = strtotime("now");
+            PMException::registerErrorLog($e, $token);
+            echo self::error( G::LoadTranslation("ID_EXCEPTION_LOG_INTERFAZ", array($token)) );
             global $tempDirectory;
             if (!empty($tempDirectory)) {
                 G::rm_dir($tempDirectory);

@@ -1,6 +1,4 @@
 <?php
-
-
 $actionAjax = isset( $_REQUEST['actionAjax'] ) ? $_REQUEST['actionAjax'] : null;
 
 if ($actionAjax == "streaming") {

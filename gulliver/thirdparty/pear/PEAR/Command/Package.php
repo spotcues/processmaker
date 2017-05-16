@@ -366,7 +366,7 @@ Wrote: /usr/src/redhat/RPMS/i386/PEAR::Net_Socket-1.0-1.i386.rpm
         $command = $filter->validateInput($command);
         
         if (empty($options['dry-run'])) {
-            $fp = popen($command, "r");
+            $fp = popen($command, 'r');
             while ($line = fgets($fp, 1024)) {
                 $this->output .= rtrim($line)."\n";
             }
@@ -429,7 +429,7 @@ Wrote: /usr/src/redhat/RPMS/i386/PEAR::Net_Socket-1.0-1.i386.rpm
             $this->output .= "+ $cmd\n";
         }
         if ($execute) {
-            $fp = popen($cmd, "r");
+            $fp = popen($cmd, 'r');
             while ($line = fgets($fp, 1024)) {
                 $this->output .= rtrim($line)."\n";
             }
@@ -544,7 +544,7 @@ Wrote: /usr/src/redhat/RPMS/i386/PEAR::Net_Socket-1.0-1.i386.rpm
         $input = $this->ui->userDialog($command,
                                        array('GnuPG Passphrase'),
                                        array('password'));
-        $gpg = popen("gpg --batch --passphrase-fd 0 --armor --detach-sign --output $tmpdir/package.sig $tmpdir/package.xml 2>/dev/null", "w");
+        $gpg = popen("gpg --batch --passphrase-fd 0 --armor --detach-sign --output $tmpdir/package.sig $tmpdir/package.xml 2>/dev/null", 'w');
         if (!$gpg) {
             return $this->raiseError("gpg command failed");
         }

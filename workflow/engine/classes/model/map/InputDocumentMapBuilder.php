@@ -69,6 +69,10 @@ class InputDocumentMapBuilder
 
         $tMap->addColumn('PRO_UID', 'ProUid', 'string', CreoleTypes::VARCHAR, true, 32);
 
+        $tMap->addColumn('INP_DOC_TITLE', 'InpDocTitle', 'string', CreoleTypes::LONGVARCHAR, true, null);
+
+        $tMap->addColumn('INP_DOC_DESCRIPTION', 'InpDocDescription', 'string', CreoleTypes::LONGVARCHAR, false, null);
+
         $tMap->addColumn('INP_DOC_FORM_NEEDED', 'InpDocFormNeeded', 'string', CreoleTypes::VARCHAR, true, 20);
 
         $tMap->addColumn('INP_DOC_ORIGINAL', 'InpDocOriginal', 'string', CreoleTypes::VARCHAR, true, 20);

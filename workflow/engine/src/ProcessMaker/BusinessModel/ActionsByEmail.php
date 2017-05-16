@@ -19,12 +19,19 @@ class ActionsByEmail
                 case 'configuration':
                     require_once 'classes/model/AbeConfiguration.php';
                     $abeConfigurationInstance = new \AbeConfiguration();
-                    if(isset($feature['fields']['ABE_CASE_NOTE_IN_RESPONSE'])){
-                        $noteValues = json_decode($feature['fields']['ABE_CASE_NOTE_IN_RESPONSE']);
-                        foreach ($noteValues as $value) {
-                            $feature['fields']['ABE_CASE_NOTE_IN_RESPONSE'] = $value;
-                        }
+
+                    if (isset($feature['fields']['ABE_CASE_NOTE_IN_RESPONSE'])) {
+                        $arrayAux = json_decode($feature['fields']['ABE_CASE_NOTE_IN_RESPONSE']);
+
+                        $feature['fields']['ABE_CASE_NOTE_IN_RESPONSE'] = (int)((!empty($arrayAux))? array_shift($arrayAux) : 0);
                     }
+
+                    if (isset($feature['fields']['ABE_FORCE_LOGIN'])) {
+                        $arrayAux = json_decode($feature['fields']['ABE_FORCE_LOGIN']);
+
+                        $feature['fields']['ABE_FORCE_LOGIN'] = (int)((!empty($arrayAux))? array_shift($arrayAux) : 0);
+                    }
+
                     $abeConfigurationInstance->createOrUpdate($feature['fields']);
                     break;
                 default:
@@ -61,6 +68,7 @@ class ActionsByEmail
             $configuration['ABE_ACTION_FIELD'] = $configuration['ABE_ACTION_FIELD'];
             $configuration['ABE_MAILSERVER_OR_MAILCURRENT'] = $configuration['ABE_MAILSERVER_OR_MAILCURRENT'];
             $configuration['ABE_CASE_NOTE_IN_RESPONSE'] = $configuration['ABE_CASE_NOTE_IN_RESPONSE'] ? '["1"]' : '[]';
+            $configuration['ABE_FORCE_LOGIN'] = ($configuration['ABE_FORCE_LOGIN'])? '["1"]' : '[]';
             $configuration['ABE_CUSTOM_GRID'] = unserialize($configuration['ABE_CUSTOM_GRID']);
         }
         $configuration['feature'] = 'ActionsByEmail';
@@ -622,5 +630,108 @@ class ActionsByEmail
 
         //Return
         return $message;
+    }
+
+    /**
+     * Verify login
+     *
+     * @param string $applicationUid Unique id of Case
+     * @param int    $delIndex       Delegation index
+     *
+     * @return void
+     */
+    public function verifyLogin($applicationUid, $delIndex)
+    {
+        try {
+            //Verify data and Set variables
+            $case = new \ProcessMaker\BusinessModel\Cases();
+
+            $arrayAppDelegationData = $case->getAppDelegationRecordByPk(
+                $applicationUid, $delIndex, ['$applicationUid' => '$applicationUid', '$delIndex' => '$delIndex']
+            );
+
+            //Verify login
+            $criteria = new \Criteria('workflow');
+
+            $criteria->add(\AbeConfigurationPeer::PRO_UID, $arrayAppDelegationData['PRO_UID'], \Criteria::EQUAL);
+            $criteria->add(\AbeConfigurationPeer::TAS_UID, $arrayAppDelegationData['TAS_UID'], \Criteria::EQUAL);
+
+            $rsCriteria = \AbeConfigurationPeer::doSelectRS($criteria);
+            $rsCriteria->setFetchmode(\ResultSet::FETCHMODE_ASSOC);
+
+            if ($rsCriteria->next()) {
+                $record = $rsCriteria->getRow();
+
+                if ($record['ABE_FORCE_LOGIN'] == 1) {
+                    $flagLogin = false;
+
+                    if (!isset($_SESSION['USER_LOGGED'])) {
+                        /*----------------------------------********---------------------------------*/
+                        //SSO
+                        if (\PMLicensedFeatures::getSingleton()->verifyfeature('x4TTzlISnp2K2tnSTJoMC8rTDRMTjlhMCtZeXV0QnNCLzU=')) {
+                            \G::LoadClass('pmSso');
+
+                            $sso = new \pmSsoClass();
+
+                            if ($sso->ssocVerifyUser()) {
+                                global $RBAC;
+
+                                //Start new session
+                                @session_destroy();
+                                session_start();
+                                session_regenerate_id();
+
+                                //Authenticate
+                                $_GET['u'] = $_SERVER['REQUEST_URI'];
+
+                                require_once(PATH_METHODS . 'login' . PATH_SEP . 'authenticationSso.php');
+                                exit(0);
+                            }
+                        }
+                        /*----------------------------------********---------------------------------*/
+
+                        if (defined('PM_SINGLE_SIGN_ON')) {
+                            $pluginRegistry = &\PMPluginRegistry::getSingleton();
+
+                            if ($pluginRegistry->existsTrigger(PM_SINGLE_SIGN_ON)) {
+                                if ($pluginRegistry->executeTriggers(PM_SINGLE_SIGN_ON, null)) {
+                                    global $RBAC;
+
+                                    //Start new session
+                                    @session_destroy();
+                                    session_start();
+                                    session_regenerate_id();
+
+                                    //Authenticate
+                                    $_GET['u'] = $_SERVER['REQUEST_URI'];
+
+                                    require_once(PATH_METHODS . 'login' . PATH_SEP . 'authenticationSso.php');
+                                    exit(0);
+                                }
+                            }
+                        }
+
+                        $flagLogin = true;
+                    } else {
+                        if ($_SESSION['USER_LOGGED'] != $arrayAppDelegationData['USR_UID']) {
+                            \G::SendTemporalMessage('ID_CASE_ASSIGNED_ANOTHER_USER', 'error', 'label');
+
+                            $flagLogin = true;
+                        }
+                    }
+
+                    if ($flagLogin) {
+                        header(
+                            'Location: /sys' . SYS_SYS . '/' . SYS_LANG . '/' . SYS_SKIN .
+                            '/login/login?u=' . urlencode($_SERVER['REQUEST_URI'])
+                        );
+
+                        exit(0);
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            throw $e;
+        }
     }
 }

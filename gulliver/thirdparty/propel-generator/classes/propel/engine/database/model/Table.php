@@ -79,6 +79,7 @@ class Table extends XMLElement implements IDMethod {
 	private $heavyIndexing;
 	private $forReferenceOnly;
 	private $isTree;
+	private $referenceOnly = false;
 
 	/**
 	 * Constructs a table object with a name
@@ -126,6 +127,7 @@ class Table extends XMLElement implements IDMethod {
 		$this->description = $this->getAttribute("description");
 		$this->enterface = $this->getAttribute("interface"); // sic ('interface' is reserved word)
 		$this->isTree = $this->booleanValue($this->getAttribute("isTree"));
+		$this->referenceOnly = $this->booleanValue($this->getAttribute('referenceOnly'));
 	}
 
 	/**
@@ -198,8 +200,8 @@ class Table extends XMLElement implements IDMethod {
 				$this->addIndex(new Index($this, array_slice($pk, $i, $size)));
 			}
 		} catch (EngineException $e) {
-			print $e->getMessage() . "\n";
-			print $e->getTraceAsString();
+			error_log( $e->getMessage() . "\n" );
+			error_log( $e->getTraceAsString() );
 		}
 	}
 
@@ -243,8 +245,8 @@ class Table extends XMLElement implements IDMethod {
 			// as test cases), so we'll assume that we needn't add an
 			// entry to the system name list for these.
 		} catch (EngineException $nameAlreadyInUse) {
-			print $nameAlreadyInUse->getMessage() . "\n";
-			print $nameAlreadyInUse->getTraceAsString();
+			error_log( $nameAlreadyInUse->getMessage() . "\n" );
+			error_log( $nameAlreadyInUse->getTraceAsString() );
 		}
 	}
 
@@ -596,8 +598,8 @@ class Table extends XMLElement implements IDMethod {
 			try {
 				$this->phpName = NameFactory::generateName(NameFactory::PHP_GENERATOR, $inputs);
 			} catch (EngineException $e) {
-				print $e->getMessage() . "\n";
-				print $e->getTraceAsString();
+				error_log( $e->getMessage() . "\n" );
+				error_log( $e->getTraceAsString() );
 			}
 		}
 		return $this->phpName;
@@ -971,6 +973,16 @@ class Table extends XMLElement implements IDMethod {
 	{
 		$this->isTree = (boolean) $v;
 	}
+
+    /**
+     * Get referenceOnly
+     *
+     * @return bool
+     */
+    public function getReferenceOnly()
+    {
+        return $this->referenceOnly;
+    }
 
 	/**
 	 * Returns a XML representation of this table.

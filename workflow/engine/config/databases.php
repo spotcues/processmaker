@@ -31,13 +31,13 @@ if (defined('PATH_DB') && defined('SYS_SYS')) {
     require_once(PATH_DB . SYS_SYS . '/db.php');
     //to do: enable for other databases
     $dbType = DB_ADAPTER;
-    $dsn     = DB_ADAPTER . '://' .  DB_USER . ':' . DB_PASS . '@' . DB_HOST . '/' . DB_NAME;
+    $dsn = DB_ADAPTER . '://' . DB_USER . ':' . urlencode(DB_PASS) . '@' . DB_HOST . '/' . DB_NAME;
 
     //to do: enable a mechanism to select RBAC Database
-    $dsnRbac = DB_ADAPTER . '://' .  DB_RBAC_USER . ':' . DB_RBAC_PASS . '@' . DB_RBAC_HOST . '/' . DB_RBAC_NAME;
+    $dsnRbac = DB_ADAPTER . '://' . DB_RBAC_USER . ':' . urlencode(DB_RBAC_PASS) . '@' . DB_RBAC_HOST . '/' . DB_RBAC_NAME;
 
     //to do: enable a mechanism to select report Database
-    $dsnReport = DB_ADAPTER . '://' .  DB_REPORT_USER . ':' . DB_REPORT_PASS . '@' . DB_REPORT_HOST . '/' . DB_REPORT_NAME;
+    $dsnReport = DB_ADAPTER . '://' . DB_REPORT_USER . ':' . urlencode(DB_REPORT_PASS) . '@' . DB_REPORT_HOST . '/' . DB_REPORT_NAME;
 
     switch (DB_ADAPTER) {
         case 'mysql':

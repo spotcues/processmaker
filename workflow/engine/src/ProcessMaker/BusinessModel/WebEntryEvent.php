@@ -162,28 +162,15 @@ class WebEntryEvent
     public function existsTitle($projectUid, $webEntryEventTitle, $webEntryEventUidToExclude = "")
     {
         try {
-            $delimiter = \DBAdapter::getStringDelimiter();
-
             $criteria = new \Criteria("workflow");
 
             $criteria->addSelectColumn(\WebEntryEventPeer::WEE_UID);
-
-            $criteria->addAlias("CT", \ContentPeer::TABLE_NAME);
-
-            $arrayCondition = array();
-            $arrayCondition[] = array(\WebEntryEventPeer::WEE_UID, "CT.CON_ID", \Criteria::EQUAL);
-            $arrayCondition[] = array("CT.CON_CATEGORY", $delimiter . "WEE_TITLE" . $delimiter, \Criteria::EQUAL);
-            $arrayCondition[] = array("CT.CON_LANG", $delimiter . SYS_LANG . $delimiter, \Criteria::EQUAL);
-            $criteria->addJoinMC($arrayCondition, \Criteria::LEFT_JOIN);
-
             $criteria->add(\WebEntryEventPeer::PRJ_UID, $projectUid, \Criteria::EQUAL);
 
             if ($webEntryEventUidToExclude != "") {
                 $criteria->add(\WebEntryEventPeer::WEE_UID, $webEntryEventUidToExclude, \Criteria::NOT_EQUAL);
             }
-
-            $criteria->add("CT.CON_VALUE", $webEntryEventTitle, \Criteria::EQUAL);
-
+            $criteria->add(\WebEntryEventPeer::WEE_TITLE, $webEntryEventTitle);
             $rsCriteria = \WebEntryEventPeer::doSelectRS($criteria);
 
             return ($rsCriteria->next())? true : false;
@@ -685,9 +672,13 @@ class WebEntryEvent
                             }
 
                             //Route
-                            if (isset($arrayData["ACT_UID"]) && $arrayData["ACT_UID"] != $arrayWebEntryEventData["ACT_UID"]) {
-                                //Delete
-                                $result = $task->deleteAllRoutesOfTask($arrayWebEntryEventData["PRJ_UID"], $arrayWebEntryEventData["WEE_WE_TAS_UID"], true);
+                            if (array_key_exists('ACT_UID', $arrayData)) {
+                                if ($arrayData['ACT_UID'] != $arrayWebEntryEventData['ACT_UID']) {
+                                    //Delete
+                                    $result = $task->deleteAllRoutesOfTask(
+                                        $arrayWebEntryEventData['PRJ_UID'], $arrayWebEntryEventData['WEE_WE_TAS_UID'], true
+                                    );
+                                }
 
                                 //Add
                                 $workflow = \ProcessMaker\Project\Workflow::load($arrayWebEntryEventData["PRJ_UID"]);
@@ -816,40 +807,20 @@ class WebEntryEvent
     public function getWebEntryEventCriteria()
     {
         try {
-            $delimiter = \DBAdapter::getStringDelimiter();
-
             $criteria = new \Criteria("workflow");
-
             $criteria->addSelectColumn(\WebEntryEventPeer::WEE_UID);
             $criteria->addSelectColumn(\WebEntryEventPeer::PRJ_UID);
             $criteria->addSelectColumn(\WebEntryEventPeer::EVN_UID);
             $criteria->addSelectColumn(\WebEntryEventPeer::ACT_UID);
             $criteria->addSelectColumn(\WebEntryEventPeer::DYN_UID);
             $criteria->addSelectColumn(\WebEntryEventPeer::USR_UID);
-            $criteria->addSelectColumn("CT.CON_VALUE AS WEE_TITLE");
-            $criteria->addSelectColumn("CD.CON_VALUE AS WEE_DESCRIPTION");
+            $criteria->addSelectColumn(\WebEntryEventPeer::WEE_TITLE);
+            $criteria->addSelectColumn(\WebEntryEventPeer::WEE_DESCRIPTION);
             $criteria->addSelectColumn(\WebEntryEventPeer::WEE_STATUS);
             $criteria->addSelectColumn(\WebEntryEventPeer::WEE_WE_UID);
             $criteria->addSelectColumn(\WebEntryEventPeer::WEE_WE_TAS_UID);
             $criteria->addSelectColumn(\WebEntryPeer::WE_DATA . " AS WEE_WE_URL");
-
-            $criteria->addAlias("CT", \ContentPeer::TABLE_NAME);
-            $criteria->addAlias("CD", \ContentPeer::TABLE_NAME);
-
-            $arrayCondition = array();
-            $arrayCondition[] = array(\WebEntryEventPeer::WEE_UID, "CT.CON_ID", \Criteria::EQUAL);
-            $arrayCondition[] = array("CT.CON_CATEGORY", $delimiter . "WEE_TITLE" . $delimiter, \Criteria::EQUAL);
-            $arrayCondition[] = array("CT.CON_LANG", $delimiter . SYS_LANG . $delimiter, \Criteria::EQUAL);
-            $criteria->addJoinMC($arrayCondition, \Criteria::LEFT_JOIN);
-
-            $arrayCondition = array();
-            $arrayCondition[] = array(\WebEntryEventPeer::WEE_UID, "CD.CON_ID", \Criteria::EQUAL);
-            $arrayCondition[] = array("CD.CON_CATEGORY", $delimiter . "WEE_DESCRIPTION" . $delimiter, \Criteria::EQUAL);
-            $arrayCondition[] = array("CD.CON_LANG", $delimiter . SYS_LANG . $delimiter, \Criteria::EQUAL);
-            $criteria->addJoinMC($arrayCondition, \Criteria::LEFT_JOIN);
-
             $criteria->addJoin(\WebEntryEventPeer::WEE_WE_UID, \WebEntryPeer::WE_UID, \Criteria::LEFT_JOIN);
-
             return $criteria;
         } catch (\Exception $e) {
             throw $e;
@@ -922,6 +893,31 @@ class WebEntryEvent
 
             //Return
             return $arrayWebEntryEvent;
+        } catch (\Exception $e) {
+            throw $e;
+        }
+    }
+
+    /**
+     * Get all WebEntry-Events
+     * Return an array with all WebEntry-Events
+     * @return array
+     * @throws \Exception
+     */
+    public function getAllWebEntryEvents()
+    {
+        try {
+            $result = array();
+            $criteria = $this->getWebEntryEventCriteria();
+            $criteria->addJoin(\WebEntryEventPeer::PRJ_UID, \ProcessPeer::PRO_UID, \Criteria::JOIN);
+            $criteria->add(\ProcessPeer::PRO_STATUS, 'ACTIVE', \Criteria::EQUAL);
+            $rsCriteria = \WebEntryEventPeer::doSelectRS($criteria);
+            $rsCriteria->setFetchmode(\ResultSet::FETCHMODE_ASSOC);
+            while ($rsCriteria->next()) {
+                $row = $rsCriteria->getRow();
+                $result[] = $this->getWebEntryEventDataFromRecord($row);
+            }
+            return $result;
         } catch (\Exception $e) {
             throw $e;
         }
@@ -1001,4 +997,3 @@ class WebEntryEvent
         }
     }
 }
-

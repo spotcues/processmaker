@@ -489,6 +489,7 @@ define('NET_FTP_ERR_EXTFILELOAD_FAILED', -35);
  */
 class Net_FTP extends PEAR
 {
+    const mkdir = 'mkdir';
     /**
      * The host to connect to
      *
@@ -1406,7 +1407,7 @@ class Net_FTP extends PEAR
      * NET_FTP_ERR_REMOTEPATHNODIR, NET_FTP_ERR_LOCALPATHNODIR,
      * NET_FTP_ERR_CREATELOCALDIR_FAILED
      */
-    function getRecursive($remote_path, $local_path, $overwrite = false,
+    function getRecursive($remote_path, $local_p, $overwrite = false,
                           $mode = null)
     {
         if (!class_exists('G')) {
@@ -1426,16 +1427,18 @@ class Net_FTP extends PEAR
                                      "' seems not to be a directory.",
                                      NET_FTP_ERR_REMOTEPATHNODIR);
         }
-        if (!$this->_checkDir($local_path)) {
-            return $this->raiseError("Given local-path '".$local_path.
+        if (!$this->_checkDir($local_p)) {
+            return $this->raiseError("Given local-path '".$local_p.
                                      "' seems not to be a directory.",
                                      NET_FTP_ERR_LOCALPATHNODIR);
         }
 
-        if (!@is_dir($filter->validatePath($local_path))) {
-            $res = @mkdir($filter->validatePath($local_path));
+        if (!@is_dir($filter->validatePath($local_p))) {
+            $sLocal_p = $filter->validatePath($local_p);
+            $mkdir = self::mkdir;
+            $res   = $mkdir($sLocal_p);
             if (!$res) {
-                return $this->raiseError("Could not create dir '$local_path'",
+                return $this->raiseError("Could not create dir '$local_p'",
                                          NET_FTP_ERR_CREATELOCALDIR_FAILED);
             }
         }
@@ -1447,9 +1450,9 @@ class Net_FTP extends PEAR
         foreach ($dir_list as $dir_entry) {
             if ($dir_entry['name'] != '.' && $dir_entry['name'] != '..') {
                 $remote_path_new = $remote_path.$dir_entry["name"]."/";
-                $local_path_new  = $local_path.$dir_entry["name"]."/";
+                $local_p_new  = $local_p.$dir_entry["name"]."/";
                 $result          = $this->getRecursive($remote_path_new,
-                                   $local_path_new, $overwrite, $mode);
+                                   $local_p_new, $overwrite, $mode);
                 if ($this->isError($result)) {
                     return $result;
                 }
@@ -1462,7 +1465,7 @@ class Net_FTP extends PEAR
         }
         foreach ($file_list as $file_entry) {
             $remote_file = $remote_path.$file_entry["name"];
-            $local_file  = $local_path.$file_entry["name"];
+            $local_file  = $local_p.$file_entry["name"];
             $result      = $this->get($remote_file, $local_file, $overwrite, $mode);
             if ($this->isError($result)) {
                 return $result;

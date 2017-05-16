@@ -67,6 +67,8 @@ class GroupwfMapBuilder
 
         $tMap->addPrimaryKey('GRP_UID', 'GrpUid', 'string', CreoleTypes::VARCHAR, true, 32);
 
+        $tMap->addColumn('GRP_TITLE', 'GrpTitle', 'string', CreoleTypes::LONGVARCHAR, true, null);
+
         $tMap->addColumn('GRP_STATUS', 'GrpStatus', 'string', CreoleTypes::CHAR, true, 8);
 
         $tMap->addColumn('GRP_LDAP_DN', 'GrpLdapDn', 'string', CreoleTypes::VARCHAR, true, 255);

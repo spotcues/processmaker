@@ -13,14 +13,24 @@ function dynaFormChanged(frm) {
  * @param formStep
  */
 function submitNextStep(formStep) {
-    var btnSubmit = $('<button>');
-    btnSubmit.attr("type","submit");
-    btnSubmit.hide();
-    $(formStep).append(btnSubmit);
-    btnSubmit.click();
-    btnSubmit.remove();
+    var btnSubmit,
+        index = 0;
+    btnSubmit = formStep.querySelectorAll('[type="submit"]');
+    if (btnSubmit && btnSubmit.length){
+        btnSubmit[index].click();
+    }else{
+        btnSubmit = $('<button>');
+        btnSubmit.attr("type","submit");
+        btnSubmit.attr("name","form[__NEXT_STEP__]");
+        btnSubmit.hide();
+        $(formStep).append(btnSubmit);
+        btnSubmit.click();
+        btnSubmit.remove();
+    }
 }
 $(window).load(function () {
+    var delIndexDefault = "0",
+        dyn_uid = window.dyn_uid || null;
     if (pm_run_outside_main_app === 'true') {
         if (parent.showCaseNavigatorPanel) {
             parent.showCaseNavigatorPanel('DRAFT');
@@ -70,6 +80,9 @@ $(window).load(function () {
     var data = jsondata;
     window.dynaform = new PMDynaform.core.Project({
         data: data,
+        delIndex: window.delIndex ? window.delIndex :  delIndexDefault,
+        dynaformUid: dyn_uid,
+        isRTL: window.isRTL,
         onBeforePrintHandler : function () {
             var nodeClone = $(".pmdynaform-container").clone();
             nodeClone.addClass("printing-form");

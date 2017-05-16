@@ -84,13 +84,13 @@ class XmlToData extends AbstractHandler {
 			try {
 				$this->parser->parse();
 			} catch (Exception $e) {
-				print $e->getMessage() . "\n";
+				error_log( $e->getMessage() . "\n" );
 				$br->close();
 			}
 			$br->close();
 		} catch (Exception $e) {
-			print $e->getMessage() . "\n";
-			print $e->getTraceAsString();
+			error_log( $e->getMessage() . "\n" );
+			error_log( $e->getTraceAsString() );
 		}
 
 		return $this->data;

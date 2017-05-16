@@ -16,6 +16,7 @@ $G_FORM->parseFile($filename, SYS_LANG, true);
 
 G::LoadClass("case");
 G::LoadClass("pmFunctions");
+G::LoadSystem('inputfilter');
 
 //Load the variables
 $oCase = new Cases();
@@ -70,5 +71,5 @@ foreach ($aResult as $field) {
 }
 
 $response["records"] = $array;
-
-echo G::json_encode($response);
+$filter = new InputFilter();
+echo G::json_encode($filter->xssFilterHard($response));

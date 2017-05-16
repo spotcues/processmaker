@@ -29,11 +29,74 @@ class Cases extends Api
         "note_date"
     ];
 
+    public function __isAllowed()
+    {
+        try {
+            $methodName = $this->restler->apiMethodInfo->methodName;
+            $arrayArgs  = $this->restler->apiMethodInfo->arguments;
+            switch ($methodName) {
+                case 'doGetCaseVariables':
+                    $applicationUid = $this->parameters[$arrayArgs['app_uid']];
+                    $dynaformUid = $this->parameters[$arrayArgs['dyn_uid']];
+                    $delIndex = $this->parameters[$arrayArgs['app_index']];
+                    $userUid = $this->getUserId();
+                    //Check if the user has the case
+                    $appDelegation = new \AppDelegation();
+                    $aCurUser = $appDelegation->getCurrentUsers($applicationUid, $delIndex);
+                    if (!empty($aCurUser)) {
+                        foreach ($aCurUser as $key => $value) {
+                            if ($value === $userUid) {
+                                return true;
+                            }
+                        }
+                    }
+                    //Check if the user has Permissions
+                    $oCases = new \ProcessMaker\BusinessModel\Cases();
+                    return $oCases->checkUserHasPermissionsOrSupervisor($userUid, $applicationUid, $dynaformUid);
+                    break;
+                case 'doPostReassign':
+                    $arrayParameters = $this->parameters[0]['cases'];
+                    $usrUid = $this->getUserId();
+
+                    //Check if the user is supervisor process
+                    $case = new \ProcessMaker\BusinessModel\Cases();
+                    $user = new \ProcessMaker\BusinessModel\User();
+
+                    $count = 0;
+
+                    foreach ($arrayParameters as $value) {
+                        $arrayApplicationData = $case->getApplicationRecordByPk($value['APP_UID'], [], false);
+
+                        if (!empty($arrayApplicationData)) {
+                            if (!$user->checkPermission($usrUid, 'PM_REASSIGNCASE')) {
+                                if ($user->checkPermission($usrUid, 'PM_REASSIGNCASE_SUPERVISOR')) {
+                                    $supervisor = new \ProcessMaker\BusinessModel\ProcessSupervisor();
+                                    $flagps = $supervisor->isUserProcessSupervisor($arrayApplicationData['PRO_UID'], $usrUid);
+                                    if (!$flagps) {
+                                        $count = $count + 1;
+                                    }
+
+                                }
+                            }
+                        }
+                    }
+
+                    if ($count == 0) {
+                        return true;
+                    }
+                    break;
+            }
+            return false;
+        } catch (\Exception $e) {
+            throw new RestException(Api::STAT_APP_EXCEPTION, $e->getMessage());
+        }
+    }
+
     /**
      * Get list Cases To Do
      *
-     * @param string $start {@from path}
-     * @param string $limit {@from path}
+     * @param int $start {@from path}
+     * @param int $limit {@from path}
      * @param string $sort {@from path}
      * @param string $dir {@from path}
      * @param string $cat_uid {@from path}
@@ -79,8 +142,8 @@ class Cases extends Api
     /**
      * Get list Cases To Do with paged
      *
-     * @param string $start {@from path}
-     * @param string $limit {@from path}
+     * @param int $start {@from path}
+     * @param int $limit {@from path}
      * @param string $sort {@from path}
      * @param string $dir {@from path}
      * @param string $cat_uid {@from path}
@@ -125,8 +188,8 @@ class Cases extends Api
     /**
      * Get list Cases Draft
      *
-     * @param string $start {@from path}
-     * @param string $limit {@from path}
+     * @param int $start {@from path}
+     * @param int $limit {@from path}
      * @param string $sort {@from path}
      * @param string $dir {@from path}
      * @param string $cat_uid {@from path}
@@ -171,8 +234,8 @@ class Cases extends Api
     /**
      * Get list Cases Draft with paged
      *
-     * @param string $start {@from path}
-     * @param string $limit {@from path}
+     * @param int $start {@from path}
+     * @param int $limit {@from path}
      * @param string $sort {@from path}
      * @param string $dir {@from path}
      * @param string $cat_uid {@from path}
@@ -217,8 +280,8 @@ class Cases extends Api
     /**
      * Get list Cases Participated
      *
-     * @param string $start {@from path}
-     * @param string $limit {@from path}
+     * @param int $start {@from path}
+     * @param int $limit {@from path}
      * @param string $sort {@from path}
      * @param string $dir {@from path}
      * @param string $cat_uid {@from path}
@@ -263,8 +326,8 @@ class Cases extends Api
     /**
      * Get list Cases Participated with paged
      *
-     * @param string $start {@from path}
-     * @param string $limit {@from path}
+     * @param int $start {@from path}
+     * @param int $limit {@from path}
      * @param string $sort {@from path}
      * @param string $dir {@from path}
      * @param string $cat_uid {@from path}
@@ -309,8 +372,8 @@ class Cases extends Api
     /**
      * Get list Cases Unassigned
      *
-     * @param string $start {@from path}
-     * @param string $limit {@from path}
+     * @param int $start {@from path}
+     * @param int $limit {@from path}
      * @param string $sort {@from path}
      * @param string $dir {@from path}
      * @param string $cat_uid {@from path}
@@ -355,8 +418,8 @@ class Cases extends Api
     /**
      * Get list Cases Unassigned with paged
      *
-     * @param string $start {@from path}
-     * @param string $limit {@from path}
+     * @param int $start {@from path}
+     * @param int $limit {@from path}
      * @param string $sort {@from path}
      * @param string $dir {@from path}
      * @param string $cat_uid {@from path}
@@ -401,8 +464,8 @@ class Cases extends Api
     /**
      * Get list Cases Paused
      *
-     * @param string $start {@from path}
-     * @param string $limit {@from path}
+     * @param int $start {@from path}
+     * @param int $limit {@from path}
      * @param string $sort {@from path}
      * @param string $dir {@from path}
      * @param string $cat_uid {@from path}
@@ -447,8 +510,8 @@ class Cases extends Api
     /**
      * Get list Cases Paused with paged
      *
-     * @param string $start {@from path}
-     * @param string $limit {@from path}
+     * @param int $start {@from path}
+     * @param int $limit {@from path}
      * @param string $sort {@from path}
      * @param string $dir {@from path}
      * @param string $cat_uid {@from path}
@@ -493,8 +556,8 @@ class Cases extends Api
     /**
      * Get list Cases Advanced Search
      *
-     * @param string $start {@from path}
-     * @param string $limit {@from path}
+     * @param int $start {@from path}
+     * @param int $limit {@from path}
      * @param string $sort {@from path}
      * @param string $dir {@from path}
      * @param string $cat_uid {@from path}
@@ -551,8 +614,8 @@ class Cases extends Api
     /**
      * Get list Cases Advanced Search with Paged
      *
-     * @param string $start {@from path}
-     * @param string $limit {@from path}
+     * @param int $start {@from path}
+     * @param int $limit {@from path}
      * @param string $sort {@from path}
      * @param string $dir {@from path}
      * @param string $cat_uid {@from path}
@@ -837,19 +900,24 @@ class Cases extends Api
     /**
      * Get Case Variables
      *
-     * @param string $app_uid {@min 1}{@max 32}
-     *
-     * @author Brayan Pereyra (Cochalo) <brayan@colosa.com>
-     * @copyright Colosa - Bolivia
-     *
+     * @access protected
+     * @class  AccessControl {@className \ProcessMaker\Services\Api\Cases}
      * @url GET /:app_uid/variables
+     *
+     * @param string $app_uid {@min 1}{@max 32}
+     * @param string $dyn_uid
+     * @param string $pro_uid
+     * @param string $act_uid
+     * @param int $app_index
+     * @return mixed
+     * @throws RestException
      */
-    public function doGetCaseVariables($app_uid)
+    public function doGetCaseVariables($app_uid, $dyn_uid = null, $pro_uid = null, $act_uid = null, $app_index = null)
     {
         try {
             $usr_uid = $this->getUserId();
             $cases = new \ProcessMaker\BusinessModel\Cases();
-            $response = $cases->getCaseVariables($app_uid, $usr_uid);
+            $response = $cases->getCaseVariables($app_uid, $usr_uid, $dyn_uid, $pro_uid, $act_uid, $app_index);
             return DateTime::convertUtcToIso8601($response);
         } catch (\Exception $e) {
             throw (new RestException(Api::STAT_APP_EXCEPTION, $e->getMessage()));
@@ -862,7 +930,7 @@ class Cases extends Api
      * @param string $app_uid {@min 1}{@max 32}
      * @param array $request_data
      * @param string $dyn_uid {@from path}
-     * @param string $del_index {@from path}
+     * @param int $del_index {@from path}
      *
      * @author Brayan Pereyra (Cochalo) <brayan@colosa.com>
      * @copyright Colosa - Bolivia
@@ -884,8 +952,8 @@ class Cases extends Api
     /**
      * Get Case Notes
      *
-     * @param string $start {@from path}
-     * @param string $limit {@from path}
+     * @param int $start {@from path}
+     * @param int $limit {@from path}
      * @param string $sort {@from path}
      * @param string $dir {@from path}
      * @param string $usr_uid {@from path}
@@ -934,8 +1002,8 @@ class Cases extends Api
     /**
      * Get Case Notes with Paged
      *
-     * @param string $start {@from path}
-     * @param string $limit {@from path}
+     * @param int $start {@from path}
+     * @param int $limit {@from path}
      * @param string $sort {@from path}
      * @param string $dir {@from path}
      * @param string $usr_uid {@from path}
@@ -1145,6 +1213,27 @@ class Cases extends Api
             $userLoggedUid = $this->getUserId();
             $user = new \ProcessMaker\BusinessModel\User();
             $user->updateBookmark($userLoggedUid, $tas_uid, 'DELETE');
+        } catch (\Exception $e) {
+            throw new RestException(Api::STAT_APP_EXCEPTION, $e->getMessage());
+        }
+    }
+
+    /**
+     * Batch reassign
+     * @url POST /reassign
+     *
+     * @access protected
+     * @class  AccessControl {@className \ProcessMaker\Services\Api\Cases}
+     *
+     * @param array $request_data
+     *
+     */
+    public function doPostReassign($request_data)
+    {
+        try {
+            $case = new \ProcessMaker\BusinessModel\Cases();
+            $response = $case->doPostReassign($request_data);
+            return $response;
         } catch (\Exception $e) {
             throw new RestException(Api::STAT_APP_EXCEPTION, $e->getMessage());
         }

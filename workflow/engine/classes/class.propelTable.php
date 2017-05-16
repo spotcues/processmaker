@@ -893,7 +893,7 @@ class propelTable
         unset( $this->tpl );
         //unset($this->dbc);
         //unset($this->ses);
-        $_SESSION['pagedTable[' . $this->id . ']'] = serialize( $this );
+        $_SESSION['pagedTable[' . $this->id . ']'] = base64_encode(serialize($this));
         $this->fastSearch = '';
         return;
     }

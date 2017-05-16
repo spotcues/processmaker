@@ -269,7 +269,10 @@ class license_application extends padl
                 $ips[$ip] = $ip;
             }
         }
-
+        # count return ips and return if found
+        if (count($ips) > 0) {
+            return $ips;
+        }
         if (isset($this->_SERVER_VARS['SERVER_ADDR'])) {
             $name = gethostbyaddr($this->_SERVER_VARS['SERVER_ADDR']);
             $ip = gethostbyname($name);

@@ -30,23 +30,31 @@
 
 class G
 {
+    const hashFx = 'md5';
+    const hash = 'hash';
+    const hashFile = 'md5_file';
+    const hashCrc = 'crc32';
     public $sessionVar = array(); //SESSION temporary array store.
+    public static $sysSys;
+    public static $sysSkin;
+    public static $pathDataSite;
+    public static $pathDocument;
+    public static $memcachedEnabled;
+    public static $pathDataPublic;
+    public static $httpHost;
 
     /**
      * is_https
-     * @return void
-    */
+     * @return bool
+     */
     public static function is_https()
     {
-        if (isset($_SERVER['HTTPS'])) {
-            if ($_SERVER['HTTPS']=='on') {
-                return true;
-            } else {
-                return false;
-            }
-        } else {
-            return false;
+        $is_http = false;
+        if ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS']=='on') ||
+            (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https')) {
+            $is_http = true;
         }
+        return $is_http;
     }
 
     /**
@@ -75,23 +83,97 @@ class G
 
     /**
      * Generate Password Random
-     * @access public
-     * @param  Int
-     * @return String
+     * $availableSets set next options:
+     * l: lowercase set a-z
+     * u: uppercase set A-Z
+     * n: numbers set 0-9
+     * s: symbols set _-+=!@#$%*&,.;:?^()[]{}<>
+     * 
+     * $symbol is source symbol generate
+     * 
+     * @param int $length
+     * @param string $availableSets
+     * @param string $symbol
+     * @return string
      */
-    public function generate_password($length = 8)
+    public function generate_password($length = 15, $availableSets = "luns", $symbol = "_-$!")
     {
+        $chars = "";
+        if (strpos($availableSets, "l") !== false) {
+            $chars = $chars . "abcdefghjkmnpqrstuvwxyz";
+        }
+        if (strpos($availableSets, "u") !== false) {
+            $chars = $chars . "ABCDEFGHJKMNPQRSTUVWXYZ";
+        }
+        if (strpos($availableSets, "n") !== false) {
+            $chars = $chars . "0123456789";
+        }
+        if (strpos($availableSets, "s") !== false) {
+            $chars = $chars . $symbol;
+        }
+        $n = strlen($chars);
+        do {
         $password = "";
-        $possible = "0123456789bcdfghjkmnpqrstvwxyz";
-        $i        = 0;
-        while ($i<$length) {
-            $char = substr($possible, mt_rand(0, strlen($possible)-1), 1);
+            $i = 0;
+            while ($i < $length) {
+                $chars = str_shuffle($chars);
+                $char = substr($chars, mt_rand(0, $n - 1), 1);
             if (!strstr($password, $char)) {
-                $password .= $char;
+                    $password = $password . $char;
                 $i++;
             }
+                $password = str_shuffle($password);
         }
+            $info = G::check_password($password, $length, $length, $availableSets);
+        } while (!$info->isValid);
         return $password;
+    }
+
+    /**
+     * Check password strong
+     * 
+     * $availableSets set next options:
+     * l: lowercase set a-z
+     * u: uppercase set A-Z
+     * n: numbers set 0-9
+     * s: symbols set _-+=!@#$%*&,.;:?^()[]{}<>
+     * 
+     * @param string $password
+     * @param int $min
+     * @param int $max
+     * @param string $availableSets
+     * @return \stdClass
+     */
+    public function check_password($password, $min = 2, $max = 20, $availableSets = "luns")
+    {
+        $info = new stdClass();
+        $info->isValid = true;
+        $info->error = "";
+        if (strlen($password) < $min) {
+            $info->error .= G::LoadTranslation("ID_PASSWORD_TOO_SHORT") . " ";
+            $info->isValid = false;
+        }
+        if (strlen($password) > $max) {
+            $info->error .= G::LoadTranslation("ID_PASSWORD_TOO_LONG") . " ";
+            $info->isValid = false;
+        }
+        if (strpos($availableSets, "l") !== false && !preg_match("#[a-z]+#", $password)) {
+            $info->error .= G::LoadTranslation("ID_PASSWORD_MUST_INCLUDE_AT_LEAST_ONE_LETTER") . " ";
+            $info->isValid = false;
+        }
+        if (strpos($availableSets, "u") !== false && !preg_match("#[A-Z]+#", $password)) {
+            $info->error .= G::LoadTranslation("ID_PASSWORD_MUST_INCLUDE_AT_LEAST_ONE_CAPS") . " ";
+            $info->isValid = false;
+        }
+        if (strpos($availableSets, "n") !== false && !preg_match("#[0-9]+#", $password)) {
+            $info->error .= G::LoadTranslation("ID_PASSWORD_MUST_INCLUDE_AT_LEAST_ONE_NUMBER") . " ";
+            $info->isValid = false;
+        }
+        if (strpos($availableSets, "s") !== false && !preg_match("#\W+#", $password)) {
+            $info->error .= G::LoadTranslation("ID_PASSWORD_MUST_INCLUDE_AT_LEAST_ONE_SYMBOL") . " ";
+            $info->isValid = false;
+        }
+        return $info;
     }
 
     /**
@@ -259,7 +341,7 @@ class G
      * @param string $key
      * @return string
      */
-    public function decrypt ($string, $key)
+    public static function decrypt($string, $key)
     {
         //   if ( defined ( 'ENABLE_ENCRYPT' ) && ENABLE_ENCRYPT == 'yes' ) {
         //if (strpos($string, '|', 0) !== false) return $string;
@@ -419,7 +501,7 @@ class G
      * @param boolean $createPath if true this public function will create the path
      * @return boolean
      */
-    public function verifyPath ($strPath, $createPath = false)
+    public static function verifyPath ($strPath, $createPath = false)
     {
         $folder_path = strstr( $strPath, '.' ) ? dirname( $strPath ) : $strPath;
 
@@ -953,7 +1035,6 @@ class G
 
         $outputHeader = "/* Autogenerated CSS file by gulliver framework \n";
         $outputHeader .= "   Skin: $filename\n";
-        $outputHeader .= "   Configuration: $configurationFile\n";
         $mtimeNow = date( 'U' );
         $gmt_mtimeNow = gmdate( "D, d M Y H:i:s", $mtimeNow ) . " GMT";
         $outputHeader .= "   Date: $gmt_mtimeNow*/\n";
@@ -1148,8 +1229,10 @@ class G
                 case 'txt':
                     G::sendHeaders( $filename, 'text/html', $download, $downloadFileName );
                     break;
-                case 'doc':
                 case 'pdf':
+                    G::sendHeaders( $filename, 'application/pdf', $download, $downloadFileName );
+                    break;
+                case 'doc':
                 case 'pm':
                 case 'po':
                     G::sendHeaders( $filename, 'application/octet-stream', $download, $downloadFileName );
@@ -1158,7 +1241,14 @@ class G
                     if ($download) {
                         G::sendHeaders( $filename, 'text/plain', $download, $downloadFileName );
                     } else {
-                        require_once ($filename);
+                        if (\Bootstrap::getDisablePhpUploadExecution() === 0) {
+                            \Bootstrap::registerMonologPhpUploadExecution('phpExecution', 200, 'Php Execution', $filename);
+                            require_once ($filename);
+                        } else {
+                            $message = G::LoadTranslation('THE_PHP_FILES_EXECUTION_WAS_DISABLED');
+                            \Bootstrap::registerMonologPhpUploadExecution('phpExecution', 550, $message, $filename);
+                            echo $message;
+                        }
                         return;
                     }
                     break;
@@ -1199,12 +1289,14 @@ class G
     {
         if ($download) {
             if ($downloadFileName == '') {
-                $aAux = explode( '/', $filename );
-                $downloadFileName = $aAux[count( $aAux ) - 1];
+                $aAux = explode('/', $filename);
+                $downloadFileName = $aAux[count($aAux) - 1];
             }
-            header( 'Content-Disposition: attachment; filename="' . $downloadFileName . '"' );
+            header('Content-Disposition: attachment; filename="' . $downloadFileName . '"');
+        } else {
+            header('Content-Disposition: inline; filename="' . $downloadFileName . '"');
         }
-        header( 'Content-Type: ' . $contentType );
+        header('Content-Type: ' . $contentType);
 
         //if userAgent (BROWSER) is MSIE we need special headers to avoid MSIE behaivor.
         $userAgent = strtolower( $_SERVER['HTTP_USER_AGENT'] );
@@ -1299,7 +1391,7 @@ class G
      * @param string $id
      * @return string
      */
-    public function createUID ($scope, $id)
+    public static function createUID ($scope, $id)
     {
         $e = $scope . $id;
         $e = G::encrypt( $e, URL_KEY );
@@ -1666,7 +1758,7 @@ class G
      *     @fn()  Evaluate string with the function "fn"
      * @author David Callizaya <calidavidx21@hotmail.com>
      */
-    public function replaceDataField ($sqlString, $result, $DBEngine = 'mysql')
+    public static function replaceDataField ($sqlString, $result, $DBEngine = 'mysql')
     {
         if (! is_array( $result )) {
             $result = array ();
@@ -1674,8 +1766,7 @@ class G
         $result = $result + G::getSystemConstants();
         $__textoEval = "";
         $u = 0;
-        //$count=preg_match_all('/\@(?:([\@\%\#\!Qq])([a-zA-Z\_]\w*)|([a-zA-Z\_][\w\-\>\:]*)\(((?:[^\\\\\)]*(?:[\\\\][\w\W])?)*)\))/',$sqlString,$match,PREG_PATTERN_ORDER | PREG_OFFSET_CAPTURE);
-        $count = preg_match_all( '/\@(?:([\@\%\#\=\!Qq])([a-zA-Z\_]\w*)|([a-zA-Z\_][\w\-\>\:]*)\(((?:[^\\\\\)]*?)*)\))/', $sqlString, $match, PREG_PATTERN_ORDER | PREG_OFFSET_CAPTURE );
+        $count = preg_match_all( '/\@(?:([\@\%\#\?\$\=\&Qq\!])([a-zA-Z\_]\w*)|([a-zA-Z\_][\w\-\>\:]*)\(((?:[^\\\\\)]*(?:[\\\\][\w\W])?)*)\))((?:\s*\[[\'"]?\w+[\'"]?\])+|\-\>([a-zA-Z\_]\w*))?/', $sqlString, $match, PREG_PATTERN_ORDER | PREG_OFFSET_CAPTURE );
         if ($count) {
             for ($r = 0; $r < $count; $r ++) {
                 if (! isset( $result[$match[2][$r][0]] )) {
@@ -1732,6 +1823,13 @@ class G
                         $__textoEval.=G::replaceDataField($result[$match[2][$r][0]],$result);
                         continue;
                     }
+                    //Objects attributes
+                    if (($match[1][$r][0]=='&')&&(isset($result[$match[2][$r][0]]))) {
+                        if (isset($result[$match[2][$r][0]]->{$match[6][$r][0]})) {
+                            $__textoEval.=$result[$match[2][$r][0]]->{$match[6][$r][0]};
+                        }
+                        continue;
+                    }
                 }
             }
         }
@@ -1747,7 +1845,7 @@ class G
     * @param type Array $aFields
     * @return type String
     */
-    public function replaceDataGridField($sContent, $aFields, $nl2brRecursive = true)
+    public static function replaceDataGridField($sContent, $aFields, $nl2brRecursive = true)
     {
         $nrt     = array("\n",    "\r",    "\t");
         $nrthtml = array("(n /)", "(r /)", "(t /)");
@@ -1807,7 +1905,7 @@ class G
 
         if ($nl2brRecursive) {
             foreach ($aFields as $sKey => $vValue) {
-                if (!is_array($vValue)) {
+                if (!is_array($vValue) && !is_object($vValue)) {
                     $aFields[$sKey] = nl2br($aFields[$sKey]);
                 }
             }
@@ -2305,7 +2403,7 @@ class G
      *
      * @return string strtoupper($sText)
      */
-    public function toUpper ($sText)
+    public static function toUpper ($sText)
     {
         return strtoupper( $sText );
     }
@@ -2743,7 +2841,7 @@ class G
      * @access public
      * @return array
      */
-    public function array_merges ()
+    public static function array_merges()
     {
         $array = array ();
         $arrays = & func_get_args();
@@ -2810,7 +2908,7 @@ class G
      * @access public
      * @return string
      */
-    public function generateCode ($iDigits = 4, $sType = 'NUMERIC')
+    public static function generateCode ($iDigits = 4, $sType = 'NUMERIC')
     {
         if (($iDigits < 4) || ($iDigits > 50)) {
             $iDigits = 4;
@@ -2890,7 +2988,7 @@ class G
      *   Constants: SYS_*
      *   Sessions : USER_* , URS_*
      */
-    public function getSystemConstants($params = null)
+    public static function getSystemConstants($params = null)
     {
         $t1 = G::microtime_float();
         $sysCon = array();
@@ -5049,9 +5147,12 @@ class G
     *                   0 to delete the temporary file flag
     *                   1 to set the temporary file flag.
     *                   2 or bigger to check if the temporary file exists.
+    * @content          Contains the content of the temporary file
+    *                   true to all workspace
+    *                   nameWorkspace to specific workspace
     * return            true if the file exists, otherwise false.
     */
-    public function isPMUnderUpdating($setFlag = 2)
+    public function isPMUnderUpdating($setFlag = 2, $content="true")
     {
         if (!defined('PATH_DATA')) {
             return false;
@@ -5063,12 +5164,16 @@ class G
             }
         } elseif ($setFlag == 1) {
             $fp = fopen($fileCheck,'w');
-            $line = fputs($fp,"true");
+            $line = fputs($fp,$content);
         }
         //checking temporary file
         if ($setFlag >= 1) {
             if (file_exists($fileCheck)) {
-                return true;
+                $res['action'] = true;
+                $fp = fopen($fileCheck, "r");
+                $res['workspace'] = fread($fp, filesize($fileCheck));
+                fclose($fp);
+                return $res;
             }
         }
         return false;
@@ -5350,12 +5455,13 @@ class G
     public static function auditLog($actionToLog, $valueToLog = "")
     {
 	    $workspace = defined('SYS_SYS') ? SYS_SYS : 'Wokspace Undefined';
-        $oServerConf = & serverConf::getSingleton();
-        $sflagAudit = $oServerConf->getAuditLogProperty( 'AL_OPTION', $workspace );
+        $conf = new Configurations();
+        $sflag = $conf->getConfiguration('AUDIT_LOG', 'log');
+        $sflagAudit = $sflag == 'true' ? true : false;
         $ipClient = G::getIpAddress();
 
         /*----------------------------------********---------------------------------*/
-        $licensedFeatures = PMLicensedFeatures::getSingleton();        
+        $licensedFeatures = PMLicensedFeatures::getSingleton();
         if ($sflagAudit && $licensedFeatures->verifyfeature('vtSeHNhT0JnSmo1bTluUVlTYUxUbUFSVStEeXVqc1pEUG5EeXc0MGd2Q3ErYz0=')) {
             $username = isset($_SESSION['USER_LOGGED']) && $_SESSION['USER_LOGGED'] != '' ? $_SESSION['USER_LOGGED'] : 'Unknow User';
             $fullname = isset($_SESSION['USR_FULLNAME']) && $_SESSION['USR_FULLNAME'] != '' ? $_SESSION['USR_FULLNAME'] : '-';
@@ -5437,17 +5543,26 @@ class G
     {
         // Initialize variables
         $res = new stdclass();
+        $res->status = false;
         $allowedTypes = array_map('G::getRealExtension', explode(',', $InpDocAllowedFiles));
+
+        // Get the file extension
+        $aux = pathinfo($fileName);
+        $fileExtension = isset($aux['extension']) ? strtolower($aux['extension']) : '';
+
+        if (\Bootstrap::getDisablePhpUploadExecution() === 1 && $fileExtension === 'php') {
+            $message = \G::LoadTranslation('THE_UPLOAD_OF_PHP_FILES_WAS_DISABLED');
+            \Bootstrap::registerMonologPhpUploadExecution('phpUpload', 550, $message, $fileName);
+            $res->status = false;
+            $res->message = $message;
+            return $res;
+        }
 
         // If required extension is *.* don't validate
         if (in_array('*', $allowedTypes)) {
             $res->status = true;
             return $res;
         }
-
-        // Get the file extension
-        $aux = pathinfo($fileName);
-        $fileExtension = isset($aux['extension']) ? strtolower($aux['extension']) : '';
 
         // If no valid extension finish (unnecesary check file content)
         $validExtension = in_array($fileExtension, $allowedTypes);
@@ -5465,7 +5580,7 @@ class G
 
         // If enabled fileinfo extension check the content
         $finfo = new finfo(FILEINFO_MIME_TYPE);
-        $mimeType = $finfo->file($filesTmpName);
+        $mimeType = $finfo->file($filesTmpName);    
         $docType = explode('/', $mimeType);
 
         // If is a empty file finish validation
@@ -5480,87 +5595,87 @@ class G
                 case 'xls':
                     if ($docType[1] == 'vnd.ms-excel' || ($fileExtension == 'xls' && $docType[1] == 'plain')) {
                         $res->status = true;
-                        return $res;
+                        break 2;
                     }
                     break;
                 case 'doc':
                     if ($docType[1] == 'msword' || ($fileExtension == 'doc' && $docType[1] == 'html')) {
                         $res->status = true;
-                        return $res;
+                        break 2;
                     }
                     break;
                 case 'ppt':
                     if ($docType[1] == 'vnd.ms-office') {
                         $res->status = true;
-                        return $res;
+                        break 2;
                     }
                     break;
                 case 'docx':
                     if ($docType[1] == 'vnd.openxmlformats-officedocument.wordprocessingml.document') {
                         $res->status = true;
-                        return $res;
+                        break 2;
                     }
                     break;
                 case 'pptx':
                     if ($docType[1] == 'vnd.openxmlformats-officedocument.presentationml.presentation') {
                         $res->status = true;
-                        return $res;
+                        break 2;
                     }
                     break;
                 case 'xlsx':
                     if ($docType[1] == 'vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
                         $res->status = true;
-                        return $res;
+                        break 2;
                     }
                     break;
                 case 'exe':
                     if ($docType[1] == 'x-msdownload' || $docType[1] == 'x-dosexec') {
                         $res->status = true;
-                        return $res;
+                        break 2;
                     }
                     break;
                 case 'wmv':
-                    if($docType[1] == 'x-ms-asf' || $docType[1] == 'x-ms-wmv'){
+                    if ($docType[1] == 'x-ms-asf' || $docType[1] == 'x-ms-wmv') {
                         $res->status = true;
-                        return $res;
+                        break 2;
                     }
                     break;
                 case 'jpg':
-                    if ($docType[1] == 'jpeg'){
+                    if ($docType[1] == 'jpeg') {
                         $res->status = true;
-                        return $res;
+                        break 2;
                     }
                     break;
                 case 'mp3':
-                    if ($docType[1] == 'mpeg'){
+                    if ($docType[1] == 'mpeg') {
                         $res->status = true;
-                        return $res;
+                        break 2;
                     }
                     break;
                 case 'rar':
-                    if ($docType[1] == 'x-rar'){
+                    if ($docType[1] == 'x-rar') {
                         $res->status = true;
-                        return $res;
+                        break 2;
                     }
                     break;
                 case 'txt':
                 case 'pm':
-                    if ($docType[1] == 'plain'){
+                    if ($docType[1] == 'plain') {
                         $res->status = true;
-                        return $res;
+                        break 2;
                     }
                     break;
                 case 'htm':
                 case 'html':
-                    if ($docType[1] == 'html'){
+                    if ($docType[1] == 'html') {
                         $res->status = true;
-                        return $res;
+                        break 2;
                     }
                     break;
                 case 'po':
-                    if ($docType[1] == 'x-po'){
+                    if ($docType[1] == 'x-po') {
                         $res->status = true;
-                        return $res;
+                        break 2;
                     }
                     break;
                 case 'pdf':
@@ -5569,23 +5684,21 @@ class G
                 case 'gif':
                 case 'zip':
                 case 'mp4':
-                    if ($docType[1] == $allowedType){
+                    if ($docType[1] == $allowedType) {
                         $res->status = true;
-                        return $res;
+                        break 2;
                     }
                     break;
                 default:
-                    if ($validExtension) {
-                        $res->status = true;
-                        return $res;
-                    }
+                    $res->status = $validExtension;
                     break;
             }
         }
 
         // If content don't match return error
-        $res->status = false;
-        $res->message = G::LoadTranslation('ID_UPLOAD_ERR_NOT_ALLOWED_EXTENSION' ) . ' ' . $fileName;
+        if (!$res->status) {
+            $res->message = G::LoadTranslation('ID_UPLOAD_ERR_NOT_ALLOWED_EXTENSION' ) . ' ' . $fileName;
+        }
         return $res;
 
     }
@@ -5625,15 +5738,39 @@ class G
        return $clean;
    }
    /**
+    * Out the result
+    *
+    * @param string $sVar
+    *
+    * @return showRes($string)
+    */
+    public function outRes ($sInfVar)
+    {
+        echo $sInfVar;
+    }
+   /**
     * encryptOld
     *
     * @param string $string
     *
     * @return md5($string)
     */
-    public function encryptOld ($string)
+    public static function encryptOld($string)
     {
-        return md5($string);
+        $consthashFx = self::hashFx;
+        return $consthashFx($string);
+    }
+    /**
+     * encryptSha
+     *
+     * @param string $string
+     *
+     * @return sha256($string)
+     */
+    public static function encryptHash($string)
+    {
+        $consthash = self::hash;
+        return $consthash('sha256', $string);
     }
     /**
     * encryptFileOld
@@ -5644,7 +5781,8 @@ class G
     */
     public function encryptFileOld ($string)
     {
-        return md5_file($string);
+        $consthashFx = self::hashFile;
+        return $consthashFx($string);
     }
     /**
     * crc32
@@ -5653,9 +5791,10 @@ class G
     *
     * @return crc32($string)
     */
-    public function encryptCrc32 ($string)
+    public static function encryptCrc32 ($string)
     {
-        return crc32($string);
+        $consthashFx = self::hashCrc;
+        return $consthashFx($string);
     }
 
     /**

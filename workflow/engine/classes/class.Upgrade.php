@@ -134,7 +134,7 @@ class Upgrade
             try {
                 $num += 1;
                 printf("Upgrading workspaces ($num/$count): {$workspace->name}\n");
-                $workspace->upgrade($first);
+                $workspace->upgrade(false, SYS_SYS, false, 'en', ['updateXml' => $first, 'updateMafe' => $first]);
                 $workspace->close();
                 $first = false;
             } catch (Exception $e) {
@@ -145,4 +145,3 @@ class Upgrade
         //printf("Time to install: %f\n", microtime(1) - $start);
     }
 }
-

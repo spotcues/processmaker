@@ -32,7 +32,7 @@ class ProcessPermissions
         }
 
         G::LoadClass('case');
-        Cases::verifyTable();
+
         $aObjectsPermissions = array();
         $oCriteria = new \Criteria('workflow');
         $oCriteria->add(ObjectPermissionPeer::PRO_UID, $pro_uid);

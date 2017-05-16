@@ -99,10 +99,10 @@ class PgSQLTableInfo extends TableInfo {
 								FROM pg_attribute att
 									JOIN pg_type ty ON ty.oid=att.atttypid
 									LEFT OUTER JOIN pg_attrdef def ON adrelid=att.attrelid AND adnum=att.attnum
-								WHERE att.attrelid = %d AND att.attnum > 0
+								WHERE att.attrelid = $1 AND att.attnum > 0
 									AND att.attisdropped IS FALSE
 								ORDER BY att.attnum";
-        $result = $this->executePgQuery($this->conn->getResource(), sprintf ($filter->preventSqlInjection($query), $this->oid));
+        $result = $this->executePgQuery($this->conn->getResource(), $query, $this->oid);
 
         if (!$result) {
             throw new SQLException("Could not list fields for table: " . $this->name, pg_last_error($this->conn->getResource()));
@@ -235,9 +235,9 @@ class PgSQLTableInfo extends TableInfo {
 														INNER JOIN pg_type b ON b.oid = CASE WHEN d.typndims > 0 then d.typelem ELSE d.typbasetype END
 													WHERE
 														d.typtype = 'd'
-														AND d.typname = '%s'
+														AND d.typname = '$1'
 													ORDER BY d.typname";
-        $result = $this->executePgQuery($this->conn->getResource(), sprintf ($filter->preventSqlInjection($query), $strDomain));
+        $result = $this->executePgQuery($this->conn->getResource(), $query, $strDomain);
 
         if (!$result) {
             throw new SQLException("Query for domain [" . $strDomain . "] failed.", pg_last_error($this->conn->getResource()));
@@ -291,11 +291,11 @@ class PgSQLTableInfo extends TableInfo {
 						     LEFT JOIN pg_catalog.pg_attribute a2 ON a2.attrelid = ct.conrelid
 						WHERE
 						     contype='f'
-						     AND conrelid = %d
+						     AND conrelid = $1
 						     AND a2.attnum = ct.conkey[1]
 						     AND a1.attnum = ct.confkey[1]
 						ORDER BY conname";
-        $result = $this->executePgQuery($this->conn->getResource(), sprintf ($filter->preventSqlInjection($query), $this->oid));
+        $result = $this->executePgQuery($this->conn->getResource(), $query, $this->oid);
         if (!$result) {
             throw new SQLException("Could not list foreign keys for table: " . $this->name, pg_last_error($this->conn->getResource()));
         }
@@ -379,9 +379,9 @@ class PgSQLTableInfo extends TableInfo {
 												indisunique
 									FROM pg_index idx
 									JOIN pg_class cls ON cls.oid=indexrelid
-									WHERE indrelid = %d AND NOT indisprimary
+									WHERE indrelid = $1 AND NOT indisprimary
 									ORDER BY cls.relname";
-		    $result = $this->executePgQuery($this->conn->getResource(), sprintf ($filter->preventSqlInjection($query), $this->oid));
+		    $result = $this->executePgQuery($this->conn->getResource(), $query, $this->oid);
 
 
         if (!$result) {
@@ -411,9 +411,9 @@ class PgSQLTableInfo extends TableInfo {
                 
 	            $query = "SELECT a.attname
 															FROM pg_catalog.pg_class c JOIN pg_catalog.pg_attribute a ON a.attrelid = c.oid
-															WHERE c.oid = '%s' AND a.attnum = %d AND NOT a.attisdropped
+															WHERE c.oid = '$1' AND a.attnum = $2 AND NOT a.attisdropped
 															ORDER BY a.attnum";
-	            $result2 = $this->executePgQuery($this->conn->getResource(), sprintf ($filter->preventSqlInjection($query), $this->oid, $intColNum));
+	            $result2 = $this->executePgQuery($this->conn->getResource(), $query, array($this->oid, $intColNum));
 				if (!$result2)
 				{
             		throw new SQLException("Could not list indexes keys for table: " . $this->name, pg_last_error($this->conn->getResource()));
@@ -454,9 +454,9 @@ class PgSQLTableInfo extends TableInfo {
 													      indisunique
 													FROM pg_index idx
 													     JOIN pg_class cls ON cls.oid=indexrelid
-													WHERE indrelid = %s AND indisprimary
+													WHERE indrelid = $1 AND indisprimary
 													ORDER BY cls.relname";
-        $result = $this->executePgQuery($this->conn->getResource(), sprintf ($filter->preventSqlInjection($query), $this->oid));
+        $result = $this->executePgQuery($this->conn->getResource(), $query, $this->oid);
         if (!$result) {
             throw new SQLException("Could not list primary keys for table: " . $this->name, pg_last_error($this->conn->getResource()));
         }
@@ -483,9 +483,9 @@ class PgSQLTableInfo extends TableInfo {
 	            
 	            $query = "SELECT a.attname
 															FROM pg_catalog.pg_class c JOIN pg_catalog.pg_attribute a ON a.attrelid = c.oid
-															WHERE c.oid = '%s' AND a.attnum = %d AND NOT a.attisdropped
+															WHERE c.oid = '$1' AND a.attnum = $2 AND NOT a.attisdropped
 															ORDER BY a.attnum";
-                $result2 = $this->executePgQuery($this->conn->getResource(), sprintf ($filter->preventSqlInjection($query), $this->oid, $intColNum));
+                $result2 = $this->executePgQuery($this->conn->getResource(), $query, array($this->oid, $intColNum));
 				if (!$result2)
 				{
             		throw new SQLException("Could not list indexes keys for table: " . $this->name, pg_last_error($this->conn->getResource()));
@@ -500,8 +500,8 @@ class PgSQLTableInfo extends TableInfo {
         $this->pkLoaded = true;
     }
 
-    function executePgQuery($conn, $query){
-        $result = pg_query($conn, $query);
+    function executePgQuery($conn, $var, $values = array()){
+        $result = pg_query_params($conn, $var, $values);
         return $result;
     }
 

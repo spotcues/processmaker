@@ -129,7 +129,7 @@ class PropelOMTask extends AbstractPropelDataModelTask {
 
 				foreach ($database->getTables() as $table) {
 
-					if (!$table->isForReferenceOnly()) {
+					if (!$table->isForReferenceOnly() && $table->getReferenceOnly() === false) {
 
 						$this->log("\t+ " . $table->getName());
 

@@ -30,8 +30,12 @@
 ////////////////////////////////////////////////////
 use ProcessMaker\Util\ElementTranslation;
 
-if (! class_exists( 'PMScript' )) {
-    G::LoadClass( 'pmScript' );
+if (!class_exists('Monolog\Logger')) {
+    Bootstrap::initVendors();
+}
+
+if (!class_exists('PMScript')) {
+    G::LoadClass('pmScript');
 }
 
 /**
@@ -240,6 +244,8 @@ function literalDate ($date, $lang = 'en')
  */
 function executeQuery ($SqlStatement, $DBConnectionUID = 'workflow', $aParameter = array())
 {
+    $sysSys = (defined("SYS_SYS"))? SYS_SYS : "Undefined";
+    $aContext = \Bootstrap::getDefaultContextLog();
     $con = Propel::getConnection( $DBConnectionUID );
     $con->begin();
     G::loadClass('system');
@@ -342,9 +348,18 @@ function executeQuery ($SqlStatement, $DBConnectionUID = 'workflow', $aParameter
                 $result = executeQueryOci($SqlStatement, $con, $aParameter);
             }
         }
+        //Logger
+        $aContext['action'] = 'execute-query';
+        $aContext['sql'] = $SqlStatement;
+        \Bootstrap::registerMonolog('sqlExecution', 200, 'Sql Execution', $aContext, $sysSys, 'processmaker.log');
 
         return $result;
     } catch (SQLException $sqle) {
+        //Logger
+        $aContext['action'] = 'execute-query';
+        $aContext['exception'] = (array)$sqle;
+        \Bootstrap::registerMonolog('sqlExecution', 400, 'Sql Execution', $aContext, $sysSys, 'processmaker.log');
+
         if (isset($sqle->xdebug_message)) {
             error_log(print_r($sqle->xdebug_message, true));
         } else {
@@ -427,7 +442,7 @@ function evaluateFunction ($aGrid, $sExpresion)
         $pmScript->execute();
 
         $aGrid[$i] = $pmScript->aFields;
-        
+
         //compatibility for var_label
         foreach ($aFields as $j => $val) {
             if (isset($aGrid[$i][$j . "_label"]) && empty($aGrid[$i][$j . "_label"]) && !empty($aGrid[$i][$j])) {
@@ -516,13 +531,27 @@ function WSLogin ($user, $pass, $endpoint = "")
 function WSOpen ($force = false)
 {
     if (isset( $_SESSION["WS_SESSION_ID"] ) || $force) {
+        $optionsHeaders = array(
+            "cache_wsdl" => WSDL_CACHE_NONE,
+            "soap_version" => SOAP_1_1,
+            "trace" => 1,
+            "stream_context" => stream_context_create(
+                array(
+                    'ssl' => array(
+                        'verify_peer' => 0,
+                        'verify_peer_name' => 0
+                    )
+                )
+            )
+        );
+
         if (! isset( $_SESSION["WS_END_POINT"] )) {
-            $defaultEndpoint = "http://" . $_SERVER["SERVER_NAME"] . ":" . $_SERVER["SERVER_PORT"] . "/sys" . SYS_SYS . "/en/classic/services/wsdl2";
+            $defaultEndpoint = $_SERVER["REQUEST_SCHEME"] . "://" . $_SERVER["SERVER_NAME"] . ":" . $_SERVER["SERVER_PORT"] . "/sys" . SYS_SYS . "/en/classic/services/wsdl2";
         }
 
         $endpoint = isset( $_SESSION["WS_END_POINT"] ) ? $_SESSION["WS_END_POINT"] : $defaultEndpoint;
 
-        $client = new SoapClient( $endpoint );
+        $client = new SoapClient( $endpoint, $optionsHeaders);
 
         return $client;
     } else {
@@ -1622,7 +1651,7 @@ function PMFUserList () //its test was successfull
  * @link http://wiki.processmaker.com/index.php/ProcessMaker_Functions#PMFAddInputDocument.28.29
  *
  * @param string(32) | $inputDocumentUid | ID of the input document | The unique ID of the input document.
- * @param string(32) | $appDocUid | ID of the application document | The unique ID of the application document; if action is set to null or empty (Add), then this parameter it set to null or empty.
+ * @param string(32) | $appDocUid | ID of the application document | The unique ID of the application document; if action is set to null or empty (Add), then this parameter it set to null.
  * @param int | $docVersion | Document version | Document version.
  * @param string | $appDocType = "INPUT" | Document type | Document type.
  * @param string | $appDocComment | Document comment | Document comment.
@@ -1897,20 +1926,20 @@ function PMFGenerateOutputDocument ($outputID, $sApplication = null, $index = nu
  * @label PMF Group List
  * @link http://wiki.processmaker.com/index.php/ProcessMaker_Functions#PMFGroupList.28.29
  *
+ * @param string | $regex = null | String to search | Optional parameter.
+ * @param int | $start = null | Start | Optional parameter.
+ * @param int | $limit = null | Limit | Optional parameter.
  * @return array | $rows | List of groups | An array of groups
  *
  */
-function PMFGroupList () //its test was successfull
+function PMFGroupList ($regex = null, $start = null, $limit = null) //its test was successfull
 {
     G::LoadClass( 'wsBase' );
     $ws = new wsBase();
-    $result = $ws->groupList();
-    $rows = Array ();
-    $i = 1;
-    if (isset( $result )) {
-        foreach ($result as $item) {
-            $rows[$i ++] = $item;
-        }
+    $result = $ws->groupList($regex, $start, $limit);
+    $rows = array();
+    if ($result) {
+        $rows = array_combine(range(1, count($result)), array_values($result));
     }
     return $rows;
 }
@@ -2063,10 +2092,8 @@ function PMFDerivateCase ($caseId, $delIndex, $bExecuteTriggersBeforeAssignment 
     G::LoadClass( 'wsBase' );
     $ws = new wsBase();
     $result = $ws->derivateCase( $sUserLogged, $caseId, $delIndex, $bExecuteTriggersBeforeAssignment );
-    if (isset( $result->status_code )) {
-        return $result->status_code;
-    } else {
-        return 0;
+    if (is_array($result)) {
+        $result = (object)$result;
     }
     if ($result->status_code == 0) {
         return 1;
@@ -2121,15 +2148,16 @@ function PMFNewCaseImpersonate ($processId, $userId, $variables, $taskId = '')
  * @param string(32) | $userId | User ID | The unique ID of the user.
  * @param string(32) | $taskId | Task ID | The unique ID of the task.
  * @param array | $variables | Array of variables | An associative array of the variables which will be sent to the case.
+ * @param string(32) | $status=null | Status | Status of the case DRAFT or TO_DO.
  * @return string | $idNewCase | Case ID | If an error occured, it returns the integer zero. Otherwise, it returns a string with the case UID of the new case.
  *
  */
-function PMFNewCase ($processId, $userId, $taskId, $variables)
+function PMFNewCase ($processId, $userId, $taskId, $variables, $status = null)
 {
     G::LoadClass( 'wsBase' );
     $ws = new wsBase();
 
-    $result = $ws->newCase( $processId, $userId, $taskId, $variables );
+    $result = $ws->newCase($processId, $userId, $taskId, $variables, 0, $status);
 
     if ($result->status_code == 0) {
         return $result->caseId;
@@ -2350,14 +2378,16 @@ function setCaseTrackerCode ($sApplicationUID, $sCode, $sPIN = '')
 function jumping ($caseId, $delIndex)
 {
     try {
-        $x = PMFDerivateCase( $caseId, $delIndex );
-        if ($x == 0) {
+        $response = PMFDerivateCase($caseId, $delIndex);
+        if ($response) {
+            G::header( 'Location: casesListExtJsRedirector' );
+            die(); // After routing and jumping the case, the thread execution will end
+        } else {
             G::SendTemporalMessage( 'ID_NOT_DERIVATED', 'error', 'labels' );
         }
     } catch (Exception $oException) {
         G::SendTemporalMessage( 'ID_NOT_DERIVATED', 'error', 'labels' );
     }
-    G::header( 'Location: casesListExtJs' );
 }
 
 /**
@@ -2380,6 +2410,21 @@ function jumping ($caseId, $delIndex)
  */
 function PMFgetLabelOption ($PROCESS, $DYNAFORM_UID, $FIELD_NAME, $FIELD_SELECTED_ID)
 {
+    G::LoadClass("pmDynaform");
+    $data = array();
+    $data["CURRENT_DYNAFORM"] = $DYNAFORM_UID;
+    $dynaform = new pmDynaform($data);
+    if ($dynaform->isResponsive()) {
+        $json = $dynaform->searchFieldByName($DYNAFORM_UID, $FIELD_NAME);
+        $options = $json->options + $json->optionsSql;
+        foreach ($options as $key => $value) {
+            if ((string) $value->value === (string) $FIELD_SELECTED_ID) {
+                return $value->label;
+            }
+        }
+        return null;
+    }
+
     $G_FORM = new Form( "{$PROCESS}/{$DYNAFORM_UID}", PATH_DYNAFORM, SYS_LANG, false );
     if (isset( $G_FORM->fields[$FIELD_NAME]->option[$FIELD_SELECTED_ID] )) {
         return $G_FORM->fields[$FIELD_NAME]->option[$FIELD_SELECTED_ID];
@@ -2488,7 +2533,7 @@ function PMFRedirectToStep ($sApplicationUID, $iDelegation, $sStepType, $sStepUi
  * Returns a list of the next assigned users to a case.
  *
  * @name PMFGetNextAssignedUser
- * @label PMFGet Next Assigned User
+ * @label PMF  Get Next Assigned User
  *
  * @param string(32) | $application | Case ID | Id of the case
  * @param string(32) | $task | Task ID | Id of the task
@@ -2553,7 +2598,7 @@ function PMFGetNextAssignedUser ($application, $task, $delIndex = null, $userUid
  * @label PMF Get User Email Address
  * @link http://wiki.processmaker.com/index.php/ProcessMaker_Functions#PMFGetUserEmailAddress.28.29
  *
- * @param string(32) or Array | $id | Case ID | Id of the case.
+ * @param string(32) or Array | $id | List of Recipients | which can be a mixture of user IDs, group IDs, variable names or email addresses
  * @param string(32) | $APP_UID = null | Application ID | Id of the Application.
  * @param string(32) | $prefix = "usr" | prefix | Id of the task.
  * @return array | $aRecipient | Array of the Recipient | Return an Array of the Recipient.
@@ -2967,15 +3012,15 @@ function PMFRemoveMask ($field, $separator = '.', $currency = '')
 function PMFSaveCurrentData ()
 {
     global $oPMScript;
-    $result = 0;
+    $response = 0;
 
     if (isset($_SESSION['APPLICATION']) && isset($oPMScript->aFields)) {
-        G::LoadClass( 'wsBase' );
+        G::LoadClass('wsBase');
         $ws = new wsBase();
-        $result = $ws->sendVariables( $_SESSION['APPLICATION'], $oPMScript->aFields );
+        $result = $ws->sendVariables($_SESSION['APPLICATION'], $oPMScript->aFields);
+        $response = $result->status_code == 0 ? 1 : 0;
     }
-
-    return $result;
+    return $response;
 }
 
 /**
@@ -2984,7 +3029,7 @@ function PMFSaveCurrentData ()
  * @name PMFTasksListByProcessId
  * @label PMF Tasks List By Process Id
  * @param string | $processId | ID Process | To get the current process id, use the system variable @@PROCESS
- * @param string | $lang | Language | Is the language of the text, that must be the same to the column: "CON_LANG" of the CONTENT table
+ * @param string | $lang | Language | This parameter actually is not used, the same is kept by backward compatibility.Is the language of the text, that must be the same to the column: "CON_LANG" of the CONTENT table
  * @return array | $result | Array result | Array of associative arrays which contain the unique task ID and title
  */
 function PMFTasksListByProcessId($processId, $lang = 'en')
@@ -2992,11 +3037,7 @@ function PMFTasksListByProcessId($processId, $lang = 'en')
     $result = array();
     $criteria = new Criteria("workflow");
     $criteria->addSelectColumn(TaskPeer::TAS_UID);
-    $criteria->addSelectColumn(ContentPeer::CON_VALUE);
-    $criteria->addSelectColumn(ContentPeer::CON_LANG);
-    $criteria->addJoin(TaskPeer::TAS_UID, ContentPeer::CON_ID, Criteria::INNER_JOIN);
-    $criteria->add(ContentPeer::CON_CATEGORY, 'TAS_TITLE', Criteria::EQUAL);
-    $criteria->add(ContentPeer::CON_LANG, $lang, Criteria::EQUAL);
+    $criteria->addSelectColumn(TaskPeer::TAS_TITLE);
     $criteria->add(TaskPeer::PRO_UID, $processId, Criteria::EQUAL);
     $ds = TaskPeer::doSelectRS($criteria);
     $ds->setFetchmode(ResultSet::FETCHMODE_ASSOC);
@@ -3033,12 +3074,8 @@ function PMFGetProcessUidByName($processName = '')
         $criteria = new Criteria('workflow');
 
         $criteria->addSelectColumn(ProcessPeer::PRO_UID);
-
-        $criteria->addJoin(ContentPeer::CON_ID, ProcessPeer::PRO_UID, Criteria::LEFT_JOIN);
-        $criteria->add(ContentPeer::CON_VALUE, $processName, Criteria::EQUAL);
-        $criteria->add(ContentPeer::CON_CATEGORY, 'PRO_TITLE', Criteria::EQUAL);
-
-        $rsCriteria = ContentPeer::doSelectRS($criteria);
+        $criteria->add(ProcessPeer::PRO_TITLE, $processName, Criteria::EQUAL);
+        $rsCriteria = ProcessPeer::doSelectRS($criteria);
         $rsCriteria->setFetchmode(ResultSet::FETCHMODE_ASSOC);
 
         if ($rsCriteria->next()) {
@@ -3086,6 +3123,26 @@ function PMFGeti18nText($id, $category, $lang = "en")
 
 /**
  * @method
+ * The requested text in the specified language | If not found returns false
+ * @name PMFUnCancelCase
+ * @label PMF Un Cancel Case
+ * @param string | $caseUID | ID Case | Is the unique UID of the case
+ * @param string | $userUID | ID User  | Is the unique ID of the user who will uncancel the case
+ * @return int | $value | Return | Returns 1 if the case was successfully uncancelled, otherwise returns 0 if an error ocurred
+ */
+function PMFUnCancelCase($caseUID, $userUID)
+{
+    try {
+        $cases = new Cases();
+        $cases->unCancelCase($caseUID, $userUID);
+        return 1;
+    } catch (Exception $oException) {
+        return 0;
+    }
+}
+
+/**
+ * @method
  * Function to return an array of objects containing the properties of the fields
  * in a specified DynaForm.
  * It also inserts the "value" and "value_label" as properties in the fields' objects,
@@ -3117,7 +3174,7 @@ function PMFDynaFormFields($dynUid, $appUid = false, $delIndex = 0)
     }
     $data["CURRENT_DYNAFORM"] = $dynUid;
 
-    $dynaform = new pmDynaform($data);
+    $dynaform = new pmDynaform(\ProcessMaker\Util\DateTime::convertUtcToTimeZone($data));
     $dynaform->onPropertyRead = function(&$json, $key, $value) {
         if (isset($json->data) && !isset($json->value)) {
             $json->value = $json->data->value;
@@ -3154,14 +3211,18 @@ function PMFDynaFormFields($dynUid, $appUid = false, $delIndex = 0)
  * @name PMFGetTaskName
  * @label PMF Get Task Title Text
  * @param string | $taskUid | ID Task | Is the identifier of task, that must be the same to the column: "TAS_UID" of the TASK table
- * @param string | $lang | Language | Is the language of the text, that must be the same to the column: "CON_LANG" of the CONTENT table
+ * @param string | $lang | Language | This parameter actually is not used, the same is kept by backward compatibility. Is the language of the text, that must be the same to the column: "CON_LANG"
+ * of the CONTENT table
  * @return string | $text | Translated text | the translated text of a string in Content
  */
 function PMFGetTaskName($taskUid, $lang = SYS_LANG) {
     if (empty($taskUid)) {
         return false;
     }
-    return PMFGeti18nText($taskUid, 'TAS_TITLE', $lang);
+    $oTask = new \Task();
+    $aTasks = $oTask->load($taskUid);
+    $text = isset($aTasks["TAS_TITLE"]) ? $aTasks["TAS_TITLE"] : false;
+    return $text;
 }
 
 /**
@@ -3200,43 +3261,105 @@ function PMFGetUidFromText($text, $category, $proUid = null, $lang = SYS_LANG)
 
 /**
  * @method
- * Get UID of a Dynaform
+ *
+ * Get the unique ID of dynaform
+ *
  * @name PMFGetDynaformUID
  * @label PMF Get Dynafrom UID
- * @param string | $dynaformName | Name Dynaform | Is the name of a Dynaform
- * @param string | $proUid = null | Process ID | The process identifier to search the dynaform name. If not specified the current process is used.
- * @return  array | $result | array
+ * @link http://wiki.processmaker.com/index.php/ProcessMaker_Functions#PMFGetDynaformUID.28.29
+ *
+ * @param string | $dynaFormName | Name dynaform | The name of dynaform
+ * @param string | $processUid = null| ID of the process | The unique ID of process. If not set, the current process ID is used
+ *
+ * @return string | $dynaFormUid | The unique ID of dynaform | Returns the unique ID of dynaform, FALSE otherwise
  */
-function PMFGetDynaformUID($dynaformName, $proUid = null)
+function PMFGetDynaformUID($dynaFormName, $processUid = null)
 {
-    return PMFGetUidFromText($dynaformName, 'DYN_TITLE', $proUid);
+    if (is_null($processUid) && !(isset($_SESSION) && array_key_exists('PROCESS', $_SESSION))) {
+        return false;
+    }
+
+    $arrayResult = PMFGetUidFromText($dynaFormName, 'DYN_TITLE', (!is_null($processUid))? $processUid : $_SESSION['PROCESS']);
+
+    //Return
+    return (!empty($arrayResult))? array_shift($arrayResult) : false;
 }
 
 /**
  * @method
- * Get UID of a Group
+ *
+ * Get the unique ID of group
+ *
  * @name PMFGetGroupUID
  * @label PMF Get Group UID
- * @param string | $groupName | Name Group | Is the name of a Group
- * @return  array | $result | array
+ * @link http://wiki.processmaker.com/index.php/ProcessMaker_Functions#PMFGetGroupUID.28.29
+
+ * @param string | $groupName | Name group | The name of group
+ *
+ * @return string | $groupUid | The unique ID of group | Returns the unique ID of group, FALSE otherwise
  */
 function PMFGetGroupUID($groupName)
 {
-    return PMFGetUidFromText($groupName, 'GRP_TITLE');
+    $groupUid = '';
+
+    $criteria = new Criteria('workflow');
+
+    $criteria->addSelectColumn(GroupwfPeer::GRP_UID);
+    $criteria->add(GroupwfPeer::GRP_TITLE, $groupName, Criteria::EQUAL);
+
+    $rsCriteria = GroupwfPeer::doSelectRS($criteria);
+    $rsCriteria->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+
+    if ($rsCriteria->next()) {
+        $record = $rsCriteria->getRow();
+
+        $groupUid = $record['GRP_UID'];
+    }
+
+    //Return
+    return ($groupUid != '')? $groupUid : false;
 }
 
 /**
  * @method
- * Get UID of a Task
+ *
+ * Get the unique ID of task
+ *
  * @name PMFGetTaskUID
  * @label PMF Get Task UID
- * @param string | $taskName | Name Task | Is the name of a Task
- * @param string | $proUid  = null| Process ID | The process identifier to search the dynaform name. If not specified the current process is used.
- * @return  array | $result | array
+ * @link http://wiki.processmaker.com/index.php/ProcessMaker_Functions#PMFGetTaskUID.28.29
+ *
+ * @param string | $taskName | Name task | The name of task
+ * @param string | $processUid = null| ID of the process | The unique ID of process. If not set, the current process ID is used
+ *
+ * @return string | $taskUid | The unique ID of task | Returns the unique ID of task, FALSE otherwise
  */
-function PMFGetTaskUID($taskName, $proUid = null)
+function PMFGetTaskUID($taskName, $processUid = null)
 {
-    return PMFGetUidFromText($taskName, 'TAS_TITLE', $proUid);
+    if (is_null($processUid) && !(isset($_SESSION) && array_key_exists('PROCESS', $_SESSION))) {
+        return false;
+    }
+
+    $taskUid = '';
+
+    $criteria = new Criteria('workflow');
+
+    $criteria->addSelectColumn(TaskPeer::TAS_UID);
+    $criteria->add(TaskPeer::TAS_TITLE, $taskName, Criteria::EQUAL);
+
+    $criteria->add(TaskPeer::PRO_UID, (!is_null($processUid))? $processUid : $_SESSION['PROCESS'], Criteria::EQUAL);
+
+    $rsCriteria = TaskPeer::doSelectRS($criteria);
+    $rsCriteria->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+
+    if ($rsCriteria->next()) {
+        $record = $rsCriteria->getRow();
+
+        $taskUid = $record['TAS_UID'];
+    }
+
+    //Return
+    return ($taskUid != '')? $taskUid : false;
 }
 
 /**
@@ -3352,3 +3475,492 @@ function PMFGetNextDerivationInfo($caseUid, $delIndex)
     }
 }
 
+/**
+ * @method
+ *
+ * Direct case link
+ *
+ * @name PMFCaseLink
+ * @label PMF Direct case link
+ * @link http://wiki.processmaker.com/index.php/ProcessMaker_Functions#PMFCaseLink.28.29
+ *
+ * @param string(32) | $caseUid | ID of the case | The unique ID of the case
+ * @param string | $workspace = null | Workspace | The workspace
+ * @param string | $language = null | Language | The language
+ * @param string | $skin = null | Skin | The skin
+ *
+ * @return string | $url | Direct case link | Returns the direct case link, FALSE otherwise
+ */
+function PMFCaseLink($caseUid, $workspace = null, $language = null, $skin = null)
+{
+    try {
+        $case = new \ProcessMaker\BusinessModel\Cases();
+
+        $arrayApplicationData = $case->getApplicationRecordByPk($caseUid, [], false);
+
+        if ($arrayApplicationData === false) {
+            return false;
+        }
+
+        $workspace = (!is_null($workspace))? $workspace : SYS_SYS;
+        $language = (!is_null($language))? $language : SYS_LANG;
+        $skin = (!is_null($skin))? $skin : SYS_SKIN;
+
+        $uri = '/sys' . $workspace . '/' . $language . '/' . $skin . '/cases/opencase/' . $caseUid;
+
+        //Return
+        return ((G::is_https())? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . $uri;
+    } catch (Exception $e) {
+        throw $e;
+    }
+}
+
+/**
+ *
+ * @method
+ *
+ * This function Associates the uploaded files inside a grid with an Input File of the process
+ *
+ * @name PMFAssociateUploadedFilesWithInputFile
+ * @label PMF Associates the uploaded files inside a grid with an Input File of the process
+ * @link http://wiki.processmaker.com/index.php/ProcessMaker_Functions#PMFAssociateUploadedFilesWithInputFile.28.29
+ *
+ * @param string(32) | $inputDocumentUid | Unique id of Input Document | The unique id of the Input Document we want to associate with
+ * @param string(32) | $gridVariableName | Variable name of the grid | Variable name of the grid, that contains the uploaded files
+ * @param string(32) | $fileVariableName | Variable name file | Variable name file , of the field in the grid that contains the files
+ * @param string(32) | $caseUid | Unique id of the case | The unique id of the case with the documents (variable application)
+ * @param string(32) | $userUid | Unique id of the user | The unique id of the user that's logged in for doing the upload
+ * @param int | $currentDelIndex | Current Index of the application | Current Index of the application
+ *
+ * @return none | $none | None | None
+ */
+
+function PMFAssociateUploadedFilesWithInputFile($inputDocumentUid, $gridVariableName, $fileVariableName, $caseUid, $userUid, $currentDelIndex)
+{
+    try {
+        require_once 'classes/model/AppDocument.php';
+
+        $appDocument = new AppDocument();
+
+        //First step: get all the documents from this case and this grid that are not associated
+        $criteria = new Criteria('workflow');
+
+        $criteria->add(AppDocumentPeer::APP_UID, $caseUid, Criteria::EQUAL);
+        $criteria->add(AppDocumentPeer::APP_DOC_TYPE, 'ATTACHED', Criteria::EQUAL);
+        $criteria->add(AppDocumentPeer::APP_DOC_FIELDNAME, $gridVariableName . '_%_' . $fileVariableName, Criteria::LIKE);
+        $criteria->add(AppDocumentPeer::APP_DOC_STATUS, 'ACTIVE', Criteria::EQUAL);
+        $criteria->add(AppDocumentPeer::DOC_UID, '-1', Criteria::EQUAL);
+        $criteria->addAscendingOrderByColumn(AppDocumentPeer::APP_DOC_INDEX);
+
+        $numRecTotal = AppDocumentPeer::doCount($criteria);
+
+        //If we have an error in the result set, do not continue
+        if ($numRecTotal == 0) {
+            //Return
+            return false;
+        }
+
+        //Query
+        $rsCriteria = AppDocumentPeer::doSelectRS($criteria);
+        $rsCriteria->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+
+        //Search file in the process, associate with the Input document
+        while ($rsCriteria->next()) {
+            $row = $rsCriteria->getRow();
+
+            //Load the file by its unique identifier, its name, its extension and the path where it's stored
+            $file = $appDocument->load($row['APP_DOC_UID']);
+            $ext = pathinfo($file['APP_DOC_FILENAME'], PATHINFO_EXTENSION);
+            $fileName = $file['APP_DOC_UID'] . '_' . $file['DOC_VERSION'] . '.' . $ext;
+            $pathFile = PATH_DOCUMENT . G::getPathFromUID($caseUid) . PATH_SEP . $fileName;
+            $comment = '';
+
+            //Delete this file so it can't be uploaded again (Includes Mark Database Record)
+            $appDocument->remove($file['APP_DOC_UID'], $file['DOC_VERSION']);
+
+            $fields = array (
+                'APP_UID' => $caseUid,
+                'DEL_INDEX' => $currentDelIndex,
+                'USR_UID' => $userUid,
+                'DOC_UID' => $inputDocumentUid,
+                'APP_DOC_TYPE' => 'INPUT',
+                'APP_DOC_CREATE_DATE' => date('Y-m-d H:i:s'),
+                'APP_DOC_COMMENT' => $comment,
+                'APP_DOC_TITLE' => $file['APP_DOC_TITLE'],
+                'APP_DOC_FILENAME' => $file['APP_DOC_FILENAME'],
+                'APP_DOC_FIELDNAME' => ''
+            );
+
+            $result = $appDocument->create($fields);
+
+            //Copy the file
+            $appUid = $appDocument->getAppUid();
+            $appDocUid = $appDocument->getAppDocUid();
+            $docVersion = $appDocument->getDocVersion();
+            $info = pathinfo( $appDocument->getAppDocFilename() );
+            $extAux = (isset( $info['extension'] )) ? $info['extension'] : '';
+
+            //Save the file
+            $pathName = PATH_DOCUMENT . G::getPathFromUID($appUid) . PATH_SEP;
+            $pathFileName = $appDocUid . '_' . $docVersion . '.' . $extAux;
+
+            copy($pathFile, $pathName . $pathFileName);
+
+            //Update
+            $result = $appDocument->update([
+                'APP_DOC_UID' => $appDocUid,
+                'DOC_VERSION' => $docVersion,
+                'APP_DOC_TAGS' => 'INPUT',
+                'APP_DOC_FIELDNAME' => $file['APP_DOC_FIELDNAME']
+            ]);
+
+            //Remove the old submitted file completely from file system
+            unlink($pathFile);
+        }
+    } catch (Exception $e) {
+        throw $e;
+    }
+}
+
+/**
+ * @method
+ *
+ * Remove users from a group
+ *
+ * @name PMFRemoveUsersToGroup
+ * @label PMF Remove users from a group (deprecated)
+ * @link http://wiki.processmaker.com/index.php/ProcessMaker_Functions#PMFRemoveUsersToGroup.28.29
+ *
+ * @deprecated we corrected the name
+ * @param string | $groupId | Group Uid | The unique Uid of the group.
+ * @param array | $users | Array of users | Array of users to remove.
+ *
+ * @return  array | $result | array
+ */
+function PMFRemoveUsersToGroup($groupUid, array $users)
+{
+    try {
+        $user = new \ProcessMaker\BusinessModel\Group\User();
+
+        $result = $user->unassignUsers($groupUid, $users);
+
+        //Return
+        return $result;
+    } catch (Exception $e) {
+        throw $e;
+    }
+}
+
+/**
+ * @method
+ *
+ * Remove users from a group
+ *
+ * @name PMFRemoveUsersFromGroup
+ * @label PMF Remove users from a group
+ * @link http://wiki.processmaker.com/index.php/ProcessMaker_Functions#PMFRemoveUsersFromGroup.28.29
+ *
+ * @param string | $groupId | Group Uid | The unique Uid of the group.
+ * @param array | $users | Array of users | Array of users to remove.
+ *
+ * @return  array | $result | array
+ */
+function PMFRemoveUsersFromGroup($groupUid, array $users)
+{
+    try {
+        $user = new \ProcessMaker\BusinessModel\Group\User();
+
+        $result = $user->unassignUsers($groupUid, $users);
+
+        //Return
+        return $result;
+    } catch (Exception $e) {
+        throw $e;
+    }
+}
+
+/**
+ * @method
+ *
+ * Copy or attach a file to a Case
+ *
+ * @name PMFCopyDocumentCase
+ * @label PMF Copy Document Case
+ *
+ * @param string | $appDocUid | Document Application ID | The unique Uid of the Document.
+ * @param int | $versionNumber | Version Number | Is the document version.
+ * @param string | $targetCaseUid | Case ID | Is the target case uid where we want to copy the document to.
+ * @param string | $inputDocumentUid =null | InputDocument ID | Optional parameter. Is the input document that we want to associate with in the target case. If is not specified then the file is uploaded as attachment in the case (not associated to any input document).
+ *
+ * @return string | $newUidAppDocUid | ID of the document | Returns ID if it has copied the input document successfully; otherwise, returns exception if an error occurred.
+ */
+function PMFCopyDocumentCase($appDocUid, $versionNumber, $targetCaseUid, $inputDocumentUid = null)
+{
+    try {
+        $messageError = 'function:PMFCopyDocumentCase Error!, ';
+        $appDocument = new AppDocument();
+        $dataFields = $appDocument->load($appDocUid, $versionNumber);
+        if (!$dataFields) {
+            throw new Exception($messageError . 'The AppDocUid does not exist');
+        }
+        $arrayFieldData = array(
+            "APP_UID" => $targetCaseUid,
+            "DEL_INDEX" => $dataFields['DEL_INDEX'],
+            "USR_UID" => $dataFields['USR_UID'],
+            "DOC_UID" => ($inputDocumentUid != null) ? $inputDocumentUid : $dataFields['DOC_UID'],
+            "APP_DOC_TYPE" => $dataFields['APP_DOC_TYPE'],
+            "APP_DOC_CREATE_DATE" => date("Y-m-d H:i:s"),
+            "APP_DOC_COMMENT" => $dataFields['APP_DOC_COMMENT'],
+            "APP_DOC_TITLE" => $dataFields['APP_DOC_TITLE'],
+            "APP_DOC_FILENAME" => $dataFields['APP_DOC_FILENAME'],
+            "FOLDER_UID" => $dataFields['FOLDER_UID'],
+            "APP_DOC_TAGS" => $dataFields['APP_DOC_TAGS']
+        );
+
+        $arrayInfo = pathinfo($appDocument->getAppDocFilename());
+        $ext = (isset($arrayInfo['extension']) ? $arrayInfo['extension'] : '');
+        $parcialPath = G::getPathFromUID($dataFields['APP_UID']);
+        $file = G::getPathFromFileUID($dataFields['APP_UID'], $dataFields['APP_DOC_UID']);
+        $realPath = PATH_DOCUMENT . $parcialPath . '/' . $file[0] . $file[1] . '_' . $versionNumber . '.' . $ext;
+        $strFileName = $dataFields['APP_DOC_UID'] . '_' . $versionNumber . '.' . $ext;
+        $newUidAppDocUid = null;
+        if ($dataFields['APP_DOC_TYPE'] == 'INPUT' || $dataFields['APP_DOC_TYPE'] == 'ATTACHED') {
+            if (file_exists($realPath)) {
+                $strPathName = PATH_DOCUMENT . G::getPathFromUID($targetCaseUid) . PATH_SEP;
+                if (!is_dir($strPathName)) {
+                    G::mk_dir($strPathName);
+                }
+                $appNewDocument = new AppDocument();
+                $newUidAppDocUid = $appNewDocument->create($arrayFieldData);
+                $appNewDocument->setAppDocTitle($dataFields['APP_DOC_TITLE']);
+                $appNewDocument->setAppDocComment($dataFields['APP_DOC_COMMENT']);
+                $appNewDocument->setAppDocFilename($dataFields['APP_DOC_FILENAME']);
+                $newStrFileName = $newUidAppDocUid . '_' . $versionNumber . '.' . $ext;
+                $resultCopy = copy($realPath, $strPathName . $newStrFileName);
+                if (!$resultCopy) {
+                    throw new Exception($messageError, 'Could not copy the document');
+                }
+            } else {
+                throw new Exception($messageError, 'The document for copy does not exist');
+            }
+        } else {
+            $pathOutput = PATH_DOCUMENT . G::getPathFromUID($dataFields['APP_UID']) . PATH_SEP . 'outdocs' . PATH_SEP;
+            if (is_dir($pathOutput)) {
+                @chmod($pathOutput, 0755);
+                $strPathName = PATH_DOCUMENT . G::getPathFromUID($targetCaseUid) . PATH_SEP . 'outdocs' . PATH_SEP;
+                if (!is_dir($strPathName)) {
+                    G::mk_dir($strPathName);
+                }
+                @chmod($strPathName, 0755);
+                $oAppDocument = new AppDocument();
+                $newUidAppDocUid = $oAppDocument->create($arrayFieldData);
+                $arrayExtension = array('doc', 'html', 'pdf');
+                $newStrFilename = $newUidAppDocUid . '_' . $versionNumber;
+                foreach ($arrayExtension as $item) {
+                    $resultCopy = copy($pathOutput . $strFileName . $item, $strPathName . $newStrFilename . '.' . $item);
+                    if (!$resultCopy) {
+                        throw new Exception($messageError, 'Could not copy the document');
+                    }
+                }
+            } else {
+                throw new Exception($messageError, 'The document for copy does not exist');
+            }
+        }
+        return $newUidAppDocUid;
+    } catch (Exception $e) {
+        throw $e;
+    }
+}
+
+/**
+ * @method
+ *
+ * Add user or group to Task
+ *
+ * @name PMFAddUserGroupToTask
+ * @label PMF Add user or group to Task
+ * @link http://wiki.processmaker.com/index.php/ProcessMaker_Functions#PMFAddUserGroupToTask.28.29
+ *
+ * @param string | $taskUid | Task Uid | The unique Id of the Task.
+ * @param string | $userGroupUid | Uid from User or Group | The unique Uid from User or Group.
+ *
+ * @return int | $result | Result | Returns 1 when is assigned
+ */
+
+function PMFAddUserGroupToTask($taskUid, $userGroupUid)
+{
+    //Verify data and Set variables
+    $task = new \ProcessMaker\BusinessModel\Task();
+    $taskwf = TaskPeer::retrieveByPK($taskUid);
+
+    if (is_null($taskwf)) {
+        throw new Exception(G::LoadTranslation('ID_TASK_NOT_EXIST', ['tas_uid', $taskUid]));
+    }
+
+    $uid = '';
+    $userType = '';
+
+    $objUser = UsersPeer::retrieveByPK($userGroupUid);
+
+    if (!is_null($objUser)) {
+        $uid = $userGroupUid;
+        $userType = 'user';
+    } else {
+        $groupUid = GroupwfPeer::retrieveByPK($userGroupUid);
+
+        if (!is_null($groupUid)) {
+            $uid = $userGroupUid;
+            $userType = 'group';
+        } else {
+            throw new Exception(G::LoadTranslation(
+                'ID_USER_GROUP_NOT_CORRESPOND', [$userGroupUid, G::LoadTranslation('ID_USER') . '/' . G::LoadTranslation('ID_GROUP')]
+            ));
+        }
+    }
+
+    //Assignee User/Group
+    $task->addTaskAssignee($taskwf->getProUid(), $taskUid, $uid, $userType);
+
+    //Return
+    return 1;
+}
+
+/**
+ * @method
+ *
+ * Remove a user or group from the list of assignees of the Task.
+ *
+ * @name PMFRemoveUserGroupFromTask
+ * @label PMF Remove user or group from a Task
+ * @link http://wiki.processmaker.com/index.php/ProcessMaker_Functions#PMFRemoveUserGroupFromTask.28.29
+ *
+ * @param string | $taskUid | Task Uid | The unique Id of the Task.
+ * @param string | $userGroupUid | Uid from User or Group | The unique Id from User or Group.
+ *
+ * @return int | $result | Result | Returns 1 when is remove
+ */
+function PMFRemoveUserGroupFromTask($taskUid, $userGroupUid)
+{
+    //Verify data and Set variables
+    $task = new \ProcessMaker\BusinessModel\Task();
+    $taskwf = TaskPeer::retrieveByPK($taskUid);
+
+    if (is_null($taskwf)) {
+        throw new Exception(G::LoadTranslation('ID_TASK_NOT_EXIST', ['tas_uid', $taskUid]));
+    }
+
+    $uid = '';
+
+    $objUser = UsersPeer::retrieveByPK($userGroupUid);
+
+    if (!is_null($objUser)) {
+        $uid = $userGroupUid;
+    } else {
+        $groupUid = GroupwfPeer::retrieveByPK($userGroupUid);
+
+        if (!is_null($groupUid)) {
+            $uid = $userGroupUid;
+        } else {
+            throw new Exception(G::LoadTranslation(
+                'ID_USER_GROUP_NOT_CORRESPOND', [$userGroupUid, G::LoadTranslation('ID_USER') . '/' . G::LoadTranslation('ID_GROUP')]
+            ));
+        }
+    }
+
+    //Remove User/Group
+    $task->removeTaskAssignee($taskwf->getProUid(), $taskUid, $uid);
+
+    //Return
+    return 1;
+}
+
+/**
+ * @method
+ *
+ * Sends emails to user's group using a template file
+ *
+ * @name PMFSendMessageToGroup
+ * @label PMF Send Message To Group
+ * @link http://wiki.processmaker.com/index.php/ProcessMaker_Functions#PMFSendMessageToGroup.28.29
+ *
+ * @param string(32) | $groupId | Group ID | Unique id of Group.
+ * @param string(32) | $caseId | Case ID | The UID (unique identification) for a case, which is a string of 32 hexadecimal characters to identify the case.
+ * @param string | $from | Sender | The email address of the person who sends out the email.
+ * @param string | $subject | Subject of the email | The subject (title) of the email.
+ * @param string | $template | Name of the template | The name of the template file in plain text or HTML format which will produce the body of the email.
+ * @param array | $arrayField = [] | Variables for email template | Optional parameter. An associative array where the keys are the variable names and the values are the variables' values.
+ * @param array | $arrayAttachment = [] | Attachment | An Optional arrray. An array of files (full paths) to be attached to the email.
+ * @param boolean | $showMessage = true | Show message | Optional parameter. Set to TRUE to show the message in the case's message history.
+ * @param int | $delIndex = 0 | Delegation index of the case | Optional parameter. The delegation index of the current task in the case.
+ * @param mixed | $config = [] | Email server configuration | An optional array: An array of parameters to be used in the Email sent (MESS_ENGINE, MESS_SERVER, MESS_PORT, MESS_FROM_MAIL, MESS_RAUTH, MESS_ACCOUNT, MESS_PASSWORD, and SMTPSecure) Or String: UID of Email server.
+ * @param int | $limit = 100 | Limit | Limit of mails to send in each bach.
+ *
+ * @return int | $result | Result | Returns 1 when is send message to group
+ */
+function PMFSendMessageToGroup(
+    $groupId,
+    $caseId,
+    $from,
+    $subject,
+    $template,
+    $arrayField = [],
+    $arrayAttachment = [],
+    $showMessage = true,
+    $delIndex = 0,
+    $config = [],
+    $limit = 100
+) {
+    //Verify data and Set variables
+    $group = new \ProcessMaker\BusinessModel\Group();
+    $case = new \ProcessMaker\BusinessModel\Cases();
+
+    $group->throwExceptionIfNotExistsGroup($groupId, '$groupId');
+
+    if ($limit <= 0) {
+        throw new Exception(G::LoadTranslation('ID_INVALID_LIMIT'));
+    }
+
+    $arrayApplicationData = $case->getApplicationRecordByPk($caseId, ['$applicationUid' => '$caseId'], true);
+
+    //Send mails
+    $criteriaGroupUser = $group->getUserCriteria($groupId, ['condition' => [[UsersPeer::USR_STATUS, 'ACTIVE', Criteria::EQUAL]]]);
+
+    $start = 0;
+
+    do {
+        $flagNextRecord = false;
+
+        $to = '';
+
+        $criteria = clone $criteriaGroupUser;
+
+        $criteria->setOffset($start);
+        $criteria->setLimit($limit);
+
+        $rsCriteria = GroupUserPeer::doSelectRS($criteria);
+        $rsCriteria->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+
+        while ($rsCriteria->next()) {
+            $record = $rsCriteria->getRow();
+
+            $to .= (($to != '')? ', ' : '') . $record['USR_EMAIL'];
+
+            $flagNextRecord = true;
+        }
+
+        if ($flagNextRecord) {
+            $result = PMFSendMessage(
+                $caseId, $from, $to, null, null, $subject, $template, $arrayField, $arrayAttachment, $showMessage, $delIndex, $config
+            );
+
+            if ($result == 0) {
+                return 0;
+            }
+        }
+
+        $start += $limit;
+    } while ($flagNextRecord);
+
+    //Return
+    return 1;
+}

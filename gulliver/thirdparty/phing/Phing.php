@@ -60,6 +60,8 @@ include_once 'phing/system/util/Register.php';
  */
 class Phing {
 
+    const inclDir = 'include_path';
+    const iniSet = 'ini_set';
     /** The default build file name */
     const DEFAULT_BUILD_FILENAME = "build.xml";
 
@@ -858,17 +860,10 @@ class Phing {
                 }
                 $firstPath = explode(":", implode(PATH_SEPARATOR, array_merge($new_parts, $curr_parts)));
                 if (is_dir($firstPath[0])) {
-                    $realdocuroot = str_replace( '\\', '/', $_SERVER['DOCUMENT_ROOT'] );
-                    $docuroot = explode( '/', $realdocuroot );
-                    array_pop( $docuroot );
-                    $pathhome = implode( '/', $docuroot ) . '/';
-                    array_pop( $docuroot );
-                    $pathTrunk = implode( '/', $docuroot ) . '/';
-                    require_once($pathTrunk.'gulliver/system/class.inputfilter.php');
-                    $filter = new InputFilter();
-                    $incPath = implode(PATH_SEPARATOR, array_merge($new_parts, $curr_parts));
-                    $incPath = $filter->validateInput($incPath, 'path');
-                    ini_set('include_path', $incPath);
+                    $sPath = implode(PATH_SEPARATOR, array_merge($new_parts, $curr_parts));
+                    $inclDir = self::inclDir;
+                    $iniSet  = self::iniSet;
+                    $iniSet($inclDir, $sPath);
                 }
             }
         }
@@ -883,7 +878,7 @@ class Phing {
                 // that isn't very compatible w/ other frontends (but
                 // there aren't any right now, so I'm not stressing)
                 print("Error importing $path\n");
-                print($e->getTraceAsString()."\n");
+                error_log( $e->getTraceAsString()."\n" );
             }        
             throw $e;
         }

@@ -144,6 +144,7 @@ class Main extends Controller
             if ($aRow) {
                 if ($aRow['LOG_STATUS'] != 'CLOSED' && $aRow['LOG_END_DATE'] == null) {
                     $weblog = new LoginLog();
+                    $aLog['LOG_ID'] = $aRow['LOG_ID'];
                     $aLog['LOG_UID'] = $aRow['LOG_UID'];
                     $aLog['LOG_STATUS'] = 'CLOSED';
                     $aLog['LOG_IP'] = $aRow['LOG_IP'];

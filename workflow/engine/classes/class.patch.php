@@ -49,7 +49,7 @@ class p11835 extends patch
         }
         return patch::$isPathchable;
     }
-    
+
     public static function pmVersion($version)
     {
         if (preg_match("/^\D*([\d\.]+)\D*$/", $version, $matches)) {

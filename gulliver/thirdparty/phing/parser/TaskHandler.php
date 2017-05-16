@@ -135,7 +135,7 @@ class TaskHandler extends AbstractHandler {
         } catch (BuildException $be) {
             // swallow here, will be thrown again in
             // UnknownElement->maybeConfigure if the problem persists.
-            print("Swallowing exception: ".$be->getMessage() . "\n");
+            error_log( "Swallowing exception: ".$be->getMessage() . "\n" );
         }
 
         // the task is not known of bat, try to load it on thy fly

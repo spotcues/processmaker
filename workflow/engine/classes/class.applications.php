@@ -1,6 +1,194 @@
 <?php
 class Applications
 {
+    /**
+     * This function return information by searching cases
+     *
+     * The query is related to advanced search with diferents filters
+     * We can search by process, status of case, category of process, users, delegate date from and to
+     *
+     * @param string $userUid
+     * @param integer $start for the pagination
+     * @param integer $limit for the pagination
+     * @param string $search
+     * @param integer $process the pro_id
+     * @param integer $status of the case
+     * @param string $dir if the order is DESC or ASC
+     * @param string $sort name of column by sort
+     * @param string $category uid for the process
+     * @param date $dateFrom
+     * @param date $dateTo
+     * @return array $result result of the query
+     */
+    public function searchAll(
+        $userUid,
+        $start = null,
+        $limit = null,
+        $search = null,
+        $process = null,
+        $status = null,
+        $dir = null,
+        $sort = null,
+        $category = null,
+        $dateFrom = null,
+        $dateTo = null
+    ) {
+        //Exclude the Task Dummies in the delegations
+        $arrayTaskTypeToExclude = array("WEBENTRYEVENT", "END-MESSAGE-EVENT", "START-MESSAGE-EVENT", "INTERMEDIATE-THROW-MESSAGE-EVENT", "INTERMEDIATE-CATCH-MESSAGE-EVENT");
+
+        //Start the connection to database
+        $con = Propel::getConnection(AppDelegationPeer::DATABASE_NAME);
+        $con->begin();
+        $stmt = $con->createStatement();
+
+        $sqlData = "SELECT
+                    STRAIGHT_JOIN APPLICATION.APP_NUMBER,
+                    APPLICATION.APP_UID,
+                    APPLICATION.APP_STATUS,
+                    APPLICATION.APP_STATUS AS APP_STATUS_LABEL,
+                    APPLICATION.PRO_UID,
+                    APPLICATION.APP_CREATE_DATE,
+                    APPLICATION.APP_FINISH_DATE,
+                    APPLICATION.APP_UPDATE_DATE,
+                    APPLICATION.APP_TITLE,
+                    APP_DELEGATION.USR_UID,
+                    APP_DELEGATION.TAS_UID,
+                    APP_DELEGATION.DEL_INDEX,
+                    APP_DELEGATION.DEL_LAST_INDEX,
+                    APP_DELEGATION.DEL_DELEGATE_DATE,
+                    APP_DELEGATION.DEL_INIT_DATE,
+                    APP_DELEGATION.DEL_FINISH_DATE,
+                    APP_DELEGATION.DEL_TASK_DUE_DATE,
+                    APP_DELEGATION.DEL_RISK_DATE,
+                    APP_DELEGATION.DEL_THREAD_STATUS,
+                    APP_DELEGATION.DEL_PRIORITY,
+                    APP_DELEGATION.DEL_DURATION,
+                    APP_DELEGATION.DEL_QUEUE_DURATION,
+                    APP_DELEGATION.DEL_STARTED,
+                    APP_DELEGATION.DEL_DELAY_DURATION,
+                    APP_DELEGATION.DEL_FINISHED,
+                    APP_DELEGATION.DEL_DELAYED,
+                    APP_DELEGATION.DEL_DELAY_DURATION,
+                    TASK.TAS_TITLE AS APP_TAS_TITLE,
+                    USERS.USR_LASTNAME,
+                    USERS.USR_FIRSTNAME,
+                    USERS.USR_USERNAME,
+                    PROCESS.PRO_TITLE AS APP_PRO_TITLE
+                FROM APP_DELEGATION
+        ";
+        $sqlData .= " LEFT JOIN APPLICATION ON (APP_DELEGATION.APP_NUMBER = APPLICATION.APP_NUMBER)";
+        $sqlData .= " LEFT JOIN TASK ON (APP_DELEGATION.TAS_ID = TASK.TAS_ID)";
+        $sqlData .= " LEFT JOIN USERS ON (APP_DELEGATION.USR_ID = USERS.USR_ID)";
+        $sqlData .= " LEFT JOIN PROCESS ON (APP_DELEGATION.PRO_ID = PROCESS.PRO_ID)";
+
+        $sqlData .= " WHERE TASK.TAS_TYPE NOT IN ('" . implode("','",$arrayTaskTypeToExclude) . "')";
+        switch ($status) {
+            case 1: //DRAFT
+                $sqlData .= " AND APP_DELEGATION.DEL_THREAD_STATUS='OPEN'";
+                $sqlData .= " AND APPLICATION.APP_STATUS_ID = 1";
+                break;
+            case 2: //TO_DO
+                $sqlData .= " AND APP_DELEGATION.DEL_THREAD_STATUS='OPEN'";
+                $sqlData .= " AND APPLICATION.APP_STATUS_ID = 2";
+                break;
+            case 3: //COMPLETED
+                $sqlData .= " AND APPLICATION.APP_STATUS_ID = 3";
+                $sqlData .= " AND APP_DELEGATION.DEL_LAST_INDEX = 1";
+                break;
+            case 4: //CANCELLED
+                $sqlData .= " AND APPLICATION.APP_STATUS_ID = 4";
+                $sqlData .= " AND APP_DELEGATION.DEL_LAST_INDEX = 1";
+                break;
+            case "PAUSED": //This status is not considered in the search, maybe we can add in the new versions
+                $sqlData .= " AND APPLICATION.APP_STATUS = 'TO_DO'";
+                break;
+            default: //All status
+                $sqlData .= " AND (APP_DELEGATION.DEL_THREAD_STATUS = 'OPEN' ";
+                $sqlData .= " OR (APP_DELEGATION.DEL_THREAD_STATUS = 'CLOSED' AND APP_DELEGATION.DEL_LAST_INDEX = 1)) ";
+                break;
+        }
+
+        if (!empty($userUid)) {
+            $sqlData .= " AND APP_DELEGATION.USR_ID = " . $userUid;
+        }
+
+        if (!empty($process)) {
+            $sqlData .= " AND APP_DELEGATION.PRO_ID = " . $process;
+        }
+
+        if (!empty($category)) {
+            $category = mysql_real_escape_string($category);
+            $sqlData .= " AND PROCESS.PRO_CATEGORY = '{$category}'";
+        }
+
+        if (!empty($search)) {
+            //In the filter search we check in the following columns: APP_NUMBER APP_TAS_TITLE APP_TITLE
+            $sqlData .= " AND (APPLICATION.APP_TITLE LIKE '%{$search}%' OR APP_DELEGATION.APP_NUMBER LIKE '%{$search}%' OR TASK.TAS_TITLE LIKE '%{$search}%')";
+        }
+
+        if (!empty($dateFrom)) {
+            $sqlData .= " AND APP_DELEGATION.DEL_DELEGATE_DATE >= '{$dateFrom}'";
+        }
+
+        if (!empty($dateTo)) {
+            $dateTo = $dateTo . " 23:59:59";
+            $sqlData .= " AND APP_DELEGATION.DEL_DELEGATE_DATE <= '{$dateTo}'";
+        }
+
+        //Add the additional filters
+        if (!empty($sort)) {
+            switch ($sort) {
+                case 'APP_NUMBER':
+                    //The order by APP_DELEGATION.APP_NUMBER is must be fast than APPLICATION.APP_NUMBER
+                    $sort = 'APP_DELEGATION.APP_NUMBER';
+                    break;
+                case 'APP_CURRENT_USER':
+                    //The column APP_CURRENT_USER is result of concat those fields
+                    $sort = 'USR_LASTNAME, USR_FIRSTNAME';
+                    break;
+            }
+            $sqlData .= " ORDER BY " . $sort;
+        }
+
+        //Sorts the records in descending order by default
+        if (!empty($dir)) {
+            $sqlData .= "  " . $dir;
+        }
+
+        //Define the number of records by return
+        if (!empty($start)) {
+            $sqlData .= " LIMIT $start, " . $limit;
+        } else {
+            $sqlData .= " LIMIT " . $limit;
+        }
+
+        $oDataset = $stmt->executeQuery($sqlData);
+        $result = array ();
+        //By performance enable always the pagination
+        $result['totalCount'] = $start + $limit + 1;
+        $rows = array();
+        $aPriorities = array ('1' => 'VL','2' => 'L','3' => 'N','4' => 'H','5' => 'VH');
+        while ($oDataset->next()) {
+            $aRow = $oDataset->getRow();
+            if (isset( $aRow['APP_STATUS'] )) {
+                $aRow['APP_STATUS_LABEL'] = G::LoadTranslation( "ID_{$aRow['APP_STATUS']}" );
+            }
+            if (isset( $aRow['DEL_PRIORITY'] )) {
+                $aRow['DEL_PRIORITY'] = G::LoadTranslation( "ID_PRIORITY_{$aPriorities[$aRow['DEL_PRIORITY']]}" );
+            }
+            $aRow["APP_CURRENT_USER"] = $aRow["USR_LASTNAME"].' '.$aRow["USR_FIRSTNAME"];
+            $aRow["APPDELCR_APP_TAS_TITLE"] = '';
+            $aRow["USRCR_USR_UID"] = $aRow["USR_UID"];
+            $aRow["USRCR_USR_FIRSTNAME"] = $aRow["USR_FIRSTNAME"];
+            $aRow["USRCR_USR_LASTNAME"] = $aRow["USR_LASTNAME"];
+            $aRow["USRCR_USR_USERNAME"] = $aRow["USR_USERNAME"];
+            $aRow["APP_OVERDUE_PERCENTAGE"] = '';
+            $rows[] = $aRow;
+        }
+        $result['data'] = $rows;
+        return $result;
+    }
+
     public function getAll(
         $userUid,
         $start = null,
@@ -143,8 +331,14 @@ class Applications
                 $CriteriaCount = $oAppCache->getToReviseCountCriteria($userUid);
                 break;
             case "to_reassign":
-                $Criteria = $oAppCache->getToReassignListCriteria($userUid);
-                $CriteriaCount = $oAppCache->getToReassignCountCriteria($userUid);
+                GLOBAL $RBAC;
+                if($RBAC->userCanAccess('PM_REASSIGNCASE') == 1){
+                    $Criteria = $oAppCache->getToReassignListCriteria($userUid);
+                    $CriteriaCount = $oAppCache->getToReassignCountCriteria($userUid);
+                } else {
+                    $Criteria = $oAppCache->getToReassignSupervisorListCriteria($userUid);
+                    $CriteriaCount = $oAppCache->getToReassignSupervisorCountCriteria($userUid);
+                }
                 break;
             case "all":
                 $Criteria = $oAppCache->getAllCasesListCriteria($userUid);
@@ -167,6 +361,9 @@ class Applications
         }
 
         $arrayTaskTypeToExclude = array("WEBENTRYEVENT", "END-MESSAGE-EVENT", "START-MESSAGE-EVENT", "INTERMEDIATE-THROW-MESSAGE-EVENT", "INTERMEDIATE-CATCH-MESSAGE-EVENT");
+
+        $Criteria->addSelectColumn(AppCacheViewPeer::TAS_UID);
+        $Criteria->addSelectColumn(AppCacheViewPeer::PRO_UID);
 
         $Criteria->addJoin(AppCacheViewPeer::TAS_UID, TaskPeer::TAS_UID, Criteria::LEFT_JOIN);
         $Criteria->add(TaskPeer::TAS_TYPE, $arrayTaskTypeToExclude, Criteria::NOT_IN);
@@ -408,16 +605,32 @@ class Applications
 
             // the criteria adds new fields if there are defined PM Table Fields in the cases list
             if ($oTmpCriteria != '') {
-                $Criteria->add( $Criteria->getNewCriterion( AppCacheViewPeer::APP_TITLE, '%' . $search . '%', Criteria::LIKE )->addOr( $Criteria->getNewCriterion( AppCacheViewPeer::APP_TAS_TITLE, '%' . $search . '%', Criteria::LIKE )->addOr( $Criteria->getNewCriterion( AppCacheViewPeer::APP_NUMBER, $search, Criteria::LIKE )->addOr( $oTmpCriteria ) ) ) );
+                $Criteria->add(
+                    $Criteria->getNewCriterion(AppCacheViewPeer::APP_TITLE, '%' . $search . '%', Criteria::LIKE)->addOr(
+                    $Criteria->getNewCriterion(AppCacheViewPeer::APP_TAS_TITLE, '%' . $search . '%', Criteria::LIKE)->addOr(
+                    $Criteria->getNewCriterion(AppCacheViewPeer::APP_UID, $search, Criteria::EQUAL)->addOr(
+                    $Criteria->getNewCriterion(AppCacheViewPeer::APP_NUMBER, $search, Criteria::EQUAL)->addOr(
+                    $oTmpCriteria
+                )))));
             } else {
-                $Criteria->add( $Criteria->getNewCriterion( AppCacheViewPeer::APP_TITLE, '%' . $search . '%', Criteria::LIKE )->addOr( $Criteria->getNewCriterion( AppCacheViewPeer::APP_TAS_TITLE, '%' . $search . '%', Criteria::LIKE )->addOr( $Criteria->getNewCriterion( AppCacheViewPeer::APP_NUMBER, $search, Criteria::LIKE ) ) ) );
+                $Criteria->add(
+                    $Criteria->getNewCriterion(AppCacheViewPeer::APP_TITLE, '%' . $search . '%', Criteria::LIKE)->addOr(
+                    $Criteria->getNewCriterion(AppCacheViewPeer::APP_TAS_TITLE, '%' . $search . '%', Criteria::LIKE)->addOr(
+                    $Criteria->getNewCriterion(AppCacheViewPeer::APP_UID, $search, Criteria::EQUAL)->addOr(
+                    $Criteria->getNewCriterion(AppCacheViewPeer::APP_NUMBER, $search, Criteria::EQUAL)
+                ))));
             }
 
             // the count query needs to be the normal criteria query if there are defined PM Table Fields in the cases list
             if ($oTmpCriteria != '') {
                 $CriteriaCount = $Criteria;
             } else {
-                $CriteriaCount->add( $CriteriaCount->getNewCriterion( AppCacheViewPeer::APP_TITLE, '%' . $search . '%', Criteria::LIKE )->addOr( $CriteriaCount->getNewCriterion( AppCacheViewPeer::APP_TAS_TITLE, '%' . $search . '%', Criteria::LIKE )->addOr( $CriteriaCount->getNewCriterion( AppCacheViewPeer::APP_NUMBER, $search, Criteria::LIKE ) ) ) );
+                $CriteriaCount->add(
+                    $CriteriaCount->getNewCriterion(AppCacheViewPeer::APP_TITLE, '%' . $search . '%', Criteria::LIKE)->addOr(
+                    $CriteriaCount->getNewCriterion(AppCacheViewPeer::APP_TAS_TITLE, '%' . $search . '%', Criteria::LIKE)->addOr(
+                    $CriteriaCount->getNewCriterion(AppCacheViewPeer::APP_UID, $search, Criteria::EQUAL)->addOr(
+                    $CriteriaCount->getNewCriterion(AppCacheViewPeer::APP_NUMBER, $search, Criteria::EQUAL)
+                ))));
             }
         }
 

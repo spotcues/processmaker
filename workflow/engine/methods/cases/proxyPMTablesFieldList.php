@@ -722,7 +722,9 @@ try {
             break;
     }
 } catch (Exception $e) {
-    echo G::json_encode($e->getMessage());
+    $token = strtotime("now");
+    PMException::registerErrorLog($e, $token);
+    G::outRes( G::json_encode( G::LoadTranslation("ID_EXCEPTION_LOG_INTERFAZ", array($token)) ) );
 }
 
  /**

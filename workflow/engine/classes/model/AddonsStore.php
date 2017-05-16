@@ -434,23 +434,43 @@ class AddonsStore extends BaseAddonsStore
             if (is_array($list)) {
                 foreach ($list['addons'] as $key => $feature) {
                     $addon = new AddonsManager();
-                    $addon->setAddonId($feature['name']);
-                    $addon->setStoreId($feature['guid']);
-                    $addon->setAddonName($feature['name']);
-                    $addon->setAddonDescription($feature['description']);
-                    $addon->setAddonNick($feature['nick']);
-                    $addon->setAddonVersion("");
-                    $addon->setAddonStatus($feature['status']);
-                    $addon->setAddonType("features");
-                    $addon->setAddonPublisher("Colosa");
-                    $addon->setAddonDownloadUrl("");
-                    $addon->setAddonDownloadMd5("");
-                    $addon->setAddonReleaseDate(null);
-                    $addon->setAddonReleaseType('localRegistry');
-                    $addon->setAddonReleaseNotes("");
-                    $addon->setAddonState("");
+                    if($addon->exists($feature['name'],$feature['guid'])){
+                        $arrayData['ADDON_ID']   = $feature['name'];
+                        $arrayData['STORE_ID']   = $feature['guid'];
+                        $arrayData['ADDON_NAME'] = $feature['name'];
+                        $arrayData['ADDON_NICK'] = $feature['nick'];
+                        $arrayData['ADDON_DESCRIPTION'] = $feature['description'];
+                        $arrayData['ADDON_STATE']     = '';
+                        $arrayData['ADDON_STATUS']    = $feature['status'];
+                        $arrayData['ADDON_VERSION']   = '';
+                        $arrayData['ADDON_TYPE']      = 'features';
+                        $arrayData['ADDON_PUBLISHER'] = 'Colosa';
+                        $arrayData['ADDON_RELEASE_DATE']  = null;
+                        $arrayData['ADDON_RELEASE_TYPE']  = 'localRegistry';
+                        $arrayData['ADDON_RELEASE_NOTES'] = '';
+                        $arrayData['ADDON_DOWNLOAD_URL']  = '';
+                        $arrayData['ADDON_DOWNLOAD_MD5']  = '';
 
-                    $addon->save();
+                        $addon->update($arrayData);
+                    } else {
+                        $addon->setAddonId($feature['name']);
+                        $addon->setStoreId($feature['guid']);
+                        $addon->setAddonName($feature['name']);
+                        $addon->setAddonDescription($feature['description']);
+                        $addon->setAddonNick($feature['nick']);
+                        $addon->setAddonVersion("");
+                        $addon->setAddonStatus($feature['status']);
+                        $addon->setAddonType("features");
+                        $addon->setAddonPublisher("Colosa");
+                        $addon->setAddonDownloadUrl("");
+                        $addon->setAddonDownloadMd5("");
+                        $addon->setAddonReleaseDate(null);
+                        $addon->setAddonReleaseType('localRegistry');
+                        $addon->setAddonReleaseNotes("");
+                        $addon->setAddonState("");
+
+                        $addon->save();
+                    }
                 }
             }
         }

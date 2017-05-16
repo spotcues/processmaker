@@ -461,6 +461,230 @@ class InputDocument
     }
 
     /**
+     * Download InputDocument
+     *
+     * @param $app_uid
+     * @param $app_doc_uid
+     * @param $version
+     * @throws \Exception
+     */
+    public function downloadInputDocument($app_uid, $app_doc_uid, $version)
+    {
+        try {
+            $oAppDocument = new \AppDocument();
+            if ($version == 0) {
+                $docVersion = $oAppDocument->getLastAppDocVersion($app_doc_uid);
+            } else {
+                $docVersion = $version;
+            }
+            $oAppDocument->Fields = $oAppDocument->load($app_doc_uid, $docVersion);
+            $sAppDocUid = $oAppDocument->getAppDocUid();
+            $iDocVersion = $oAppDocument->getDocVersion();
+            $info = pathinfo($oAppDocument->getAppDocFilename());
+
+            $app_uid = \G::getPathFromUID($oAppDocument->Fields['APP_UID']);
+            $file = \G::getPathFromFileUID($oAppDocument->Fields['APP_UID'], $sAppDocUid);
+
+            $ext = (isset($info['extension']) ? $info['extension'] : '');
+            $realPath = PATH_DOCUMENT . $app_uid . '/' . $file[0] . $file[1] . '_' . $iDocVersion . '.' . $ext;
+            $realPath1 = PATH_DOCUMENT . $app_uid . '/' . $file[0] . $file[1] . '.' . $ext;
+            if (!file_exists($realPath) && file_exists($realPath1)) {
+                $realPath = $realPath1;
+            }
+            $filename = $info['basename'];
+            $mimeType = $this->mime_content_type($filename);
+            header('HTTP/1.0 206');
+            header('Pragma: public');
+            header('Expires: -1');
+            header('Cache-Control: public, must-revalidate, post-check=0, pre-check=0');
+            header('Content-Transfer-Encoding: binary');
+            header("Content-Disposition: attachment; filename=\"$filename\"");
+            header("Content-Length: " . filesize($realPath));
+            header("Content-Type: $mimeType");
+            header("Content-Description: File Transfer");
+
+            if ($fp = fopen($realPath, 'rb')) {
+                ob_end_clean();
+                while (!feof($fp) and (connection_status() == 0)) {
+                    print(fread($fp, 8192));
+                    flush();
+                }
+                @fclose($fp);
+            }
+        } catch (\Exception $e) {
+            throw $e;
+        }
+    }
+
+    public function mime_content_type($filename) {
+        $idx = explode( '.', $filename );
+        $count_explode = count($idx);
+        $idx = strtolower($idx[$count_explode-1]);
+
+        $mimet = array(
+            'ai' =>'application/postscript',
+            'aif' =>'audio/x-aiff',
+            'aifc' =>'audio/x-aiff',
+            'aiff' =>'audio/x-aiff',
+            'asc' =>'text/plain',
+            'atom' =>'application/atom+xml',
+            'avi' =>'video/x-msvideo',
+            'bcpio' =>'application/x-bcpio',
+            'bmp' =>'image/bmp',
+            'cdf' =>'application/x-netcdf',
+            'cgm' =>'image/cgm',
+            'cpio' =>'application/x-cpio',
+            'cpt' =>'application/mac-compactpro',
+            'crl' =>'application/x-pkcs7-crl',
+            'crt' =>'application/x-x509-ca-cert',
+            'csh' =>'application/x-csh',
+            'css' =>'text/css',
+            'dcr' =>'application/x-director',
+            'dir' =>'application/x-director',
+            'djv' =>'image/vnd.djvu',
+            'djvu' =>'image/vnd.djvu',
+            'doc' =>'application/msword',
+            'dtd' =>'application/xml-dtd',
+            'dvi' =>'application/x-dvi',
+            'dxr' =>'application/x-director',
+            'eps' =>'application/postscript',
+            'etx' =>'text/x-setext',
+            'ez' =>'application/andrew-inset',
+            'gif' =>'image/gif',
+            'gram' =>'application/srgs',
+            'grxml' =>'application/srgs+xml',
+            'gtar' =>'application/x-gtar',
+            'hdf' =>'application/x-hdf',
+            'hqx' =>'application/mac-binhex40',
+            'html' =>'text/html',
+            'html' =>'text/html',
+            'ice' =>'x-conference/x-cooltalk',
+            'ico' =>'image/x-icon',
+            'ics' =>'text/calendar',
+            'ief' =>'image/ief',
+            'ifb' =>'text/calendar',
+            'iges' =>'model/iges',
+            'igs' =>'model/iges',
+            'jpe' =>'image/jpeg',
+            'jpeg' =>'image/jpeg',
+            'jpg' =>'image/jpeg',
+            'js' =>'application/x-javascript',
+            'kar' =>'audio/midi',
+            'latex' =>'application/x-latex',
+            'm3u' =>'audio/x-mpegurl',
+            'man' =>'application/x-troff-man',
+            'mathml' =>'application/mathml+xml',
+            'me' =>'application/x-troff-me',
+            'mesh' =>'model/mesh',
+            'mid' =>'audio/midi',
+            'midi' =>'audio/midi',
+            'mif' =>'application/vnd.mif',
+            'mov' =>'video/quicktime',
+            'movie' =>'video/x-sgi-movie',
+            'mp2' =>'audio/mpeg',
+            'mp3' =>'audio/mpeg',
+            'mpe' =>'video/mpeg',
+            'mpeg' =>'video/mpeg',
+            'mpg' =>'video/mpeg',
+            'mpga' =>'audio/mpeg',
+            'ms' =>'application/x-troff-ms',
+            'msh' =>'model/mesh',
+            'mxu m4u' =>'video/vnd.mpegurl',
+            'nc' =>'application/x-netcdf',
+            'oda' =>'application/oda',
+            'ogg' =>'application/ogg',
+            'pbm' =>'image/x-portable-bitmap',
+            'pdb' =>'chemical/x-pdb',
+            'pdf' =>'application/pdf',
+            'pgm' =>'image/x-portable-graymap',
+            'pgn' =>'application/x-chess-pgn',
+            'php' =>'application/x-httpd-php',
+            'php4' =>'application/x-httpd-php',
+            'php3' =>'application/x-httpd-php',
+            'phtml' =>'application/x-httpd-php',
+            'phps' =>'application/x-httpd-php-source',
+            'png' =>'image/png',
+            'pnm' =>'image/x-portable-anymap',
+            'ppm' =>'image/x-portable-pixmap',
+            'ppt' =>'application/vnd.ms-powerpoint',
+            'ps' =>'application/postscript',
+            'qt' =>'video/quicktime',
+            'ra' =>'audio/x-pn-realaudio',
+            'ram' =>'audio/x-pn-realaudio',
+            'ras' =>'image/x-cmu-raster',
+            'rdf' =>'application/rdf+xml',
+            'rgb' =>'image/x-rgb',
+            'rm' =>'application/vnd.rn-realmedia',
+            'roff' =>'application/x-troff',
+            'rtf' =>'text/rtf',
+            'rtx' =>'text/richtext',
+            'sgm' =>'text/sgml',
+            'sgml' =>'text/sgml',
+            'sh' =>'application/x-sh',
+            'shar' =>'application/x-shar',
+            'shtml' =>'text/html',
+            'silo' =>'model/mesh',
+            'sit' =>'application/x-stuffit',
+            'skd' =>'application/x-koan',
+            'skm' =>'application/x-koan',
+            'skp' =>'application/x-koan',
+            'skt' =>'application/x-koan',
+            'smi' =>'application/smil',
+            'smil' =>'application/smil',
+            'snd' =>'audio/basic',
+            'spl' =>'application/x-futuresplash',
+            'src' =>'application/x-wais-source',
+            'sv4cpio' =>'application/x-sv4cpio',
+            'sv4crc' =>'application/x-sv4crc',
+            'svg' =>'image/svg+xml',
+            'swf' =>'application/x-shockwave-flash',
+            't' =>'application/x-troff',
+            'tar' =>'application/x-tar',
+            'tcl' =>'application/x-tcl',
+            'tex' =>'application/x-tex',
+            'texi' =>'application/x-texinfo',
+            'texinfo' =>'application/x-texinfo',
+            'tgz' =>'application/x-tar',
+            'tif' =>'image/tiff',
+            'tiff' =>'image/tiff',
+            'tr' =>'application/x-troff',
+            'tsv' =>'text/tab-separated-values',
+            'txt' =>'text/plain',
+            'ustar' =>'application/x-ustar',
+            'vcd' =>'application/x-cdlink',
+            'vrml' =>'model/vrml',
+            'vxml' =>'application/voicexml+xml',
+            'wav' =>'audio/x-wav',
+            'wbmp' =>'image/vnd.wap.wbmp',
+            'wbxml' =>'application/vnd.wap.wbxml',
+            'wml' =>'text/vnd.wap.wml',
+            'wmlc' =>'application/vnd.wap.wmlc',
+            'wmlc' =>'application/vnd.wap.wmlc',
+            'wmls' =>'text/vnd.wap.wmlscript',
+            'wmlsc' =>'application/vnd.wap.wmlscriptc',
+            'wmlsc' =>'application/vnd.wap.wmlscriptc',
+            'wrl' =>'model/vrml',
+            'xbm' =>'image/x-xbitmap',
+            'xht' =>'application/xhtml+xml',
+            'xhtml' =>'application/xhtml+xml',
+            'xls' =>'application/vnd.ms-excel',
+            'xml xsl' =>'application/xml',
+            'xpm' =>'image/x-xpixmap',
+            'xslt' =>'application/xslt+xml',
+            'xul' =>'application/vnd.mozilla.xul+xml',
+            'xwd' =>'image/x-xwindowdump',
+            'xyz' =>'chemical/x-xyz',
+            'zip' =>'application/zip'
+        );
+
+        if (isset( $mimet[$idx] )) {
+            return $mimet[$idx];
+        } else {
+            return 'application/octet-stream';
+        }
+    }
+
+    /**
      * Delete InputDocument
      *
      * @param string $inputDocumentUid
@@ -493,7 +717,7 @@ class InputDocument
      *
      * return array Return an array with data of an InputDocument
      */
-    public function addCasesInputDocument($applicationUid, $taskUid, $appDocComment, $inputDocumentUid, $userUid)
+    public function addCasesInputDocument($applicationUid, $taskUid, $appDocComment, $inputDocumentUid, $userUid, $runningWorkflow = true)
     {
         try {
             if ((isset( $_FILES['form'] )) && ($_FILES['form']['error'] != 0)) {
@@ -535,7 +759,60 @@ class InputDocument
             $appDocType = 'INPUT';
             $case = new \Cases();
             $delIndex = \AppDelegation::getCurrentIndex($applicationUid);
-            $case->thisIsTheCurrentUser($applicationUid, $delIndex, $userUid, "REDIRECT", "casesListExtJs");
+
+            if ($runningWorkflow) {
+                $case->thisIsTheCurrentUser($applicationUid, $delIndex, $userUid, 'REDIRECT', 'casesListExtJs');
+            } else {
+                $criteria = new \Criteria('workflow');
+
+                $criteria->add(\AppDelegationPeer::APP_UID, $applicationUid);
+                $criteria->add(\AppDelegationPeer::DEL_INDEX, $delIndex);
+                $criteria->add(\AppDelegationPeer::USR_UID, $userUid);
+
+                $rsCriteria = \ProcessUserPeer::doSelectRS($criteria);
+
+                if (!$rsCriteria->next()) {
+                    $case2 = new \ProcessMaker\BusinessModel\Cases();
+
+                    $arrayApplicationData = $case2->getApplicationRecordByPk($applicationUid, [], false);
+
+                    $msg = '';
+
+                    $supervisor = new \ProcessMaker\BusinessModel\ProcessSupervisor();
+                    $flagps = $supervisor->isUserProcessSupervisor($arrayApplicationData['PRO_UID'], $userUid);
+
+                    if ($flagps == false) {
+                        $msg = \G::LoadTranslation('ID_USER_NOT_IT_BELONGS_CASE_OR_NOT_SUPERVISOR');
+                    }
+
+                    if ($msg == '') {
+                        $criteria = new \Criteria('workflow');
+
+                        $criteria->add(\StepSupervisorPeer::PRO_UID, $arrayApplicationData['PRO_UID'], \Criteria::EQUAL);
+                        $criteria->add(\StepSupervisorPeer::STEP_TYPE_OBJ, 'INPUT_DOCUMENT', \Criteria::EQUAL);
+                        $criteria->add(\StepSupervisorPeer::STEP_UID_OBJ, $inputDocumentUid, \Criteria::EQUAL);
+
+                        $rsCriteria = \StepSupervisorPeer::doSelectRS($criteria);
+
+                        if (!$rsCriteria->next()) {
+                            $msg = \G::LoadTranslation('ID_USER_IS_SUPERVISOR_DOES_NOT_ASSOCIATED_INPUT_DOCUMENT');
+                        }
+                    }
+
+                    if ($msg != '') {
+                        if ($runningWorkflow) {
+                            \G::SendMessageText($msg, 'ERROR');
+                            $backUrlObj = explode('sys' . SYS_SYS, $_SERVER['HTTP_REFERER']);
+
+                            \G::header('location: ' . '/sys' . SYS_SYS . $backUrlObj[1]);
+                            exit(0);
+                        } else {
+                            throw new \Exception($msg);
+                        }
+                    }
+                }
+            }
+
             //Load the fields
             $arrayField = $case->loadCase($applicationUid);
             $arrayField["APP_DATA"] = array_merge($arrayField["APP_DATA"], \G::getSystemConstants());
@@ -589,6 +866,167 @@ class InputDocument
             return($this->getCasesInputDocument($applicationUid, $userUid, $appDocUid));
         } catch (\Exception $e) {
             throw $e;
+        }
+    }
+
+    /**
+     * @param $files $_FILES request files
+     * @param $caseInstance \Cases object class.cases
+     * @param $aData array data case
+     * @param $userUid string user id
+     * @param $appUid string application id
+     * @param $delIndex int the index case
+     */
+    public function uploadFileCase($files, $caseInstance, $aData, $userUid, $appUid, $delIndex)
+    {
+        $arrayField = array();
+        $arrayFileName = array();
+        $arrayFileTmpName = array();
+        $arrayFileError = array();
+        $i = 0;
+        foreach ($files["form"]["name"] as $fieldIndex => $fieldValue) {
+            if (is_array($fieldValue)) {
+                foreach ($fieldValue as $index => $value) {
+                    if (is_array($value)) {
+                        foreach ($value as $grdFieldIndex => $grdFieldValue) {
+                            $arrayField[$i]["grdName"] = $fieldIndex;
+                            $arrayField[$i]["grdFieldName"] = $grdFieldIndex;
+                            $arrayField[$i]["index"] = $index;
+
+                            $arrayFileName[$i] = $files["form"]["name"][$fieldIndex][$index][$grdFieldIndex];
+                            $arrayFileTmpName[$i] = $files["form"]["tmp_name"][$fieldIndex][$index][$grdFieldIndex];
+                            $arrayFileError[$i] = $files["form"]["error"][$fieldIndex][$index][$grdFieldIndex];
+                            $i = $i + 1;
+                        }
+                    }
+                }
+            } else {
+                $arrayField[$i] = $fieldIndex;
+
+                $arrayFileName[$i] = $files["form"]["name"][$fieldIndex];
+                $arrayFileTmpName[$i] = $files["form"]["tmp_name"][$fieldIndex];
+                $arrayFileError[$i] = $files["form"]["error"][$fieldIndex];
+                $i = $i + 1;
+            }
+        }
+        if (count($arrayField) > 0) {
+            foreach ($arrayField as $i => $item) {
+            //for ($i = 0; $i <= count($arrayField) - 1; $i++) {
+                if ($arrayFileError[$i] == 0) {
+                    $indocUid = null;
+                    $fieldName = null;
+                    $fileSizeByField = 0;
+
+                    if (is_array($arrayField[$i])) {
+                        if (isset($_POST["INPUTS"][$arrayField[$i]["grdName"]][$arrayField[$i]["grdFieldName"]]) && !empty($_POST["INPUTS"][$arrayField[$i]["grdName"]][$arrayField[$i]["grdFieldName"]])) {
+                            $indocUid = $_POST["INPUTS"][$arrayField[$i]["grdName"]][$arrayField[$i]["grdFieldName"]];
+                        }
+                        $fieldName = $arrayField[$i]["grdName"] . "_" . $arrayField[$i]["index"] . "_" . $arrayField[$i]["grdFieldName"];
+                        if (isset($files["form"]["size"][$arrayField[$i]["grdName"]][$arrayField[$i]["index"]][$arrayField[$i]["grdFieldName"]])) {
+                            $fileSizeByField = $files["form"]["size"][$arrayField[$i]["grdName"]][$arrayField[$i]["index"]][$arrayField[$i]["grdFieldName"]];
+                        }
+                    } else {
+                        if (isset($_POST["INPUTS"][$arrayField[$i]]) && !empty($_POST["INPUTS"][$arrayField[$i]])) {
+                            $indocUid = $_POST["INPUTS"][$arrayField[$i]];
+                        }
+                        $fieldName = $arrayField[$i];
+                        if (isset($files["form"]["size"][$fieldName])) {
+                            $fileSizeByField = $files["form"]["size"][$fieldName];
+                        }
+                    }
+                    if ($indocUid != null) {
+                        $oInputDocument = new \InputDocument();
+                        $aID = $oInputDocument->load($indocUid);
+
+                        //Get the Custom Folder ID (create if necessary)
+                        $oFolder = new \AppFolder();
+
+                        //***Validating the file allowed extensions***
+                        $res = \G::verifyInputDocExtension($aID['INP_DOC_TYPE_FILE'], $arrayFileName[$i], $arrayFileTmpName[$i]);
+                        if ($res->status == 0) {
+                            //The value of the variable "_label" is cleared because the file load failed.
+                            //The validation of the die command should be improved.
+                            if (isset($aData["APP_DATA"][$item . "_label"]) && !empty($aData["APP_DATA"][$item . "_label"])) {
+                                unset($aData["APP_DATA"][$item . "_label"]);
+                                $caseInstance->updateCase($appUid, $aData);
+                            }
+                            $message = $res->message;
+                            \G::SendMessageText($message, "ERROR");
+                            $backUrlObj = explode("sys" . SYS_SYS, $_SERVER['HTTP_REFERER']);
+                            \G::header("location: " . "/sys" . SYS_SYS . $backUrlObj[1]);
+                            die();
+                        }
+
+                        //--- Validate Filesize of $_FILE
+                        $inpDocMaxFilesize = $aID["INP_DOC_MAX_FILESIZE"];
+                        $inpDocMaxFilesizeUnit = $aID["INP_DOC_MAX_FILESIZE_UNIT"];
+
+                        $inpDocMaxFilesize = $inpDocMaxFilesize * (($inpDocMaxFilesizeUnit == "MB") ? 1024 * 1024 : 1024); //Bytes
+
+                        if ($inpDocMaxFilesize > 0 && $fileSizeByField > 0) {
+                            if ($fileSizeByField > $inpDocMaxFilesize) {
+                                \G::SendMessageText(\G::LoadTranslation("ID_SIZE_VERY_LARGE_PERMITTED"), "ERROR");
+                                $arrayAux1 = explode("sys" . SYS_SYS, $_SERVER["HTTP_REFERER"]);
+                                \G::header("location: /sys" . SYS_SYS . $arrayAux1[1]);
+                                exit(0);
+                            }
+                        }
+
+                        $aFields = array("APP_UID" => $appUid, "DEL_INDEX" => $delIndex, "USR_UID" => $userUid, "DOC_UID" => $indocUid, "APP_DOC_TYPE" => "INPUT", "APP_DOC_CREATE_DATE" => date("Y-m-d H:i:s"), "APP_DOC_COMMENT" => "", "APP_DOC_TITLE" => "", "APP_DOC_FILENAME" => $arrayFileName[$i], "FOLDER_UID" => $oFolder->createFromPath($aID["INP_DOC_DESTINATION_PATH"]), "APP_DOC_TAGS" => $oFolder->parseTags($aID["INP_DOC_TAGS"]), "APP_DOC_FIELDNAME" => $fieldName);
+                    } else {
+                        $aFields = array("APP_UID" => $appUid, "DEL_INDEX" => $delIndex, "USR_UID" => $userUid, "DOC_UID" => -1, "APP_DOC_TYPE" => "ATTACHED", "APP_DOC_CREATE_DATE" => date("Y-m-d H:i:s"), "APP_DOC_COMMENT" => "", "APP_DOC_TITLE" => "", "APP_DOC_FILENAME" => $arrayFileName[$i], "APP_DOC_FIELDNAME" => $fieldName);
+                    }
+
+                    $sExtension = pathinfo($aFields["APP_DOC_FILENAME"]);
+                    if (\Bootstrap::getDisablePhpUploadExecution() === 1 && $sExtension["extension"] === 'php') {
+                        $message = \G::LoadTranslation('THE_UPLOAD_OF_PHP_FILES_WAS_DISABLED');
+                        \Bootstrap::registerMonologPhpUploadExecution('phpUpload', 550, $message, $sFileName);
+                        \G::SendMessageText($message, "ERROR");
+                        $backUrlObj = explode("sys" . SYS_SYS, $_SERVER['HTTP_REFERER']);
+                        \G::header("location: " . "/sys" . SYS_SYS . $backUrlObj[1]);
+                        die();
+                    }
+
+                    $oAppDocument = new \AppDocument();
+                    $oAppDocument->create($aFields);
+
+                    $iDocVersion = $oAppDocument->getDocVersion();
+                    $sAppDocUid = $oAppDocument->getAppDocUid();
+                    $aInfo = pathinfo($oAppDocument->getAppDocFilename());
+                    $sExtension = ((isset($aInfo["extension"])) ? $aInfo["extension"] : "");
+                    $pathUID = \G::getPathFromUID($appUid);
+                    $sPathName = PATH_DOCUMENT . $pathUID . PATH_SEP;
+                    $sFileName = $sAppDocUid . "_" . $iDocVersion . "." . $sExtension;
+
+                    \G::uploadFile($arrayFileTmpName[$i], $sPathName, $sFileName);
+
+                    //set variable for APP_DOC_UID
+                    $aData["APP_DATA"][$oAppDocument->getAppDocFieldname()] = \G::json_encode([$oAppDocument->getAppDocUid()]);
+                    $aData["APP_DATA"][$oAppDocument->getAppDocFieldname() . "_label"] = \G::json_encode([$oAppDocument->getAppDocFilename()]);
+                    $caseInstance->updateCase($appUid, $aData);
+
+                    //Plugin Hook PM_UPLOAD_DOCUMENT for upload document
+                    $oPluginRegistry = &\PMPluginRegistry::getSingleton();
+
+                    if ($oPluginRegistry->existsTrigger(PM_UPLOAD_DOCUMENT) && class_exists("uploadDocumentData")) {
+                        $triggerDetail = $oPluginRegistry->getTriggerInfo(PM_UPLOAD_DOCUMENT);
+                        $documentData = new \uploadDocumentData($appUid, $userUid, $sPathName . $sFileName, $aFields["APP_DOC_FILENAME"], $sAppDocUid, $iDocVersion);
+                        $uploadReturn = $oPluginRegistry->executeTriggers(PM_UPLOAD_DOCUMENT, $documentData);
+
+                        if ($uploadReturn) {
+                            $aFields["APP_DOC_PLUGIN"] = $triggerDetail->sNamespace;
+                            if (!isset($aFields["APP_DOC_UID"])) {
+                                $aFields["APP_DOC_UID"] = $sAppDocUid;
+                            }
+                            if (!isset($aFields["DOC_VERSION"])) {
+                                $aFields["DOC_VERSION"] = $iDocVersion;
+                            }
+                            $oAppDocument->update($aFields);
+                            unlink($sPathName . $sFileName);
+                        }
+                    }
+                }
+            }
         }
     }
 }

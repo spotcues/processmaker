@@ -1,30 +1,30 @@
-[4 days ago] 443d719  OM-668 <jonathan>
-[6 days ago] fff3e90  OM-658 <jonathan>
-[6 days ago] 3cf4a0b  OM-656: Los checkboxes no recuperan la información en Mobile <alex_santos>
-[6 days ago] acc6eef  update <jonathan>
-[6 days ago] 9e6b3b4  OM-652 <jonathan>
-[7 days ago] 4a43100  OM-644:(Suggest Grid) En una siguiente tarea, el campo suggest muestra el valor en vez del label <richardnoel>
-[7 days ago] a583cbe  OM-648 <jonathan>
-[7 days ago] 10224b5  OM-649:El debug sigue guardando el valor de la ultima fila borrada de un grid. <richardnoel>
-[7 days ago] 5b5f164  OM-647 <jonathan>
-[7 days ago] 09e0d64  OM-643 <jonathan>
-[11 days ago] 8b3abb5  OM-620 <jonathan>
-[11 days ago] a411fda  OM-635: [Grid-web] Al modificar el width datetime el icono se desfaza <alex_santos>
-[12 days ago] 52da960  OM-633: (Suggest Grid) El modulo que se despliega con las opciones del suggest en una grilla muestra una posición incorrecta <Rodrigo Quelca>
-[12 days ago] e5895a6  OM-631: FileUpload no funciona correctamente en mobile <Rodrigo Quelca>
-[12 days ago] 726cee5  OM-622: Modificar el .getValue() del control file <Rodrigo Quelca>
-[12 days ago] 78176d2  OM-627: [print dynaform-MOBILE] esta propiedad aparece en mobile y no tiene ninguna funcionalidad <mcuiza>
-[13 days ago] 682e6c5  OM-612 <jonathan>
-[13 days ago] ba26979  update <jonathan>
-[2 weeks ago] acc3c34  OM-610: [Mobile] Se muestra aun el NaN en el grid cuando se adicionan rows sin ningun dato <alex_santos>
-[2 weeks ago] 0acc4b4  OM-590: Correcciones de estilos a la grilla de Mobile <alex_santos>
-[2 weeks ago] 52cc97e  OM-602:Grids allow to delete all rows <richardnoel>
-[2 weeks ago] bb23478  TRI-1261: Funcion getText (con radio buttons) optiene valor con un espacio extra <alex_santos>
-[2 weeks ago] 72fe913  OM-611:[Grid-web] TypeError: this.model.attributes.gridFunctions[field.row] is undefined <richardnoel>
-[2 weeks ago] d1e8832  [Dynaform-calendario dentro de una grilla] al usar el teclado el calendario aparece cortado <richardnoel>
-[2 weeks ago] ca9ee36  OM-600 <jonathan>
-[2 weeks ago] fe3d246  OM-597: Formulas en grillas muestran NaN si no se tiene registros <alex_santos>
-[2 weeks ago] 56a1b97  OM-605: [Ejecución de casos] El control FILE aun adiciona archivos en IE 11 en modo VIEW y DISABLED <Rodrigo Quelca>
-[2 weeks ago] c118226  OM-294: [Dynaform]: Los campos text y textArea no se ven bien dentro de una grilla en internet Explorer <alex_santos>
-[3 weeks ago] 7b67b2e  OM-591 <jonathan>
-[3 weeks ago] 1ce8c1b  OM-589:(Grid Style) Al ocultar un campo la grilla se desfaza tanto en cabeceras como en contenido <richardnoel>
+[24 hours ago] ce576e9  FBI-1746: (pmDynaform) the setOnchange helper is not executed after its dependent field was changed <alex_santos>
+[3 weeks ago] c62a721  bugfix/FBI-1679 <jonathanquispe>
+[3 weeks ago] 648443a  bugfix/FBI-1673 <jonathanquispe>
+[3 weeks ago] eb8d4db  bugfix/FBI-1674 <jonathanquispe>
+[3 weeks ago] 6e7b0c6  bugfix/FBI-1665 <jonathanquispe>
+[3 weeks ago] 94bb8be  FBI-1622: [Mobile] The File control does not works, when required property is activate <alex_santos>
+[3 weeks ago] 33b9cca  suggest validate has been implemented in onchange method <Rodrigo Quelca>
+[3 weeks ago] ce16542  validate form <Rodrigo Quelca>
+[3 weeks ago] 4feeb7a  enable validatiens in edit mode <Rodrigo Quelca>
+[4 weeks ago] 378f90c  FBI-1624: [Mobile] The controls within a grid control has red color where does not be must <Rodrigo Quelca>
+[4 weeks ago] fd8d3a1  remove unused code <Rodrigo>
+[4 weeks ago] 522620d  FBI-1630: (Dynaforms) After routing to a subprocess a datetime value with "@=" as prefix the case does not display the form in the next taskj <Rodrigo>
+[4 weeks ago] e442b32  bugfix/FBI-1446 <jonathanquispe>
+[5 weeks ago] 8dba731  bugfix/FBI-1617 <jonathanquispe>
+[5 weeks ago] 4604afd  (origin/bugfix/FBI-1608, composer/bugfix/FBI-1608) FBI-1608 <duhnnie>
+[5 weeks ago] 227d23e  (origin/bugfix/FBI-1606, composer/bugfix/FBI-1606) bugfix/FBI-1606 <duhnnie>
+[5 weeks ago] 5bdbcd2  bugfix/FBI-1601 <jonathanquispe>
+[5 weeks ago] 01d2575  bugfix/FBI-1603 <jonathanquispe>
+[5 weeks ago] 2dc6116  FBI-1597:check box control, when delete option does not works Form.setOnchange() <Rodrigo Quelca>
+[5 weeks ago] d9a7c88  bugfix/FBI-1600 <jonathanquispe>
+[5 weeks ago] 1820d04  fix CR observations <Rodrigo Quelca>
+[5 weeks ago] 856ec20  (origin/bugfix/FBI-1581, composer/bugfix/FBI-1581) add validations for getBoundingClientRect <Rodrigo Quelca>
+[5 weeks ago] 335fa58  enable setOnchange for datetime field <Rodrigo Quelca>
+[5 weeks ago] beb2981  (origin/bugfix/FBI-1567, composer/bugfix/FBI-1567) remove calendar setOnchange <Rodrigo Quelca>
+[5 weeks ago] 59e20e9  more changes <Rodrigo Quelca>
+[5 weeks ago] f19ee04  updates for dropdown, radio, checkbox <Rodrigo Quelca>
+[5 weeks ago] 4603083  fix checkbox validation <Rodrigo Quelca>
+[5 weeks ago] 63beb34  setOnchange infinyt calls has been fixed <Rodrigo Quelca>
+[5 weeks ago] 8900115  restore set value <Rodrigo Quelca>
+[5 weeks ago] f6e4791  change variables <Rodrigo Quelca>

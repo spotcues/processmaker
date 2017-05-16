@@ -10,7 +10,7 @@ class AppAssignSelfServiceValue extends BaseAppAssignSelfServiceValue
      *
      * return void
      */
-    public function create($applicationUid, $delIndex, array $arrayData)
+    public function create($applicationUid, $delIndex, array $arrayData, $dataVariable)
     {
         try {
             $cnn = Propel::getConnection(AppAssignSelfServiceValuePeer::DATABASE_NAME);
@@ -25,10 +25,17 @@ class AppAssignSelfServiceValue extends BaseAppAssignSelfServiceValue
 
                 if ($appAssignSelfServiceValue->validate()) {
                     $cnn->begin();
-
                     $result = $appAssignSelfServiceValue->save();
-
                     $cnn->commit();
+
+                    //SELECT LAST_INSERT_ID()
+                    $stmt = $cnn->createStatement();
+                    $rs = $stmt->executeQuery("SELECT LAST_INSERT_ID()", ResultSet::FETCHMODE_ASSOC);
+                    $rs->next();
+                    $row = $rs->getRow();
+                    $appAssignSelfServiceValueId = $row['LAST_INSERT_ID()'];
+                    $appAssignSelfServiceValueGroup = new AppAssignSelfServiceValueGroup();
+                    $appAssignSelfServiceValueGroup->createRows($appAssignSelfServiceValueId, $dataVariable);
                 } else {
                     $msg = "";
 
@@ -68,6 +75,17 @@ class AppAssignSelfServiceValue extends BaseAppAssignSelfServiceValue
             }
 
             $result = AppAssignSelfServiceValuePeer::doDelete($criteria);
+
+            // Delete related rows and missing relations, criteria don't execute delete with joins
+            $cnn = Propel::getConnection(AppAssignSelfServiceValueGroupPeer::DATABASE_NAME);
+            $cnn->begin();
+            $stmt = $cnn->createStatement();
+            $rs = $stmt->executeQuery("DELETE " . AppAssignSelfServiceValueGroupPeer::TABLE_NAME . "
+                                       FROM " . AppAssignSelfServiceValueGroupPeer::TABLE_NAME . "
+                                       LEFT JOIN " . AppAssignSelfServiceValuePeer::TABLE_NAME . "
+                                       ON (" . AppAssignSelfServiceValueGroupPeer::ID . " = " . AppAssignSelfServiceValuePeer::ID . ")
+                                       WHERE " . AppAssignSelfServiceValuePeer::ID . " IS NULL");
+            $cnn->commit();
         } catch (Exception $e) {
             throw $e;
         }

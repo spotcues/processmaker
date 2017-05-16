@@ -96,6 +96,13 @@ try {
         }
 
         $res = $tar->extract($path);
+
+        //Verify if not is Enterprise Plugin
+        if (!$oPluginRegistry->isEnterprisePlugin($sClassName, $path)) {
+            throw new Exception(G::LoadTranslation('ID_EEPLUGIN_IMPORT_PLUGIN_NOT_IS_ENTERPRISE', [$filename]));
+        }
+
+        //Get contents of plugin file
         $sContent = file_get_contents($path . $pluginFile);
         $sContent = str_ireplace($sAux, $sAux . '_', $sContent);
         $sContent = str_ireplace('PATH_PLUGINS', "'".$path."'", $sContent);
@@ -179,5 +186,5 @@ if ($status == 0) {
     $response["success"] = false;
 }
 
-echo G::json_encode($response);
+G::outRes( G::json_encode($response) );
 

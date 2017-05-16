@@ -13,6 +13,8 @@
  */
 class Capsule {
     
+    const inclDir = 'include_path';
+    const iniSet = 'ini_set';
     /**
      * Look for templates here (if relative path provided).
      * @var string
@@ -118,31 +120,23 @@ class Capsule {
         // extract variables into local namespace
         extract($this->vars);
 
-        $realdocuroot = str_replace( '\\', '/', $_SERVER['DOCUMENT_ROOT'] );
-        $docuroot = explode( '/', $realdocuroot );
-        array_pop( $docuroot );
-        $pathhome = implode( '/', $docuroot ) . '/';
-        array_pop( $docuroot );
-        $pathTrunk = implode( '/', $docuroot ) . '/';
-        require_once($pathTrunk.'gulliver/system/class.inputfilter.php');
-        $filter = new InputFilter();
-        // prepend template path to include path, 
+        // prepend template path to include path,
         // so that include "path/relative/to/templates"; can be used within templates
         $__old_inc_path = ini_get('include_path');
 
         $path = $this->templatePath . PATH_SEPARATOR . $__old_inc_path;
         if(strpos($path,":")>0){
-            $firstPath = explode(":", $this->templatePath . PATH_SEPARATOR . $__old_inc_path);
+            $firstPath = explode(":", $path);
             if (is_dir($firstPath[0])) {
-                $incPath = $this->templatePath . PATH_SEPARATOR . $__old_inc_path;
-                $incPath = $filter->validateInput($incPath, 'path');
-                ini_set('include_path', $incPath);
-            } 
+                $inclDir = self::inclDir;
+                $iniSet  = self::iniSet;
+                $iniSet($inclDir, $path);
+            }
         } else {
-            if(is_dir($this->templatePath . PATH_SEPARATOR . $__old_inc_path)) {
-                $incPath = $this->templatePath . PATH_SEPARATOR . $__old_inc_path;
-                $incPath = $filter->validateInput($incPath, 'path');
-                ini_set('include_path', $incPath);
+            if(is_dir($path)) {
+                $inclDir = self::inclDir;
+                $iniSet  = self::iniSet;
+                $iniSet($inclDir, $path);
             }
         }
                 

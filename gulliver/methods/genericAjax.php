@@ -1,10 +1,4 @@
 <?php
-G::LoadSystem('inputfilter');
-$filter = new InputFilter();
-$_GET = $filter->xssFilterHard($_GET,"url");
-$_POST = $filter->xssFilterHard($_POST,"url");
-$_REQUEST = $filter->xssFilterHard($_REQUEST,"url");
-$_SESSION = $filter->xssFilterHard($_SESSION,"url");
 
 $request = isset($_POST['request'])? $_POST['request']: null;
 if( !isset($request) ){
@@ -38,21 +32,6 @@ if( isset($request) ){
 
           $_SESSION[$_POST["formID"]][$_POST["gridname"]] = $oFields;
       }
-
-    /*  if( isset($_SESSION['APPLICATION']) ){
-        G::LoadClass('case');
-        $oApp= new Cases();
-        $aFields = $oApp->loadCase($_SESSION['APPLICATION']);
-        unset($aFields['APP_DATA'][$_POST['gridname']][$_POST['rowpos']]);
-        $initialKey = 1;
-        foreach ($aFields['APP_DATA'][$_POST['gridname']] as $key => $value) {
-          $oFields[$initialKey] = $value;
-          $initialKey++;
-          $aFields['APP_DATA'][$_POST['gridname']] = $oFields;
-        }
-        $oApp->updateCase($_SESSION['APPLICATION'], $aFields);
-      }
-*/
     break;
     /** widgets **/
     case 'suggest':

@@ -53,8 +53,6 @@ class AppHistory extends BaseAppHistory
         G::LoadClass('case');
         $oCase = new Cases();
 
-        $oCase->verifyTable();
-
         $aObjectPermissions = $oCase->getAllObjects($PRO_UID, $APP_UID, $TAS_UID, $_SESSION['USER_LOGGED']);
 
         if (!is_array($aObjectPermissions)) {

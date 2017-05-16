@@ -73,16 +73,9 @@ try {
                     require_once 'classes/model/AppDelegation.php';
                     $oCriteria = new Criteria( 'workflow' );
                     $oCriteria->addSelectColumn( AppDelegationPeer::PRO_UID );
+                    $oCriteria->addSelectColumn( ProcessPeer::PRO_TITLE );
                     $oCriteria->addSelectColumn( 'COUNT(' . AppDelegationPeer::PRO_UID . ') AS CANTITY' );
-                    $oCriteria->addAsColumn( 'PRO_TITLE', ContentPeer::CON_VALUE );
-                    $aConditions = array ();
-                    $aConditions[] = array (AppDelegationPeer::PRO_UID,ContentPeer::CON_ID
-                    );
-                    $aConditions[] = array (ContentPeer::CON_CATEGORY,$del . 'PRO_TITLE' . $del
-                    );
-                    $aConditions[] = array (ContentPeer::CON_LANG,$del . SYS_LANG . $del
-                    );
-                    $oCriteria->addJoinMC( $aConditions, Criteria::LEFT_JOIN );
+                    $oCriteria->addJoin(AppDelegationPeer::PRO_UID, ProcessPeer::PRO_UID);
                     $oCriteria->add( AppDelegationPeer::USR_UID, $_POST['USR_UID'] );
                     $oCriteria->add( AppDelegationPeer::DEL_FINISH_DATE, null, Criteria::ISNULL );
                     $oCriteria->addGroupByColumn( AppDelegationPeer::PRO_UID );
@@ -113,6 +106,9 @@ try {
     }
     G::RenderPage( 'publish', 'raw' );
 } catch (Exception $oException) {
-    die( $oException->getMessage() );
+    $token = strtotime("now");
+    PMException::registerErrorLog($oException, $token);
+    G::outRes( G::LoadTranslation("ID_EXCEPTION_LOG_INTERFAZ", array($token)) );
+    die;
 }
 

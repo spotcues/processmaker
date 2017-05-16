@@ -70,6 +70,8 @@ try {
     $result['data'] = $rows;
     print G::json_encode( $result );
 } catch (Exception $e) {
-    print G::json_encode ($e->getMessage());
+    $token = strtotime("now");
+    PMException::registerErrorLog($e, $token);
+    G::outRes( G::json_encode( G::LoadTranslation("ID_EXCEPTION_LOG_INTERFAZ", array($token)) ) );
 }
 

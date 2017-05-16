@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: ProcessMaker (Branch 3.0.1.8)\n"
+"Project-Id-Version: ProcessMaker (Branch 3.1)\n"
 "POT-Creation-Date: \n"
-"PO-Revision-Date: 2016-03-30 19:23:50\n"
+"PO-Revision-Date: 2016-08-16 20:08:15\n"
 "Last-Translator: \n"
 "Language-Team: Colosa Developers Team <developers@colosa.com>\n"
 "MIME-Version: 1.0\n"
@@ -472,8 +472,8 @@ msgstr "Assign Screen"
 # TRANSLATION
 # LABEL/ID_ASSIGN_TASK
 #: LABEL/ID_ASSIGN_TASK
-msgid "Assign Task"
-msgstr "Assign Task"
+msgid "Assign Task/Event"
+msgstr "Assign Task/Event"
 
 # TRANSLATION
 # LABEL/ID_UPLOAD
@@ -1526,6 +1526,12 @@ msgid "Notification for task assignment"
 msgstr "Notification for task assignment"
 
 # TRANSLATION
+# LABEL/ID_EMAIL_SERVER_FROM_MAIL_EMPTY
+#: LABEL/ID_EMAIL_SERVER_FROM_MAIL_EMPTY
+msgid "The email has not been sent because configuration email in the Email Server Settings (admin/settings/email) is empty. Please fill this information."
+msgstr "The email has not been sent because configuration email in the Email Server Settings (admin/settings/email) is empty. Please fill this information."
+
+# TRANSLATION
 # LABEL/ID_PERMITIONS
 #: LABEL/ID_PERMITIONS
 msgid "[LABEL/ID_PERMITIONS] Permissions"
@@ -1880,6 +1886,18 @@ msgid "Reassign"
 msgstr "Reassign"
 
 # TRANSLATION
+# LABEL/ID_REASON
+#: LABEL/ID_REASON
+msgid "Reason"
+msgstr "Reason"
+
+# TRANSLATION
+# LABEL/ID_NOTIFY
+#: LABEL/ID_NOTIFY
+msgid "Notify"
+msgstr "Notify"
+
+# TRANSLATION
 # LABEL/ID_PRIORITY_VH
 #: LABEL/ID_PRIORITY_VH
 msgid "VERY HIGH"
@@ -2088,6 +2106,12 @@ msgstr "in"
 #: LABEL/ID_CASE_DOES_NOT_EXISTS
 msgid "This case does not exist"
 msgstr "This case does not exist"
+
+# TRANSLATION
+# LABEL/ID_APPLICATION_OR_INDEX_MISSING
+#: LABEL/ID_APPLICATION_OR_INDEX_MISSING
+msgid "Application ID or Delegation Index is missing!. The System can not open the case."
+msgstr "Application ID or Delegation Index is missing!. The System can not open the case."
 
 # TRANSLATION
 # LABEL/ID_PLEASE_SELECT_UPGRADE_FILE
@@ -2476,8 +2500,8 @@ msgstr "The PIN is invalid"
 # TRANSLATION
 # LABEL/ID_MAP
 #: LABEL/ID_MAP
-msgid "Where is my Case?"
-msgstr "Where is my Case?"
+msgid "My Case Status"
+msgstr "My Case Status"
 
 # TRANSLATION
 # LABEL/ID_DYNADOC
@@ -2590,8 +2614,8 @@ msgstr "Last Employee"
 # TRANSLATION
 # LABEL/ID_EMPLOYEE
 #: LABEL/ID_EMPLOYEE
-msgid "Employee"
-msgstr "Employee"
+msgid "Next User"
+msgstr "Next User"
 
 # TRANSLATION
 # LABEL/ID_SESSION
@@ -2602,8 +2626,8 @@ msgstr "Session"
 # TRANSLATION
 # LABEL/ID_NEXT_TASK
 #: LABEL/ID_NEXT_TASK
-msgid "Next Task"
-msgstr "Next Task"
+msgid "Next Task/Event"
+msgstr "Next Task/Event"
 
 # TRANSLATION
 # LABEL/ID_PERMISSIONS_FOR_THE_ROL
@@ -2650,8 +2674,8 @@ msgstr "Delete Stage"
 # TRANSLATION
 # LABEL/ID_HISTORY_MESSAGES
 #: LABEL/ID_HISTORY_MESSAGES
-msgid "My History Messages"
-msgstr "My History Messages"
+msgid "My Message History"
+msgstr "My Message History"
 
 # TRANSLATION
 # LABEL/ID_STAGE
@@ -2898,6 +2922,12 @@ msgstr "Process"
 #: LABEL/ID_REASSIGN_CASES
 msgid "Reassign Cases"
 msgstr "Reassign Cases"
+
+# TRANSLATION
+# LABEL/ID_THE_REASON_REASSIGN_USER_EMPTY
+#: LABEL/ID_THE_REASON_REASSIGN_USER_EMPTY
+msgid "Please complete the reassign reason."
+msgstr "Please complete the reassign reason."
 
 # TRANSLATION
 # LABEL/ID_ALERT_MESSAGE
@@ -3436,8 +3466,8 @@ msgstr "The uploaded file exceeds the MAX_FILE_SIZE directive that was specified
 # TRANSLATION
 # LABEL/ID_UPLOAD_ERR_INI_SIZE
 #: LABEL/ID_UPLOAD_ERR_INI_SIZE
-msgid "The uploaded file exceeds the upload_max_filesize or post_max_size directive in php.ini"
-msgstr "The uploaded file exceeds the upload_max_filesize or post_max_size directive in php.ini"
+msgid "The uploaded file exceeds the upload_max_filesize directive in php.ini"
+msgstr "The uploaded file exceeds the upload_max_filesize directive in php.ini"
 
 # TRANSLATION
 # LABEL/ID_NOT_PROCESS_RELATED
@@ -3974,12 +4004,6 @@ msgid "Unassigned"
 msgstr "Unassigned"
 
 # TRANSLATION
-# LABEL/ID_UNASSIGNED_STATUS
-#: LABEL/ID_UNASSIGNED_STATUS
-msgid "Unassigned Status"
-msgstr "Unassigned Status"
-
-# TRANSLATION
 # LABEL/ID_CLAIM
 #: LABEL/ID_CLAIM
 msgid "Claim"
@@ -4510,14 +4534,14 @@ msgstr "User Reassignment"
 # TRANSLATION
 # LABEL/ID_CASES_LIST_SETUP
 #: LABEL/ID_CASES_LIST_SETUP
-msgid "Cases Lists"
-msgstr "Cases Lists"
+msgid "Case Lists"
+msgstr "Case Lists"
 
 # TRANSLATION
 # LABEL/ID_APPCACHE_SETUP
 #: LABEL/ID_APPCACHE_SETUP
-msgid "Cases List Cache Builder"
-msgstr "Cases List Cache Builder"
+msgid "Case List Cache Builder"
+msgstr "Case List Cache Builder"
 
 # TRANSLATION
 # LABEL/ID_CLEAR_CACHE_MSG1
@@ -4738,8 +4762,8 @@ msgstr "Country"
 # TRANSLATION
 # LABEL/ID_LAN_UPDATE_DATE
 #: LABEL/ID_LAN_UPDATE_DATE
-msgid "Update Date"
-msgstr "Update Date"
+msgid "Date Updated"
+msgstr "Date Updated"
 
 # TRANSLATION
 # LABEL/ID_LAN_REV_DATE
@@ -4906,8 +4930,8 @@ msgstr "Available Fields"
 # TRANSLATION
 # LABEL/ID_CASES_LIST_FIELDS
 #: LABEL/ID_CASES_LIST_FIELDS
-msgid "Cases List Fields"
-msgstr "Cases List Fields"
+msgid "Case List Fields"
+msgstr "Case List Fields"
 
 # TRANSLATION
 # LABEL/ID_TITLE_INBOX
@@ -5060,12 +5084,6 @@ msgid "There is {0} cases started with this language, delete action canceled!"
 msgstr "There is {0} cases started with this language, delete action canceled!"
 
 # TRANSLATION
-# LABEL/ID_CANNOT_REMOVE_TEMPLATE_EMAIL_EVENT
-#: LABEL/ID_CANNOT_REMOVE_TEMPLATE_EMAIL_EVENT
-msgid "You can not delete the template {0} because it has a relationship with Email Event"
-msgstr "You can not delete the template {0} because it has a relationship with Email Event"
-
-# TRANSLATION
 # LABEL/ID_TOTAL_CASES
 #: LABEL/ID_TOTAL_CASES
 msgid "Total Cases"
@@ -5200,8 +5218,8 @@ msgstr "All Users"
 # TRANSLATION
 # LABEL/ID_ALL_STATUS
 #: LABEL/ID_ALL_STATUS
-msgid "All Status"
-msgstr "All Status"
+msgid "All Statuses"
+msgstr "All Statuses"
 
 # TRANSLATION
 # LABEL/ID_CONFIRM
@@ -5230,8 +5248,8 @@ msgstr "Debug"
 # TRANSLATION
 # LABEL/ID_PRO_CREATE_DATE
 #: LABEL/ID_PRO_CREATE_DATE
-msgid "Create Date"
-msgstr "Create Date"
+msgid "Date Created"
+msgstr "Date Created"
 
 # TRANSLATION
 # LABEL/ID_ON
@@ -6346,8 +6364,8 @@ msgstr "Current User"
 # TRANSLATION
 # LABEL/ID_LAST_MODIFY
 #: LABEL/ID_LAST_MODIFY
-msgid "[LABEL/ID_LAST_MODIFY] Last Modify"
-msgstr "Last Modify"
+msgid "[LABEL/ID_LAST_MODIFY] Last Modified"
+msgstr "Last Modified"
 
 # TRANSLATION
 # LABEL/ID_DELEGATION_DATE
@@ -6780,18 +6798,6 @@ msgstr "Departments"
 #: LABEL/ID_DEPARTMENT_NAME
 msgid "Department Name"
 msgstr "Department Name"
-
-# TRANSLATION
-# LABEL/ID_DEPARTMENT_ERROR_CREATE
-#: LABEL/ID_DEPARTMENT_ERROR_CREATE
-msgid "Error creating department"
-msgstr "Error creating department"
-
-# TRANSLATION
-# LABEL/ID_DEPARTMENT_CHECK_PARENT_DEPARTMENT
-#: LABEL/ID_DEPARTMENT_CHECK_PARENT_DEPARTMENT
-msgid "It's necessary to check the parent-department: {0} for the sub-department: {1}"
-msgstr "It's necessary to check the parent-department: {0} for the sub-department: {1}"
 
 # TRANSLATION
 # LABEL/ID_CONFIRM_CANCEL_CASE
@@ -9542,12 +9548,6 @@ msgid "The process you are trying to import already exists. Please select one of
 msgstr "The process you are trying to import already exists. Please select one of the following options to continue:"
 
 # TRANSLATION
-# LABEL/ID_PROCESS_DEFINITION_INCOMPLETE
-#: LABEL/ID_PROCESS_DEFINITION_INCOMPLETE
-msgid "To create a new process all the process objects must be selected/included in the pmx2 file."
-msgstr "To create a new process all the process objects must be selected/included in the pmx2 file."
-
-# TRANSLATION
 # LABEL/ID_DEBUG_MESSAGE
 #: LABEL/ID_DEBUG_MESSAGE
 msgid "Debug Messages"
@@ -10018,8 +10018,8 @@ msgstr "Your password is"
 # TRANSLATION
 # LABEL/ID_ENABLE_FOTGOT_PASSWORD
 #: LABEL/ID_ENABLE_FOTGOT_PASSWORD
-msgid "Enable Forgot password"
-msgstr "Enable Forgot password"
+msgid "Enable Password Recovery"
+msgstr "Enable Password Recovery"
 
 # TRANSLATION
 # LABEL/ID_NEW_PASSWORD_SENT
@@ -11524,8 +11524,8 @@ msgstr "Assigned To"
 # TRANSLATION
 # LABEL/ID_DASHLETS_INSTANCES
 #: LABEL/ID_DASHLETS_INSTANCES
-msgid "Dashlets Instances"
-msgstr "Dashlets Instances"
+msgid "Dashlet Instances"
+msgstr "Dashlet Instances"
 
 # TRANSLATION
 # LABEL/ID_INPUT_DOC_DOESNT_EXIST
@@ -11928,6 +11928,12 @@ msgstr "Administrators users cannot use this User Experience."
 #: LABEL/ID_IMPORT_PMT
 msgid "Import PM Table"
 msgstr "Import PM Table"
+
+# TRANSLATION
+# LABEL/ID_THE_NAME_CHANGE_MAY_CAUSE_DATA_LOSS
+#: LABEL/ID_THE_NAME_CHANGE_MAY_CAUSE_DATA_LOSS
+msgid "The change might cause data loss in the PM table. Do you want to continue?"
+msgstr "The change might cause data loss in the PM table. Do you want to continue?"
 
 # TRANSLATION
 # LABEL/ID_OVERWRITE_EXIST
@@ -12646,8 +12652,8 @@ msgstr "The current password is incorrect"
 # TRANSLATION
 # LABEL/ID_MAX_LIFETIME
 #: LABEL/ID_MAX_LIFETIME
-msgid "Cookie lifetime (seconds)"
-msgstr "Cookie lifetime (seconds)"
+msgid "Cookie Lifetime (Seconds)"
+msgstr "Cookie Lifetime (Seconds)"
 
 # TRANSLATION
 # LABEL/ID_SUCCESSFUL_CONNECTION
@@ -13978,8 +13984,8 @@ msgstr "The system has detected that changes to the case labels will affect more
 # TRANSLATION
 # LABEL/ID_MESSAGE_LOGIN
 #: LABEL/ID_MESSAGE_LOGIN
-msgid "The default language set here is for the \"Language\" dropdown box displayed on the login screen. This configuration is set for each workspace."
-msgstr "The default language set here is for the \"Language\" dropdown box displayed on the login screen. This configuration is set for each workspace."
+msgid "The default language set here is for the Language dropdown box displayed on the login screen. This configuration is set for each workspace."
+msgstr "The default language set here is for the Language dropdown box displayed on the login screen. This configuration is set for each workspace."
 
 # TRANSLATION
 # LABEL/ID_MESSAGE_SYSTEM
@@ -14530,8 +14536,8 @@ msgstr "No Emails to display"
 # TRANSLATION
 # LABEL/ID_PROCESSMAKER_REQUIREMENTS_CHECK
 #: LABEL/ID_PROCESSMAKER_REQUIREMENTS_CHECK
-msgid "Check PM requirements"
-msgstr "Check PM requirements"
+msgid "Check PM Requirements"
+msgstr "Check PM Requirements"
 
 # TRANSLATION
 # LABEL/ID_PHP_INFO
@@ -14554,20 +14560,20 @@ msgstr "Check again"
 # TRANSLATION
 # LABEL/ID_PROCESSMAKER_REQUIREMENTS_DESCRIPTION
 #: LABEL/ID_PROCESSMAKER_REQUIREMENTS_DESCRIPTION
-msgid "If any of these items are not supported (marked as No), then please take actions to correct them.<br />"
-msgstr "If any of these items are not supported (marked as No), then please take actions to correct them.<br />"
+msgid "If any of these items are not supported (marked as \" No\"), then please take actions to correct them.<br />"
+msgstr "If any of these items are not supported (marked as \" No\"), then please take actions to correct them.<br />"
 
 # TRANSLATION
 # LABEL/ID_PROCESSMAKER_REQUIREMENTS_DESCRIPTION2
 #: LABEL/ID_PROCESSMAKER_REQUIREMENTS_DESCRIPTION2
-msgid "Failure to do so could lead your ProcessMaker installation not functioning correctly!<br />"
-msgstr "Failure to do so could lead your ProcessMaker installation not functioning correctly!<br />"
+msgid "Failure to do so correctly could lead to your ProcessMaker installation not functioning correctly!<br />"
+msgstr "Failure to do so correctly could lead to your ProcessMaker installation not functioning correctly!<br />"
 
 # TRANSLATION
 # LABEL/ID_PROCESSMAKER_REQUIREMENTS_PHP
 #: LABEL/ID_PROCESSMAKER_REQUIREMENTS_PHP
-msgid "PHP Version >= 5.5.33"
-msgstr "PHP Version >= 5.5.33"
+msgid "PHP recommended version 5.6 or higher (7.0 not supported)"
+msgstr "PHP recommended version 5.6 or higher (7.0 not supported)"
 
 # TRANSLATION
 # LABEL/ID_PROCESSMAKER_REQUIREMENTS_MYSQL
@@ -14626,8 +14632,8 @@ msgstr "LDAP Support (*)"
 # TRANSLATION
 # LABEL/ID_PROCESSMAKER_REQUIREMENTS_MEMORYLIMIT
 #: LABEL/ID_PROCESSMAKER_REQUIREMENTS_MEMORYLIMIT
-msgid "Memory Limit >= 256M"
-msgstr "Memory Limit >= 256M"
+msgid "Memory Limit >= 80M"
+msgstr "Memory Limit >= 80M"
 
 # TRANSLATION
 # LABEL/ID_ADMINISTRATOR_ROLE_CANT_CHANGED
@@ -14674,8 +14680,8 @@ msgstr "Restart labels with system fields"
 # TRANSLATION
 # LABEL/ID_CASESLIST_FIELD_LABEL_RESET_ID
 #: LABEL/ID_CASESLIST_FIELD_LABEL_RESET_ID
-msgid "Restart labels with system fields with the labels ID for its translation"
-msgstr "Restart labels with system fields with the labels ID for its translation"
+msgid "Restart labels with system fields with the ID of the label for its translation"
+msgstr "Restart labels with system fields with the ID of the label for its translation"
 
 # TRANSLATION
 # LABEL/ID_SKIN_TEAM
@@ -14950,8 +14956,8 @@ msgstr "Do you want to clear the information from the first row?"
 # TRANSLATION
 # LABEL/ID_FROM_NAME
 #: LABEL/ID_FROM_NAME
-msgid "From name"
-msgstr "From name"
+msgid "Sender Name"
+msgstr "Sender Name"
 
 # TRANSLATION
 # LABEL/ID_ACCEPT
@@ -15430,8 +15436,8 @@ msgstr "Group cannot be deleted while it's assigned to a task"
 # TRANSLATION
 # LABEL/ID_FROM_EMAIL
 #: LABEL/ID_FROM_EMAIL
-msgid "From Mail"
-msgstr "From Mail"
+msgid "Sender Email"
+msgstr "Sender Email"
 
 # TRANSLATION
 # LABEL/ID_UNSAVED_TRIGGERS_WINDOW
@@ -16714,8 +16720,8 @@ msgstr "No new versions available"
 # TRANSLATION
 # LABEL/ID_CHECK_UPDATES
 #: LABEL/ID_CHECK_UPDATES
-msgid "Check for updates (you need to be connected to Internet)"
-msgstr "Check for updates (you need to be connected to Internet)"
+msgid "Check for updates (you need to be connected to the Internet)"
+msgstr "Check for updates (you need to be connected to the Internet)"
 
 # TRANSLATION
 # LABEL/ID_YOUR_LICENSE
@@ -16960,14 +16966,14 @@ msgstr "Audit Log has been disabled"
 # TRANSLATION
 # LABEL/ID_AUDIT_LOG_DETAILS_1
 #: LABEL/ID_AUDIT_LOG_DETAILS_1
-msgid "When this option is enabled, all changes made in the \"ADMIN\" tab are registered in a log."
-msgstr "When this option is enabled, all changes made in the \"ADMIN\" tab are registered in a log."
+msgid "When this option is enabled, all changes made in the Admin tab are registered in a log."
+msgstr "When this option is enabled, all changes made in the Admin tab are registered in a log."
 
 # TRANSLATION
 # LABEL/ID_AUDIT_LOG_DETAILS_2
 #: LABEL/ID_AUDIT_LOG_DETAILS_2
-msgid "and the user will be able to see those changes in the \"Audit Log\" option in Logs Menu"
-msgstr "and the user will be able to see those changes in the \"Audit Log\" option in Logs Menu"
+msgid "The user will be able to see those changes in the Audit Log option in the Logs menu."
+msgstr "The user will be able to see those changes in the Audit Log option in the Logs menu."
 
 # TRANSLATION
 # LABEL/ID_PRIVATE
@@ -17506,13 +17512,13 @@ msgstr "Mcrypt Support"
 # TRANSLATION
 # LABEL/ID_GENERATE_INFO_SUPPORT
 #: LABEL/ID_GENERATE_INFO_SUPPORT
-msgid "A file with the information of your System will be generated. It will help the support team to provide a better support to any issue that may appear"
-msgstr "A file with the information of your System will be generated. It will help the support team to provide a better support to any issue that may appear"
+msgid "A file with information about your System will be generated. It will help the support team provide better support for any issue that may occur."
+msgstr "A file with information about your System will be generated. It will help the support team provide better support for any issue that may occur."
 
 # TRANSLATION
 # LABEL/ID_CURRENT_BROWSER_NOT_SUPPORTED
 #: LABEL/ID_CURRENT_BROWSER_NOT_SUPPORTED
-msgid "The current browser is not supported, please use a different browser. Minimum system requirements Internet Explorer 8, Chrome 26, Firefox 20"
+msgid "Your browser is not supported. See the list of supported browsers. List of supported browsers is a link to the wiki page: http://wiki.processmaker.com/3.0/Supported_Browsers"
 msgstr "The current browser is not supported, please use a different browser. Minimum system requirements Internet Explorer 8, Chrome 26, Firefox 20"
 
 # TRANSLATION
@@ -17626,8 +17632,8 @@ msgstr "The process \"{0}\" has the following unwanted code (this code should be
 # TRANSLATION
 # LABEL/ID_LECA
 #: LABEL/ID_LECA
-msgid "Your license has expired, please contact your administrator."
-msgstr "Your license has expired, please contact your administrator."
+msgid "Your license has expired. Please contact your administrator."
+msgstr "Your license has expired. Please contact your administrator."
 
 # TRANSLATION
 # LABEL/ID_NLIC
@@ -17764,8 +17770,8 @@ msgstr "Default"
 # TRANSLATION
 # LABEL/ID_EMAIL_SERVER_ACCOUNT_FROM
 #: LABEL/ID_EMAIL_SERVER_ACCOUNT_FROM
-msgid "[LABEL/ID_EMAIL_SERVER_ACCOUNT_FROM] Account From"
-msgstr "Account From"
+msgid "[LABEL/ID_EMAIL_SERVER_ACCOUNT_FROM] Sender Account"
+msgstr "Sender Account"
 
 # TRANSLATION
 # LABEL/ID_EMAIL_SERVER_TEST_CONNECTION_VERIFYING_MAIL
@@ -18862,8 +18868,8 @@ msgstr "Sort by"
 # TRANSLATION
 # LABEL/ID_CUSTOM_CASES_LISTS
 #: LABEL/ID_CUSTOM_CASES_LISTS
-msgid "Custom Cases Lists"
-msgstr "Custom Cases Lists"
+msgid "Custom Case List"
+msgstr "Custom Case List"
 
 # TRANSLATION
 # LABEL/ID_NO_INEFFICIENT_PROCESSES
@@ -19398,6 +19404,12 @@ msgstr "Lane"
 #: LABEL/ID_MAFE_03937134cedab9078be39a77ee3a48a0
 msgid "[LABEL/ID_MAFE_03937134cedab9078be39a77ee3a48a0] Group"
 msgstr "Group"
+
+# TRANSLATION
+# LABEL/ID_MAFE_7215ee9c7d9dc229d2921a40e899ec5f
+#: LABEL/ID_MAFE_7215ee9c7d9dc229d2921a40e899ec5f
+msgid "[LABEL/ID_MAFE_7215ee9c7d9dc229d2921a40e899ec5f] "
+msgstr ""
 
 # TRANSLATION
 # LABEL/ID_MAFE_5308fcbb3c60d1cb24e45795bf9a0b7e
@@ -20776,7 +20788,7 @@ msgstr "There are no items."
 # TRANSLATION
 # LABEL/ID_MAFE_545106eebc5cfec4095c8903a3e5bea9
 #: LABEL/ID_MAFE_545106eebc5cfec4095c8903a3e5bea9
-msgid "[LABEL/ID_MAFE_545106eebc5cfec4095c8903a3e5bea9] Next Task"
+msgid "Next Task"
 msgstr "Next Task"
 
 # TRANSLATION
@@ -22576,8 +22588,8 @@ msgstr "Edit permission"
 # TRANSLATION
 # LABEL/ID_MAFE_3901de5bd75f430a8ce0bed0f2f90056
 #: LABEL/ID_MAFE_3901de5bd75f430a8ce0bed0f2f90056
-msgid "[LABEL/ID_MAFE_3901de5bd75f430a8ce0bed0f2f90056] Status Case"
-msgstr "Status Case"
+msgid "[LABEL/ID_MAFE_3901de5bd75f430a8ce0bed0f2f90056] Case Status"
+msgstr "Case Status"
 
 # TRANSLATION
 # LABEL/ID_MAFE_521019040a0f4f7773357aa6bc22180b
@@ -24290,6 +24302,12 @@ msgid "The following case is a \"Script-Task\""
 msgstr "The following case is a \"Script-Task\""
 
 # TRANSLATION
+# LABEL/ID_ROUTE_TO_TASK_SERVICE_TASK
+#: LABEL/ID_ROUTE_TO_TASK_SERVICE_TASK
+msgid "The following case is a \"Service-Task\""
+msgstr "The following case is a \"Service-Task\""
+
+# TRANSLATION
 # LABEL/ID_MAFE_0d82790b0612935992bd564a17ce37d6
 #: LABEL/ID_MAFE_0d82790b0612935992bd564a17ce37d6
 msgid "Quit"
@@ -24416,22 +24434,10 @@ msgid "The user with \"{0}\" did not have permission to perform this action."
 msgstr "The user with \"{0}\" did not have permission to perform this action."
 
 # TRANSLATION
-# LABEL/ID_NOT_EXECUTE_QUERY
-#: LABEL/ID_NOT_EXECUTE_QUERY
-msgid "Changes to {0} are forbidden. Please contact system administrator for more information."
-msgstr "Changes to {0} are forbidden. Please contact system administrator for more information."
-
-# TRANSLATION
 # LABEL/ID_EMAIL_MORE_THAN_ONE_USER
 #: LABEL/ID_EMAIL_MORE_THAN_ONE_USER
 msgid "This email is assigned to more than one user. Please contact your administrator."
 msgstr "This email is assigned to more than one user. Please contact your administrator."
-
-# TRANSLATION
-# LABEL/ID_EMAIL_EVENT_DEFINITION_DOES_NOT_EXIST
-#: LABEL/ID_EMAIL_EVENT_DEFINITION_DOES_NOT_EXIST
-msgid "The email event definition does not exist."
-msgstr "The email event definition does not exist."
 
 # TRANSLATION
 # LABEL/ID_USER_DOES_NOT_CORRESPOND
@@ -26074,8 +26080,8 @@ msgstr "Please enter a numeric value"
 # TRANSLATION
 # LABEL/ID_MAFE_42b5e40c0f14c557113865a3aa78b673
 #: LABEL/ID_MAFE_42b5e40c0f14c557113865a3aa78b673
-msgid "Insert a SQL query like: SELECT [Key field], [Label field] FROM [Table name]"
-msgstr "Insert a SQL query like: SELECT [Key field], [Label field] FROM [Table name]"
+msgid "Insert an SQL query like: SELECT [Key field], [Label field] FROM [Table name]"
+msgstr "Insert an SQL query like: SELECT [Key field], [Label field] FROM [Table name]"
 
 # TRANSLATION
 # LABEL/ID_MAFE_6b66a61fa66288a9a7ad6474d2e686ec
@@ -26854,14 +26860,14 @@ msgstr "Are you sure to disable the Google Drive Integration? If you do this, th
 # TRANSLATION
 # LABEL/ID_GMAIL_HELP_ENABLE
 #: LABEL/ID_GMAIL_HELP_ENABLE
-msgid "Enabling this option, users will be able to use the  Gmail extension that allows to interact with Processamaker from the urser's Gmail web page."
-msgstr "Enabling this option, users will be able to use the  Gmail extension that allows to interact with Processamaker from the urser's Gmail web page."
+msgid "When this option is enabled, users will be able to use the Gmail extension that allows interaction with ProcessMaker from the user's Gmail web page."
+msgstr "When this option is enabled, users will be able to use the Gmail extension that allows interaction with ProcessMaker from the user's Gmail web page."
 
 # TRANSLATION
 # LABEL/ID_DRIVE_HELP_ENABLE
 #: LABEL/ID_DRIVE_HELP_ENABLE
-msgid "Enabling this option will allow to store all input, output and attached documents generated in your processes in Google Drive."
-msgstr "Enabling this option will allow to store all input, output and attached documents generated in your processes in Google Drive."
+msgid "When this option is enabled, all input, output and attached documents generated in your processes can be stored in Google Drive."
+msgstr "When this option is enabled, all input, output and attached documents generated in your processes can be stored in Google Drive."
 
 # TRANSLATION
 # LABEL/ID_ENABLE_PMDRIVE
@@ -27312,12 +27318,6 @@ msgid "There was a problem sending the email to"
 msgstr "There was a problem sending the email to"
 
 # TRANSLATION
-# LABEL/ID_USER_CANT_BE_DELETED_FOR_THE_PROCESS
-#: LABEL/ID_USER_CANT_BE_DELETED_FOR_THE_PROCESS
-msgid "The user can't be deleted because it is referenced in the process {processTitle} in a process permission."
-msgstr "The user can't be deleted because it is referenced in the process {processTitle} in a process permission."
-
-# TRANSLATION
 # LABEL/ID_MAFE_c5d84b6c19cb058b7b5471b30e926823
 #: LABEL/ID_MAFE_c5d84b6c19cb058b7b5471b30e926823
 msgid "Invalid operation: Delete message flow before converting it to"
@@ -27344,8 +27344,8 @@ msgstr "There are problems loading the process objects."
 # TRANSLATION
 # LABEL/ID_MAFE_f4b5974fd11406f8410fa7e8502a26a3
 #: LABEL/ID_MAFE_f4b5974fd11406f8410fa7e8502a26a3
-msgid "[LABEL/ID_MAFE_f4b5974fd11406f8410fa7e8502a26a3] Custom"
-msgstr "Custom"
+msgid "Granular"
+msgstr "Granular"
 
 # TRANSLATION
 # LABEL/ID_MAFE_84f6ae383a4278397861eb8c783fe1d8
@@ -27358,6 +27358,408 @@ msgstr "Export Process Objects"
 #: LABEL/ID_MAFE_5e9df908eafa83cb51c0a3720e8348c7
 msgid "[LABEL/ID_MAFE_5e9df908eafa83cb51c0a3720e8348c7] Check All"
 msgstr "Check All"
+
+# TRANSLATION
+# LABEL/ID_UNASSIGNED_STATUS
+#: LABEL/ID_UNASSIGNED_STATUS
+msgid "Unassigned Status"
+msgstr "Unassigned Status"
+
+# TRANSLATION
+# LABEL/ID_ROUTE_TO_TASK_INTERMEDIATE-THROW-EMAIL-EVENT
+#: LABEL/ID_ROUTE_TO_TASK_INTERMEDIATE-THROW-EMAIL-EVENT
+msgid "The following case is a \"Intermediate Email Event\""
+msgstr "The following case is a \"Intermediate Email Event\""
+
+# TRANSLATION
+# LABEL/ID_REASON_REASSIGN
+#: LABEL/ID_REASON_REASSIGN
+msgid "Reason to reassign this case"
+msgstr "Reason to reassign this case"
+
+# TRANSLATION
+# LABEL/ID_YOU_DO_NOT_HAVE_PERMISSION
+#: LABEL/ID_YOU_DO_NOT_HAVE_PERMISSION
+msgid "Error: You do not have permission."
+msgstr "Error: You do not have permission."
+
+# TRANSLATION
+# LABEL/ID_THE_APPLICATION_IS_NOT_CANCELED
+#: LABEL/ID_THE_APPLICATION_IS_NOT_CANCELED
+msgid "Error: The application {0} is not canceled."
+msgstr "Error: The application {0} is not canceled."
+
+# TRANSLATION
+# LABEL/ID_THREAD_STATUS_DOES_NOT_EXIST_FOR_THE_APPLICATION
+#: LABEL/ID_THREAD_STATUS_DOES_NOT_EXIST_FOR_THE_APPLICATION
+msgid "Error: Thread status does not exist for the application {0}."
+msgstr "Error: Thread status does not exist for the application {0}."
+
+# TRANSLATION
+# LABEL/ID_NO_PREVIOUS_USR_UID
+#: LABEL/ID_NO_PREVIOUS_USR_UID
+msgid "The previuos task doesn't have any users."
+msgstr "The previuos task doesn't have any users."
+
+# TRANSLATION
+# LABEL/ID_WARNING_GATEWAY_CONVERGENT_WITH_CONDITION
+#: LABEL/ID_WARNING_GATEWAY_CONVERGENT_WITH_CONDITION
+msgid "Your Gateway Convergent has a condition, save again your process."
+msgstr "Your Gateway Convergent has a condition, save again your process."
+
+# TRANSLATION
+# LABEL/ID_RT_RENAME_NAME_TABLE
+#: LABEL/ID_RT_RENAME_NAME_TABLE
+msgid "All references to the previous table name are going to be invalid. Do you really want to change the table name?"
+msgstr "All references to the previous table name are going to be invalid. Do you really want to change the table name?"
+
+# TRANSLATION
+# LABEL/ID_RT_CONTINUE_TABLE_RENAME
+#: LABEL/ID_RT_CONTINUE_TABLE_RENAME
+msgid "Continue renaming the table"
+msgstr "Continue renaming the table"
+
+# TRANSLATION
+# LABEL/ID_RT_NOT_CHANGE_NAME
+#: LABEL/ID_RT_NOT_CHANGE_NAME
+msgid "Do not change name"
+msgstr "Do not change name"
+
+# TRANSLATION
+# LABEL/ID_EXTERNAL_REGISTRATION
+#: LABEL/ID_EXTERNAL_REGISTRATION
+msgid "External Registration"
+msgstr "External Registration"
+
+# TRANSLATION
+# LABEL/ID_FILTER_BY
+#: LABEL/ID_FILTER_BY
+msgid "Filter By"
+msgstr "Filter By"
+
+# TRANSLATION
+# LABEL/THE_UPLOAD_OF_PHP_FILES_WAS_DISABLED
+#: LABEL/THE_UPLOAD_OF_PHP_FILES_WAS_DISABLED
+msgid "The upload of PHP files was disabled please contact the system administrator."
+msgstr "The upload of PHP files was disabled please contact the system administrator."
+
+# TRANSLATION
+# LABEL/THE_PHP_FILES_EXECUTION_WAS_DISABLED
+#: LABEL/THE_PHP_FILES_EXECUTION_WAS_DISABLED
+msgid "The PHP files execution was disabled please contact the system administrator."
+msgstr "The PHP files execution was disabled please contact the system administrator."
+
+# TRANSLATION
+# LABEL/ID_MAFE_cae0206c31eaa305dd0e847330c5e837
+#: LABEL/ID_MAFE_cae0206c31eaa305dd0e847330c5e837
+msgid "wildcard"
+msgstr "wildcard"
+
+# TRANSLATION
+# LABEL/ID_MAFE_8efa191bcfbd509f1be06c9eac30cb9c
+#: LABEL/ID_MAFE_8efa191bcfbd509f1be06c9eac30cb9c
+msgid "Fields marked with an asterisk (%%ASTERISK%%) are required."
+msgstr "Fields marked with an asterisk (%%ASTERISK%%) are required."
+
+# TRANSLATION
+# LABEL/ID_MAFE_c7f8f8652db6d74e086d297129179d2f
+#: LABEL/ID_MAFE_c7f8f8652db6d74e086d297129179d2f
+msgid "Task/sub-process name can't be empty"
+msgstr "Task/sub-process name can't be empty"
+
+# TRANSLATION
+# LABEL/ID_EMAIL_EVENT_CONFIGURATION_EMAIL
+#: LABEL/ID_EMAIL_EVENT_CONFIGURATION_EMAIL
+msgid "Email event: {0}, in process: {1}, cannot send any mail because its configuration needs to be completed."
+msgstr "Email event: {0}, in process: {1}, cannot send any mail because its configuration needs to be completed."
+
+# TRANSLATION
+# LABEL/ID_CANNOT_REMOVE_TEMPLATE_EMAIL_EVENT
+#: LABEL/ID_CANNOT_REMOVE_TEMPLATE_EMAIL_EVENT
+msgid "You can not delete the template {0} because it has a relationship with Email Event"
+msgstr "You can not delete the template {0} because it has a relationship with Email Event"
+
+# TRANSLATION
+# LABEL/ID_DEPARTMENT_ERROR_CREATE
+#: LABEL/ID_DEPARTMENT_ERROR_CREATE
+msgid "Error creating department"
+msgstr "Error creating department"
+
+# TRANSLATION
+# LABEL/ID_DEPARTMENT_CHECK_PARENT_DEPARTMENT
+#: LABEL/ID_DEPARTMENT_CHECK_PARENT_DEPARTMENT
+msgid "It's necessary to check the parent-department: {0} for the sub-department: {1}"
+msgstr "It's necessary to check the parent-department: {0} for the sub-department: {1}"
+
+# TRANSLATION
+# LABEL/ID_PROCESS_DEFINITION_INCOMPLETE
+#: LABEL/ID_PROCESS_DEFINITION_INCOMPLETE
+msgid "To create a new process all the process objects must be selected/included in the pmx2 file."
+msgstr "To create a new process all the process objects must be selected/included in the pmx2 file."
+
+# TRANSLATION
+# LABEL/ID_NOT_EXECUTE_QUERY
+#: LABEL/ID_NOT_EXECUTE_QUERY
+msgid "Changes to {0} are forbidden. Please contact system administrator for more information."
+msgstr "Changes to {0} are forbidden. Please contact system administrator for more information."
+
+# TRANSLATION
+# LABEL/ID_EMAIL_EVENT_DEFINITION_DOES_NOT_EXIST
+#: LABEL/ID_EMAIL_EVENT_DEFINITION_DOES_NOT_EXIST
+msgid "The email event definition does not exist."
+msgstr "The email event definition does not exist."
+
+# TRANSLATION
+# LABEL/ID_USER_CANT_BE_DELETED_FOR_THE_PROCESS
+#: LABEL/ID_USER_CANT_BE_DELETED_FOR_THE_PROCESS
+msgid "The user can't be deleted because it is referenced in the process {processTitle} in a process permission."
+msgstr "The user can't be deleted because it is referenced in the process {processTitle} in a process permission."
+
+# TRANSLATION
+# LABEL/ID_USER_NOT_IT_BELONGS_CASE_OR_NOT_SUPERVISOR
+#: LABEL/ID_USER_NOT_IT_BELONGS_CASE_OR_NOT_SUPERVISOR
+msgid "The user does not belong to case or user not is supervisor"
+msgstr "The user does not belong to case or user not is supervisor"
+
+# TRANSLATION
+# LABEL/ID_USER_IS_SUPERVISOR_DOES_NOT_ASSOCIATED_INPUT_DOCUMENT
+#: LABEL/ID_USER_IS_SUPERVISOR_DOES_NOT_ASSOCIATED_INPUT_DOCUMENT
+msgid "The user is supervisor, but it does not have an associated input document"
+msgstr "The user is supervisor, but it does not have an associated input document"
+
+# TRANSLATION
+# LABEL/ID_MAFE_c5bcf625cbb751aba886be634ef4ef47
+#: LABEL/ID_MAFE_c5bcf625cbb751aba886be634ef4ef47
+msgid "Invalid Connection between elements"
+msgstr "Invalid Connection between elements"
+
+# TRANSLATION
+# LABEL/ID_MAFE_815b565aff7fbfe8db5eb2573677e9a4
+#: LABEL/ID_MAFE_815b565aff7fbfe8db5eb2573677e9a4
+msgid "SubProcess must have an incoming sequence flow"
+msgstr "SubProcess must have an incoming sequence flow"
+
+# TRANSLATION
+# LABEL/ID_MAFE_85cc96b9ef52490be95df14539d47a39
+#: LABEL/ID_MAFE_85cc96b9ef52490be95df14539d47a39
+msgid "SubProcess must have an outgoing sequence flow"
+msgstr "SubProcess must have an outgoing sequence flow"
+
+# TRANSLATION
+# LABEL/ID_MAFE_fbd86a8fe4703e24aff466cbe75facd6
+#: LABEL/ID_MAFE_fbd86a8fe4703e24aff466cbe75facd6
+msgid "This is a Message of Error"
+msgstr "This is a Message of Error"
+
+# TRANSLATION
+# LABEL/ID_MAFE_ec6f1a89963c5b95d783e0c260fc959a
+#: LABEL/ID_MAFE_ec6f1a89963c5b95d783e0c260fc959a
+msgid "Can't connect start event to subprocess"
+msgstr "Can't connect start event to subprocess"
+
+# TRANSLATION
+# LABEL/ID_EEPLUGIN_IMPORT_PLUGIN_NOT_IS_ENTERPRISE
+#: LABEL/ID_EEPLUGIN_IMPORT_PLUGIN_NOT_IS_ENTERPRISE
+msgid "The plugin \"{0}\" not is a Enterprise Edition Plugin"
+msgstr "The plugin \"{0}\" not is a Enterprise Edition Plugin"
+
+# TRANSLATION
+# LABEL/ID_PMPLUGIN_IMPORT_PLUGIN_IS_ENTERPRISE
+#: LABEL/ID_PMPLUGIN_IMPORT_PLUGIN_IS_ENTERPRISE
+msgid "The plugin \"{0}\" is a Enterprise Edition Plugin, please install the Enterprise Plugins Manager to use this plugin"
+msgstr "The plugin \"{0}\" is a Enterprise Edition Plugin, please install the Enterprise Plugins Manager to use this plugin"
+
+# TRANSLATION
+# LABEL/ID_USER_GROUP_NOT_CORRESPOND
+#: LABEL/ID_USER_GROUP_NOT_CORRESPOND
+msgid "This id: {0} not correspond to a {1}"
+msgstr "This id: {0} not correspond to a {1}"
+
+# TRANSLATION
+# LABEL/ID_PROCESS_CANNOT_BE_UPDATED_THERE_ARE_TASKS_WITH_ACTIVE_CASES
+#: LABEL/ID_PROCESS_CANNOT_BE_UPDATED_THERE_ARE_TASKS_WITH_ACTIVE_CASES
+msgid "The process cannot be updated because there are tasks with active cases which are not presented in the new definition of the process, please verify that there are not active cases in those tasks before trying to import the process again."
+msgstr "The process cannot be updated because there are tasks with active cases which are not presented in the new definition of the process, please verify that there are not active cases in those tasks before trying to import the process again."
+
+# TRANSLATION
+# LABEL/ID_MILLISECONDS
+#: LABEL/ID_MILLISECONDS
+msgid "Milliseconds"
+msgstr "Milliseconds"
+
+# TRANSLATION
+# LABEL/ID_FIELD_NOT_FOUND
+#: LABEL/ID_FIELD_NOT_FOUND
+msgid "Field not found"
+msgstr "Field not found"
+
+# TRANSLATION
+# LABEL/ID_OUTPUT_DOCUMENT_INVALID_EXTENSION
+#: LABEL/ID_OUTPUT_DOCUMENT_INVALID_EXTENSION
+msgid "Invalid extension"
+msgstr "Invalid extension"
+
+# TRANSLATION
+# LABEL/ID_OUTPUT_DOCUMENT_CONFIG_NOT_SUPPORT_EXTENSION
+#: LABEL/ID_OUTPUT_DOCUMENT_CONFIG_NOT_SUPPORT_EXTENSION
+msgid "The document in its configuration does not support this extension"
+msgstr "The document in its configuration does not support this extension"
+
+# TRANSLATION
+# LABEL/ID_NOT_EXISTS_FILE
+#: LABEL/ID_NOT_EXISTS_FILE
+msgid "File does not exists"
+msgstr "File does not exists"
+
+# TRANSLATION
+# LABEL/ID_EXCEPTION_LOG_INTERFAZ
+#: LABEL/ID_EXCEPTION_LOG_INTERFAZ
+msgid "An internal error occurred #{0}. Please contact your system administrator for more information."
+msgstr "An internal error occurred #{0}. Please contact your system administrator for more information."
+
+# TRANSLATION
+# LABEL/ID_CASE_OUTPUT_DOCUMENT_DOES_NOT_EXIST
+#: LABEL/ID_CASE_OUTPUT_DOCUMENT_DOES_NOT_EXIST
+msgid "This output document with {0}: {1} does not exist."
+msgstr "This output document with {0}: {1} does not exist."
+
+# TRANSLATION
+# LABEL/ID_MAFE_a9f2bfaa472c55e0975d15c0ba59d24d
+#: LABEL/ID_MAFE_a9f2bfaa472c55e0975d15c0ba59d24d
+msgid "Before Output Document"
+msgstr "Before Output Document"
+
+# TRANSLATION
+# LABEL/ID_MAFE_41e80c3ce414de15ab19d996f7072429
+#: LABEL/ID_MAFE_41e80c3ce414de15ab19d996f7072429
+msgid "fileupload"
+msgstr "fileupload"
+
+# TRANSLATION
+# LABEL/ID_MAFE_c72d7ee8a23bae4c80e8cc4521f89f7a
+#: LABEL/ID_MAFE_c72d7ee8a23bae4c80e8cc4521f89f7a
+msgid "Steps for task"
+msgstr "Steps for task"
+
+# TRANSLATION
+# LABEL/ID_MAFE_d0aac4ce1ac97df2b4c6e456bbe3a061
+#: LABEL/ID_MAFE_d0aac4ce1ac97df2b4c6e456bbe3a061
+msgid "Expand all"
+msgstr "Expand all"
+
+# TRANSLATION
+# LABEL/ID_MAFE_ab3cc3868af33a9eb61a93bd0adec2a0
+#: LABEL/ID_MAFE_ab3cc3868af33a9eb61a93bd0adec2a0
+msgid "Collapse all"
+msgstr "Collapse all"
+
+# TRANSLATION
+# LABEL/ID_SCRIPT_TASK_ACTIVITY_ALREADY_REGISTERED
+#: LABEL/ID_SCRIPT_TASK_ACTIVITY_ALREADY_REGISTERED
+msgid "The Script-Task with {0}: \"{1}\" already registered"
+msgstr "The Script-Task with {0}: \"{1}\" already registered"
+
+# TRANSLATION
+# LABEL/ID_CASE_CANCELLED_PARALLEL
+#: LABEL/ID_CASE_CANCELLED_PARALLEL
+msgid "To cancel a case, no parallel threads must be active. Only cases with one active thread can be canceled."
+msgstr "To cancel a case, no parallel threads must be active. Only cases with one active thread can be canceled."
+
+# TRANSLATION
+# LABEL/ID_REASSIGNMENT_ERROR
+#: LABEL/ID_REASSIGNMENT_ERROR
+msgid "The case was already derivated to other person. Try to open again the case to reassign."
+msgstr "The case was already derivated to other person. Try to open again the case to reassign."
+
+# TRANSLATION
+# LABEL/ID_REASSIGNMENT_PAUSED_ERROR
+#: LABEL/ID_REASSIGNMENT_PAUSED_ERROR
+msgid "The case is paused and can't be reasigned."
+msgstr "The case is paused and can't be reasigned."
+
+# TRANSLATION
+# LABEL/ID_THE_DEFAULT_CONFIGURATION
+#: LABEL/ID_THE_DEFAULT_CONFIGURATION
+msgid "The default configuration wasn't defined"
+msgstr "The default configuration wasn't defined"
+
+# TRANSLATION
+# LABEL/ID_MAFE_1de162d73f017a9243ce0c939064a014
+#: LABEL/ID_MAFE_1de162d73f017a9243ce0c939064a014
+msgid "Enable gallery"
+msgstr "Enable gallery"
+
+# TRANSLATION
+# LABEL/ID_MAFE_4e357e7345689cff230335282b201a11
+#: LABEL/ID_MAFE_4e357e7345689cff230335282b201a11
+msgid "Enable camera"
+msgstr "Enable camera"
+
+# TRANSLATION
+# LABEL/ID_MAFE_5582ead0a9ee86a54da29c20caee6f57
+#: LABEL/ID_MAFE_5582ead0a9ee86a54da29c20caee6f57
+msgid "Force user login"
+msgstr "Force user login"
+
+# TRANSLATION
+# LABEL/ID_MAFE_f82e519e2e82239be5f49d78b24ea228
+#: LABEL/ID_MAFE_f82e519e2e82239be5f49d78b24ea228
+msgid "Supported Controls: Multiple File."
+msgstr "Supported Controls: Multiple File."
+
+# TRANSLATION
+# LABEL/ID_DEFAULT_EXPIRATION_YEAR
+#: LABEL/ID_DEFAULT_EXPIRATION_YEAR
+msgid "Default User Expiry Date (Years)"
+msgstr "Default User Expiry Date (Years)"
+
+# TRANSLATION
+# LABEL/ID_MAFE_497f247967ea9a295c48effdc025c1a1
+#: LABEL/ID_MAFE_497f247967ea9a295c48effdc025c1a1
+msgid "Email From Format"
+msgstr "Email From Format"
+
+# TRANSLATION
+# LABEL/ID_MAFE_28a7de43bb5297bf6122425d52210f93
+#: LABEL/ID_MAFE_28a7de43bb5297bf6122425d52210f93
+msgid "Assigned User"
+msgstr "Assigned User"
+
+# TRANSLATION
+# LABEL/ID_MAFE_31d1eacb86fc41c8ba34934923e8b53e
+#: LABEL/ID_MAFE_31d1eacb86fc41c8ba34934923e8b53e
+msgid "Email Account Settings"
+msgstr "Email Account Settings"
+
+# TRANSLATION
+# LABEL/ID_MAFE_d4903c30cd1efde76c02488c8697503b
+#: LABEL/ID_MAFE_d4903c30cd1efde76c02488c8697503b
+msgid "Assigned user"
+msgstr "Assigned user"
+
+# TRANSLATION
+# LABEL/ID_CASE_NUMBER_CAPITALIZED
+#: LABEL/ID_CASE_NUMBER_CAPITALIZED
+msgid "Case Number"
+msgstr "Case Number"
+
+# TRANSLATION
+# LABEL/ID_ANSWERED
+#: LABEL/ID_ANSWERED
+msgid "Answered"
+msgstr "Answered"
+
+# TRANSLATION
+# LABEL/ID_VIEW_RESPONSE
+#: LABEL/ID_VIEW_RESPONSE
+msgid "View Response"
+msgstr "View Response"
+
+# TRANSLATION
+# LABEL/ID_ERROR_MESSAGE
+#: LABEL/ID_ERROR_MESSAGE
+msgid "Error Message"
+msgstr "Error Message"
 
 # additionalTables/additionalTablesData.xml?ADD_TAB_NAME
 # additionalTables/additionalTablesData.xml
@@ -36900,8 +37302,8 @@ msgstr "Cancel"
 # login/licenseExpired.xml?thetitle
 # login/licenseExpired.xml
 #: title - thetitle
-msgid "Your license has expired or the System does not have a license. To use the ProcessMaker Enterprise Edition upload a valid license"
-msgstr "Your license has expired or the System does not have a license. To use the ProcessMaker Enterprise Edition upload a valid license"
+msgid "Your license has expired or the system does not have a license. To use the ProcessMaker Enterprise Edition upload a valid license"
+msgstr "Your license has expired or the system does not have a license. To use the ProcessMaker Enterprise Edition upload a valid license"
 
 # login/licenseExpired.xml?licenseFile
 # login/licenseExpired.xml
@@ -36918,8 +37320,8 @@ msgstr "Update License"
 # login/licenseExpiredpm3.xml?thetitle
 # login/licenseExpiredpm3.xml
 #: title - thetitle
-msgid "[login/licenseExpiredpm3.xml?thetitle] Your license has expired or the System does not have a license. To use the ProcessMaker Enterprise Edition upload a valid license"
-msgstr "Your license has expired or the System does not have a license. To use the ProcessMaker Enterprise Edition upload a valid license"
+msgid "[login/licenseExpiredpm3.xml?thetitle] Your license has expired or the system does not have a license. To use the ProcessMaker Enterprise Edition upload a valid license"
+msgstr "Your license has expired or the system does not have a license. To use the ProcessMaker Enterprise Edition upload a valid license"
 
 # login/licenseExpiredpm3.xml?licenseFile
 # login/licenseExpiredpm3.xml

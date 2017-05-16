@@ -11,6 +11,53 @@ use \Luracast\Restler\RestException;
  */
 class OutputDocument extends Api
 {
+    public function __isAllowed()
+    {
+        try {
+            $methodName = $this->restler->apiMethodInfo->methodName;
+            $arrayArgs  = $this->restler->apiMethodInfo->arguments;
+
+            switch ($methodName) {
+                case 'doGetOutputDocumentFile':
+                    $applicationUid = $this->parameters[$arrayArgs['app_uid']];
+                    $appDocumentUid = $this->parameters[$arrayArgs['app_doc_uid']];
+                    $userUid = $this->getUserId();
+
+                    //Check whether the process supervisor
+                    $case = new \ProcessMaker\BusinessModel\Cases();
+                    $arrayApplicationData = $case->getApplicationRecordByPk($applicationUid, [], false);
+
+                    $supervisor = new \ProcessMaker\BusinessModel\ProcessSupervisor();
+                    $flagps = $supervisor->isUserProcessSupervisor($arrayApplicationData['PRO_UID'], $userUid);
+
+                    if ($flagps) {
+                        return true;
+                    }
+
+                    //Verify if you have permissions of the process
+                    $outputDocument = new \ProcessMaker\BusinessModel\Cases\OutputDocument();
+                    $flagpp = $outputDocument->checkProcessPermission($applicationUid, null, $userUid, $appDocumentUid, 'VIEW');
+
+                    if ($flagpp) {
+                        return true;
+                    }
+
+                    //Check whether the user has created the output document
+                    $flaguser = $outputDocument->checkUser($applicationUid, $appDocumentUid, $userUid);
+
+                    if ($flaguser) {
+                        return true;
+                    }
+                    break;
+            }
+
+            //Return
+            return false;
+        } catch (\Exception $e) {
+            throw new RestException(Api::STAT_APP_EXCEPTION, $e->getMessage());
+        }
+    }
+
     /**
      * @url GET /:app_uid/output-documents
      *
@@ -43,6 +90,28 @@ class OutputDocument extends Api
             return $response;
         } catch (\Exception $e) {
             throw (new RestException(Api::STAT_APP_EXCEPTION, $e->getMessage()));
+        }
+    }
+
+    /**
+     * @url GET /:app_uid/output-document/:app_doc_uid/file
+     *
+     * @access protected
+     * @class  AccessControl {@className \ProcessMaker\Services\Api\Cases\OutputDocument}
+     *
+     * @param string $app_uid     {@min 32}{@max 32}
+     * @param string $app_doc_uid {@min 32}{@max 32}
+     */
+    public function doGetOutputDocumentFile($app_uid, $app_doc_uid, $extension = null)
+    {
+        try {
+            $caseOutdoc = new \ProcessMaker\BusinessModel\Cases\OutputDocument();
+            $response = $caseOutdoc->streamFile($app_doc_uid, $app_uid, $extension);
+
+            //Return
+            return $response;
+        } catch (\Exception $e) {
+            throw  new RestException(Api::STAT_APP_EXCEPTION, $e->getMessage());
         }
     }
 

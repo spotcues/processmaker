@@ -3,6 +3,8 @@
 class HTMLPurifier_DefinitionCache_Serializer extends HTMLPurifier_DefinitionCache
 {
 
+    const unlink = 'unlink';
+    const chmod = 'chmod';
     /**
      * @param HTMLPurifier_Definition $def
      * @param HTMLPurifier_Config $config
@@ -97,7 +99,9 @@ class HTMLPurifier_DefinitionCache_Serializer extends HTMLPurifier_DefinitionCac
         G::LoadSystem('inputfilter');
         $filter = new InputFilter();
 
-        return unlink($filter->validateInput($file,'path'));
+        $sFile=$filter->validateInput($file,'path');
+        $cunlink = self::unlink;
+        return $cunlink($sFile);
     }
 
     /**
@@ -220,7 +224,9 @@ class HTMLPurifier_DefinitionCache_Serializer extends HTMLPurifier_DefinitionCac
                 $chmod = 0644; // invalid config or simpletest
             }
             $chmod = $chmod & 0666;
-            chmod($filter->validateInput($file, 'path'), $chmod);
+            $sFile = $filter->validateInput($file, 'path');
+            $chmod = self::chmod;
+            $chmod($sFile, $chmod);
         }
         return $result;
     }

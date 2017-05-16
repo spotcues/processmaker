@@ -92,8 +92,6 @@ if (sizeof( $newValues ) > 1 && isset( $_POST['grid'] )) {
             }
         }
     }
-    $newValues = array ();
-    //$fieldBase = (array) $fieldBase;
     $newValues[0]->$_POST['grid'] = $fieldBase;
 }
 

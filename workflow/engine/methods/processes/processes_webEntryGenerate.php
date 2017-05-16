@@ -106,6 +106,19 @@ try {
             file_put_contents( $fileName, $template->getOutputContent() );
         }
 
+        //save data in table WEB_ENTRY
+        $arrayData = [
+            "PRO_UID" => $sPRO_UID,
+            "DYN_UID" => $sDYNAFORM,
+            "TAS_UID" => $sTASKS,
+            "WE_DATA" => $dynTitle . ".php",
+            "USR_UID" => $_SESSION['USER_LOGGED'],
+            "WE_CREATE_USR_UID" => $_SESSION['USER_LOGGED'],
+            "WE_UPDATE_USR_UID" => $_SESSION['USER_LOGGED']
+        ];
+        $webEntry = new \ProcessMaker\BusinessModel\WebEntry();
+        $webEntry->createClassic($arrayData);
+
         require_once 'classes/model/Event.php';
         $oEvent = new Event();
         $aDataEvent = array ();

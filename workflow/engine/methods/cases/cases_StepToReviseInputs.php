@@ -71,7 +71,6 @@ $oHeadPublisher->addScriptCode( '
     var leimnud = new maborak();
     leimnud.make();
     leimnud.Package.Load("rpc,drag,drop,panel,app,validator,fx,dom,abbr",{Instance:leimnud,Type:"module"});
-    leimnud.Package.Load("json",{Type:"file"});
     leimnud.Package.Load("cases",{Type:"file",Absolute:true,Path:"/jscore/cases/core/cases.js"});
     leimnud.Package.Load("cases_Step",{Type:"file",Absolute:true,Path:"/jscore/cases/core/cases_Step.js"});
     leimnud.Package.Load("processmap",{Type:"file",Absolute:true,Path:"/jscore/processmap/core/processmap.js"});
@@ -92,9 +91,11 @@ $oCase = new Cases();
 $Fields = $oCase->loadCase( $_SESSION['APPLICATION'] );
 
 $G_PUBLISH = new Publisher();
-
-if (! isset( $_GET['ex'] )) {
+$ex = 0;
+if (! isset( $_GET['ex'] ) || empty($_GET['ex'])) {
     $_GET['ex'] = 0;
+} else {
+    $ex = $filter->xssFilterHard($_GET['ex']);
 }
 
 if (! isset( $_GET['INP_DOC_UID'] )) {
@@ -140,7 +141,7 @@ G::RenderPage( 'publish', 'blank' );
 //Deprecated Section since the interface are now movig to ExtJS
 function setSelect()
 {
-    var ex=<?php echo $filter->xssFilterHard($_GET['ex'])?>;
+    var ex=<?php echo $ex; ?>;
     try {
         for (i=1; i<50; i++) {
             if (i == ex) {

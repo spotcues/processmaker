@@ -59,10 +59,10 @@ function run_create_translation($args, $opts)
     CLI::logging("Updating labels Mafe ...\n");
     foreach ($workspaces as $workspace) {
         try {
-            echo "Updating labels for workspace " . pakeColor::colorize($workspace->name, "INFO") . "\n";
+            G::outRes( "Updating labels for workspace " . pakeColor::colorize($workspace->name, "INFO") . "\n" );
             $translation->generateTransaltionMafe($lang);
         } catch (Exception $e) {
-            echo "Errors upgrading labels for workspace " . CLI::info($workspace->name) . ": " . CLI::error(G::getErrorMessage($e)) . "\n";
+            G::outRes( "Errors upgrading labels for workspace " . CLI::info($workspace->name) . ": " . CLI::error(G::getErrorMessage($e)) . "\n" );
         }
     }
 

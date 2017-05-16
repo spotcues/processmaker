@@ -48,21 +48,21 @@ class Dynaform extends BaseDynaform
      *
      * @var string
      */
-    protected $dyn_title = '';
+    protected $dyn_title_content = '';
 
     /**
-     * Get the [Dyn_title] column value.
+     * Get the [Dyn_title_content] column value.
      *
      * @return string
      */
-    public function getDynTitle ()
+    public function getDynTitleContent ()
     {
         if ($this->getDynUid() == '') {
             throw (new Exception( "Error in getDynTitle, the DYN_UID can't be blank" ));
         }
         $lang = defined( 'SYS_LANG' ) ? SYS_LANG : 'en';
-        $this->dyn_title = Content::load( 'DYN_TITLE', '', $this->getDynUid(), $lang );
-        return $this->dyn_title;
+        $this->dyn_title_content = Content::load( 'DYN_TITLE', '', $this->getDynUid(), $lang );
+        return $this->dyn_title_content;
     }
 
     /**
@@ -71,7 +71,7 @@ class Dynaform extends BaseDynaform
      * @param string $v new value
      * @return void
      */
-    public function setDynTitle ($v)
+    public function setDynTitleContent ($v)
     {
         if ($this->getDynUid() == '') {
             throw (new Exception( "Error in setDynTitle, the DYN_UID can't be blank" ));
@@ -82,11 +82,11 @@ class Dynaform extends BaseDynaform
             $v = (string) $v;
         }
 
-        if ($this->dyn_title !== $v || $v === '') {
-            $this->dyn_title = $v;
+        if (in_array(DynaformPeer::DYN_TITLE, $this->modifiedColumns) || $v === '') {
+            $this->dyn_title_content = $v;
             $lang = defined( 'SYS_LANG' ) ? SYS_LANG : 'en';
 
-            $res = Content::addContent( 'DYN_TITLE', '', $this->getDynUid(), $lang, $this->dyn_title );
+            $res = Content::addContent( 'DYN_TITLE', '', $this->getDynUid(), $lang, $this->dyn_title_content );
         }
 
     } // set()
@@ -104,7 +104,7 @@ class Dynaform extends BaseDynaform
      *
      * @return string
      */
-    public function getDynDescription ()
+    public function getDynDescriptionContent ()
     {
         if ($this->getDynUid() == '') {
             throw (new Exception( "Error in getDynDescription, the DYN_UID can't be blank" ));
@@ -120,7 +120,7 @@ class Dynaform extends BaseDynaform
      * @param string $v new value
      * @return void
      */
-    public function setDynDescription ($v)
+    public function setDynDescriptionContent ($v)
     {
         if ($this->getDynUid() == '') {
             throw (new Exception( "Error in setDynDescription, the DYN_UID can't be blank" ));
@@ -131,7 +131,7 @@ class Dynaform extends BaseDynaform
             $v = (string) $v;
         }
 
-        if ($this->dyn_description !== $v || $v === '') {
+        if (in_array(DynaformPeer::DYN_DESCRIPTION, $this->modifiedColumns) || $v === '') {
             $this->dyn_description = $v;
             $lang = defined( 'SYS_LANG' ) ? SYS_LANG : 'en';
 
@@ -166,6 +166,10 @@ class Dynaform extends BaseDynaform
                 $dynUid = $aData['DYN_UID'];
             }
             $this->setDynUid( $dynUid );
+            $dynTitle = isset($aData['DYN_TITLE']) ? $aData['DYN_TITLE'] : 'Default Dynaform Title';
+            $this->setDynTitle($dynTitle);
+            $dynDescription = isset($aData['DYN_DESCRIPTION']) ? $aData['DYN_DESCRIPTION'] : 'Default Dynaform Description';
+            $this->setDynDescription($dynDescription);
             $this->setProUid( $aData['PRO_UID'] );
             $this->setDynType( isset( $aData['DYN_TYPE'] ) ? $aData['DYN_TYPE'] : 'xmlform' );
             $this->setDynFilename( $aData['PRO_UID'] . PATH_SEP . $dynUid );
@@ -205,20 +209,9 @@ class Dynaform extends BaseDynaform
             $this->setDynVersion( $aData['DYN_VERSION'] );
             if ($this->validate()) {
                 $con->begin();
+                $this->setDynTitleContent( $dynTitle );
+                $this->setDynDescriptionContent( $dynDescription );
                 $res = $this->save();
-
-                if (isset( $aData['DYN_TITLE'] )) {
-                    $this->setDynTitle( $aData['DYN_TITLE'] );
-                } else {
-                    $this->setDynTitle( 'Default Dynaform Title' );
-                }
-
-                if (isset( $aData['DYN_DESCRIPTION'] )) {
-                    $this->setDynDescription( $aData['DYN_DESCRIPTION'] );
-                } else {
-                    $this->setDynDescription( 'Default Dynaform Description' );
-                }
-
                 $con->commit();
                 
                 //Add Audit Log
@@ -271,9 +264,6 @@ class Dynaform extends BaseDynaform
     {
         $this->create( $aData , $pmTableUid);
         $aData['DYN_UID'] = $this->getDynUid();
-        //krumo(BasePeer::getFieldnames('Content'));
-        $fields = array ();
-        //$oCriteria = new Criteria('workflow');
         $pmTable = AdditionalTablesPeer::retrieveByPK( $pmTableUid );
         $addTabName = $pmTable->getAddTabName();
         $keys = '';
@@ -288,19 +278,6 @@ class Dynaform extends BaseDynaform
         } else {
             $keys = ' ';
         }
-
-        //      $addTabKeys = $pmTable->getAddTabDynavars();
-        //      $addTabKeys = unserialize($addTabKeys);
-        //      $keys = '';
-        //      foreach ( $addTabKeys as $addTabKey ){
-        //        if (trim($addTabKey['CASE_VARIABLE'])!=''&&$keys!=''){
-        //            $keys = $keys.'|'.$addTabKey['CASE_VARIABLE'];
-        //        } else {
-        //            $keys = $addTabKey['CASE_VARIABLE'];
-        //        }
-        //
-        //      }
-
 
         // Determines the engine to use
         // For a description of a table
@@ -319,7 +296,6 @@ class Dynaform extends BaseDynaform
 
         $file = $aData['PRO_UID'] . '/' . $aData['DYN_UID'];
         $dbc = new DBConnection( PATH_DYNAFORM . $file . '.xml', '', '', '', 'myxml' );
-        $ses = new DBSession( $dbc );
         $fieldXML = new DynaFormField( $dbc );
 
         $pmConnectionName = $addTabName . '_CONNECTION';
@@ -348,7 +324,6 @@ class Dynaform extends BaseDynaform
         $res = $sth->executeQuery( $sql, ResultSet::FETCHMODE_ASSOC );
 
         while ($res->next()) {
-            // if(strtoupper($res->get('Null'))=='NO') {
             if (strtoupper( $res->get( $oDataBase->getFieldNull() ) ) == 'NO') {
                 if ($countKeys == 1 && $res->get( 'Field' ) == $keyRequered) {
                     $required = '0';
@@ -559,10 +534,6 @@ class Dynaform extends BaseDynaform
             if (is_object( $oPro ) && get_class( $oPro ) == 'Dynaform') {
                 $aFields = $oPro->toArray( BasePeer::TYPE_FIELDNAME );
                 $this->fromArray( $aFields, BasePeer::TYPE_FIELDNAME );
-                $aFields['DYN_TITLE'] = $oPro->getDynTitle();
-                $aFields['DYN_DESCRIPTION'] = $oPro->getDynDescription();
-                $this->setDynTitle( $oPro->getDynTitle() );
-                $this->setDynDescription( $oPro->getDynDescription() );
                 return $aFields;
             } else {
                 throw (new Exception( "The row '$ProUid' in table Dynaform doesn't exist!" ));
@@ -591,10 +562,10 @@ class Dynaform extends BaseDynaform
                 $oPro->setDynUpdateDate(date("Y-m-d H:i:s"));
                 if ($oPro->validate()) {
                     if (isset( $aData['DYN_TITLE'] )) {
-                        $oPro->setDynTitle( $aData['DYN_TITLE'] );
+                        $oPro->setDynTitleContent( $aData['DYN_TITLE'] );
                     }
                     if (isset( $aData['DYN_DESCRIPTION'] )) {
-                        $oPro->setDynDescription( $aData['DYN_DESCRIPTION'] );
+                        $oPro->setDynDescriptionContent( $aData['DYN_DESCRIPTION'] );
                     }
                     $res = $oPro->save();
                     $con->commit();
@@ -715,37 +686,22 @@ class Dynaform extends BaseDynaform
         return $G_FORM->fields;
     }
 
-    public function verifyExistingName ($sName, $sProUid, $sDynUid)
+    public function verifyExistingName ($sName, $sProUid, $sDynUid = null)
     {
         $sNameDyanform = urldecode( $sName );
         $sProUid = urldecode( $sProUid );
         $oCriteria = new Criteria( 'workflow' );
         $oCriteria->addSelectColumn( DynaformPeer::DYN_UID );
         $oCriteria->add( DynaformPeer::PRO_UID, $sProUid );
-        $oCriteria->add( DynaformPeer::DYN_UID, $sDynUid );
+        if (!is_null($sDynUid)) {
+            $oCriteria->add(DynaformPeer::DYN_UID, $sDynUid);
+        }
+        $oCriteria->add( DynaformPeer::DYN_TITLE, $sNameDyanform );
         $oDataset = DynaformPeer::doSelectRS( $oCriteria );
         $oDataset->setFetchmode( ResultSet::FETCHMODE_ASSOC );
-        $flag = true;
-        while ($oDataset->next() && $flag) {
-            $aRow = $oDataset->getRow();
-            $oCriteria1 = new Criteria( 'workflow' );
-            $oCriteria1->addSelectColumn( 'COUNT(*) AS DYNAFORMS' );
-            $oCriteria1->add( ContentPeer::CON_CATEGORY, 'DYN_TITLE' );
-            $oCriteria1->add( ContentPeer::CON_ID, $sDynUid, Criteria::NOT_EQUAL);
-            $oCriteria1->add( ContentPeer::CON_VALUE, $sNameDyanform );
-            $oCriteria1->add( ContentPeer::CON_LANG, SYS_LANG );
-            $oCriteria1->add( DynaformPeer::PRO_UID, $sProUid);
-            $oCriteria1->addJoin( ContentPeer::CON_ID, DynaformPeer::DYN_UID, Criteria::INNER_JOIN );
-            $oDataset1 = ContentPeer::doSelectRS( $oCriteria1 );
-            $oDataset1->setFetchmode( ResultSet::FETCHMODE_ASSOC );
-            $oDataset1->next();
-            $aRow1 = $oDataset1->getRow();
-            if ($aRow1['DYNAFORMS'] == 1) {
-                $flag = false;
-                break;
-            }
-        }
-        return $flag;
+        $oDataset->next();
+        $aRow = $oDataset->getRow();
+        return (!$aRow) ? true : false;
     }
     
     /**

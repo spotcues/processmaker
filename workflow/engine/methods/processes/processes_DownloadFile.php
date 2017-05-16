@@ -22,16 +22,16 @@
  * Coral Gables, FL, 33134, USA, or email info@colosa.com.
  */
 
-if (! isset($_GET["file_hash"])) {
+if (!isset($_GET["file_hash"])) {
     throw new Exception("Invalid Request, param 'file_hash' was not sent.");
 }
 
 $httpStream = new \ProcessMaker\Util\IO\HttpStream();
 $outputDir = PATH_DATA . "sites" . PATH_SEP . SYS_SYS . PATH_SEP . "files" . PATH_SEP . "output" . PATH_SEP;
-$filename = base64_decode($_GET["file_hash"]);
+$filename = urldecode(base64_decode($_GET["file_hash"]));
 $fileExtension = pathinfo($outputDir . $filename, PATHINFO_EXTENSION);
 
-if (! file_exists($outputDir . $filename)) {
+if (!file_exists($outputDir . $filename)) {
     throw new Exception("Error, couldn't find request file: $filename");
 }
 

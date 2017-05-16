@@ -443,7 +443,7 @@ font-weight:normal;
 	<li class="debug-child">
 	<div onmouseout="krumo.out(this);" onmouseover="krumo.over(this);" onclick="krumo.toggle(this);" class="debug-element debug-opened">
 			<a class="debug-name">{$id}</a>&nbsp;
-	  		<strong class="debug-string">{$data}</strong>
+	  		<strong class="debug-string">{if $data|is_array}{$data|@debug_print_var}{else}{$data}{/if}</strong>
 	</div>
   </li>
 	{/foreach}

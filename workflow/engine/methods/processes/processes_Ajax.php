@@ -193,17 +193,18 @@ try {
             G::LoadSystem('inputfilter');
             $filter = new InputFilter();
             $form = $_REQUEST;
-            if(file_exists(PATH_DATA . "sites" . PATH_SEP . SYS_SYS . PATH_SEP . "public" . PATH_SEP . $form['PRO_UID'] . PATH_SEP . $form['FILENAME'])) {
-                unlink($filter->validateInput(PATH_DATA . "sites" . PATH_SEP . SYS_SYS . PATH_SEP . "public" .
-                    PATH_SEP . $form['PRO_UID'] . PATH_SEP . $form['FILENAME'], 'path'));
+            $filePath = PATH_DATA . "sites" . PATH_SEP . SYS_SYS . PATH_SEP . "public" . PATH_SEP . $form['PRO_UID'] . PATH_SEP . $form['FILENAME'];
+            if (file_exists($filePath)) {
+                unlink($filter->validateInput($filePath, 'path'));
+                $webEntry = new \ProcessMaker\BusinessModel\WebEntry();
+                $webEntry->deleteClassic($form['PRO_UID'], $filePath);
             }
-            if(file_exists(PATH_DATA . "sites" . PATH_SEP . SYS_SYS . PATH_SEP . "public" . PATH_SEP . $form['PRO_UID'] . PATH_SEP . str_replace(".php", "Post", $form['FILENAME']) . ".php")) {
-                unlink($filter->validateInput(PATH_DATA . "sites" . PATH_SEP . SYS_SYS . PATH_SEP . "public" .
-                    PATH_SEP . $form['PRO_UID'] . PATH_SEP . str_replace(".php", "Post", $form['FILENAME']) . ".php",
-                'path'));
+            $filePath = PATH_DATA . "sites" . PATH_SEP . SYS_SYS . PATH_SEP . "public" . PATH_SEP . $form['PRO_UID'] . PATH_SEP . str_replace(".php", "Post", $form['FILENAME']) . ".php";
+            if (file_exists($filePath)) {
+                unlink($filter->validateInput($filePath, 'path'));
             }
             $oProcessMap->webEntry($_REQUEST['PRO_UID']);
-            G::auditLog('WebEntry','Delete web entry ('.$form['FILENAME'].') in process "'.$resultProcess['PRO_TITLE'].'"');
+            G::auditLog('WebEntry', 'Delete web entry (' . $form['FILENAME'] . ') in process "' . $resultProcess['PRO_TITLE'] . '"');
             break;
         case 'webEntry_new':
             $oProcessMap->webEntry_new($oData->PRO_UID);
@@ -993,6 +994,9 @@ try {
         die($sOutput);
     }
 } catch (Exception $oException) {
-    die($oException->getMessage() . "\n" . $oException->getTraceAsString());
+    $token = strtotime("now");
+    PMException::registerErrorLog($oException, $token);
+    G::outRes( G::LoadTranslation("ID_EXCEPTION_LOG_INTERFAZ", array($token)) );
+    die;
 }
 

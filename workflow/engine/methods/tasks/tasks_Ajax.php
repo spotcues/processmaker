@@ -136,6 +136,9 @@ try {
             break;
     }
 } catch (Exception $oException) {
-    die( $oException->getMessage() );
+    $token = strtotime("now");
+    PMException::registerErrorLog($oException, $token);
+    G::outRes($oException->getMessage());
+    die;
 }
 

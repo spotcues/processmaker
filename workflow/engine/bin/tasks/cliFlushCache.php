@@ -60,6 +60,9 @@ function run_flush_cache($args, $opts)
         G::mk_dir($workspace->path . "/cache", 0777);
         G::rm_dir($workspace->path . "/cachefiles");
         G::mk_dir($workspace->path . "/cachefiles", 0777);
+        if (file_exists($workspace->path.'/routes.php')) {
+            unlink($workspace->path.'/routes.php');
+        }
         echo "DONE" . PHP_EOL;
     }
 }

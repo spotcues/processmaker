@@ -471,6 +471,11 @@ class Roles extends BaseRoles {
         G::auditLog("DeleteUserToRole", "Delete user ".$user['USR_USERNAME']." (".$USR_UID.") to Role ".$rol['ROL_NAME']." (".$ROL_UID.") ");
     }
 
+    /**
+     * @param $roleUid
+     * @return ResultSet
+     * @throws Exception
+     */
     function getRolePermissionsByPerUid($roleUid){
         try {
             $criteria = new Criteria();
@@ -487,6 +492,36 @@ class Roles extends BaseRoles {
             throw $e;
         }
     }
+
+    /**
+     * Checks a permission is assigned to a Role
+     * @param $ROL_UID
+     * @param $PER_UID
+     * @return bool
+     * @throws Exception
+     */
+    function getPermissionAssignedRole($ROL_UID, $PER_UID)
+    {
+        try {
+            $criteria = new Criteria();
+            $criteria->addSelectColumn(RolesPermissionsPeer::ROL_UID);
+            $criteria->addSelectColumn(RolesPermissionsPeer::PER_UID);
+            $criteria->add(RolesPermissionsPeer::ROL_UID, $ROL_UID, Criteria::EQUAL);
+            $criteria->add(RolesPermissionsPeer::PER_UID, $PER_UID, Criteria::EQUAL);
+
+            $oDataset = RolesPermissionsPeer::doSelectRS($criteria);
+            $oDataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+            $oDataset->next();
+            if($aRowRP = $oDataset->getRow()){
+                return true;
+            }
+            return false;
+
+        } catch (exception $e) {
+            throw $e;
+        }
+    }
+    
     function getRolePermissions($ROL_UID, $filter='', $status=null) {
         try {
             $criteria = new Criteria();

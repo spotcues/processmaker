@@ -104,6 +104,8 @@ class PMPluginRegistry
     private $_arrayDesignerMenu = array();
     private $_aMenuOptionsToReplace = array ();
     private $_aImportProcessCallbackFile = array ();
+    private $_aOpenReassignCallback = array ();
+    private $_arrayDesignerSourcePath = array();
 
     /**
      * Registry a plugin javascript to include with js core at same runtime
@@ -114,6 +116,8 @@ class PMPluginRegistry
      * Contains all rest services classes from plugins
      */
     private $_restServices = array ();
+
+    private $_restExtendServices = array ();
 
     private $_restServiceEnabled = array();
 
@@ -169,7 +173,7 @@ class PMPluginRegistry
      */
     public function serializeInstance ()
     {
-        return serialize( self::$instance );
+        return serialize( $this );
     }
 
     /**
@@ -316,14 +320,16 @@ class PMPluginRegistry
                 if ($eventPlugin == 1) {
                     //$plugin = new $detail->sClassName( $detail->sNamespace, $detail->sFilename );
                     $this->_aPlugins[$detail->sNamespace] = $detail;
-                    if (method_exists( $detail, "disable" )) {
-                        $detail->disable();
+                    // If plugin class exists check if disable method exist,
+                    // otherwise use default plugin details
+                    if (class_exists($detail->sClassName)) {
+                        $plugin = new $detail->sClassName($detail->sNamespace, $detail->sFilename);
+                    } else {
+                        $plugin = $detail;
                     }
-                    //flag Only Plugin actionsByEmail
-                    if($detail->sNamespace == 'actionsByEmail'){
-                      $plugin = new $detail->sClassName( $detail->sNamespace, $detail->sFilename );
-                      $plugin->disable();
-                    } 
+                    if (method_exists($plugin, "disable")) {
+                        $plugin->disable();
+                    }
                 }
 
                 $sw = true;
@@ -406,14 +412,27 @@ class PMPluginRegistry
             }
         }
         
+        foreach ($this->_arrayDesignerSourcePath as $key => $detail) {
+            if ($detail->pluginName == $sNamespace) {
+                unset($this->_arrayDesignerSourcePath[$key]);
+            }
+        }
+
         if(sizeof( $this->_aMenuOptionsToReplace )){
             unset( $this->_aMenuOptionsToReplace );
         }
-        
+
         if(sizeof( $this->_aImportProcessCallbackFile )){
             unset( $this->_aImportProcessCallbackFile );
         }
-        
+
+        if(sizeof( $this->_aOpenReassignCallback )){
+            unset( $this->_aOpenReassignCallback );
+        }
+
+        if (sizeof($this->_restExtendServices)) {
+            $this->disableExtendsRestService($sNamespace);
+        }
         //unregistering javascripts from this plugin
         $this->unregisterJavascripts( $sNamespace );
         //unregistering rest services from this plugin
@@ -1425,7 +1444,7 @@ class PMPluginRegistry
         foreach ($classesList as $classFile) {
             if (pathinfo($classFile, PATHINFO_EXTENSION) === 'php') {
                 $ns = str_replace(
-                    DIRECTORY_SEPARATOR,
+                    '/',
                     '\\',
                     str_replace('.php', '', str_replace($baseSrcPluginPath, '', $classFile))
                 );
@@ -1443,6 +1462,60 @@ class PMPluginRegistry
         \Maveriks\WebApplication::purgeRestApiCache(basename(PATH_DATA_SITE));
 
         return true;
+    }
+
+    /**
+     * Register a extend rest service class from a plugin to be served by processmaker
+     *
+     * @param string $sNamespace The namespace for the plugin
+     * @param string $className The service (api) class name
+     */
+    public function registerExtendsRestService($sNamespace, $className)
+    {
+        $baseSrcPluginPath = PATH_PLUGINS . $sNamespace . PATH_SEP . "src";
+        $apiPath = PATH_SEP . "Services" . PATH_SEP . "Ext" . PATH_SEP;
+        $classFile = $baseSrcPluginPath . $apiPath . 'Ext' . $className . '.php';
+        if (file_exists($classFile)) {
+            $this->_restExtendServices[$sNamespace][$className] = array(
+                "filePath" => $classFile,
+                "classParent" => $className,
+                "classExtend" => 'Ext' . $className
+            );
+        }
+    }
+
+    /**
+     * Get a extend rest service class from a plugin to be served by processmaker
+     *
+     * @param string $className The service (api) class name
+     * @return array
+     */
+    public function getExtendsRestService($className)
+    {
+        $responseRestExtendService = array();
+        foreach ($this->_restExtendServices as $sNamespace => $restExtendService) {
+            if (isset($restExtendService[$className])) {
+                $responseRestExtendService = $restExtendService[$className];
+                break;
+            }
+        }
+        return $responseRestExtendService;
+    }
+
+    /**
+     * Remove a extend rest service class from a plugin to be served by processmaker
+     *
+     * @param string $sNamespace
+     * @param string $className The service (api) class name
+     * @return bool
+     */
+    public function disableExtendsRestService($sNamespace, $className = '')
+    {
+        if (isset($this->_restExtendServices[$sNamespace][$className]) && !empty($className)) {
+            unset($this->_restExtendServices[$sNamespace][$className]);
+        } elseif (empty($className)) {
+            unset($this->_restExtendServices[$sNamespace]);
+        }
     }
 
     /**
@@ -1672,14 +1745,14 @@ class PMPluginRegistry
             throw $e;
         }
     }
-    
+
     /**
      * Replace new options to menu
      *
      * @param unknown_type $namespace
      *
      * @param array $from
-     * 
+     *
      * @param array $options
      *
      * @return void
@@ -1695,7 +1768,7 @@ class PMPluginRegistry
             $this->_aMenuOptionsToReplace[$from["section"]][$from["menuId"]][] = $options;
         }
     }
-    
+
     /**
      * Return all menu Options from a specific section
      *
@@ -1707,10 +1780,10 @@ class PMPluginRegistry
         if(sizeof($oMenuFromPlugin)) {
             if(array_key_exists($strMenuName,$oMenuFromPlugin)) {
                 return $oMenuFromPlugin[$strMenuName];
-            }    
+            }
         }
     }
-    
+
     /**
      * Register a callBackFile in the singleton
      *
@@ -1733,12 +1806,12 @@ class PMPluginRegistry
             if (!$found) {
                 $callBackFile = new importCallBack( $namespace, $callBackFile );
                 $this->_aImportProcessCallbackFile[] = $callBackFile;
-            }    
+            }
         } catch(Excepton $e) {
             throw $e;
         }
     }
-    
+
     /**
      * Return all callBackFiles registered
      *
@@ -1748,5 +1821,129 @@ class PMPluginRegistry
     {
         return $this->_aImportProcessCallbackFile;
     }
-}
 
+    /**
+     * Register a callBackFile in the singleton
+     *
+     * @param string $callBackFile
+     *
+     * @return void
+     */
+    public function registerOpenReassignCallback ($callBackFile)
+    {
+        try {
+            $found = false;
+            foreach ($this->_aOpenReassignCallback as $row => $detail) {
+                if ($callBackFile == $detail->callBackFile) {
+                    $detail->callBackFile = $callBackFile;
+                    $found = true;
+                }
+            }
+            if (!$found) {
+                $callBackFile = new OpenReassignCallback( $callBackFile );
+                $this->_aOpenReassignCallback[] = $callBackFile;
+            }
+        } catch(Excepton $e) {
+            throw $e;
+        }
+    }
+
+    /**
+     * Return all callBackFiles registered
+     *
+     * @return array
+     */
+    public function getOpenReassignCallback()
+    {
+        return $this->_aOpenReassignCallback;
+    }
+
+    public function getPluginsData()
+    {
+        return $this->_aPlugins;
+    }
+
+    /**
+     * The following function method extracts the plugin if exists one
+     * with the same uppercase characters, this is required for the
+     *
+     * @param $code
+     */
+    public function getPluginByCode($code)
+    {
+        $plugin = false;
+        foreach ($this->_aPlugins as $plugin) {
+            $plugin = (array)$plugin;
+            if (strtoupper($plugin['sNamespace']) == $code) {
+                return (object)$plugin;
+            }
+        }
+        return $plugin;
+    }
+
+    /**
+     * Checks if the plugin name is Enterprise Plugin
+     *
+     * @param string $pluginName Plugin name
+     * @param string $path       Path to plugin
+     *
+     * @return bool Returns TRUE when plugin name is Enterprise Plugin, FALSE otherwise
+     */
+    public function isEnterprisePlugin($pluginName, $path = null)
+    {
+        $path = (!is_null($path) && $path != '') ? rtrim($path, '/\\') . PATH_SEP : PATH_PLUGINS;
+        $pluginFile = $pluginName . '.php';
+
+        //Return
+        return preg_match(
+            '/^.*class\s+' . $pluginName . 'Plugin\s+extends\s+(?:enterprisePlugin)\s*\{.*$/i',
+            str_replace(["\n", "\r", "\t"], ' ', file_get_contents($path . $pluginFile))
+        );
+    }
+
+    /**
+     * Registry in an array routes for js or css files.
+     * @param type $pluginName
+     * @param type $pathFile
+     * @throws Exception
+     */
+    public function registerDesignerSourcePath($pluginName, $pathFile)
+    {
+        try {
+            $flagFound = false;
+
+            foreach ($this->_arrayDesignerSourcePath as $value) {
+                if ($value->pluginName == $pluginName && $value->pathFile == $pathFile) {
+                    $flagFound = true;
+                    break;
+                }
+            }
+
+            if (!$flagFound) {
+                $obj = new stdClass();
+                $obj->pluginName = $pluginName;
+                $obj->pathFile = $pathFile;
+
+                $this->_arrayDesignerSourcePath[] = $obj;
+            }
+        } catch (Exception $e) {
+            throw $e;
+        }
+    }
+
+    /**
+     * You obtain an array containing the routes recorded by the
+     * function registerDesignerSourcePath.
+     * @return type
+     * @throws Exception
+     */
+    public function getDesignerSourcePath()
+    {
+        try {
+            return $this->_arrayDesignerSourcePath;
+        } catch (Exception $e) {
+            throw $e;
+        }
+    }
+
+}

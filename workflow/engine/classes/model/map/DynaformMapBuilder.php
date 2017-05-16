@@ -67,6 +67,10 @@ class DynaformMapBuilder
 
         $tMap->addPrimaryKey('DYN_UID', 'DynUid', 'string', CreoleTypes::VARCHAR, true, 32);
 
+        $tMap->addColumn('DYN_TITLE', 'DynTitle', 'string', CreoleTypes::LONGVARCHAR, true, null);
+
+        $tMap->addColumn('DYN_DESCRIPTION', 'DynDescription', 'string', CreoleTypes::LONGVARCHAR, false, null);
+
         $tMap->addColumn('PRO_UID', 'ProUid', 'string', CreoleTypes::VARCHAR, true, 32);
 
         $tMap->addColumn('DYN_TYPE', 'DynType', 'string', CreoleTypes::VARCHAR, true, 20);

@@ -4,7 +4,6 @@ $filter = new InputFilter();
 $_GET = $filter->xssFilterHard($_GET);
 $_POST = $filter->xssFilterHard($_POST);
 $_REQUEST = $filter->xssFilterHard($_REQUEST);
-$_SESSION = $filter->xssFilterHard($_SESSION);
 
 if (!isset($_SESSION['USER_LOGGED'])) {
     $response = new stdclass();
@@ -405,8 +404,9 @@ switch (($_POST['action']) ? $_POST['action'] : $_REQUEST['action']) {
             $APP_UID = $_SESSION['APPLICATION'];
             $DEL_INDEX = $_SESSION['INDEX'];
         }
+        $appTitle = $_POST['APP_TITLE'];
 
-        $oCase->pauseCase( $APP_UID, $DEL_INDEX, $_SESSION['USER_LOGGED'], $unpauseDate );
+        $oCase->pauseCase($APP_UID, $DEL_INDEX, $_SESSION['USER_LOGGED'], $unpauseDate, $appTitle);
         break;
     case 'unpauseCase':
         $sApplicationUID = (isset( $_POST['sApplicationUID'] )) ? $_POST['sApplicationUID'] : $_SESSION['APPLICATION'];
@@ -547,46 +547,49 @@ switch (($_POST['action']) ? $_POST['action'] : $_REQUEST['action']) {
         G::RenderPage( 'publish', 'raw' );
         break;
     case 'uploadDocumentGrid_Ajax':
-        G::LoadClass( 'case' );
-        G::LoadClass( "BasePeer" );
+        G::LoadClass('case');
+        G::LoadClass("BasePeer");
         global $G_PUBLISH;
 
         $arrayToTranslation = array(
-            "INPUT"    => G::LoadTranslation("ID_INPUT_DB"),
-            "OUTPUT"   => G::LoadTranslation("ID_OUTPUT_DB"),
+            "INPUT" => G::LoadTranslation("ID_INPUT_DB"),
+            "OUTPUT" => G::LoadTranslation("ID_OUTPUT_DB"),
             "ATTACHED" => G::LoadTranslation("ID_ATTACHED_DB")
         );
 
         $oCase = new Cases();
-        $aProcesses = Array ();
+        $aProcesses = Array();
         $G_PUBLISH = new Publisher();
-        $c = $oCase->getAllUploadedDocumentsCriteria( $_SESSION['PROCESS'], $_SESSION['APPLICATION'], 
-            $_SESSION['CURRENT_TASK'], $_SESSION['USER_LOGGED'], $_SESSION['INDEX']);
-
-        if ($c->getDbName() == 'dbarray') {
-            $rs = ArrayBasePeer::doSelectRs( $c );
+        $criteria = $oCase->getAllUploadedDocumentsCriteria($_SESSION['PROCESS'], $_SESSION['APPLICATION'], $_SESSION['CURRENT_TASK'], $_SESSION['USER_LOGGED'], $_SESSION['INDEX']);
+        if ($criteria->getDbName() == 'dbarray') {
+            $rs = ArrayBasePeer::doSelectRs($criteria);
         } else {
-            $rs = GulliverBasePeer::doSelectRs( $c );
+            $rs = GulliverBasePeer::doSelectRs($criteria);
         }
+        $totalCount = $rs->getRecordCount();
 
-        $rs->setFetchmode( ResultSet::FETCHMODE_ASSOC );
-        $rs->next();
+        $start = $_REQUEST["start"];
+        $limit = $_REQUEST["limit"];
 
-        $totalCount = 0;
-
-        for ($j = 0; $j < $rs->getRecordCount(); $j ++) {
+        $criteria->setLimit($limit);
+        $criteria->setOffset($start);
+        if ($criteria->getDbName() == 'dbarray') {
+            $rs = ArrayBasePeer::doSelectRs($criteria);
+        } else {
+            $rs = GulliverBasePeer::doSelectRs($criteria);
+        }
+        $rs->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+        while ($rs->next()) {
             $result = $rs->getRow();
-            $result["TYPE"] = (array_key_exists($result["TYPE"], $arrayToTranslation))? $arrayToTranslation[$result["TYPE"]] : $result["TYPE"];
+            $result["TYPE"] = (array_key_exists($result["TYPE"], $arrayToTranslation)) ? $arrayToTranslation[$result["TYPE"]] : $result["TYPE"];
             $aProcesses[] = $result;
-            $rs->next();
-            $totalCount ++;
         }
 
         $r = new stdclass();
         $r->data = $aProcesses;
         $r->totalCount = $totalCount;
 
-        echo Bootstrap::json_encode( $r );
+        echo Bootstrap::json_encode($r);
         break;
     case 'generateDocumentGrid_Ajax':
 
@@ -1003,7 +1006,6 @@ switch (($_POST['action']) ? $_POST['action'] : $_REQUEST['action']) {
         }
         break;
     case "previusJump":
-        //require_once 'classes/model/Application.php';
 
         $oCriteria = new Criteria( 'workflow' );
         $response = array ("success" => true );
@@ -1016,8 +1018,30 @@ switch (($_POST['action']) ? $_POST['action'] : $_REQUEST['action']) {
 
         if (is_array( $aApplication )) {
             $response['exists'] = true;
+            $objCase = new \ProcessMaker\BusinessModel\Cases();
+            $aUserCanAccess = $objCase->userAuthorization(
+                $_SESSION['USER_LOGGED'],
+                $aApplication['PRO_UID'],
+                $aApplication['APP_UID'],
+                array('PM_ALLCASES'),
+                array('SUMMARY_FORM'=>'VIEW')
+            );
+
+            //Check if the user is a supervisor to this Process
+            if (isset($_POST['actionFromList']) && $_POST['actionFromList']==='to_revise') {
+                if (!$aUserCanAccess['supervisor']) {
+                    $response['exists'] = false;
+                    $response['message'] = G::LoadTranslation('ID_NO_PERMISSION_NO_PARTICIPATED');
+                }
+            } else {//Check if the user participated in this case
+                if (!$aUserCanAccess['participated'] && !$aUserCanAccess['rolesPermissions']['PM_ALLCASES'] && !$aUserCanAccess['objectPermissions']['SUMMARY_FORM']) {
+                    $response['exists'] = false;
+                    $response['message'] = G::LoadTranslation('ID_NO_PERMISSION_NO_PARTICIPATED');
+                }
+            }
         } else {
             $response['exists'] = false;
+            $response['message'] = G::LoadTranslation('ID_CASE_DOES_NOT_EXIST_JS', array($_POST['appNumber']));
         }
 
         echo Bootstrap::json_encode( $response );

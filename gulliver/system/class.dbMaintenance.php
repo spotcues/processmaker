@@ -49,6 +49,7 @@ class DataBaseMaintenance
     protected $tmpDir;
     protected $outfile;
     protected $infile;
+    protected $isWindows;
 
     /**
      * __construct
@@ -64,7 +65,7 @@ class DataBaseMaintenance
         $this->tmpDir = './';
         $this->link = null;
         $this->dbName = null;
-
+        $this->isWindows = strtoupper(substr(PHP_OS, 0, 3)) === 'WIN';
         if (isset( $host ) && isset( $user ) && isset( $passwd )) {
             $this->host = $host;
             $this->user = $user;
@@ -266,7 +267,10 @@ class DataBaseMaintenance
         // Commented that is not assigned to a variable.
         // mysql_escape_string("';");
         if (! @mysql_query( $sql )) {
-            echo mysql_error() . "\n";
+            $ws = (defined("SYS_SYS"))? SYS_SYS : "Wokspace Undefined";
+            Bootstrap::registerMonolog('MysqlCron', 400, mysql_error(), array('sql'=>$sql), $ws, 'processmaker.log');
+            $varRes = mysql_error() . "\n";
+            G::outRes( $varRes );
             return false;
         }
         return true;
@@ -284,44 +288,12 @@ class DataBaseMaintenance
         $tableName = str_replace( '.dump', '', basename( $backupFile ) );
         $sql = "LOAD DATA INFILE '$backupFile' INTO TABLE $tableName FIELDS TERMINATED BY '\t|\t' OPTIONALLY ENCLOSED BY '\"' LINES TERMINATED BY '\t\t\r\r\n'";
         if (! @mysql_query( $sql )) {
-            print mysql_error() . "\n";
+            $ws = (defined("SYS_SYS"))? SYS_SYS : "Wokspace Undefined";
+            Bootstrap::registerMonolog('MysqlCron', 400, mysql_error(), array('sql'=>$sql), $ws, 'processmaker.log');
+            $varRes = mysql_error() . "\n";
+            G::outRes( $varRes );
             return false;
         }
-        return true;
-    }
-
-    /**
-     * backupData
-     *
-     * @return boolean true or false
-     */
-    function backupData ()
-    {
-        $aTables = $this->getTablesList();
-        foreach ($aTables as $table) {
-            if ($this->dumpData( $table ) !== false) {
-                printf( "%20s %s %s\n", 'Dump of table:', $table, " in file {$this->outfile}" );
-            } else {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /**
-     * backupSqlData
-     *
-     * @return boolean true or false
-     */
-    function backupSqlData ()
-    {
-        $aTables = $this->getTablesList();
-        foreach ($aTables as $table) {
-            $fsize = $this->dumpSqlInserts( $table );
-            $file = basename( $this->outfile );
-
-        }
-
         return true;
     }
 
@@ -419,67 +391,6 @@ class DataBaseMaintenance
         $mysqli->close();
     }
 
-    function lockTables ()
-    {
-        $aTables = $this->getTablesList();
-        if (empty( $aTables ))
-            return false;
-        printf( "%-70s", "LOCK TABLES" );
-        if (@mysql_query( 'LOCK TABLES ' . implode( ' READ, ', $aTables ) . ' READ; ' )) {
-            echo "    [OK]\n";
-            return true;
-        } else {
-            echo "[FAILED]\n" . mysql_error() . "\n";
-            return false;
-        }
-    }
-
-    function unlockTables ()
-    {
-        printf( "%-70s", "UNLOCK TABLES" );
-        if (@mysql_query( "UNLOCK TABLES;" )) {
-            echo "    [OK]\n";
-        } else {
-            echo "[FAILED]\n" . mysql_error() . "\n";
-        }
-    }
-
-    /**
-     * dumpSqlInserts
-     *
-     * @param string $table
-     *
-     * @return integer $bytesSaved;
-     */
-    function dumpSqlInserts ($table)
-    {
-
-        $bytesSaved = 0;
-        $result = @mysql_query( 'SELECT * FROM `'.$table.'`' );
-
-        $num_rows = mysql_num_rows( $result );
-        $num_fields = mysql_num_fields( $result );
-
-        $data = "";
-        for ($i = 0; $i < $num_rows; $i ++) {
-
-            $row = mysql_fetch_object( $result );
-            $data .= "INSERT INTO `$table` VALUES (";
-
-            for ($x = 0; $x < $num_fields; $x ++) {
-                $field_name = mysql_field_name( $result, $x );
-
-                $data .= ($row->$field_name === null) ? 'NULL' : "'" . mysql_real_escape_string( $row->$field_name ) . "'";
-                $data .= ($x < ($num_fields - 1)) ? ", " : false;
-            }
-
-            $data .= ");\n";
-        }
-
-        printf( "%-59s%20s", "Dump of table $table", strlen( $data ) . " Bytes Saved\n" );
-        return $data;
-    }
-
     /**
      * backupDataBaseSchema
      *
@@ -489,30 +400,86 @@ class DataBaseMaintenance
      */
     function backupDataBase ($outfile)
     {
+        $password = escapeshellarg($this->passwd);
+        
+        //On Windows, escapeshellarg() instead replaces percent signs, exclamation 
+        //marks (delayed variable substitution) and double quotes with spaces and 
+        //adds double quotes around the string.
+        //See: http://php.net/manual/en/function.escapeshellarg.php
+        if ($this->isWindows) {
+            $password = $this->escapeshellargCustom($this->passwd);
+        }
         $aHost = explode(':', $this->host);
         $dbHost = $aHost[0];
         if (isset($aHost[1])) {
             $dbPort = $aHost[1];
             $command = 'mysqldump'
-                . ' --user=' . $this->user
-                . ' --password=' . str_replace('"', '\"', str_replace("'", "\'", quotemeta($this->passwd)))
-                . ' --host=' . $dbHost
-                . ' --port=' . $dbPort
-                . ' --opt'
-                . ' --skip-comments'
-                . ' ' . $this->dbName
-                . ' > ' . $outfile;
+                    . ' --user=' . $this->user
+                    . ' --password=' . $password
+                    . ' --host=' . $dbHost
+                    . ' --port=' . $dbPort
+                    . ' --opt'
+                    . ' --skip-comments'
+                    . ' ' . $this->dbName
+                    . ' > ' . $outfile;
         } else {
             $command = 'mysqldump'
-                . ' --host=' . $dbHost
-                . ' --user=' . $this->user
-                . ' --opt'
-                . ' --skip-comments'
-                . ' --password=' . str_replace('"', '\"', str_replace("'", "\'", quotemeta($this->passwd)))
-                . ' ' . $this->dbName
-                . ' > ' . $outfile;
+                    . ' --host=' . $dbHost
+                    . ' --user=' . $this->user
+                    . ' --opt'
+                    . ' --skip-comments'
+                    . ' --password=' . $password
+                    . ' ' . $this->dbName
+                    . ' > ' . $outfile;
         }
         shell_exec($command);
+    }
+
+    /**
+     * string escapeshellargCustom ( string $arg , character $quotes)
+     * 
+     * escapeshellarg() adds single quotes around a string and quotes/escapes any 
+     * existing single quotes allowing you to pass a string directly to a shell 
+     * function and having it be treated as a single safe argument. This function 
+     * should be used to escape individual arguments to shell functions coming 
+     * from user input. The shell functions include exec(), system() and the 
+     * backtick operator.
+     * 
+     * On Windows, escapeshellarg() instead replaces percent signs, exclamation 
+     * marks (delayed variable substitution) and double quotes with spaces and 
+     * adds double quotes around the string.
+     */
+    private function escapeshellargCustom($string, $quotes = "")
+    {
+        if ($quotes === "") {
+            $quotes = $this->isWindows ? "\"" : "'";
+        }
+        $n = strlen($string);
+        $special = ["!", "%", "\""];
+        $substring = "";
+        $result1 = [];
+        $result2 = [];
+        for ($i = 0; $i < $n; $i++) {
+            if (in_array($string[$i], $special, true)) {
+                $result2[] = $string[$i];
+                $result1[] = $substring;
+                $substring = "";
+            } else {
+                $substring = $substring . $string[$i];
+            }
+        }
+        $result1[] = $substring;
+        //Rebuild the password string
+        $n = count($result1);
+        for ($i = 0; $i < $n; $i++) {
+            $result1[$i] = trim(escapeshellarg($result1[$i]), $quotes);
+            if (isset($result2[$i])) {
+                $result1[$i] = $result1[$i] . $result2[$i];
+            }
+        }
+        //add simple quotes, see escapeshellarg function
+        $newString = $quotes . implode("", $result1) . $quotes;
+        return $newString;
     }
 
     /**
@@ -543,8 +510,10 @@ class DataBaseMaintenance
                 $queries += 1;
 
                 if (! @mysql_query( $query )) {
-                    echo mysql_error() . "\n";
-                    echo "==>" . $query . "<==\n";
+                    $varRes = mysql_error() . "\n";
+                    G::outRes( $varRes );
+                    $varRes = "==>" . $query . "<==\n";
+                    G::outRes( $varRes );
                 }
             }
 
@@ -592,7 +561,9 @@ class DataBaseMaintenance
                 $mysqli->close();
             } catch (Exception $e) {
                 echo $query;
-                echo $e->getMessage();
+                $token = strtotime("now");
+                PMException::registerErrorLog($e, $token);
+                G::outRes( G::LoadTranslation("ID_EXCEPTION_LOG_INTERFAZ", array($token)) );
             }
         }
         return $queries;
@@ -606,7 +577,7 @@ class DataBaseMaintenance
      * @return string $tableSchema
      */
     function getSchemaFromTable ($tablename)
-    {   
+    {
         //$tableSchema = "/* Structure for table `$tablename` */\n";
         //$tableSchema .= "DROP TABLE IF EXISTS `$tablename`;\n\n";
         $tableSchema = "";
@@ -618,7 +589,7 @@ class DataBaseMaintenance
             }
             mysql_free_result( $result );
         } else {
-            echo mysql_error();
+            G::outRes( mysql_error() );
         }
         return $tableSchema;
     }
@@ -639,22 +610,3 @@ class DataBaseMaintenance
         return $str;
     }
 }
-
-/*
-// Sample to use
-$oDbMaintainer = new DataBaseMaintenance('localhost', 'root', 'atopml2005');
-$oDbMaintainer->setTempDir('/home/erik/backs/');
-$oDbMaintainer->setDbName('rb_os');
-$oDbMaintainer->connect();
-$oDbMaintainer->backupDataBaseSchema('/home/erik/backs/schema_os.sql');
-$oDbMaintainer->backupSqlData();
-$oDbMaintainer->createDb('neyek12', true);
-
-$o2 = new DataBaseMaintenance('localhost', 'root', 'atopml2005');
-$o2->setTempDir('/home/erik/backs/');
-$o2->setDbName('neyek12');
-$o2->connect();
-
-$o2->restoreFromSql('/home/erik/backs/schema_os.sql');
-$o2->restoreAllData('sql');
-*/

@@ -31,14 +31,17 @@
 $sWS_USER = trim( $_REQUEST['USERNAME'] );
 $sWS_PASS = trim( $_REQUEST['PASSWORD'] );
 
+$streamContext = [];
+
 if (G::is_https()) {
     $http = 'https://';
+    $streamContext = ['stream_context' => stream_context_create(['ssl' => ['verify_peer' => false, 'verify_peer_name' => false, 'allow_self_signed' => true]])];
 } else {
     $http = 'http://';
 }
 
 $endpoint = $http . $_SERVER['HTTP_HOST'] . '/sys' . SYS_SYS . '/' . SYS_LANG . '/' . SYS_SKIN . '/services/wsdl2';
-@$client = new SoapClient( $endpoint );
+$client = new SoapClient($endpoint, $streamContext);
 
 $user = $sWS_USER;
 $pass = $sWS_PASS;

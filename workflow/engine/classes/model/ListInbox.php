@@ -13,9 +13,10 @@ require_once 'classes/model/om/BaseListInbox.php';
  *
  * @package    classes.model
  */
-
+// @codingStandardsIgnoreStart
 class ListInbox extends BaseListInbox
 {
+    // @codingStandardsIgnoreEnd
     /**
      * Create List Inbox Table
      *
@@ -25,18 +26,33 @@ class ListInbox extends BaseListInbox
      */
     public function create($data, $isSelfService = false)
     {
-        $con = Propel::getConnection( ListInboxPeer::DATABASE_NAME );
+        $con = Propel::getConnection(ListInboxPeer::DATABASE_NAME);
         try {
-            if(isset($data['APP_TITLE'])) {
+            if (isset($data['APP_TITLE'])) {
                 $oCase = new Cases();
-                $aData = $oCase->loadCase( $data["APP_UID"] );
+                $aData = $oCase->loadCase($data["APP_UID"]);
                 $data['APP_TITLE'] = G::replaceDataField($data['APP_TITLE'], $aData['APP_DATA']);
             }
-            $this->fromArray( $data, BasePeer::TYPE_FIELDNAME );
+            if (!empty($data['PRO_UID']) && empty($data['PRO_ID'])) {
+                $p = new Process();
+                $data['PRO_ID'] =  $p->load($data['PRO_UID'])['PRO_ID'];
+            }
+            if (!empty($data['USR_UID'])) {
+                $u = new Users();
+                $data['USR_ID'] = $data['USR_UID']==='SELF_SERVICES' ? null : $u->load($data['USR_UID'])['USR_ID'];
+            }
+            if (!empty($data['TAS_UID'])) {
+                $t = new Task();
+                $data['TAS_ID'] = $t->load($data['TAS_UID'])['TAS_ID'];
+            }
+            if (!empty($data['APP_STATUS'])) {
+                $data['APP_STATUS_ID'] = Application::$app_status_values[$data['APP_STATUS']];
+            }
+            $this->fromArray($data, BasePeer::TYPE_FIELDNAME);
             if ($this->validate()) {
                 $result = $this->save();
             } else {
-                $e = new Exception( "Failed Validation in class " . get_class( $this ) . "." );
+                $e = new Exception("Failed Validation in class " . get_class($this) . ".");
                 $e->aValidationFailures = $this->getValidationFailures();
                 throw ($e);
             }
@@ -44,7 +60,7 @@ class ListInbox extends BaseListInbox
 
             // create participated history
             $listParticipatedHistory = new ListParticipatedHistory();
-            $listParticipatedHistory->remove($data['APP_UID'],$data['DEL_INDEX']);
+            $listParticipatedHistory->remove($data['APP_UID'], $data['DEL_INDEX']);
             $listParticipatedHistory = new ListParticipatedHistory();
             $listParticipatedHistory->create($data);
 
@@ -63,8 +79,6 @@ class ListInbox extends BaseListInbox
                     $oCriteria->add(ListParticipatedLastPeer::APP_UID, $data['APP_UID']);
                     $oCriteria->add(ListParticipatedLastPeer::USR_UID, $data['USR_UID']);
                     ListParticipatedLastPeer::doDelete($oCriteria);
-                    $users = new Users();
-                    $users->refreshTotal($data['USR_UID'], 'removed', 'participated');
                 }
 
                 $listParticipatedLast = new ListParticipatedLast();
@@ -72,7 +86,7 @@ class ListInbox extends BaseListInbox
                 $listParticipatedLast = new ListParticipatedLast();
                 $listParticipatedLast->refresh($data);
             } else {
-                $data['USR_UID_CURRENT'] = $data['DEL_PREVIOUS_USR_UID']; 
+                $data['USR_UID_CURRENT'] = $data['DEL_PREVIOUS_USR_UID'];
                 $data['DEL_CURRENT_USR_LASTNAME'] = '';
                 $data['DEL_CURRENT_USR_USERNAME'] = '';
                 $data['DEL_CURRENT_USR_FIRSTNAME'] = '';
@@ -84,10 +98,12 @@ class ListInbox extends BaseListInbox
                 $listParticipatedLast->create($data);
                 $listParticipatedLast = new ListParticipatedLast();
                 $listParticipatedLast->refresh($data, $isSelfService);
+                $listUnassigned = new ListUnassigned();
+                $listUnassigned->newRow($data, $data['DEL_PREVIOUS_USR_UID']);
             }
 
             return $result;
-        } catch(Exception $e) {
+        } catch (Exception $e) {
             $con->rollback();
             throw ($e);
         }
@@ -102,23 +118,18 @@ class ListInbox extends BaseListInbox
      */
     public function update($data, $isSelfService = false)
     {
-        if(isset($data['APP_TITLE'])) {
+        if (isset($data['APP_TITLE'])) {
             $oCase = new Cases();
-            $aData = $oCase->loadCase( $data["APP_UID"] );
+            $aData = $oCase->loadCase($data["APP_UID"]);
             $data['APP_TITLE'] = G::replaceDataField($data['APP_TITLE'], $aData['APP_DATA']);
         }
         if ($isSelfService) {
-            $users = new Users();
-            $users->refreshTotal($data['USR_UID'], 'add', 'inbox');
-
             $listParticipatedLast = new ListParticipatedLast();
             $listParticipatedLast->remove($data['APP_UID'], $data['USR_UID'], $data['DEL_INDEX']);
-
             //Update
             //Update - SET
             $criteriaSet = new Criteria("workflow");
             $criteriaSet->add(ListParticipatedLastPeer::USR_UID, $data["USR_UID"]);
-
             //Update - WHERE
             $criteriaWhere = new Criteria("workflow");
             $criteriaWhere->add(ListParticipatedLastPeer::APP_UID, $data["APP_UID"], Criteria::EQUAL);
@@ -130,10 +141,12 @@ class ListInbox extends BaseListInbox
             //Update
             $listParticipatedLast = new ListParticipatedLast();
             $listParticipatedLast->refresh($data);
-            $users = new Users();
-            $users->refreshTotal($data['USR_UID'], 'add', 'participated');
         } else {
-            if (isset($data["APP_UID"]) && isset($data["USER_UID"]) && isset($data["DEL_INDEX"]) && isset($data["APP_TITLE"])) {
+            if (isset($data["APP_UID"]) &&
+                isset($data["USER_UID"]) &&
+                isset($data["DEL_INDEX"]) &&
+                isset($data["APP_TITLE"])
+            ) {
                 //Update
                 //Update - SET
                 $criteriaSet = new Criteria("workflow");
@@ -149,15 +162,29 @@ class ListInbox extends BaseListInbox
             }
         }
 
-        if((array_key_exists('TAS_UID', $data) && isset($data['TAS_UID'])) && (array_key_exists('TAS_UID', $data) && isset($data['PRO_UID'])) && isset($data['APP_UID'])) {
+        if ((array_key_exists('TAS_UID', $data) && isset($data['TAS_UID'])) &&
+            (array_key_exists('TAS_UID', $data) && isset($data['PRO_UID'])) &&
+            isset($data['APP_UID'])
+        ) {
             $data['DEL_PRIORITY'] = $this->getTaskPriority($data['TAS_UID'], $data['PRO_UID'], $data["APP_UID"]);
         }
 
-        $con = Propel::getConnection( ListInboxPeer::DATABASE_NAME );
+        if (!empty($data['USR_UID'])) {
+            $u = new Users();
+            $data['USR_ID'] = $data['USR_UID']==='SELF_SERVICES' ? null : $u->load($data['USR_UID'])['USR_ID'];
+        }
+        if (!empty($data['TAS_UID'])) {
+            $t = new Task();
+            $data['TAS_ID'] = $t->load($data['TAS_UID'])['TAS_ID'];
+        }
+        if (!empty($data['APP_STATUS'])) {
+            $data['APP_STATUS_ID'] = Application::$app_status_values[$data['APP_STATUS']];
+        }
+        $con = Propel::getConnection(ListInboxPeer::DATABASE_NAME);
         try {
             $con->begin();
-            $this->setNew( false );
-            $this->fromArray( $data, BasePeer::TYPE_FIELDNAME );
+            $this->setNew(false);
+            $this->fromArray($data, BasePeer::TYPE_FIELDNAME);
             if ($this->validate()) {
                 $result = $this->save();
                 $con->commit();
@@ -168,7 +195,7 @@ class ListInbox extends BaseListInbox
                 return $result;
             } else {
                 $con->rollback();
-                throw (new Exception( "Failed Validation in class " . get_class( $this ) . "." ));
+                throw (new Exception("Failed Validation in class " . get_class($this) . "."));
             }
         } catch (Exception $e) {
             $con->rollback();
@@ -184,9 +211,9 @@ class ListInbox extends BaseListInbox
      * @throws type
      *
      */
-    public function remove ($app_uid, $del_index)
+    public function remove($app_uid, $del_index)
     {
-        $con = Propel::getConnection( ListInboxPeer::DATABASE_NAME );
+        $con = Propel::getConnection(ListInboxPeer::DATABASE_NAME);
         try {
             $this->setAppUid($app_uid);
             $this->setDelIndex($del_index);
@@ -208,9 +235,9 @@ class ListInbox extends BaseListInbox
      * @throws type
      *
      */
-    public function removeAll ($app_uid)
+    public function removeAll($app_uid)
     {
-        $con = Propel::getConnection( ListInboxPeer::DATABASE_NAME );
+        $con = Propel::getConnection(ListInboxPeer::DATABASE_NAME);
         try {
             $this->setAppUid($app_uid);
 
@@ -223,8 +250,24 @@ class ListInbox extends BaseListInbox
         }
     }
 
-    public function newRow ($data, $delPreviusUsrUid, $isInitSubprocess = false, $dataPreviusApplication = array(), $isSelfService = false)
-    {
+    /**
+     * Define the variables before created the row
+     *
+     * This method is used before create the new data
+     * we completed the information about some variables
+     * for create the record
+     *
+     * @param array $data
+     * @param string $delPreviusUsrUid Uid from the user previous
+     * @param boolean $isSelfService this value define if the case is Unassigned
+     * @return void
+     *
+     */
+    public function newRow(
+        $data,
+        $delPreviusUsrUid,
+        $isSelfService = false
+    ) {
         $removeList = true;
         if (isset($data['REMOVED_LIST'])) {
             $removeList = $data['REMOVED_LIST'];
@@ -235,19 +278,19 @@ class ListInbox extends BaseListInbox
             $data['DEL_DUE_DATE'] = $data['DEL_TASK_DUE_DATE'];
         }
 
-        if(!isset($data['DEL_DUE_DATE'])) {
+        if (!isset($data['DEL_DUE_DATE'])) {
             $filters = array("APP_UID" => $data["APP_UID"], "DEL_INDEX" => $data['DEL_INDEX']);
-            $data['DEL_DUE_DATE'] = $this->getAppDelegationInfo($filters,'DEL_TASK_DUE_DATE');
+            $data['DEL_DUE_DATE'] = $this->getAppDelegationInfo($filters, 'DEL_TASK_DUE_DATE');
         }
 
-        if(isset($data['APP_INIT_DATE'])){
+        if (isset($data['APP_INIT_DATE'])) {
             $data['DEL_INIT_DATE'] = $data['APP_INIT_DATE'];
         }
 
         $criteria = new Criteria();
-        $criteria->addSelectColumn( ApplicationPeer::APP_NUMBER );
-        $criteria->addSelectColumn( ApplicationPeer::APP_UPDATE_DATE );
-        $criteria->add( ApplicationPeer::APP_UID, $data['APP_UID'], Criteria::EQUAL );
+        $criteria->addSelectColumn(ApplicationPeer::APP_NUMBER);
+        $criteria->addSelectColumn(ApplicationPeer::APP_UPDATE_DATE);
+        $criteria->add(ApplicationPeer::APP_UID, $data['APP_UID'], Criteria::EQUAL);
         $dataset = ApplicationPeer::doSelectRS($criteria);
         $dataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
         $dataset->next();
@@ -256,51 +299,52 @@ class ListInbox extends BaseListInbox
 
 
         $criteria = new Criteria();
-        $criteria->addSelectColumn(ContentPeer::CON_VALUE);
-        $criteria->add( ContentPeer::CON_ID, $data['APP_UID'], Criteria::EQUAL );
-        $criteria->add( ContentPeer::CON_CATEGORY, 'APP_TITLE', Criteria::EQUAL );
-        $criteria->add( ContentPeer::CON_LANG, SYS_LANG, Criteria::EQUAL );
-        $dataset = ContentPeer::doSelectRS($criteria);
+        $criteria->addSelectColumn(TaskPeer::TAS_TITLE);
+        $criteria->addSelectColumn(TaskPeer::TAS_DEF_TITLE);
+        $criteria->add(TaskPeer::TAS_UID, $data['TAS_UID'], Criteria::EQUAL);
+        $dataset = TaskPeer::doSelectRS($criteria);
         $dataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
         $dataset->next();
         $aRow = $dataset->getRow();
-        $data['APP_TITLE'] = $aRow['CON_VALUE'];
+        if ($aRow['TAS_DEF_TITLE'] == '') {
+            $criteria = new Criteria();
+            $criteria->addSelectColumn(ApplicationPeer::APP_TITLE);
+            $criteria->add(ApplicationPeer::APP_UID, $data['APP_UID'], Criteria::EQUAL);
+            $dataset = ApplicationPeer::doSelectRS($criteria);
+            $dataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+            $dataset->next();
+            $aRowApp = $dataset->getRow();
+            $aRow['TAS_DEF_TITLE'] = $aRowApp['APP_TITLE'];
+        }
+        $data['APP_TITLE'] = $aRow['TAS_DEF_TITLE'];
+        $data['APP_TAS_TITLE'] = $aRow['TAS_TITLE'];
 
 
         $criteria = new Criteria();
-        $criteria->addSelectColumn(ContentPeer::CON_VALUE);
-        $criteria->add( ContentPeer::CON_ID, $data['PRO_UID'], Criteria::EQUAL );
-        $criteria->add( ContentPeer::CON_CATEGORY, 'PRO_TITLE', Criteria::EQUAL );
-        $criteria->add( ContentPeer::CON_LANG, SYS_LANG, Criteria::EQUAL );
-        $dataset = ContentPeer::doSelectRS($criteria);
+        $criteria->addSelectColumn(ProcessPeer::PRO_TITLE);
+        $criteria->add(ProcessPeer::PRO_UID, $data['PRO_UID'], Criteria::EQUAL);
+        $dataset = ProcessPeer::doSelectRS($criteria);
         $dataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
         $dataset->next();
         $aRow = $dataset->getRow();
-        $data['APP_PRO_TITLE'] = $aRow['CON_VALUE'];
-
-
-        $criteria = new Criteria();
-        $criteria->addSelectColumn(ContentPeer::CON_VALUE);
-        $criteria->add( ContentPeer::CON_ID, $data['TAS_UID'], Criteria::EQUAL );
-        $criteria->add( ContentPeer::CON_CATEGORY, 'TAS_TITLE', Criteria::EQUAL );
-        $criteria->add( ContentPeer::CON_LANG, SYS_LANG, Criteria::EQUAL );
-        $dataset = ContentPeer::doSelectRS($criteria);
-        $dataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
-        $dataset->next();
-        $aRow = $dataset->getRow();
-        $data['APP_TAS_TITLE'] = $aRow['CON_VALUE'];
-
+        $data['APP_PRO_TITLE'] = $aRow['PRO_TITLE'];
 
         $data['DEL_PRIORITY'] = $this->getTaskPriority($data['TAS_UID'], $data['PRO_UID'], $data["APP_UID"]);
 
-
         $data['APP_PREVIOUS_USER'] = '';
+        if ($data['DEL_PREVIOUS_USR_UID'] === '') {
+            global $RBAC;
+            if (isset($RBAC->aUserInfo['USER_INFO'])) {
+                $aUser = $RBAC->aUserInfo['USER_INFO'];
+                $data['DEL_PREVIOUS_USR_UID'] = $aUser['USR_UID'];
+            }
+        }
         if ($data['DEL_PREVIOUS_USR_UID'] != '') {
             $criteria = new Criteria();
             $criteria->addSelectColumn(UsersPeer::USR_USERNAME);
             $criteria->addSelectColumn(UsersPeer::USR_FIRSTNAME);
             $criteria->addSelectColumn(UsersPeer::USR_LASTNAME);
-            $criteria->add( UsersPeer::USR_UID, $data['DEL_PREVIOUS_USR_UID'], Criteria::EQUAL );
+            $criteria->add(UsersPeer::USR_UID, $data['DEL_PREVIOUS_USR_UID'], Criteria::EQUAL);
             $dataset = UsersPeer::doSelectRS($criteria);
             $dataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
             $dataset->next();
@@ -310,62 +354,25 @@ class ListInbox extends BaseListInbox
             $data['DEL_PREVIOUS_USR_LASTNAME']  = $aRow['USR_LASTNAME'];
         }
 
-        $users = new Users();
         $criteria = new Criteria();
         $criteria->addSelectColumn(SubApplicationPeer::DEL_INDEX_PARENT);
-        $criteria->add( SubApplicationPeer::APP_PARENT, $data['APP_UID'], Criteria::EQUAL );
+        $criteria->add(SubApplicationPeer::APP_PARENT, $data['APP_UID'], Criteria::EQUAL);
         $dataset = SubApplicationPeer::doSelectRS($criteria);
         $dataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
         if ($dataset->next()) {
             $aSub = $dataset->getRow();
             if ($aSub['DEL_INDEX_PARENT'] == $data['DEL_PREVIOUS'] && !$isSelfService) {
-                $users->refreshTotal($data['USR_UID'], 'add', 'inbox');
                 self::create($data, $isSelfService);
                 return 1;
             }
         }
 
-        if (!$isInitSubprocess) {
-            if ($data['APP_STATUS'] == 'DRAFT') {
-                $users->refreshTotal($data['USR_UID'], 'add', 'draft');
-            } else {
-                $oRow = ApplicationPeer::retrieveByPK($data['APP_UID']);
-                $aFields = $oRow->toArray( BasePeer::TYPE_FIELDNAME );
-                if ($removeList) {
-                    if ($data['DEL_INDEX'] == 2 || $aFields['APP_STATUS'] == 'DRAFT') {
-                        $criteria = new Criteria();
-                        $criteria->addSelectColumn(SubApplicationPeer::APP_UID);
-                        $criteria->add( SubApplicationPeer::APP_UID, $data['APP_UID'], Criteria::EQUAL );
-                        $dataset = SubApplicationPeer::doSelectRS($criteria);
-                        if ($dataset->next()) {
-                            //$users->refreshTotal($delPreviusUsrUid, 'remove', 'inbox');
-                        } else {
-                            //$users->refreshTotal($delPreviusUsrUid, 'remove', 'draft');
-                        }
-                    } else {
-                        //$users->refreshTotal($delPreviusUsrUid, 'remove', 'inbox');
-                    }
-                }
-                if (!$isSelfService) {
-                    $users->refreshTotal($data['USR_UID'], 'add', 'inbox');
-                }
-            }
-        } else {
-            if($data['USR_UID'] !=''){
-                $users->refreshTotal($data['USR_UID'], 'add', 'inbox');
-            }
-            if ($dataPreviusApplication['APP_STATUS'] == 'DRAFT') {
-                //$users->refreshTotal($dataPreviusApplication['CURRENT_USER_UID'], 'remove', 'draft');
-            } else {
-                //$users->refreshTotal($dataPreviusApplication['CURRENT_USER_UID'], 'remove', 'inbox');
-            }
-        }
         if ($data['USR_UID'] != '') {
             $criteria = new Criteria();
             $criteria->addSelectColumn(UsersPeer::USR_USERNAME);
             $criteria->addSelectColumn(UsersPeer::USR_FIRSTNAME);
             $criteria->addSelectColumn(UsersPeer::USR_LASTNAME);
-            $criteria->add( UsersPeer::USR_UID, $data['USR_UID'], Criteria::EQUAL );
+            $criteria->add(UsersPeer::USR_UID, $data['USR_UID'], Criteria::EQUAL);
             $dataset = UsersPeer::doSelectRS($criteria);
             $dataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
             $dataset->next();
@@ -377,8 +384,10 @@ class ListInbox extends BaseListInbox
         self::create($data, $isSelfService);
     }
 
-    public function loadFilters (&$criteria, $filters)
+    public function loadFilters(&$criteria, $filters)
     {
+        $action         = isset($filters['action']) ? $filters['action'] : "";
+        $usrUid         = isset($filters['usr_uid']) ? $filters['usr_uid'] : "";
         $filter         = isset($filters['filter']) ? $filters['filter'] : "";
         $search         = isset($filters['search']) ? $filters['search'] : "";
         $process        = isset($filters['process']) ? $filters['process'] : "";
@@ -386,72 +395,105 @@ class ListInbox extends BaseListInbox
         $dateFrom       = isset($filters['dateFrom']) ? $filters['dateFrom'] : "";
         $dateTo         = isset($filters['dateTo']) ? $filters['dateTo'] : "";
         $filterStatus   = isset($filters['filterStatus']) ? $filters['filterStatus'] : "";
-        $newestthan     = isset($filters['newestthan'] ) ? $filters['newestthan'] : '';
-        $oldestthan     = isset($filters['oldestthan'] ) ? $filters['oldestthan'] : '';
+        $newestthan     = isset($filters['newestthan']) ? $filters['newestthan'] : '';
+        $oldestthan     = isset($filters['oldestthan']) ? $filters['oldestthan'] : '';
 
-        if ($filter != '') {
-            switch ($filter) {
-                case 'read':
-                    $criteria->add( ListInboxPeer::DEL_INIT_DATE, null, Criteria::ISNOTNULL );
-                    break;
-                case 'unread':
-                    $criteria->add( ListInboxPeer::DEL_INIT_DATE, null, Criteria::ISNULL );
-                    break;
-            }
+        //Check the inbox to call
+        switch ($action) {
+            case 'draft':
+                $criteria->add(ListInboxPeer::APP_STATUS, 'DRAFT', Criteria::EQUAL);
+                $criteria->add(ListInboxPeer::USR_UID, $usrUid, Criteria::EQUAL);
+                break;
+            case 'to_revise':
+                $criteria->add(ListInboxPeer::APP_STATUS, 'TO_DO', Criteria::EQUAL);
+                $oAppCache = new AppCacheView();
+                $aProcesses = $oAppCache->getProUidSupervisor($usrUid);
+                $criteria->add(ListInboxPeer::PRO_UID, $aProcesses, Criteria::IN);
+                break;
+            case 'to_reassign':
+                $criteria->add(ListInboxPeer::APP_STATUS, 'TO_DO', Criteria::EQUAL);
+                if ($usrUid !== '') {
+                    $criteria->add(ListInboxPeer::USR_UID, $usrUid, Criteria::EQUAL);
+                }
+                break;
+            default://todo
+                $criteria->add(ListInboxPeer::APP_STATUS, 'TO_DO', Criteria::EQUAL);
+                $criteria->add(ListInboxPeer::USR_UID, $usrUid, Criteria::EQUAL);
         }
 
+        //Filter Read Unread All
+        switch ($filter) {
+            case 'read':
+                $criteria->add(ListInboxPeer::DEL_INIT_DATE, null, Criteria::ISNOTNULL);
+                break;
+            case 'unread':
+                $criteria->add(ListInboxPeer::DEL_INIT_DATE, null, Criteria::ISNULL);
+                break;
+        }
+
+        //Filter Task Status
+        switch ($filterStatus) {
+            case 'ON_TIME':
+                $criteria->add(
+                    ListInboxPeer::DEL_RISK_DATE,
+                    "TIMEDIFF(". ListInboxPeer::DEL_RISK_DATE." , NOW( ) ) > 0",
+                    Criteria::CUSTOM
+                );
+                break;
+            case 'AT_RISK':
+                $criteria->add(
+                    ListInboxPeer::DEL_RISK_DATE,
+                    "TIMEDIFF(". ListInboxPeer::DEL_RISK_DATE .", NOW( ) ) < 0",
+                    Criteria::CUSTOM
+                );
+                $criteria->add(
+                    ListInboxPeer::DEL_DUE_DATE,
+                    "TIMEDIFF(". ListInboxPeer::DEL_DUE_DATE .", NOW( ) ) >  0",
+                    Criteria::CUSTOM
+                );
+                break;
+            case 'OVERDUE':
+                $criteria->add(
+                    ListInboxPeer::DEL_DUE_DATE,
+                    "TIMEDIFF(". ListInboxPeer::DEL_DUE_DATE." , NOW( ) ) < 0",
+                    Criteria::CUSTOM
+                );
+                break;
+        }
+
+        //Filter Search
         if ($search != '') {
             $criteria->add(
-                $criteria->getNewCriterion( ListInboxPeer::APP_TITLE, '%' . $search . '%', Criteria::LIKE )
+                $criteria->getNewCriterion(ListInboxPeer::APP_TITLE, '%' . $search . '%', Criteria::LIKE)
                 ->addOr(
-                    $criteria->getNewCriterion( ListInboxPeer::APP_TAS_TITLE, '%' . $search . '%', Criteria::LIKE )
+                    $criteria->getNewCriterion(ListInboxPeer::APP_TAS_TITLE, '%' . $search . '%', Criteria::LIKE)
                     ->addOr(
-                        $criteria->getNewCriterion( ListInboxPeer::APP_NUMBER, $search, Criteria::LIKE )
+                        $criteria->getNewCriterion(ListInboxPeer::APP_PRO_TITLE, '%' . $search . '%', Criteria::LIKE)
                         ->addOr(
-                            $criteria->getNewCriterion( ListInboxPeer::APP_PRO_TITLE, '%' . $search . '%', Criteria::LIKE )
+                            $criteria->getNewCriterion(ListInboxPeer::APP_UID, $search, Criteria::EQUAL)
+                            ->addOr(
+                                $criteria->getNewCriterion(ListInboxPeer::APP_NUMBER, $search, Criteria::EQUAL)
+                            )
                         )
                     )
                 )
             );
         }
 
+        //Filter Process Id
         if ($process != '') {
-            $criteria->add( ListInboxPeer::PRO_UID, $process, Criteria::EQUAL);
+            $criteria->add(ListInboxPeer::PRO_UID, $process, Criteria::EQUAL);
         }
 
+        //Filter Category
         if ($category != '') {
-            // INNER JOIN FOR TAS_TITLE
             $criteria->addSelectColumn(ProcessPeer::PRO_CATEGORY);
             $aConditions   = array();
             $aConditions[] = array(ListInboxPeer::PRO_UID, ProcessPeer::PRO_UID);
             $aConditions[] = array(ProcessPeer::PRO_CATEGORY, "'" . $category . "'");
             $criteria->addJoinMC($aConditions, Criteria::INNER_JOIN);
         }
-
-        if ($dateFrom != "") {
-            if ($dateTo != "") {
-                if ($dateFrom == $dateTo) {
-                    $dateSame = $dateFrom;
-                    $dateFrom = $dateSame . " 00:00:00";
-                    $dateTo = $dateSame . " 23:59:59";
-                } else {
-                    $dateFrom = $dateFrom . " 00:00:00";
-                    $dateTo = $dateTo . " 23:59:59";
-                }
-
-                $criteria->add( $criteria->getNewCriterion( ListInboxPeer::DEL_DELEGATE_DATE, $dateFrom, Criteria::GREATER_EQUAL )->
-                addAnd( $criteria->getNewCriterion( ListInboxPeer::DEL_DELEGATE_DATE, $dateTo, Criteria::LESS_EQUAL ) ) );
-            } else {
-                $dateFrom = $dateFrom . " 00:00:00";
-
-                $criteria->add( ListInboxPeer::DEL_DELEGATE_DATE, $dateFrom, Criteria::GREATER_EQUAL );
-            }
-        } elseif ($dateTo != "") {
-            $dateTo = $dateTo . " 23:59:59";
-
-            $criteria->add( ListInboxPeer::DEL_DELEGATE_DATE, $dateTo, Criteria::LESS_EQUAL );
-        }
-
+        //Those filters: $newestthan, $oldestthan is used from mobile GET /light/todo
         if ($newestthan != '') {
             $criteria->add( $criteria->getNewCriterion( ListInboxPeer::DEL_DELEGATE_DATE, $newestthan, Criteria::GREATER_THAN ));
         }
@@ -459,35 +501,6 @@ class ListInbox extends BaseListInbox
         if ($oldestthan != '') {
             $criteria->add( $criteria->getNewCriterion( ListInboxPeer::DEL_DELEGATE_DATE, $oldestthan, Criteria::LESS_THAN ));
         }
-
-        if ($filterStatus != '') {
-            switch ($filterStatus) {
-                case 'ON_TIME':
-                    $criteria->add( ListInboxPeer::DEL_RISK_DATE  , "TIMEDIFF(". ListInboxPeer::DEL_RISK_DATE." , NOW( ) ) > 0", Criteria::CUSTOM);
-                    break;
-                case 'AT_RISK':
-                    $criteria->add( ListInboxPeer::DEL_RISK_DATE  , "TIMEDIFF(". ListInboxPeer::DEL_RISK_DATE .", NOW( ) ) < 0", Criteria::CUSTOM);
-                    $criteria->add( ListInboxPeer::DEL_DUE_DATE  , "TIMEDIFF(". ListInboxPeer::DEL_DUE_DATE .", NOW( ) ) >  0", Criteria::CUSTOM);
-                    break;
-                case 'OVERDUE':
-                    $criteria->add( ListInboxPeer::DEL_DUE_DATE  , "TIMEDIFF(". ListInboxPeer::DEL_DUE_DATE." , NOW( ) ) < 0", Criteria::CUSTOM);
-                    break;
-            }
-        }
-    }
-
-    public function countTotal ($usr_uid, $filters = array())
-    {
-        $criteria = new Criteria();
-        $criteria->add( ListInboxPeer::USR_UID, $usr_uid, Criteria::EQUAL );
-        if ($filters['action'] == 'draft') {
-            $criteria->add( ListInboxPeer::APP_STATUS, 'DRAFT', Criteria::EQUAL );
-        } else {
-            $criteria->add( ListInboxPeer::APP_STATUS, 'TO_DO', Criteria::EQUAL );
-        }
-        self::loadFilters($criteria, $filters);
-        $total = ListInboxPeer::doCount( $criteria );
-        return (int)$total;
     }
 
     /**
@@ -499,7 +512,10 @@ class ListInbox extends BaseListInbox
      */
     public function loadList($usr_uid, $filters = array(), $callbackRecord = null)
     {
-        $criteria = new Criteria();
+        $pmTable = new PmTable();
+        $criteria = $pmTable->addPMFieldsToList('todo');
+
+        $filters['usr_uid'] = $usr_uid;
 
         $criteria->addSelectColumn(ListInboxPeer::APP_UID);
         $criteria->addSelectColumn(ListInboxPeer::DEL_INDEX);
@@ -525,21 +541,16 @@ class ListInbox extends BaseListInbox
         $criteria->addSelectColumn(UsersPeer::USR_FIRSTNAME);
         $criteria->addSelectColumn(UsersPeer::USR_LASTNAME);
         $criteria->addSelectColumn(UsersPeer::USR_USERNAME);
-        $criteria->addJoin( ListInboxPeer::USR_UID, UsersPeer::USR_UID, Criteria::LEFT_JOIN );
-        $criteria->add( ListInboxPeer::USR_UID, $usr_uid, Criteria::EQUAL );
+        $criteria->addJoin(ListInboxPeer::USR_UID, UsersPeer::USR_UID, Criteria::LEFT_JOIN);
         self::loadFilters($criteria, $filters);
 
-        $sort  = (!empty($filters['sort'])) ? $filters['sort'] : "LIST_INBOX.APP_UPDATE_DATE";
+        $sort  = (!empty($filters['sort'])) ?
+            ListInboxPeer::TABLE_NAME.'.'.$filters['sort'] :
+            "LIST_INBOX.APP_UPDATE_DATE";
         $dir   = isset($filters['dir']) ? $filters['dir'] : "ASC";
         $start = isset($filters['start']) ? $filters['start'] : "0";
         $limit = isset($filters['limit']) ? $filters['limit'] : "25";
         $paged = isset($filters['paged']) ? $filters['paged'] : 1;
-
-        if ($filters['action'] == 'draft') {
-            $criteria->add( ListInboxPeer::APP_STATUS, 'DRAFT', Criteria::EQUAL );
-        } else {
-            $criteria->add( ListInboxPeer::APP_STATUS, 'TO_DO', Criteria::EQUAL );
-        }
 
         if ($dir == "DESC") {
             $criteria->addDescendingOrderByColumn($sort);
@@ -548,18 +559,21 @@ class ListInbox extends BaseListInbox
         }
 
         if ($paged == 1) {
-            $criteria->setLimit( $limit );
-            $criteria->setOffset( $start );
+            $criteria->setLimit($limit);
+            $criteria->setOffset($start);
         }
 
-        $dataset = ListInboxPeer::doSelectRS($criteria, Propel::getDbConnection('workflow_ro') );
+        $dataset = ListInboxPeer::doSelectRS($criteria, Propel::getDbConnection('workflow_ro'));
         $dataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
         $data = array();
-        $aPriorities = array ('1' => 'VL','2' => 'L','3' => 'N','4' => 'H','5' => 'VH');
+        $aPriorities = array('1' => 'VL', '2' => 'L', '3' => 'N', '4' => 'H', '5' => 'VH');
         while ($dataset->next()) {
             $aRow = (is_null($callbackRecord))? $dataset->getRow() : $callbackRecord($dataset->getRow());
-            $aRow['DEL_PRIORITY'] = (isset($aRow['DEL_PRIORITY']) && is_numeric($aRow['DEL_PRIORITY']) && $aRow['DEL_PRIORITY'] <= 5 && $aRow['DEL_PRIORITY'] > 0 ) ? $aRow['DEL_PRIORITY'] : 3;
-            $aRow['DEL_PRIORITY'] = G::LoadTranslation( "ID_PRIORITY_{$aPriorities[$aRow['DEL_PRIORITY']]}" );
+            $aRow['DEL_PRIORITY'] = (isset($aRow['DEL_PRIORITY']) &&
+                is_numeric($aRow['DEL_PRIORITY']) &&
+                $aRow['DEL_PRIORITY'] <= 5 &&
+                $aRow['DEL_PRIORITY'] > 0) ? $aRow['DEL_PRIORITY'] : 3;
+            $aRow['DEL_PRIORITY'] = G::LoadTranslation("ID_PRIORITY_{$aPriorities[$aRow['DEL_PRIORITY']]}");
             $data[] = $aRow;
         }
         return $data;
@@ -569,18 +583,18 @@ class ListInbox extends BaseListInbox
     {
         $criteria = new Criteria();
         $criteria->addSelectColumn(TaskPeer::TAS_PRIORITY_VARIABLE);
-        $criteria->add( TaskPeer::TAS_UID, $taskUid, Criteria::EQUAL );
-        $criteria->add( TaskPeer::PRO_UID, $proUid, Criteria::EQUAL );
+        $criteria->add(TaskPeer::TAS_UID, $taskUid, Criteria::EQUAL);
+        $criteria->add(TaskPeer::PRO_UID, $proUid, Criteria::EQUAL);
         $dataset = TaskPeer::doSelectRS($criteria);
         $dataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
         $dataset->next();
         $aRow = $dataset->getRow();
         $priority = $aRow['TAS_PRIORITY_VARIABLE'];
-        if(strlen($priority)>2){
+        if (strlen($priority)>2) {
             $oCase = new Cases();
-            $aData = $oCase->loadCase( $appUid );
-            $priorityLabel = substr($priority, 2,strlen($priority));
-            if (isset( $aData['APP_DATA'][$priorityLabel] )) {
+            $aData = $oCase->loadCase($appUid);
+            $priorityLabel = substr($priority, 2, strlen($priority));
+            if (isset($aData['APP_DATA'][$priorityLabel])) {
                 $priority = $aData['APP_DATA'][$priorityLabel];
             }
         }
@@ -591,14 +605,36 @@ class ListInbox extends BaseListInbox
     {
         $criteria = new Criteria();
         eval('$criteria->addSelectColumn( AppDelegationPeer::'.$fieldName.');');
-        foreach($filters as $k => $v) {
-           eval('$criteria->add( AppDelegationPeer::'.$k.',$v, Criteria::EQUAL);');
+        foreach ($filters as $k => $v) {
+            eval('$criteria->add( AppDelegationPeer::'.$k.',$v, Criteria::EQUAL);');
         }
         $dataset = AppDelegationPeer::doSelectRS($criteria);
         $dataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
         $dataset->next();
         $aRow = $dataset->getRow();
-        return isset($aRow[$fieldName]) ? $aRow[$fieldName] : NULL;
+        return isset($aRow[$fieldName]) ? $aRow[$fieldName] : null;
+    }
+
+   /**
+     * Returns the number of cases of a user
+     * @param string $usrUid
+     * @param array  $filters
+     * @param string $status
+     * @return int
+     */
+    public function getCountList($usrUid, $filters = array())
+    {
+        $filters['usr_uid'] = $usrUid;
+        $criteria = new Criteria();
+        $criteria->addSelectColumn('COUNT(*) AS TOTAL');
+        $criteria->add(ListInboxPeer::USR_UID, $usrUid, Criteria::EQUAL);
+        if (count($filters)) {
+            self::loadFilters($criteria, $filters);
+        }
+        $dataset = ListInboxPeer::doSelectRS($criteria);
+        $dataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+        $dataset->next();
+        $aRow = $dataset->getRow();
+        return (int)$aRow['TOTAL'];
     }
 }
-

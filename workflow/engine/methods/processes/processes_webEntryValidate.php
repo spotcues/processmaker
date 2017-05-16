@@ -20,14 +20,17 @@ $sWE_USR = $oData->WE_USR;
 //echo ($sTASKS."<br>");
 //echo ($sDYNAFORM."<br>");
 
+$streamContext = [];
 
-if (G::is_https())
+if (G::is_https()) {
     $http = 'https://';
-else
+    $streamContext = ['stream_context' => stream_context_create(['ssl' => ['verify_peer' => false, 'verify_peer_name' => false, 'allow_self_signed' => true]])]; //lsl
+} else {
     $http = 'http://';
+}
 
 $endpoint = $http . $_SERVER['HTTP_HOST'] . '/sys' . SYS_SYS . '/' . SYS_LANG . '/' . SYS_SKIN . '/services/wsdl2';
-@$client = new SoapClient( $endpoint );
+$client = new SoapClient( $endpoint, $streamContext );
 
 $user = $sWS_USER;
 $pass = $sWS_PASS;

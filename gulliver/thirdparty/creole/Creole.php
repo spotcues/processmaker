@@ -189,14 +189,14 @@ class Creole {
 			trigger_error("The Creole::NO_ASSOC_LOWER flag has been deprecated, and is now the default behavior. Use Creole::COMPAT_ASSOC_LOWER to lowercase resulset keys.", E_USER_WARNING);
 		}
 
-        if(!class_exists('G')){
-          $realdocuroot = str_replace( '\\', '/', $_SERVER['DOCUMENT_ROOT'] );
-          $docuroot = explode( '/', $realdocuroot );
-          array_pop( $docuroot );
-          $pathhome = implode( '/', $docuroot ) . '/';
-          array_pop( $docuroot );
-          $pathTrunk = implode( '/', $docuroot ) . '/';
-          require_once($pathTrunk.'gulliver/system/class.g.php');
+        if (!class_exists('G')) {
+            $realdocuroot = str_replace('\\', '/', $_SERVER['DOCUMENT_ROOT']);
+            $docuroot = explode('/', $realdocuroot);
+            array_pop($docuroot);
+            $pathhome = implode('/', $docuroot) . '/';
+            array_pop($docuroot);
+            $pathTrunk = implode('/', $docuroot) . '/';
+            require_once($pathTrunk . 'gulliver/system/class.g.php');
         }
         // sort $dsninfo by keys so the serialized result is always the same
         // for identical connection parameters, no matter what their order is
@@ -309,6 +309,10 @@ class Creole {
         );
 
         $info = parse_url($dsn);
+
+        if (!is_null($dsn)) {
+            $info['pass'] = urldecode($info['pass']);
+        }
 
         if (count($info) === 1) { // if there's only one element in result, then it must be the phptype
             $parsed['phptype'] = array_pop($info);

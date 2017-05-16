@@ -751,6 +751,11 @@ class Bpmn extends Handler
             //Check and validate Message Flow
             $this->throwExceptionFlowIfIsAnInvalidMessageFlow($data);
 
+            //Validating FLO_CONDITION value
+            if (array_key_exists('FLO_CONDITION', $data) && is_null($data['FLO_CONDITION'])) {
+                $data['FLO_CONDITION'] = '';
+            }
+
             //Create
             $flow = new Flow();
             $flow->fromArray($data, BasePeer::TYPE_FIELDNAME);
@@ -781,6 +786,11 @@ class Bpmn extends Handler
         try {
             //Check and validate Message Flow
             $this->throwExceptionFlowIfIsAnInvalidMessageFlow($data);
+
+            //Validating FLO_CONDITION value
+            if (array_key_exists('FLO_CONDITION', $data) && is_null($data['FLO_CONDITION'])) {
+                $data['FLO_CONDITION'] = '';
+            }
 
             //Update
             $flow = FlowPeer::retrieveByPk($floUid);

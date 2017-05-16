@@ -350,6 +350,28 @@ class PMPlugin
     }
 
     /**
+     * Register a extend rest service and expose it
+     *
+     * @param string $className that is name class to extends
+     */
+    function registerExtendsRestService($className)
+    {
+        $oPluginRegistry =& PMPluginRegistry::getSingleton();
+        $oPluginRegistry->registerExtendsRestService($this->sNamespace, $className);
+    }
+
+    /**
+     * Register a extend rest service and expose it
+     *
+     * @param string $className that is name class to extends
+     */
+    function disableExtendsRestService($className)
+    {
+        $oPluginRegistry =& PMPluginRegistry::getSingleton();
+        $oPluginRegistry->disableExtendsRestService($this->sNamespace, $className);
+    }
+
+    /**
      * Unregister a rest service
      *
      * @author  Erik Amaru Ortiz <erik@colosa.com>
@@ -396,7 +418,7 @@ class PMPlugin
             throw $e;
         }
     }
-    
+
     /**
      * Changes the menu properties from the given processmaker section and menu id
      *
@@ -415,7 +437,7 @@ class PMPlugin
             throw $e;
         }
     }
-    
+
     /**
      * callBack File after import process
      *
@@ -432,6 +454,67 @@ class PMPlugin
             throw $e;
         }
     }
+
+    /**
+     * callBack File on reassign
+     *
+     * @param string $callBackFile
+     *
+     * @return void
+     */
+    public function registerOpenReassignCallback($callBackFile = '')
+    {
+        try {
+            $oPluginRegistry =& PMPluginRegistry::getSingleton();
+            $oPluginRegistry->registerOpenReassignCallback($callBackFile);
+        } catch (Exception $e) {
+            throw $e;
+        }
+    }
+
+    /**
+     * Path registry to file js or css.
+     * @param type $pathFile
+     * @param string $scope
+     * @throws Exception
+     */
+    public function registerDesignerSourcePath($pathFile, $scope = null)
+    {
+        if ($scope === null) {
+            $scope = '/plugin/' . $this->sNamespace . '/';
+        }
+        try {
+            $pluginRegistry = &PMPluginRegistry::getSingleton();
+            $pluginRegistry->registerDesignerSourcePath($this->sNamespace, $scope . $pathFile);
+        } catch (Exception $e) {
+            throw $e;
+        }
+    }
+
+    /**
+     * Enable build js or css into build.json paths.
+     * @param type $sourcePath
+     */
+    public function enableExtensionSources($sourcePath = 'config/build.json')
+    {
+        $path = PATH_PLUGINS . $this->sPluginFolder . "/";
+        $buildFile = $path . $sourcePath;
+        if (is_file($buildFile)) {
+            $buildObjects = G::json_decode(file_get_contents($buildFile));
+            foreach ($buildObjects as $item) {
+                $item->path = $path . rtrim($item->path, "/\\");
+                $extensionPath = "extension-" . $item->name . "-" . G::browserCacheFilesGetUid() . "." . $item->extension;
+                $file = $path . "public_html/" . $extensionPath;
+                @file_put_contents($file, "", LOCK_EX);
+                foreach ($item->files as $name) {
+                    $content = file_get_contents($item->path . "/" . $name) . "\n";
+                    @file_put_contents($file, $content, FILE_APPEND | LOCK_EX);
+                }
+                $this->registerDesignerSourcePath($extensionPath);
+            }
+        }
+    }
+
 }
 
 class menuDetail
@@ -786,6 +869,22 @@ class importCallBack
     public function __construct($namespace, $callBackFile)
     {
         $this->namespace = $namespace;
+        $this->callBackFile  = $callBackFile;
+    }
+}
+
+class OpenReassignCallback
+{
+    public $callBackFile;
+
+    /**
+     * This function is the constructor of the cronFile class
+     * param string $namespace
+     * param string $callBackFile
+     * @return void
+     */
+    public function __construct($callBackFile)
+    {
         $this->callBackFile  = $callBackFile;
     }
 }

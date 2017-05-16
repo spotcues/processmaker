@@ -113,7 +113,7 @@ class EnterpriseUtils
 
     public static function getUrlServerName()
     {
-        $s = (empty($_SERVER["HTTPS"]))? null : (($_SERVER["HTTPS"] == "on")? "s" : null);
+        $s = (G::is_https() ? "s" : null);
         $p = strtolower($_SERVER["SERVER_PROTOCOL"]);
 
         $protocol = substr($p, 0, strpos($p, "/")) . $s;

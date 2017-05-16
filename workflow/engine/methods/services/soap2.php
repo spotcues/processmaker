@@ -1,5 +1,5 @@
 <?php
-ini_set( "soap.wsdl_cache_enabled", "0" ); //disabling WSDL cache
+ini_set("soap.wsdl_cache_enabled", 0); //disabling WSDL cache
 
 
 define( 'WEB_SERVICE_VERSION', '2.0' );
@@ -1240,7 +1240,10 @@ function claimCase($params)
     return $res;
 }
 
-$server = new SoapServer($wsdl);
+$options = array(
+    'cache_wsdl' => WSDL_CACHE_NONE
+);
+$server = new SoapServer($wsdl, $options);
 
 $server->addFunction("Login");
 $server->addFunction("ProcessList");

@@ -34,6 +34,7 @@ if (isset( $_POST['id'] ))
 
 G::LoadClass( 'languages' );
 G::LoadSystem( 'database_mysql' );
+G::LoadSystem('inputfilter');
 
 $aUpgradeData = unserialize( file_get_contents( PATH_DATA . 'log' . PATH_SEP . "upgrade.data.bin" ) );
 $aWorkspaces = $aUpgradeData['workspaces'];
@@ -60,7 +61,7 @@ if (is_array( $aWorkspaces ) && count( $aWorkspaces ) > 0) {
     print "<table cellpadding=0><tr><td><img src='/images/ajax-loader.gif' border=0/></td><td>";
     print "<div style='border-style:solid;border-width:1px; border-color: #A1C868; width:300px; height:19px;' >";
     print "<div style='color:#FFF; height:16px; text-align:center; padding-top:3px; background-image: url(/skins/green/images/bm.jpg); background-repeat: repeat-x; width: {$gauge}px' ></div> </div>";
-    print "</td><td width='40%'><font color=black> Upgrading the workspace </font><b><font color=green>$workspace</font></b></td><td width=250 align=right>| $id Remaining</td></tr></table>";
+    print "</td><td width='40%'><font color=black> Upgrading the workspace </font><b><font color=green>".$filter->xssFilterHard($workspace)."</font></b></td><td width=250 align=right>| ".$filter->xssFilterHard($id)." Remaining</td></tr></table>";
     file_put_contents( PATH_DATA . 'log' . PATH_SEP . "upgrade.data.bin", serialize( $aUpgradeData ) );
 } else {
     print "<table cellpadding=0><tr><td>&nbsp;&nbsp;&nbsp;&nbsp;</td><td>";

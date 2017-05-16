@@ -17,17 +17,49 @@ switch($req){
         $dir        = isset($_REQUEST['dir']) ?         $_REQUEST['dir']        : 'ASC';
         $dateFrom   = isset( $_POST["dateFrom"] ) ? substr( $_POST["dateFrom"], 0, 10 ) : "";
         $dateTo     = isset( $_POST["dateTo"] ) ? substr( $_POST["dateTo"], 0, 10 ) : "";
+        $filterBy = (isset($_REQUEST['filterBy']))? $_REQUEST['filterBy'] : 'ALL';
 
         $response = new stdclass();
         $response->status = 'OK';
 
+        $delimiter = DBAdapter::getStringDelimiter();
+
         $criteria = new Criteria();
-        $criteria->addJoin(AppMessagePeer::APP_UID, ApplicationPeer::APP_UID);
+        $criteria->addJoin(AppMessagePeer::APP_UID, ApplicationPeer::APP_UID, Criteria::LEFT_JOIN);
+
         if ($emailStatus != '') {
             $criteria->add( AppMessagePeer::APP_MSG_STATUS, $emailStatus);
         }
         if ($proUid != '') {
             $criteria->add( ApplicationPeer::PRO_UID, $proUid);
+        }
+
+        $arrayType = [];
+
+        $pluginRegistry = PMPluginRegistry::getSingleton();
+        $statusEr = $pluginRegistry->getStatusPlugin('externalRegistration');
+
+        $flagEr = (preg_match('/^enabled$/', $statusEr))? 1 : 0;
+
+        if ($flagEr == 0) {
+            $arrayType[] = 'EXTERNAL_REGISTRATION';
+        }
+
+        switch ($filterBy) {
+            case 'CASES':
+                $criteria->add(AppMessagePeer::APP_MSG_TYPE, ['TEST', 'EXTERNAL_REGISTRATION'], Criteria::NOT_IN);
+                break;
+            case 'TEST':
+                $criteria->add(AppMessagePeer::APP_MSG_TYPE, 'TEST', Criteria::EQUAL);
+                break;
+            case 'EXTERNAL-REGISTRATION':
+                $criteria->add(AppMessagePeer::APP_MSG_TYPE, 'EXTERNAL_REGISTRATION', Criteria::EQUAL);
+                break;
+            default:
+                if (!empty($arrayType)) {
+                    $criteria->add(AppMessagePeer::APP_MSG_TYPE, $arrayType, Criteria::NOT_IN);
+                }
+                break;
         }
 
         if ($dateFrom != "") {
@@ -83,15 +115,30 @@ switch($req){
 
         $criteria->addSelectColumn(ApplicationPeer::PRO_UID);
         $criteria->addSelectColumn(ApplicationPeer::APP_NUMBER);
-
-        $criteria->addAsColumn('PRO_TITLE', 'C2.CON_VALUE');
-        $criteria->addAlias('C2', 'CONTENT');
+        $criteria->addSelectColumn(ProcessPeer::PRO_TITLE);
 
         if ($emailStatus != '') {
             $criteria->add( AppMessagePeer::APP_MSG_STATUS, $emailStatus);
         }
         if ($proUid != '') {
             $criteria->add( ApplicationPeer::PRO_UID, $proUid);
+        }
+
+        switch ($filterBy) {
+            case 'CASES':
+                $criteria->add(AppMessagePeer::APP_MSG_TYPE, ['TEST', 'EXTERNAL_REGISTRATION'], Criteria::NOT_IN);
+                break;
+            case 'TEST':
+                $criteria->add(AppMessagePeer::APP_MSG_TYPE, 'TEST', Criteria::EQUAL);
+                break;
+            case 'EXTERNAL-REGISTRATION':
+                $criteria->add(AppMessagePeer::APP_MSG_TYPE, 'EXTERNAL_REGISTRATION', Criteria::EQUAL);
+                break;
+            default:
+                if (!empty($arrayType)) {
+                    $criteria->add(AppMessagePeer::APP_MSG_TYPE, $arrayType, Criteria::NOT_IN);
+                }
+                break;
         }
 
         if ($dateFrom != "") {
@@ -128,17 +175,11 @@ switch($req){
             $criteria->setLimit($limit);
             $criteria->setOffset($start);
         }
-        $criteria->addJoin(AppMessagePeer::APP_UID, ApplicationPeer::APP_UID);
 
-        $conditions = array();
-        $conditions[] = array(ApplicationPeer::PRO_UID, 'C2.CON_ID');
-        $conditions[] = array(
-            'C2.CON_CATEGORY', DBAdapter::getStringDelimiter() . 'PRO_TITLE' . DBAdapter::getStringDelimiter()
-        );
-        $conditions[] = array(
-            'C2.CON_LANG', DBAdapter::getStringDelimiter() . SYS_LANG . DBAdapter::getStringDelimiter()
-        );
-        $criteria->addJoinMC($conditions, Criteria::LEFT_JOIN);
+        $criteria->addJoin(AppMessagePeer::APP_UID, ApplicationPeer::APP_UID);
+        $criteria->addJoin(ApplicationPeer::PRO_UID, ProcessPeer::PRO_UID);
+
+
         $result = AppMessagePeer::doSelectRS($criteria);
         $result->setFetchmode(ResultSet::FETCHMODE_ASSOC);
         $data = Array();
@@ -150,26 +191,51 @@ switch($req){
             $row = $result->getRow();
             $row['APP_MSG_FROM'] =htmlentities($row['APP_MSG_FROM'], ENT_QUOTES, "UTF-8");
             $row['APP_MSG_STATUS'] = ucfirst ( $row['APP_MSG_STATUS']);
-            if ($row['DEL_INDEX'] != 0) {
-                $index = $row['DEL_INDEX'];
+
+            switch ($filterBy) {
+               case 'CASES':
+                   if ($row['DEL_INDEX'] != 0) {
+                       $index = $row['DEL_INDEX'];
+                   }
+
+                   $criteria = new Criteria();
+
+                   $criteria->addSelectColumn(AppCacheViewPeer::APP_TITLE);
+                   $criteria->addSelectColumn(AppCacheViewPeer::APP_TAS_TITLE);
+                   $criteria->add(AppCacheViewPeer::APP_UID, $row['APP_UID'], Criteria::EQUAL);
+                   $criteria->add(AppCacheViewPeer::DEL_INDEX, $index, Criteria::EQUAL);
+
+                   $resultCacheView = AppCacheViewPeer::doSelectRS($criteria);
+                   $resultCacheView->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+
+                   $row['APP_TITLE'] = '-';
+
+                   while ($resultCacheView->next()) {
+                       $rowCacheView = $resultCacheView->getRow();
+                       $row['APP_TITLE'] = $rowCacheView['APP_TITLE'];
+                       $row['TAS_TITLE'] = $rowCacheView['APP_TAS_TITLE'];
+                   }
+
+                   if ($row['DEL_INDEX'] == 0) {
+                       $row['TAS_TITLE'] = $tasTitleDefault;
+                   }
+                   break;
+               case 'TEST':
+                   $row['PRO_UID'] = '';
+                   $row['APP_NUMBER'] = '';
+                   $row['PRO_TITLE'] = '';
+                   $row['APP_TITLE'] = '';
+                   $row['TAS_TITLE'] = '';
+                   break;
+               case 'EXTERNAL-REGISTRATION':
+                   $row['PRO_UID'] = '';
+                   $row['APP_NUMBER'] = '';
+                   $row['PRO_TITLE'] = '';
+                   $row['APP_TITLE'] = '';
+                   $row['TAS_TITLE'] = '';
+                   break;
             }
 
-            $criteria = new Criteria();
-            $criteria->addSelectColumn(AppCacheViewPeer::APP_TITLE);
-            $criteria->addSelectColumn(AppCacheViewPeer::APP_TAS_TITLE);
-            $criteria->add(AppCacheViewPeer::APP_UID, $row['APP_UID']);
-            $criteria->add(AppCacheViewPeer::DEL_INDEX, $index);
-            $resultCacheView = AppCacheViewPeer::doSelectRS($criteria);
-            $resultCacheView->setFetchmode(ResultSet::FETCHMODE_ASSOC);
-            $row['APP_TITLE'] = '-';
-            while ($resultCacheView->next()) {
-                $rowCacheView = $resultCacheView->getRow();
-                $row['APP_TITLE'] = $rowCacheView['APP_TITLE'];
-                $row['TAS_TITLE'] = $rowCacheView['APP_TAS_TITLE'];
-            }
-            if ($row['DEL_INDEX'] == 0) {
-                $row['TAS_TITLE'] = $tasTitleDefault;
-            }
             $data[] = $row;
         }
         $response = array();

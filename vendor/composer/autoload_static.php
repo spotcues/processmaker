@@ -4,9 +4,34 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInit0542a784f78c2a50684bd6e211cf3cdb
+class ComposerStaticInit5b9661cf53f4d32d96efb74d23ba1bc6
 {
+    public static $prefixLengthsPsr4 = array (
+        'M' => 
+        array (
+            'Monolog\\' => 8,
+        ),
+    );
+
+    public static $prefixDirsPsr4 = array (
+        'Monolog\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/monolog/monolog/src/Monolog',
+        ),
+    );
+
     public static $prefixesPsr0 = array (
+        'P' => 
+        array (
+            'Psr\\Log\\' => 
+            array (
+                0 => __DIR__ . '/..' . '/psr/log',
+            ),
+            'ProcessMaker\\' => 
+            array (
+                0 => __DIR__ . '/../..' . '/workflow/engine/src',
+            ),
+        ),
         'O' => 
         array (
             'OAuth2' => 
@@ -3573,8 +3598,10 @@ class ComposerStaticInit0542a784f78c2a50684bd6e211cf3cdb
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixesPsr0 = ComposerStaticInit0542a784f78c2a50684bd6e211cf3cdb::$prefixesPsr0;
-            $loader->classMap = ComposerStaticInit0542a784f78c2a50684bd6e211cf3cdb::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticInit5b9661cf53f4d32d96efb74d23ba1bc6::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInit5b9661cf53f4d32d96efb74d23ba1bc6::$prefixDirsPsr4;
+            $loader->prefixesPsr0 = ComposerStaticInit5b9661cf53f4d32d96efb74d23ba1bc6::$prefixesPsr0;
+            $loader->classMap = ComposerStaticInit5b9661cf53f4d32d96efb74d23ba1bc6::$classMap;
 
         }, null, ClassLoader::class);
     }

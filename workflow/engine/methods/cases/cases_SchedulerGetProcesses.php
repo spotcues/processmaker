@@ -11,14 +11,11 @@ G::LoadClass( 'Content' );
 $oCriteria = new Criteria( 'workflow' );
 $oCriteria->addSelectColumn( ProcessPeer::PRO_UID );
 $oCriteria->setDistinct();
-$oCriteria->addSelectColumn( ContentPeer::CON_VALUE );
+$oCriteria->addSelectColumn( ProcessPeer::PRO_TITLE );
 $oCriteria->addJoin( ProcessPeer::PRO_UID, TaskPeer::PRO_UID, Criteria::LEFT_JOIN );
-$oCriteria->addJoin( ProcessPeer::PRO_UID, ContentPeer::CON_ID, Criteria::LEFT_JOIN );
 $oCriteria->addJoin( TaskPeer::TAS_UID, TaskUserPeer::TAS_UID, Criteria::LEFT_JOIN );
 $oCriteria->add( TaskUserPeer::USR_UID, $oUserId );
 $oCriteria->add( TaskPeer::TAS_START, 'true' );
-$oCriteria->add( ContentPeer::CON_CATEGORY, 'PRO_TITLE' );
-$oCriteria->add( ContentPeer::CON_LANG, SYS_LANG );
 $oCriteria->addAnd( ProcessPeer::PRO_UID, $process );
 
 $resultSet = TaskUserPeer::doSelectRS( $oCriteria );

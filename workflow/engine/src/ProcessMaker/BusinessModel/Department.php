@@ -22,25 +22,16 @@ class Department
     public function existsTitle($departmentTitle, $departmentUidExclude = "")
     {
         try {
-            $delimiter = \DBAdapter::getStringDelimiter();
-
             $criteria = new \Criteria("workflow");
 
             $criteria->addSelectColumn(\DepartmentPeer::DEP_UID);
-
-            $criteria->addAlias("CT", \ContentPeer::TABLE_NAME);
-
-            $arrayCondition = array();
-            $arrayCondition[] = array(\DepartmentPeer::DEP_UID, "CT.CON_ID", \Criteria::EQUAL);
-            $arrayCondition[] = array("CT.CON_CATEGORY", $delimiter . "DEPO_TITLE" . $delimiter, \Criteria::EQUAL);
-            $arrayCondition[] = array("CT.CON_LANG", $delimiter . SYS_LANG . $delimiter, \Criteria::EQUAL);
-            $criteria->addJoinMC($arrayCondition, \Criteria::LEFT_JOIN);
+            $criteria->addSelectColumn(\DepartmentPeer::DEP_TITLE);
 
             if ($departmentUidExclude != "") {
                 $criteria->add(\DepartmentPeer::DEP_UID, $departmentUidExclude, \Criteria::NOT_EQUAL);
             }
 
-            $criteria->add("CT.CON_VALUE", $departmentTitle, \Criteria::EQUAL);
+            $criteria->add(\DepartmentPeer::DEP_TITLE, $departmentTitle, \Criteria::EQUAL);
 
             $rsCriteria = \DepartmentPeer::doSelectRS($criteria);
 
@@ -476,7 +467,7 @@ class Department
         $oDept->updateDepartmentManager( $dep_uid );
 
         $oDept = new \Department();
-        $oDept->load($dep_uid);
+        $oDept->Load($dep_uid);
         $oDept->addUserToDepartment($dep_uid, $usr_uid, ($oDept->getDepManager() == "")? true : false, false);
         $oDept->updateDepartmentManager($dep_uid);
     }

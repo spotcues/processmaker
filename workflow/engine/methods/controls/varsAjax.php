@@ -90,8 +90,6 @@ if ($isBpmn) {
     $html .= '<option value="ID_TO_STRING">@@</option>';
     $html .= '<option value="ID_TO_FLOAT">@#</option>';
     $html .= '<option value="ID_TO_INTEGER">@%</option>';
-    $html .= '<option value="ID_TO_URL">@?</option>';
-    $html .= '<option value="ID_SQL_ESCAPE">@$</option>';
     $html .= '<option value="ID_REPLACE_WITHOUT_CHANGES">@=</option>';
 } else {
     $html .= '<option value="ID_TO_STRING">@@</option>';

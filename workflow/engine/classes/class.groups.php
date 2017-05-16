@@ -209,17 +209,13 @@ class Groups
             $oCriteria = new Criteria('workflow');
             $oCriteria->addSelectColumn(GroupwfPeer::GRP_UID);
             $oCriteria->addSelectColumn(GroupwfPeer::GRP_STATUS);
-            $oCriteria->addSelectColumn(ContentPeer::CON_VALUE);
-            $oCriteria->addJoin(GroupwfPeer::GRP_UID, ContentPeer::CON_ID, Criteria::LEFT_JOIN);
+            $oCriteria->addAsColumn('CON_VALUE',GroupwfPeer::GRP_TITLE);
+            $oCriteria->addAscendingOrderByColumn(GroupwfPeer::GRP_TITLE);
             $oCriteria->add(GroupwfPeer::GRP_UID, $gUIDs, Criteria::NOT_IN);
             $oCriteria->add(GroupwfPeer::GRP_STATUS, 'ACTIVE');
-            $oCriteria->add(ContentPeer::CON_CATEGORY, 'GRP_TITLE');
-            $oCriteria->add(ContentPeer::CON_LANG, SYS_LANG);
-
             if ($filter != '') {
-                $oCriteria->add(ContentPeer::CON_VALUE, '%' . $filter . '%', Criteria::LIKE);
+                $oCriteria->add(GroupwfPeer::GRP_TITLE, '%' . $filter . '%', Criteria::LIKE);
             }
-
             return $oCriteria;
         } catch (exception $e) {
             throw $e;
@@ -240,18 +236,14 @@ class Groups
             $oCriteria->addSelectColumn(GroupwfPeer::GRP_UID);
             $oCriteria->addSelectColumn(GroupwfPeer::GRP_STATUS);
             $oCriteria->addSelectColumn(GroupwfPeer::GRP_LDAP_DN);
-            $oCriteria->addSelectColumn(ContentPeer::CON_VALUE);
+            $oCriteria->addAsColumn('CON_VALUE',GroupwfPeer::GRP_TITLE);
+            $oCriteria->addAscendingOrderByColumn(GroupwfPeer::GRP_TITLE);
             $oCriteria->addJoin(GroupUserPeer::GRP_UID, GroupwfPeer::GRP_UID, Criteria::LEFT_JOIN);
-            $oCriteria->addJoin(GroupwfPeer::GRP_UID, ContentPeer::CON_ID, Criteria::LEFT_JOIN);
             $oCriteria->add(GroupUserPeer::USR_UID, $sUserUid, Criteria::EQUAL);
             $oCriteria->add(GroupwfPeer::GRP_STATUS, 'ACTIVE');
-            $oCriteria->add(ContentPeer::CON_CATEGORY, 'GRP_TITLE');
-            $oCriteria->add(ContentPeer::CON_LANG, SYS_LANG);
-
             if ($filter != '') {
-                $oCriteria->add(ContentPeer::CON_VALUE, '%' . $filter . '%', Criteria::LIKE);
+                $oCriteria->add(GroupwfPeer::GRP_TITLE, '%' . $filter . '%', Criteria::LIKE);
             }
-
             return $oCriteria;
         } catch (exception $e) {
             throw $e;
@@ -261,7 +253,7 @@ class Groups
     public function getGroupsForUser($usrUid)
     {
         $criteria = $this->getAssignedGroupsCriteria($usrUid);
-        $criteria->addAscendingOrderByColumn(ContentPeer::CON_VALUE);
+        $criteria->addAscendingOrderByColumn(GroupwfPeer::GRP_TITLE);
         $dataset = GroupwfPeer::doSelectRS($criteria);
         $dataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
         $dataset->next();

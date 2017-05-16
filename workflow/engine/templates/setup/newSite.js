@@ -13,7 +13,7 @@ Ext.onReady(function(){
   xtype:'textfield',
   value:'sample',
   width: 200,
-  autoCreate: {tag: 'input', type: 'text', size: '20', autocomplete: 'off', maxlength: '13'},
+  autoCreate: {tag: 'input', type: 'text', size: '20', autocomplete: 'off', maxlength: '30'},
   allowBlank: false,
   listeners: {
               'render': function(c) {

@@ -12,6 +12,7 @@ use \CasesPeer;
 class Cases
 {
     private $formatFieldNameInUppercase = true;
+    private $messageResponse = [];
 
     /**
      * Set the format of the fields name (uppercase, lowercase)
@@ -232,7 +233,6 @@ class Cases
         }
 
         G::LoadClass("applications");
-        $solrEnabled = false;
         $userUid = $dataList["userId"];
         $callback = isset( $dataList["callback"] ) ? $dataList["callback"] : "stcCallback1001";
         $dir = isset( $dataList["dir"] ) ? $dataList["dir"] : "DESC";
@@ -302,7 +302,7 @@ class Cases
             Validator::catUid($category, '$cat_uid');
         }
         $status = G::toUpper($status);
-        $listStatus = array('TO_DO', 'DRAFT', 'COMPLETED', 'CANCEL', 'OPEN', 'CLOSE');
+        $listStatus = array('TO_DO', 'DRAFT', 'COMPLETED', 'CANCELLED', 'OPEN', 'CLOSE');
         if (!(in_array($status, $listStatus))) {
             $status = '';
         }
@@ -326,70 +326,30 @@ class Cases
             }
         }
 
-        if ((
-                $action == "todo" || $action == "draft" || $action == "paused" || $action == "sent" ||
-                $action == "selfservice" || $action == "unassigned" || $action == "search"
-            ) &&
-            (($solrConf = \System::solrEnv()) !== false)
-        ) {
-            G::LoadClass("AppSolr");
+        G::LoadClass("applications");
+        $apps = new \Applications();
+        $result = $apps->getAll(
+            $userUid,
+            $start,
+            $limit,
+            $action,
+            $filter,
+            $search,
+            $process,
+            $status,
+            $type,
+            $dateFrom,
+            $dateTo,
+            $callback,
+            $dir,
+            (strpos($sort, ".") !== false) ? $sort : "APP_CACHE_VIEW." . $sort,
+            $category,
+            true,
+            $paged,
+            $newerThan,
+            $oldestThan
+        );
 
-            $ApplicationSolrIndex = new \AppSolr(
-                $solrConf["solr_enabled"],
-                $solrConf["solr_host"],
-                $solrConf["solr_instance"]
-            );
-
-            if ($ApplicationSolrIndex->isSolrEnabled() && $solrConf['solr_enabled'] == true) {
-                //Check if there are missing records to reindex and reindex them
-                $ApplicationSolrIndex->synchronizePendingApplications();
-                $solrEnabled = true;
-            }
-        }
-
-        if ($solrEnabled) {
-            $result = $ApplicationSolrIndex->getAppGridData(
-                $userUid,
-                $start,
-                $limit,
-                $action,
-                $filter,
-                $search,
-                $process,
-                $status,
-                $type,
-                $dateFrom,
-                $dateTo,
-                $callback,
-                $dir,
-                $sort,
-                $category
-            );
-        } else {
-            G::LoadClass("applications");
-            $apps = new \Applications();
-            $result = $apps->getAll(
-                $userUid,
-                $start,
-                $limit,
-                $action,
-                $filter,
-                $search,
-                $process,
-                $status,
-                $type,
-                $dateFrom,
-                $dateTo,
-                $callback,
-                $dir,
-                (strpos($sort, ".") !== false)? $sort : "APP_CACHE_VIEW." . $sort,
-                $category,
-                true,
-                $paged,
-                $newerThan,
-                $oldestThan
-            );
-        }
         if (!empty($result['data'])) {
             foreach ($result['data'] as &$value) {
                 $value = array_change_key_case($value, CASE_LOWER);
@@ -710,13 +670,8 @@ class Cases
             $oCriteria->addSelectColumn( \AppDelegationPeer::TAS_UID );
             $oCriteria->addSelectColumn(\AppDelegationPeer::DEL_INIT_DATE);
             $oCriteria->addSelectColumn(\AppDelegationPeer::DEL_TASK_DUE_DATE);
-            $oCriteria->addAsColumn( 'TAS_TITLE', 'C1.CON_VALUE' );
-            $oCriteria->addAlias( "C1", 'CONTENT' );
-            $tasTitleConds   = array ();
-            $tasTitleConds[] = array (\AppDelegationPeer::TAS_UID,'C1.CON_ID');
-            $tasTitleConds[] = array ('C1.CON_CATEGORY',$del . 'TAS_TITLE' . $del);
-            $tasTitleConds[] = array ('C1.CON_LANG',$del . SYS_LANG . $del);
-            $oCriteria->addJoinMC( $tasTitleConds, \Criteria::LEFT_JOIN );
+            $oCriteria->addSelectColumn(\TaskPeer::TAS_TITLE);
+            $oCriteria->addJoin(\AppDelegationPeer::TAS_UID, \TaskPeer::TAS_UID);
             $oCriteria->add( \AppDelegationPeer::APP_UID, $applicationUid );
             $oCriteria->add( \AppDelegationPeer::USR_UID, $userUid );
             $oCriteria->add( \AppDelegationPeer::DEL_THREAD_STATUS, 'OPEN' );
@@ -1171,9 +1126,9 @@ class Cases
         \G::LoadClass("configuration");
         $conf = new \Configurations();
         $confEnvSetting = $conf->getFormats();
-        //verifica si existe la tabla OBJECT_PERMISSION
+
         $cases = new \cases();
-        $cases->verifyTable();
+
         $listing = false;
         $oPluginRegistry = & \PMPluginRegistry::getSingleton();
         if ($oPluginRegistry->existsTrigger(PM_CASE_DOCUMENT_LIST)) {
@@ -1469,9 +1424,9 @@ class Cases
         \G::LoadClass("configuration");
         $conf = new \Configurations();
         $confEnvSetting = $conf->getFormats();
-        //verifica si la tabla OBJECT_PERMISSION
+        
         $cases = new \cases();
-        $cases->verifyTable();
+
         $listing = false;
         $oPluginRegistry = & \PMPluginRegistry::getSingleton();
         if ($oPluginRegistry->existsTrigger(PM_CASE_DOCUMENT_LIST)) {
@@ -1683,42 +1638,130 @@ class Cases
     }
 
     /**
+     * Get fields and values by DynaForm
+     *
+     * @param array $form
+     * @param array $appData
+     * @param array $caseVariable
+     *
+     * return array Return array
+     */
+    private function __getFieldsAndValuesByDynaFormAndAppData(array $form, array $appData, array $caseVariable)
+    {
+        try {
+            $caseVariableAux = [];
+
+            foreach ($form['items'] as $value) {
+                foreach ($value as $value2) {
+                    $field = $value2;
+
+                    if (isset($field['type'])) {
+                        if ($field['type'] != 'form') {
+                            foreach ($field as &$val) {
+                                if (is_string($val) && in_array(substr($val, 0, 2), \pmDynaform::$prefixs)) {
+                                    $val = substr($val, 2);
+                                }
+                            }
+                            foreach ($appData as $key => $valueKey) {
+                                if (in_array($key, $field, true) != false) {
+                                    $keyname = array_search($key, $field);
+                                    if (isset($field['dataType']) && $field['dataType'] != 'grid') {
+                                        $caseVariable[$field[$keyname]] = $appData[$field[$keyname]];
+
+                                        if (isset($appData[$field[$keyname] . '_label'])) {
+                                            $caseVariable[$field[$keyname] . '_label'] = $appData[$field[$keyname] . '_label'];
+                                        } else {
+                                            $caseVariable[$field[$keyname] . '_label'] = '';
+                                        }
+                                    } else {
+                                        $caseVariable[$field[$keyname]] = $appData[$field[$keyname]];
+                                    }
+                                }
+                            }
+
+                        } else {
+                            $caseVariableAux = $this->__getFieldsAndValuesByDynaFormAndAppData($field, $appData, $caseVariable);
+                            $caseVariable = array_merge($caseVariable, $caseVariableAux);
+                        }
+                    }
+                }
+            }
+
+            //Return
+            return $caseVariable;
+        } catch (\Exception $e) {
+            throw $e;
+        }
+    }
+
+    /**
      * Get Case Variables
      *
      * @access public
      * @param string $app_uid, Uid for case
      * @param string $usr_uid, Uid for user
+     * @param string $dynaFormUid, Uid for dynaform
      * @return array
      *
      * @author Brayan Pereyra (Cochalo) <brayan@colosa.com>
      * @copyright Colosa - Bolivia
      */
-    public function getCaseVariables($app_uid, $usr_uid)
+    public function getCaseVariables($app_uid, $usr_uid, $dynaFormUid = null, $pro_uid = null, $act_uid = null, $app_index = null)
     {
         Validator::isString($app_uid, '$app_uid');
         Validator::appUid($app_uid, '$app_uid');
         Validator::isString($usr_uid, '$usr_uid');
         Validator::usrUid($usr_uid, '$usr_uid');
 
-        $appCacheView = new \AppCacheView();
-        $isProcessSupervisor = $appCacheView->getProUidSupervisor($usr_uid);
-        $criteria = new \Criteria("workflow");
-        $criteria->addSelectColumn(\AppDelegationPeer::APP_UID);
-        $criteria->add(\AppDelegationPeer::APP_UID, $app_uid, \Criteria::EQUAL);
-        $criteria->add(\AppDelegationPeer::USR_UID, $usr_uid, \Criteria::EQUAL);
-        $criteria->add(
-            $criteria->getNewCriterion(\AppDelegationPeer::USR_UID, $usr_uid, \Criteria::EQUAL)->addOr(
-            $criteria->getNewCriterion(\AppDelegationPeer::PRO_UID, $isProcessSupervisor, \Criteria::IN))
-        );
-        $rsCriteria = \AppDelegationPeer::doSelectRS($criteria);
-
-        if (!$rsCriteria->next()) {
-            throw (new \Exception(\G::LoadTranslation("ID_NO_PERMISSION_NO_PARTICIPATED", array($usr_uid))));
-        }
-
         $case = new \Cases();
         $fields = $case->loadCase($app_uid);
-        return $fields['APP_DATA'];
+
+        $arrayCaseVariable = [];
+
+        if (!is_null($dynaFormUid)) {
+            \G::LoadClass("pmDynaform");
+            $data["CURRENT_DYNAFORM"] = $dynaFormUid;
+            $pmDynaForm = new \pmDynaform($data);
+            $arrayDynaFormData = $pmDynaForm->getDynaform();
+            $arrayDynContent = \G::json_decode($arrayDynaFormData['DYN_CONTENT']);
+            $pmDynaForm->jsonr($arrayDynContent);
+
+            $arrayDynContent = \G::json_decode(\G::json_encode($arrayDynContent), true);
+
+            $arrayAppData = $fields['APP_DATA'];
+
+            $arrayCaseVariable = $this->__getFieldsAndValuesByDynaFormAndAppData(
+                    $arrayDynContent['items'][0], $arrayAppData, $arrayCaseVariable
+            );
+        } else {
+            $arrayCaseVariable = $fields['APP_DATA'];
+        }
+
+        //Get historyDate for Dynaform
+        if (!is_null($pro_uid) && !is_null($act_uid) && !is_null($app_index)) {
+            $oCriteriaAppHistory = new \Criteria("workflow");
+            $oCriteriaAppHistory->addSelectColumn(\AppHistoryPeer::HISTORY_DATE);
+            $oCriteriaAppHistory->add(\AppHistoryPeer::APP_UID, $app_uid, \Criteria::EQUAL);
+            $oCriteriaAppHistory->add(\AppHistoryPeer::DEL_INDEX, $app_index, \Criteria::EQUAL);
+            $oCriteriaAppHistory->add(\AppHistoryPeer::PRO_UID, $pro_uid, \Criteria::EQUAL);
+            $oCriteriaAppHistory->add(\AppHistoryPeer::TAS_UID, $act_uid, \Criteria::EQUAL);
+            $oCriteriaAppHistory->add(\AppHistoryPeer::USR_UID, $usr_uid, \Criteria::EQUAL);
+            if (!is_null($dynaFormUid)) {
+                $oCriteriaAppHistory->add(\AppHistoryPeer::DYN_UID, $dynaFormUid, \Criteria::EQUAL);
+            }
+            $oCriteriaAppHistory->addDescendingOrderByColumn('HISTORY_DATE');
+            $oCriteriaAppHistory->setLimit(1);
+            $oDataset = \AppDocumentPeer::doSelectRS($oCriteriaAppHistory);
+            $oDataset->setFetchmode(\ResultSet::FETCHMODE_ASSOC);
+            $oDataset->next();
+            if ($aRow = $oDataset->getRow()) {
+                $dateHistory['SYS_VAR_UPDATE_DATE'] = $aRow['HISTORY_DATE'];
+            } else {
+                $dateHistory['SYS_VAR_UPDATE_DATE'] = null;
+            }
+            $arrayCaseVariable = array_merge($arrayCaseVariable, $dateHistory);
+        }
+        return $arrayCaseVariable;
     }
 
     /**
@@ -1771,6 +1814,16 @@ class Cases
         $_SESSION['APPLICATION'] = $app_uid;
         $_SESSION['USER_LOGGED'] = $usr_uid;
 
+        $arrayVariableDocumentToDelete = [];
+
+        if (array_key_exists('__VARIABLE_DOCUMENT_DELETE__', $app_data)) {
+            if (is_array($app_data['__VARIABLE_DOCUMENT_DELETE__']) && !empty($app_data['__VARIABLE_DOCUMENT_DELETE__'])) {
+                $arrayVariableDocumentToDelete = $app_data['__VARIABLE_DOCUMENT_DELETE__'];
+            }
+
+            unset($app_data['__VARIABLE_DOCUMENT_DELETE__']);
+        }
+
         $case = new \Cases();
         $fields = $case->loadCase($app_uid, $del_index);
         $_POST['form'] = $app_data;
@@ -1797,6 +1850,11 @@ class Cases
         }
         $data['APP_DATA'] = array_merge($fields['APP_DATA'], $_POST['form']);
         $case->updateCase($app_uid, $data);
+
+        //Delete MultipleFile
+        if (!empty($arrayVariableDocumentToDelete)) {
+            $this->deleteMultipleFile($app_uid, $arrayVariableDocumentToDelete);
+        }
     }
 
     /**
@@ -2003,8 +2061,8 @@ class Cases
             $criteria = new \Criteria("workflow");
 
             $criteria->addSelectColumn(\TaskPeer::TAS_UID);
-            $criteria->addAsColumn("TAS_TITLE", "CT.CON_VALUE");
-            $criteria->addAsColumn("TAS_DESCRIPTION", "CD.CON_VALUE");
+            $criteria->addSelectColumn(\TaskPeer::TAS_TITLE);
+            $criteria->addSelectColumn(\TaskPeer::TAS_DESCRIPTION);
             $criteria->addSelectColumn(\TaskPeer::TAS_START);
             $criteria->addSelectColumn(\TaskPeer::TAS_TYPE);
             $criteria->addSelectColumn(\TaskPeer::TAS_DERIVATION);
@@ -2013,21 +2071,6 @@ class Cases
             $criteria->addSelectColumn(\UsersPeer::USR_USERNAME);
             $criteria->addSelectColumn(\UsersPeer::USR_FIRSTNAME);
             $criteria->addSelectColumn(\UsersPeer::USR_LASTNAME);
-
-            $criteria->addAlias("CT", \ContentPeer::TABLE_NAME);
-            $criteria->addAlias("CD", \ContentPeer::TABLE_NAME);
-
-            $arrayCondition = array();
-            $arrayCondition[] = array(\TaskPeer::TAS_UID, "CT.CON_ID", \Criteria::EQUAL);
-            $arrayCondition[] = array("CT.CON_CATEGORY", $delimiter . "TAS_TITLE" . $delimiter, \Criteria::EQUAL);
-            $arrayCondition[] = array("CT.CON_LANG", $delimiter . SYS_LANG . $delimiter, \Criteria::EQUAL);
-            $criteria->addJoinMC($arrayCondition, \Criteria::LEFT_JOIN);
-
-            $arrayCondition = array();
-            $arrayCondition[] = array(\TaskPeer::TAS_UID, "CD.CON_ID", \Criteria::EQUAL);
-            $arrayCondition[] = array("CD.CON_CATEGORY", $delimiter . "TAS_DESCRIPTION" . $delimiter, \Criteria::EQUAL);
-            $arrayCondition[] = array("CD.CON_LANG", $delimiter . SYS_LANG . $delimiter, \Criteria::EQUAL);
-            $criteria->addJoinMC($arrayCondition, \Criteria::LEFT_JOIN);
 
             $criteria->addJoin(\TaskPeer::TAS_LAST_ASSIGNED, \UsersPeer::USR_UID, \Criteria::LEFT_JOIN);
 
@@ -2052,24 +2095,9 @@ class Cases
                     $criteria2 = new \Criteria("workflow");
 
                     $criteria2->addSelectColumn(\SubProcessPeer::PRO_UID);
-                    $criteria2->addAsColumn("TAS_TITLE", "CT.CON_VALUE");
-                    $criteria2->addAsColumn("TAS_DESCRIPTION", "CD.CON_VALUE");
-
-                    $criteria2->addAlias("CT", \ContentPeer::TABLE_NAME);
-                    $criteria2->addAlias("CD", \ContentPeer::TABLE_NAME);
-
-                    $arrayCondition = array();
-                    $arrayCondition[] = array(\SubProcessPeer::TAS_PARENT, "CT.CON_ID", \Criteria::EQUAL);
-                    $arrayCondition[] = array("CT.CON_CATEGORY", $delimiter . "TAS_TITLE" . $delimiter, \Criteria::EQUAL);
-                    $arrayCondition[] = array("CT.CON_LANG", $delimiter . SYS_LANG . $delimiter, \Criteria::EQUAL);
-                    $criteria2->addJoinMC($arrayCondition, \Criteria::LEFT_JOIN);
-
-                    $arrayCondition = array();
-                    $arrayCondition[] = array(\SubProcessPeer::TAS_PARENT, "CD.CON_ID", \Criteria::EQUAL);
-                    $arrayCondition[] = array("CD.CON_CATEGORY", $delimiter . "TAS_DESCRIPTION" . $delimiter, \Criteria::EQUAL);
-                    $arrayCondition[] = array("CD.CON_LANG", $delimiter . SYS_LANG . $delimiter, \Criteria::EQUAL);
-                    $criteria2->addJoinMC($arrayCondition, \Criteria::LEFT_JOIN);
-
+                    $criteria2->addSelectColumn(\TaskPeer::TAS_TITLE);
+                    $criteria2->addSelectColumn(\TaskPeer::TAS_DESCRIPTION);
+                    $criteria2->addJoin(\SubProcessPeer::TAS_PARENT, \TaskPeer::TAS_UID, \Criteria::LEFT_JOIN);
                     $criteria2->add(\SubProcessPeer::PRO_PARENT, $processUid);
                     $criteria2->add(\SubProcessPeer::TAS_PARENT, $row["TAS_UID"]);
 
@@ -2318,14 +2346,39 @@ class Cases
         return $aField;
     }
 
+    private function __getStatusInfoDataByRsCriteria($rsCriteria)
+    {
+        try {
+            $arrayData = [];
+
+            if ($rsCriteria->next()) {
+                $record = $rsCriteria->getRow();
+
+                $arrayData = ['APP_STATUS' => $record['APP_STATUS'], 'DEL_INDEX' => [], 'PRO_UID' => $record['PRO_UID']];
+                $arrayData['DEL_INDEX'][] = $record['DEL_INDEX'];
+
+                while ($rsCriteria->next()) {
+                    $record = $rsCriteria->getRow();
+
+                    $arrayData['DEL_INDEX'][] = $record['DEL_INDEX'];
+                }
+            }
+
+            //Return
+            return $arrayData;
+        } catch (\Exception $e) {
+            throw $e;
+        }
+    }
+
     /**
      * Get status info Case
      *
      * @param string $applicationUid Unique id of Case
-     * @param int    $del_index      {@min 1}
+     * @param int    $delIndex       Delegation index
      * @param string $userUid        Unique id of User
      *
-     * return array Return an array with status info Case, array empty otherwise
+     * @return array Return an array with status info Case, array empty otherwise
      */
     public function getStatusInfo($applicationUid, $delIndex = 0, $userUid = "")
     {
@@ -2339,8 +2392,10 @@ class Cases
 
             $criteria = new \Criteria("workflow");
 
-            $criteria->addSelectColumn($delimiter . "PAUSED" . $delimiter . " AS APP_STATUS");
+            $criteria->setDistinct();
+            $criteria->addSelectColumn($delimiter . 'PAUSED' . $delimiter . ' AS APP_STATUS');
             $criteria->addSelectColumn(\AppDelayPeer::APP_DEL_INDEX . " AS DEL_INDEX");
+            $criteria->addSelectColumn(\AppDelayPeer::PRO_UID);
 
             $criteria->add(\AppDelayPeer::APP_UID, $applicationUid, \Criteria::EQUAL);
             $criteria->add(\AppDelayPeer::APP_TYPE, "PAUSE", \Criteria::EQUAL);
@@ -2360,17 +2415,51 @@ class Cases
             $rsCriteria = \AppDelayPeer::doSelectRS($criteria);
             $rsCriteria->setFetchmode(\ResultSet::FETCHMODE_ASSOC);
 
-            if ($rsCriteria->next()) {
-                $row = $rsCriteria->getRow();
+            $arrayData = $this->__getStatusInfoDataByRsCriteria($rsCriteria);
 
-                //Return
-                return array("APP_STATUS" => $row["APP_STATUS"], "DEL_INDEX" => $row["DEL_INDEX"]);
+            if (!empty($arrayData)) {
+                return $arrayData;
+            }
+
+            //Status is UNASSIGNED
+            if ($userUid != '') {
+                $appCacheView = new \AppCacheView();
+
+                $criteria = $appCacheView->getUnassignedListCriteria($userUid);
+            } else {
+                $criteria = new \Criteria('workflow');
+
+                $criteria->add(\AppCacheViewPeer::DEL_FINISH_DATE, null, \Criteria::ISNULL);
+                $criteria->add(\AppCacheViewPeer::USR_UID, '', \Criteria::EQUAL);
+            }
+
+            $criteria->setDistinct();
+            $criteria->clearSelectColumns();
+            $criteria->addSelectColumn($delimiter . 'UNASSIGNED' . $delimiter . ' AS APP_STATUS');
+            $criteria->addSelectColumn(\AppCacheViewPeer::DEL_INDEX);
+            $criteria->addSelectColumn(\AppCacheViewPeer::PRO_UID);
+
+            $criteria->add(\AppCacheViewPeer::APP_UID, $applicationUid, \Criteria::EQUAL);
+
+            if ($delIndex != 0) {
+                $criteria->add(\AppCacheViewPeer::DEL_INDEX, $delIndex, \Criteria::EQUAL);
+            }
+
+            $rsCriteria = \AppCacheViewPeer::doSelectRS($criteria);
+            $rsCriteria->setFetchmode(\ResultSet::FETCHMODE_ASSOC);
+
+            $arrayData = $this->__getStatusInfoDataByRsCriteria($rsCriteria);
+
+            if (!empty($arrayData)) {
+                return $arrayData;
             }
 
             //Status is TO_DO, DRAFT
             $criteria = new \Criteria("workflow");
 
+            $criteria->setDistinct();
             $criteria->addSelectColumn(\ApplicationPeer::APP_STATUS);
+            $criteria->addSelectColumn(\ApplicationPeer::PRO_UID);
             $criteria->addSelectColumn(\AppDelegationPeer::DEL_INDEX);
 
             $arrayCondition = array();
@@ -2401,26 +2490,23 @@ class Cases
             $rsCriteria = \ApplicationPeer::doSelectRS($criteria);
             $rsCriteria->setFetchmode(\ResultSet::FETCHMODE_ASSOC);
 
-            if ($rsCriteria->next()) {
-                $row = $rsCriteria->getRow();
+            $arrayData = $this->__getStatusInfoDataByRsCriteria($rsCriteria);
 
-                //Return
-                return array("APP_STATUS" => $row["APP_STATUS"], "DEL_INDEX" => $row["DEL_INDEX"]);
+            if (!empty($arrayData)) {
+                return $arrayData;
             }
 
             //Status is CANCELLED, COMPLETED
             $criteria = new \Criteria("workflow");
 
             $criteria->addSelectColumn(\ApplicationPeer::APP_STATUS);
+            $criteria->addSelectColumn(\ApplicationPeer::PRO_UID);
             $criteria->addSelectColumn(\AppDelegationPeer::DEL_INDEX);
 
             $arrayCondition = array();
             $arrayCondition[] = array(\ApplicationPeer::APP_UID, \AppDelegationPeer::APP_UID, \Criteria::EQUAL);
             $arrayCondition[] = array(\ApplicationPeer::APP_UID, $delimiter . $applicationUid . $delimiter, \Criteria::EQUAL);
             $criteria->addJoinMC($arrayCondition, \Criteria::LEFT_JOIN);
-
-            $criteria->add(\ApplicationPeer::APP_STATUS, array("CANCELLED", "COMPLETED"), \Criteria::IN);
-            $criteria->add(\AppDelegationPeer::DEL_LAST_INDEX, 1, \Criteria::EQUAL);
 
             if ($delIndex != 0) {
                 $criteria->add(\AppDelegationPeer::DEL_INDEX, $delIndex, \Criteria::EQUAL);
@@ -2430,14 +2516,39 @@ class Cases
                 $criteria->add(\AppDelegationPeer::USR_UID, $userUid, \Criteria::EQUAL);
             }
 
-            $rsCriteria = \ApplicationPeer::doSelectRS($criteria);
-            $rsCriteria->setFetchmode(\ResultSet::FETCHMODE_ASSOC);
+            $criteria2 = clone $criteria;
 
-            if ($rsCriteria->next()) {
-                $row = $rsCriteria->getRow();
+            $criteria2->setDistinct();
 
-                //Return
-                return array("APP_STATUS" => $row["APP_STATUS"], "DEL_INDEX" => $row["DEL_INDEX"]);
+            $criteria2->add(\ApplicationPeer::APP_STATUS, ['CANCELLED', 'COMPLETED'], \Criteria::IN);
+            $criteria2->add(\AppDelegationPeer::DEL_LAST_INDEX, 1, \Criteria::EQUAL);
+
+            $rsCriteria2 = \ApplicationPeer::doSelectRS($criteria2);
+            $rsCriteria2->setFetchmode(\ResultSet::FETCHMODE_ASSOC);
+
+            $arrayData = $this->__getStatusInfoDataByRsCriteria($rsCriteria2);
+
+            if (!empty($arrayData)) {
+                return $arrayData;
+            }
+
+            //Status is PARTICIPATED
+            $criteria2 = clone $criteria;
+
+            $criteria2->setDistinct();
+            $criteria2->clearSelectColumns();
+            $criteria2->addSelectColumn($delimiter . 'PARTICIPATED' . $delimiter . ' AS APP_STATUS');
+            $criteria2->addSelectColumn(\AppDelegationPeer::DEL_INDEX);
+            $criteria2->addSelectColumn(\ApplicationPeer::APP_UID);
+            $criteria2->addSelectColumn(\ApplicationPeer::PRO_UID);
+
+            $rsCriteria2 = \ApplicationPeer::doSelectRS($criteria2);
+            $rsCriteria2->setFetchmode(\ResultSet::FETCHMODE_ASSOC);
+
+            $arrayData = $this->__getStatusInfoDataByRsCriteria($rsCriteria2);
+
+            if (!empty($arrayData)) {
+                return $arrayData;
             }
 
             //Return
@@ -2494,41 +2605,15 @@ class Cases
             $c = new \Criteria();
             $c->clearSelectColumns();
             $c->addSelectColumn(\TaskPeer::TAS_UID);
+            $c->addSelectColumn(\TaskPeer::TAS_TITLE);
             $c->addSelectColumn(\TaskPeer::PRO_UID);
+            $c->addSelectColumn(\ProcessPeer::PRO_TITLE);
             $c->addJoin(\TaskPeer::PRO_UID, \ProcessPeer::PRO_UID, \Criteria::LEFT_JOIN);
             $c->addJoin(\TaskPeer::TAS_UID, \TaskUserPeer::TAS_UID, \Criteria::LEFT_JOIN);
             $c->add(\ProcessPeer::PRO_STATUS, 'ACTIVE');
             $c->add(\TaskPeer::TAS_START, 'TRUE');
             $c->add(\TaskUserPeer::USR_UID, $groups, \Criteria::IN);
             $c->add(\TaskPeer::TAS_UID, $bookmark, \Criteria::IN);
-
-            $c->addAsColumn('TAS_TITLE', 'C1.CON_VALUE');
-            $c->addAlias("C1", 'CONTENT');
-            $tasTitleConds = array();
-            $tasTitleConds[] = array(\TaskPeer::TAS_UID, 'C1.CON_ID');
-            $tasTitleConds[] = array(
-                'C1.CON_CATEGORY',
-                \DBAdapter::getStringDelimiter() . 'TAS_TITLE' . \DBAdapter::getStringDelimiter()
-            );
-            $tasTitleConds[] = array(
-                'C1.CON_LANG',
-                \DBAdapter::getStringDelimiter() . SYS_LANG . \DBAdapter::getStringDelimiter()
-            );
-            $c->addJoinMC( $tasTitleConds, \Criteria::LEFT_JOIN );
-
-            $c->addAsColumn('PRO_TITLE', 'C2.CON_VALUE');
-            $c->addAlias("C2", 'CONTENT');
-            $proTitleConds = array();
-            $proTitleConds[] = array(\ProcessPeer::PRO_UID, 'C2.CON_ID');
-            $proTitleConds[] = array(
-                'C2.CON_CATEGORY',
-                \DBAdapter::getStringDelimiter() . 'PRO_TITLE' . \DBAdapter::getStringDelimiter()
-            );
-            $proTitleConds[] = array(
-                'C2.CON_LANG',
-                \DBAdapter::getStringDelimiter() . SYS_LANG . \DBAdapter::getStringDelimiter()
-            );
-            $c->addJoinMC( $proTitleConds, \Criteria::LEFT_JOIN );
 
             if ($typeView == 'category') {
                 $c->addAsColumn('PRO_CATEGORY', 'PCS.PRO_CATEGORY');
@@ -2759,5 +2844,526 @@ class Cases
             throw $e;
         }
     }
-}
 
+    /**
+     * Batch reassign
+     *
+     * @param array $data
+     *
+     * return json Return an json with the result of the reassigned cases.
+     */
+
+    public function doPostReassign($data)
+    {
+        if (!is_array($data)) {
+            $isJson = is_string($data) && is_array(G::json_decode($data, true)) ? true : false;
+            if ($isJson) {
+                $data = G::json_decode($data, true);
+            } else {
+                return;
+            }
+        }
+        $dataResponse = $data;
+        $casesToReassign = $data['cases'];
+        $oCases = new \Cases();
+        foreach ($casesToReassign as $key => $val) {
+            $appDelegation = \AppDelegationPeer::retrieveByPK($val['APP_UID'], $val['DEL_INDEX']);
+            $existDelegation = $this->validateReassignData($appDelegation, $val, $data, 'DELEGATION_NOT_EXISTS');
+            if ($existDelegation) {
+                $existDelegation = $this->validateReassignData($appDelegation, $val, $data, 'USER_NOT_ASSIGNED_TO_TASK');
+                if ($existDelegation) {
+                    $usrUid = '';
+                    if (array_key_exists('USR_UID', $val)) {
+                        if ($val['USR_UID'] != '') {
+                            $usrUid = $val['USR_UID'];
+                        }
+                    }
+                    if ($usrUid == '') {
+                        $fields = $appDelegation->toArray(\BasePeer::TYPE_FIELDNAME);
+                        $usrUid = $fields['USR_UID'];
+                    }
+                    //Will be not able reassign a case when is paused
+                    $flagPaused = $this->validateReassignData($appDelegation, $val, $data, 'ID_REASSIGNMENT_PAUSED_ERROR');
+                    //Current users of OPEN DEL_INDEX thread
+                    $flagSameUser = $this->validateReassignData($appDelegation, $val, $data, 'REASSIGNMENT_TO_THE_SAME_USER');
+                    //reassign case
+                    if ($flagPaused && $flagSameUser) {
+                        $reassigned = $oCases->reassignCase($val['APP_UID'], $val['DEL_INDEX'], $usrUid, $data['usr_uid_target']);
+                        $result = $reassigned ? 1 : 0;
+                        $this->messageResponse = [
+                            'APP_UID' => $val['APP_UID'],
+                            'DEL_INDEX' => $val['DEL_INDEX'],
+                            'RESULT' => $result,
+                            'STATUS' => 'SUCCESS'
+                        ];
+                    }
+                }
+            }
+            $dataResponse['cases'][$key] = $this->messageResponse;
+        }
+        unset($dataResponse['usr_uid_target']);
+        return G::json_encode($dataResponse);
+    }
+
+    /**
+     * @param $appDelegation
+     * @param $value
+     * @param $data
+     * @param string $type
+     * @return bool
+     */
+    private function validateReassignData($appDelegation, $value, $data, $type = 'DELEGATION_NOT_EXISTS')
+    {
+        $return = true;
+        switch ($type) {
+            case 'DELEGATION_NOT_EXISTS':
+                if (is_null($appDelegation)) {
+                    $this->messageResponse = [
+                        'APP_UID' => $value['APP_UID'],
+                        'DEL_INDEX' => $value['DEL_INDEX'],
+                        'RESULT' => 0,
+                        'STATUS' => $type
+                    ];
+                    $return = false;
+                }
+                break;
+            case 'USER_NOT_ASSIGNED_TO_TASK':
+                $task = new \ProcessMaker\BusinessModel\Task();
+                $supervisor = new \ProcessMaker\BusinessModel\ProcessSupervisor();
+                $taskUid = $appDelegation->getTasUid();
+                $flagBoolean = $task->checkUserOrGroupAssignedTask($taskUid, $data['usr_uid_target']);
+                $flagps = $supervisor->isUserProcessSupervisor($appDelegation->getProUid(), $data['usr_uid_target']);
+
+                if (!$flagBoolean && !$flagps) {
+                    $this->messageResponse = [
+                        'APP_UID' => $value['APP_UID'],
+                        'DEL_INDEX' => $value['DEL_INDEX'],
+                        'RESULT' => 0,
+                        'STATUS' => 'USER_NOT_ASSIGNED_TO_TASK'
+                    ];
+                    $return = false;
+                }
+                break;
+            case 'ID_REASSIGNMENT_PAUSED_ERROR':
+                if (\AppDelay::isPaused($value['APP_UID'], $value['DEL_INDEX'])) {
+                    $this->messageResponse = [
+                        'APP_UID' => $value['APP_UID'],
+                        'DEL_INDEX' => $value['DEL_INDEX'],
+                        'RESULT' => 0,
+                        'STATUS' => \G::LoadTranslation('ID_REASSIGNMENT_PAUSED_ERROR')
+                    ];
+                    $return = false;
+                }
+                break;
+            case 'REASSIGNMENT_TO_THE_SAME_USER':
+                $aCurUser = $appDelegation->getCurrentUsers($value['APP_UID'], $value['DEL_INDEX']);
+                if (!empty($aCurUser)) {
+                    foreach ($aCurUser as $keyAux => $val) {
+                        if ($val === $data['usr_uid_target']) {
+                            $this->messageResponse = [
+                                'APP_UID' => $value['APP_UID'],
+                                'DEL_INDEX' => $value['DEL_INDEX'],
+                                'RESULT' => 1,
+                                'STATUS' => 'SUCCESS'
+                            ];
+                            $return = false;
+                        }
+                    }
+                } else {
+                    //DEL_INDEX is CLOSED
+                    $this->messageResponse = [
+                        'APP_UID' => $value['APP_UID'],
+                        'DEL_INDEX' => $value['DEL_INDEX'],
+                        'RESULT' => 0,
+                        'STATUS' => \G::LoadTranslation('ID_REASSIGNMENT_ERROR')
+                    ];
+                    $return = false;
+                }
+                break;
+        }
+        return $return;
+    }
+
+    /**
+     * if case already routed
+     *
+     * @param type $app_uid
+     * @param type $del_index
+     * @param type $usr_uid
+     * @throws type
+     */
+    public function caseAlreadyRouted($app_uid, $del_index, $usr_uid = '')
+    {
+        $c = new \Criteria('workflow');
+        $c->add(\AppDelegationPeer::APP_UID, $app_uid);
+        $c->add(\AppDelegationPeer::DEL_INDEX, $del_index);
+        if (!empty($usr_uid)) {
+            $c->add(\AppDelegationPeer::USR_UID, $usr_uid);
+        }
+        $c->add(\AppDelegationPeer::DEL_FINISH_DATE, null, \Criteria::ISNULL);
+        return !(boolean) \AppDelegationPeer::doCount($c);
+    }
+
+    public function checkUserHasPermissionsOrSupervisor($userUid, $applicationUid, $dynaformUid)
+    {
+        $arrayApplicationData = $this->getApplicationRecordByPk($applicationUid, [], false);
+        //Check whether the process supervisor
+        $supervisor = new \ProcessMaker\BusinessModel\ProcessSupervisor();
+        $userAccess = $supervisor->isUserProcessSupervisor($arrayApplicationData['PRO_UID'], $userUid);
+        if (!empty($dynaformUid)) {
+            //Check if have objects assigned (Supervisor)
+            $cases = new \Cases();
+            $resultDynaForm = $cases->getAllDynaformsStepsToRevise($applicationUid);
+            $flagSupervisors = false;
+            while ($resultDynaForm->next()) {
+                $row = $resultDynaForm->getRow();
+                if ($row["STEP_UID_OBJ"] = $dynaformUid) {
+                    $flagSupervisors = true;
+                    break;
+                }
+            }
+            //Check if have permissions VIEW
+            $case = new \Cases();
+            $arrayAllObjectsFrom = $case->getAllObjectsFrom($arrayApplicationData['PRO_UID'], $applicationUid, '', $userUid, 'VIEW', 0);
+            $flagPermissionsVIEW = false;
+            if (array_key_exists('DYNAFORMS', $arrayAllObjectsFrom) &&
+                !empty($arrayAllObjectsFrom['DYNAFORMS'])
+            ) {
+                foreach ($arrayAllObjectsFrom['DYNAFORMS'] as $value) {
+                    if ($value == $dynaformUid) {
+                        $flagPermissionsVIEW = true;
+                    }
+                }
+            }
+            //Check if have permissions BLOCK
+            $arrayAllObjectsFrom = $case->getAllObjectsFrom($arrayApplicationData['PRO_UID'], $applicationUid, '', $userUid, 'BLOCK', 0);
+            $flagPermissionsBLOCK = false;
+            if (array_key_exists('DYNAFORMS', $arrayAllObjectsFrom) &&
+                !empty($arrayAllObjectsFrom['DYNAFORMS'])
+            ) {
+                foreach ($arrayAllObjectsFrom['DYNAFORMS'] as $value) {
+                    if ($value == $dynaformUid) {
+                        $flagPermissionsBLOCK = true;
+                    }
+                }
+            }
+            //check case Tracker
+            $flagCaseTracker = $case->getAllObjectsTrackerDynaform($arrayApplicationData['PRO_UID'], $dynaformUid);
+            return ($flagSupervisors && $userAccess) || $flagPermissionsVIEW || $flagPermissionsBLOCK || $flagCaseTracker;
+        } else {
+            $arrayResult = $this->getStatusInfo($applicationUid, 0, $userUid);
+            $flagParticipated = false;
+            if ($arrayResult || $userAccess) {
+                $flagParticipated = true;
+            }
+            return $flagParticipated;
+        }
+    }
+
+    /**
+     * Delete MultipleFile in Case data
+     *
+     * @param array  $arrayApplicationData  Case data
+     * @param string $variable1             Variable1
+     * @param string $variable2             Variable2
+     * @param string $type                  Type (NORMAL, GRID)
+     * @param array  $arrayDocumentToDelete Document to delete
+     *
+     * @return array Returns array with Case data updated
+     */
+    private function __applicationDataDeleteMultipleFile(array $arrayApplicationData, $variable1, $variable2, $type, array $arrayDocumentToDelete)
+    {
+        if (array_key_exists($variable1, $arrayApplicationData) &&
+            is_array($arrayApplicationData[$variable1]) && !empty($arrayApplicationData[$variable1])
+        ) {
+            switch ($type) {
+                case 'NORMAL':
+                    $arrayAux = $arrayApplicationData[$variable1];
+                    $arrayApplicationData[$variable1] = [];
+                    $keyd = null;
+
+                    foreach ($arrayAux as $key => $value) {
+                        if ($value['appDocUid'] == $arrayDocumentToDelete['appDocUid'] &&
+                            (int)($value['version']) == (int)($arrayDocumentToDelete['version'])
+                        ) {
+                            $keyd = $key;
+                        } else {
+                            $arrayApplicationData[$variable1][] = $value;
+                        }
+                    }
+
+                    if (!is_null($keyd)) {
+                        $variable1 = $variable1 . '_label';
+
+                        if (array_key_exists($variable1, $arrayApplicationData) &&
+                            is_array($arrayApplicationData[$variable1]) && !empty($arrayApplicationData[$variable1])
+                        ) {
+                            $arrayAux = $arrayApplicationData[$variable1];
+                            $arrayApplicationData[$variable1] = [];
+
+                            foreach ($arrayAux as $key => $value) {
+                                if ($key != $keyd) {
+                                    $arrayApplicationData[$variable1][] = $value;
+                                }
+                            }
+                        }
+                    }
+                    break;
+                case 'GRID':
+                    foreach ($arrayApplicationData[$variable1] as $key => $value) {
+                        if (array_key_exists($variable2, $value)) {
+                            $arrayApplicationData[$variable1][$key] = $this->__applicationDataDeleteMultipleFile(
+                                $value, $variable2, null, 'NORMAL', $arrayDocumentToDelete
+                            );
+                        }
+                    }
+                    break;
+            }
+        }
+
+        //Return
+        return $arrayApplicationData;
+    }
+
+    /**
+     * Delete MultipleFile
+     *
+     * @param string $applicationUid                Unique id of Case
+     * @param array  $arrayVariableDocumentToDelete Variable with Documents to delete
+     *
+     * @return void
+     */
+    public function deleteMultipleFile($applicationUid, array $arrayVariableDocumentToDelete)
+    {
+        $case = new \Cases();
+        $appDocument = new \AppDocument();
+
+        $arrayApplicationData = $this->getApplicationRecordByPk($applicationUid, [], false);
+        $arrayApplicationData['APP_DATA'] = $case->unserializeData($arrayApplicationData['APP_DATA']);
+        $flagDelete = false;
+
+        foreach ($arrayVariableDocumentToDelete as $key => $value) {
+            if (is_array($value) && !empty($value)) {
+                $type = '';
+
+                $arrayAux = $value;
+                $arrayAux = array_shift($arrayAux);
+
+                if (array_key_exists('appDocUid', $arrayAux)) {
+                    $type = 'NORMAL';
+                } else {
+                    $arrayAux = array_shift($arrayAux);
+                    $arrayAux = array_shift($arrayAux);
+
+                    if (array_key_exists('appDocUid', $arrayAux)) {
+                        $type = 'GRID';
+                    }
+                }
+
+                switch ($type) {
+                    case 'NORMAL':
+                        $variable = $key;
+                        $arrayDocumentDelete = $value;
+
+                        foreach ($arrayDocumentDelete as $value2) {
+                            $appDocument->remove($value2['appDocUid'], (int)($value2['version']));
+
+                            $arrayApplicationData['APP_DATA'] = $this->__applicationDataDeleteMultipleFile(
+                                $arrayApplicationData['APP_DATA'], $variable, null, $type, $value2
+                            );
+
+                            $flagDelete = true;
+                        }
+                        break;
+                    case 'GRID':
+                        $grid = $key;
+
+                        foreach ($value as $value2) {
+                            foreach ($value2 as $key3 => $value3) {
+                                $variable = $key3;
+                                $arrayDocumentDelete = $value3;
+
+                                foreach ($arrayDocumentDelete as $value4) {
+                                    $appDocument->remove($value4['appDocUid'], (int)($value4['version']));
+
+                                    $arrayApplicationData['APP_DATA'] = $this->__applicationDataDeleteMultipleFile(
+                                        $arrayApplicationData['APP_DATA'], $grid, $variable, $type, $value4
+                                    );
+
+                                    $flagDelete = true;
+                                }
+                            }
+                        }
+                        break;
+                }
+            }
+        }
+
+        //Delete simple files. 
+        //The observations suggested by 'pull request' approver are applied (please see pull request).
+        foreach ($arrayVariableDocumentToDelete as $key => $value) {
+            if (isset($value['appDocUid'])) {
+                $appDocument->remove($value['appDocUid'], (int) (isset($value['version']) ? $value['version'] : 1));
+                if (is_string($arrayApplicationData['APP_DATA'][$key])) {
+                    try {
+                        $files = G::json_decode($arrayApplicationData['APP_DATA'][$key]);
+                        foreach ($files as $keyFile => $valueFile) {
+                            if ($valueFile === $value['appDocUid']) {
+                                unset($files[$keyFile]);
+                            }
+                        }
+                        $arrayApplicationData['APP_DATA'][$key] = G::json_encode($files);
+                    } catch (\Exception $e) {
+                        Bootstrap::registerMonolog('DeleteFile', 400, $e->getMessage(), $value, SYS_SYS, 'processmaker.log');
+                    }
+                }
+                $flagDelete = true;
+            }
+        }
+
+        if ($flagDelete) {
+            $result = $case->updateCase($applicationUid, $arrayApplicationData);
+        }
+    }
+
+    /**
+     * Get Permissions, Participate, Access
+     *
+     * @param string $usrUid
+     * @param string $proUid
+     * @param string $appUid
+     * @param array $rolesPermissions
+     * @param array $objectPermissions
+     * @return array Returns array with all access
+     */
+    public function userAuthorization($usrUid, $proUid, $appUid, $rolesPermissions = array(), $objectPermissions = array()) {
+        $arrayAccess = array();
+
+        //User has participated
+        $oParticipated = new \ListParticipatedLast();
+        $aParticipated = $oParticipated->loadList($usrUid, array(), null, $appUid);
+        $arrayAccess['participated'] = (count($aParticipated) == 0) ? false : true;
+
+        //User is supervisor
+        $supervisor = new \ProcessMaker\BusinessModel\ProcessSupervisor();
+        $isSupervisor = $supervisor->isUserProcessSupervisor($proUid, $usrUid);
+        $arrayAccess['supervisor'] = ($isSupervisor) ? true : false;
+
+        //Roles Permissions
+        if (count($rolesPermissions) > 0) {
+            global $RBAC;
+            foreach ($rolesPermissions as $value) {
+                $arrayAccess['rolesPermissions'][$value] = ($RBAC->userCanAccess($value) < 0) ? false : true;
+            }
+        }
+
+        //Object Permissions
+        if (count($objectPermissions) > 0) {
+            $oCase = new \Cases();
+            foreach ($objectPermissions as $key => $value) {
+                $resPermission = $oCase->getAllObjectsFrom($proUid, $appUid, '', $usrUid, $value);
+                if (isset($resPermission[$key])) {
+                    $arrayAccess['objectPermissions'][$key] = $resPermission[$key];
+                }
+            }
+        }
+
+        return $arrayAccess;
+    }
+
+
+    /**
+     * Get Global System Variables
+     * @param array $appData
+     * @param array $dataVariable
+     * @return array
+     * @throws \Exception
+     */
+    public static function getGlobalVariables($appData = array(), $dataVariable = array())
+    {
+        $appData = array_change_key_case($appData, CASE_UPPER);
+        $dataVariable = array_change_key_case($dataVariable, CASE_UPPER);
+
+        if (!isset($dataVariable['APPLICATION']) || empty($dataVariable['APPLICATION'])) {
+            $dataVariable['APPLICATION'] = (isset($dataVariable['APP_UID']) && $dataVariable['APP_UID'] != '') ? $dataVariable['APP_UID'] : $appData['APPLICATION'];
+        }
+        if (!isset($dataVariable['PROCESS']) || empty($dataVariable['PROCESS'])) {
+            $dataVariable['PROCESS'] = (isset($dataVariable['PRO_UID']) && $dataVariable['PRO_UID'] != '') ? $dataVariable['PRO_UID'] : $appData['PROCESS'];
+        }
+        if (isset($appData['TASK']) && !empty($appData['TASK'])) {
+            $dataVariable['TASK'] = $appData['TASK'];
+        }
+        if (isset($appData['INDEX']) && !empty($appData['INDEX'])) {
+            $dataVariable['INDEX'] = $appData['INDEX'];
+        }
+        $dataVariable['USER_LOGGED'] = \ProcessMaker\Services\OAuth2\Server::getUserId();
+        if (isset($dataVariable['USER_LOGGED']) && !empty($dataVariable['USER_LOGGED'])) {
+            $oUserLogged = new \Users();
+            $oUserLogged->load($dataVariable['USER_LOGGED']);
+            $dataVariable['USR_USERNAME'] = $oUserLogged->getUsrUsername();
+        }
+
+        return $dataVariable;
+    }
+
+    /**
+     * Get index last participation from a user
+     *
+     * This function return the last participation
+     * by default is not considered the status OPEN or CLOSED
+     * in parallel cases return the first to find
+     * @param string $appUid
+     * @param string $userUid
+     * @param string $threadStatus
+     * @return integer delIndex
+     */
+    public function getLastParticipatedByUser($appUid, $userUid, $threadStatus = '')
+    {
+        $criteria = new \Criteria('workflow');
+        $criteria->addSelectColumn(\AppDelegationPeer::DEL_INDEX);
+        $criteria->addSelectColumn(\AppDelegationPeer::DEL_THREAD_STATUS);
+        $criteria->add(\AppDelegationPeer::APP_UID, $appUid, \Criteria::EQUAL);
+        $criteria->add(\AppDelegationPeer::USR_UID, $userUid, \Criteria::EQUAL);
+        if (!empty($threadStatus)) {
+            $criteria->add(\AppDelegationPeer::DEL_THREAD_STATUS, $threadStatus, \Criteria::EQUAL);
+        }
+        $dataSet = \AppDelegationPeer::doSelectRS($criteria);
+        $dataSet->setFetchmode(\ResultSet::FETCHMODE_ASSOC);
+        $dataSet->next();
+        $row = $dataSet->getRow();
+        return isset($row['DEL_INDEX']) ? $row['DEL_INDEX'] : 0;
+    }
+
+    /**
+     * Get last index, we can considering the pause thread
+     *
+     * This function return the last index thread and will be considered the paused cases
+     * Is created by Jump to and redirect the correct thread
+     * by default is not considered the paused thread
+     * in parallel cases return the first thread to find
+     * @param string $appUid
+     * @param boolean $checkCaseIsPaused
+     * @return integer delIndex
+     */
+    public function getOneLastThread($appUid, $checkCaseIsPaused = false)
+    {
+        $criteria = new \Criteria('workflow');
+        $criteria->addSelectColumn(\AppDelegationPeer::DEL_INDEX);
+        $criteria->addSelectColumn(\AppDelegationPeer::DEL_THREAD_STATUS);
+        $criteria->add(\AppDelegationPeer::APP_UID, $appUid, \Criteria::EQUAL);
+        $dataSet = \AppDelegationPeer::doSelectRS($criteria);
+        $dataSet->setFetchmode(\ResultSet::FETCHMODE_ASSOC);
+        $dataSet->next();
+        $row = $dataSet->getRow();
+        $delIndex = 0;
+        while (is_array($row)) {
+            $delIndex = $row['DEL_INDEX'];
+            if ($checkCaseIsPaused && \AppDelay::isPaused($appUid, $delIndex)) {
+                return $delIndex;
+            }
+            $dataSet->next();
+            $row = $dataSet->getRow();
+        }
+        return $delIndex;
+    }
+}

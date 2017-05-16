@@ -201,6 +201,26 @@ class ScriptTask
             if ($obj->getActTaskType() != "SCRIPTTASK") {
                throw new \Exception(\G::LoadTranslation("ID_SCRIPT_TASK_TYPE_ACTIVITY_NOT_IS_SCRIPTTASK", array($this->arrayFieldNameForException["actUid"], $arrayData["ACT_UID"])));
             }
+
+            //Activity - Already registered
+            $criteria = new \Criteria('workflow');
+            $criteria->addSelectColumn(\ScriptTaskPeer::SCRTAS_UID);
+
+            if ($scriptTaskUid != '') {
+                $criteria->add(\ScriptTaskPeer::SCRTAS_UID, $scriptTaskUid, \Criteria::NOT_EQUAL);
+            }
+
+            $criteria->add(\ScriptTaskPeer::PRJ_UID, $projectUid, \Criteria::EQUAL);
+            $criteria->add(\ScriptTaskPeer::ACT_UID, $arrayFinalData['ACT_UID'], \Criteria::EQUAL);
+
+            $rsCriteria = \ScriptTaskPeer::doSelectRS($criteria);
+
+            if ($rsCriteria->next()) {
+                throw new \Exception(\G::LoadTranslation(
+                    'ID_SCRIPT_TASK_ACTIVITY_ALREADY_REGISTERED',
+                    [$this->arrayFieldNameForException['actUid'], $arrayFinalData['ACT_UID']]
+                ));
+            }
         } catch (\Exception $e) {
             throw $e;
         }

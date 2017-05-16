@@ -34,6 +34,15 @@
 //require_once 'classes/model/Process.php';
 //require_once 'classes/model/Task.php';
 
+if (!isset($_SESSION['USER_LOGGED'])) {
+    $responseObject = new stdclass();
+    $responseObject->error = G::LoadTranslation('ID_LOGIN_AGAIN');
+    $responseObject->success = true;
+    $responseObject->lostSession = true;
+    print G::json_encode( $responseObject );
+    die();
+}
+
 G::LoadSystem('inputfilter');
 $filter = new InputFilter();
 $_REQUEST = $filter->xssFilterHard($_REQUEST);
@@ -48,6 +57,22 @@ if(isset($_REQUEST['action']) && $_REQUEST['action'] == "verifySession" ) {
         die();
     } else {
         $response = new stdclass();
+
+        //Check if the user is a supervisor to this Process
+        GLOBAL $RBAC;
+        if($RBAC->userCanAccess('PM_REASSIGNCASE') == 1){
+            $response->reassigncase = true;
+            $response->message = '';
+        } elseif ($RBAC->userCanAccess('PM_REASSIGNCASE_SUPERVISOR') == 1) {
+            $response->reassigncase = false;
+            $response->message = G::LoadTranslation('ID_NOT_ABLE_REASSIGN');
+            $oAppCache = new AppCacheView();
+            $aProcesses = $oAppCache->getProUidSupervisor($_SESSION['USER_LOGGED']);
+            if(in_array($_SESSION['PROCESS'], $aProcesses)){
+                $response->reassigncase = true;
+            }
+        }
+
         print G::json_encode( $response );
         die();
     }
@@ -184,8 +209,10 @@ class Ajax
 
                 $options[] = Array('text' => G::LoadTranslation('ID_DELETE'), 'fn' => 'deleteCase');
 
-                if ($RBAC->userCanAccess('PM_REASSIGNCASE') == 1) {
-                    $options[] = Array('text' => G::LoadTranslation('ID_REASSIGN'), 'fn' => 'getUsersToReassign');
+                if ($RBAC->userCanAccess('PM_REASSIGNCASE') == 1 || $RBAC->userCanAccess('PM_REASSIGNCASE_SUPERVISOR') == 1) {
+                    if (!AppDelay::isPaused($_SESSION['APPLICATION'], $_SESSION['INDEX'])) {
+                        $options[] = Array('text' => G::LoadTranslation('ID_REASSIGN'), 'fn' => 'getUsersToReassign');
+                    }
                 }
                 break;
             case 'TO_DO':
@@ -201,8 +228,10 @@ class Ajax
                 } else {
                     $options[] = Array('text' => G::LoadTranslation('ID_UNPAUSE'), 'fn' => 'unpauseCase');
                 }
-                if ($RBAC->userCanAccess('PM_REASSIGNCASE') == 1 || $RBAC->userCanAccess('PM_SUPERVISOR') == 1) {
-                    $options[] = Array('text' => G::LoadTranslation('ID_REASSIGN'), 'fn' => 'getUsersToReassign');
+                if ($RBAC->userCanAccess('PM_REASSIGNCASE') == 1 || $RBAC->userCanAccess('PM_REASSIGNCASE_SUPERVISOR') == 1) {
+                    if (!AppDelay::isPaused($_SESSION['APPLICATION'], $_SESSION['INDEX'])) {
+                        $options[] = Array('text' => G::LoadTranslation('ID_REASSIGN'), 'fn' => 'getUsersToReassign');
+                    }
                 }
                 break;
             case 'CANCELLED':
@@ -212,7 +241,18 @@ class Ajax
 
         if ($_SESSION["TASK"] != "" && $_SESSION["TASK"] != "-1") {
             $oTask = new Task();
-            $aTask = $oTask->load($_SESSION['TASK']);
+            $tasksInParallel = explode('|', $_SESSION['TASK']);
+            $tasksInParallel = array_filter($tasksInParallel, function($value) {
+                return !empty($value);
+            });
+            $nTasksInParallel = count($tasksInParallel);
+
+            if ($nTasksInParallel > 1) {
+                $aTask = $oTask->load($tasksInParallel[$nTasksInParallel - 1]);
+            } else {
+                $aTask = $oTask->load($_SESSION['TASK']);
+            }
+
             if ($aTask['TAS_TYPE'] == 'ADHOC') {
                 $options[] = Array('text' => G::LoadTranslation('ID_ADHOC_ASSIGNMENT'), 'fn' => 'adhocAssignmentUsers');
             }
@@ -579,17 +619,47 @@ class Ajax
         $user = new Users();
         $app = new Application();
         $result = new stdclass();
+        $oAppDel = new AppDelegation();
 
         $TO_USR_UID = $_POST['USR_UID'];
         try {
-            $cases->reassignCase($_SESSION['APPLICATION'], $_SESSION['INDEX'], $_SESSION['USER_LOGGED'], $TO_USR_UID);
+            //Current users of OPEN DEL_INDEX thread
+            if(isset($_SESSION['APPLICATION']) && isset($_SESSION['INDEX'])){
+                $aCurUser = $oAppDel->getCurrentUsers($_SESSION['APPLICATION'], $_SESSION['INDEX']);
+            }
+            $flagReassign = true;
+            if(!empty($aCurUser)){
+                foreach ($aCurUser as $key => $value) {
+                    if($value === $TO_USR_UID){
+                        $flagReassign = false;
+                    }
+                }
+            } else {
+                //DEL_INDEX is CLOSED
+                throw new Exception(G::LoadTranslation('ID_REASSIGNMENT_ERROR'));
+            }
+
+            //If the currentUser is diferent to nextUser, create the thread
+            if($flagReassign){
+                $cases->reassignCase($_SESSION['APPLICATION'], $_SESSION['INDEX'], $_SESSION['USER_LOGGED'], $TO_USR_UID);
+            }
+
             $caseData = $app->load($_SESSION['APPLICATION']);
             $userData = $user->load($TO_USR_UID);
-            //print_r($caseData);
+
             $data['APP_NUMBER'] = $caseData['APP_NUMBER'];
             $data['USER'] = $userData['USR_LASTNAME'] . ' ' . $userData['USR_FIRSTNAME']; //TODO change with the farmated username from environment conf
             $result->status = 0;
             $result->msg = G::LoadTranslation('ID_REASSIGNMENT_SUCCESS', SYS_LANG, $data);
+
+            // Save the note reassign reason
+            if (isset($_POST['NOTE_REASON']) && $_POST['NOTE_REASON'] !== '') {
+                require_once ("classes/model/AppNotes.php");
+                $appNotes = new AppNotes();
+                $noteContent = addslashes($_POST['NOTE_REASON']);
+                $notifyReassign = $_POST['NOTIFY_REASSIGN'] === 'true' ? true: false;
+                $appNotes->postNewNote($_SESSION['APPLICATION'], $_SESSION['USER_LOGGED'], $noteContent, $notifyReassign);
+            }
         } catch (Exception $e) {
             $result->status = 1;
             $result->msg = $e->getMessage();
@@ -983,4 +1053,3 @@ $action = $_REQUEST['action'];
 unset($_REQUEST['action']);
 
 $ajax->$action($_REQUEST);
-

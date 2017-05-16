@@ -87,21 +87,18 @@ class Tasks
     {
         try {
             $aTasks = array();
-            $sDelimiter = @DBAdapter::getStringDelimiter();
             $oCriteria = new Criteria('workflow');
+            $oCriteria->addSelectColumn( TaskPeer::TAS_UID );
             $oCriteria->add(TaskPeer::PRO_UID, $sProUid);
-            $aConditions = array();
-            $aConditions[] = array(TaskPeer::TAS_UID, ContentPeer::CON_ID);
-            $aConditions[] = array(ContentPeer::CON_CATEGORY, $sDelimiter . 'TAS_TITLE' . $sDelimiter);
-            $aConditions[] = array(ContentPeer::CON_LANG, $sDelimiter . SYS_LANG . $sDelimiter);
-            $oCriteria->addJoinMC($aConditions, Criteria::LEFT_JOIN);
-            $oCriteria->addAscendingOrderByColumn(ContentPeer::CON_VALUE);
+            $oCriteria->addAscendingOrderByColumn(TaskPeer::TAS_TITLE);
             $oDataset = TaskPeer::doSelectRS($oCriteria);
             $oDataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
             $oDataset->next();
             while ($aRow = $oDataset->getRow()) {
                 $oTask = new Task();
-                $aTasks[] = $oTask->Load($aRow['TAS_UID']);
+                $pTask = $oTask->load($aRow['TAS_UID']);
+                unset($pTask['TAS_ID']);
+                $aTasks[] = $pTask;
                 $oDataset->next();
             }
             return $aTasks;
@@ -703,6 +700,7 @@ class Tasks
         try {
             $aTasks = array();
             $oCriteria = new Criteria('workflow');
+            $oCriteria->addSelectColumn( TaskPeer::TAS_UID );
             $oCriteria->add(TaskPeer::PRO_UID, $sProUid);
             //$oCriteria->add(TaskPeer::TAS_USER,    $sUsrUid);
             $oCriteria->add(TaskPeer::TAS_START, 'TRUE');
@@ -711,7 +709,7 @@ class Tasks
             $oDataset->next();
             while ($aRow = $oDataset->getRow()) {
                 $oTask = new Task();
-                $aTasks[] = $oTask->Load($aRow['TAS_UID']);
+                $aTasks[] = $oTask->load($aRow['TAS_UID']);
                 $oDataset->next();
             }
             return $aTasks;

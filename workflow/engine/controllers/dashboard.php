@@ -173,7 +173,9 @@ class Dashboard extends Controller
             //G::pr($this->pmDashlet->setup( $width ));die;
         } catch (Exception $error) {
             //ToDo: Show the error message
-            echo $error->getMessage();
+            $token = strtotime("now");
+            PMException::registerErrorLog($error, $token);
+            G::outRes( G::LoadTranslation("ID_EXCEPTION_LOG_INTERFAZ", array($token)) );
         }
     }
 
@@ -354,27 +356,14 @@ class Dashboard extends Controller
                     $criteria = new Criteria( 'workflow' );
                     $criteria->setDistinct();
                     $criteria->addSelectColumn( DepartmentPeer::DEP_UID );
-                    $criteria->addSelectColumn( ContentPeer::CON_VALUE );
-                    //FROM
-                    $conditions = array ();
-                    $conditions[] = array (DepartmentPeer::DEP_UID,ContentPeer::CON_ID
-                    );
-                    $conditions[] = array (ContentPeer::CON_CATEGORY,DBAdapter::getStringDelimiter() . 'DEPO_TITLE' . DBAdapter::getStringDelimiter()
-                    );
-                    $conditions[] = array (ContentPeer::CON_LANG,DBAdapter::getStringDelimiter() . 'en' . DBAdapter::getStringDelimiter()
-                    );
-                    $criteria->addJoinMC( $conditions, Criteria::LEFT_JOIN );
-                    //WHERE
+                    $criteria->addSelectColumn( DepartmentPeer::DEP_TITLE );
                     $criteria->add( DepartmentPeer::DEP_STATUS, 'ACTIVE' );
-                    //ORDER BY
-                    $criteria->addAscendingOrderByColumn( ContentPeer::CON_VALUE );
-
+                    $criteria->addAscendingOrderByColumn( DepartmentPeer::DEP_TITLE );
                     $dataset = DepartmentPeer::doSelectRS( $criteria );
                     $dataset->setFetchmode( ResultSet::FETCHMODE_ASSOC );
                     $dataset->next();
                     while ($row = $dataset->getRow()) {
-                        $departments[] = array ('OWNER_UID' => $row['DEP_UID'],'OWNER_NAME' => $row['CON_VALUE']
-                        );
+                        $departments[] = array('OWNER_UID' => $row['DEP_UID'], 'OWNER_NAME' => $row['DEP_TITLE']);
                         $dataset->next();
                     }
 
@@ -390,26 +379,17 @@ class Dashboard extends Controller
                     $criteria = new Criteria( 'workflow' );
                     $criteria->setDistinct();
                     $criteria->addSelectColumn( GroupwfPeer::GRP_UID );
-                    $criteria->addSelectColumn( ContentPeer::CON_VALUE );
-                    //FROM
-                    $conditions = array ();
-                    $conditions[] = array (GroupwfPeer::GRP_UID,ContentPeer::CON_ID
-                    );
-                    $conditions[] = array (ContentPeer::CON_CATEGORY,DBAdapter::getStringDelimiter() . 'GRP_TITLE' . DBAdapter::getStringDelimiter()
-                    );
-                    $conditions[] = array (ContentPeer::CON_LANG,DBAdapter::getStringDelimiter() . 'en' . DBAdapter::getStringDelimiter()
-                    );
-                    $criteria->addJoinMC( $conditions, Criteria::LEFT_JOIN );
+                    $criteria->addSelectColumn( GroupwfPeer::GRP_TITLE );
                     //WHERE
                     $criteria->add( GroupwfPeer::GRP_STATUS, 'ACTIVE' );
                     //ORDER BY
-                    $criteria->addAscendingOrderByColumn( ContentPeer::CON_VALUE );
+                    $criteria->addAscendingOrderByColumn( GroupwfPeer::GRP_TITLE );
 
                     $dataset = GroupwfPeer::doSelectRS( $criteria );
                     $dataset->setFetchmode( ResultSet::FETCHMODE_ASSOC );
                     $dataset->next();
                     while ($row = $dataset->getRow()) {
-                        $groups[] = array ('OWNER_UID' => $row['GRP_UID'],'OWNER_NAME' => $row['CON_VALUE']
+                        $groups[] = array ('OWNER_UID' => $row['GRP_UID'],'OWNER_NAME' => $row['GRP_TITLE']
                         );
                         $dataset->next();
                     }

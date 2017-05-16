@@ -407,14 +407,9 @@ try {
             $oData = Bootstrap::json_decode( stripslashes( $_POST['data'] ) );
             $oCriteria = new Criteria( 'workflow' );
             $oCriteria->addSelectColumn( TaskPeer::TAS_UID );
-            $oCriteria->addAsColumn( 'TAS_TITLE', ContentPeer::CON_VALUE );
-            $aConditions = array ();
-            $aConditions[] = array (0 => TaskPeer::TAS_UID,1 => ContentPeer::CON_ID);
-            $aConditions[] = array (0 => ContentPeer::CON_CATEGORY,1 => DBAdapter::getStringDelimiter() . 'TAS_TITLE' . DBAdapter::getStringDelimiter());
-            $aConditions[] = array (0 => ContentPeer::CON_LANG,1 => DBAdapter::getStringDelimiter() . SYS_LANG . DBAdapter::getStringDelimiter());
-            $oCriteria->addJoinMC( $aConditions, Criteria::LEFT_JOIN );
+            $oCriteria->addSelectColumn( TaskPeer::TAS_TITLE );
             $oCriteria->add( TaskPeer::STG_UID, $oData->stg_uid );
-            $oCriteria->addAscendingOrderByColumn( 'TAS_TITLE' );
+            $oCriteria->addAscendingOrderByColumn( TaskPeer::TAS_TITLE );
             global $G_PUBLISH;
             $G_PUBLISH = new Publisher();
             $G_PUBLISH->AddContent( 'propeltable', 'paged-table', 'tracker/tracker_StageTasks', $oCriteria, array ('PRO_UID' => $oData->pro_uid,'STG_UID' => $oData->stg_uid) );
@@ -425,15 +420,10 @@ try {
             require_once 'classes/model/Task.php';
             $oCriteria = new Criteria( 'workflow' );
             $oCriteria->addSelectColumn( TaskPeer::TAS_UID );
-            $oCriteria->addAsColumn( 'TAS_TITLE', ContentPeer::CON_VALUE );
-            $aConditions = array ();
-            $aConditions[] = array (0 => TaskPeer::TAS_UID,1 => ContentPeer::CON_ID );
-            $aConditions[] = array (0 => ContentPeer::CON_CATEGORY,1 => DBAdapter::getStringDelimiter() . 'TAS_TITLE' . DBAdapter::getStringDelimiter());
-            $aConditions[] = array (0 => ContentPeer::CON_LANG,1 => DBAdapter::getStringDelimiter() . SYS_LANG . DBAdapter::getStringDelimiter());
-            $oCriteria->addJoinMC( $aConditions, Criteria::LEFT_JOIN );
+            $oCriteria->addSelectColumn( TaskPeer::TAS_TITLE );
             $oCriteria->add( TaskPeer::PRO_UID, $_POST['PRO_UID'] );
             $oCriteria->add( TaskPeer::STG_UID, '' );
-            $oCriteria->addAscendingOrderByColumn( 'TAS_TITLE' );
+            $oCriteria->addAscendingOrderByColumn( TaskPeer::TAS_TITLE );
             global $G_PUBLISH;
             $G_PUBLISH = new Publisher();
             $G_PUBLISH->AddContent( 'propeltable', 'paged-table', 'tracker/tracker_AvailableStageTasks', $oCriteria, array ('STG_UID' => $_POST['STG_UID']) );
@@ -469,6 +459,9 @@ try {
             break;
     }
 } catch (Exception $oException) {
-    die( $oException->getMessage() );
+    $token = strtotime("now");
+    PMException::registerErrorLog($oException, $token);
+    G::outRes( G::LoadTranslation("ID_EXCEPTION_LOG_INTERFAZ", array($token)) );
+    die;
 }
 

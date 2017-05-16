@@ -887,44 +887,6 @@ class ProcessMakerWebDav extends HTTP_WebDAV_Server
     }
 
     /**
-     * PROPPATCH method handler
-     *
-     * @param array general parameter passing array
-     * @return bool true on success
-     */
-    public function PROPPATCH(&$options)
-    {
-        global $prefs, $tab;
-
-        $msg = "";
-
-        $path = $options["path"];
-
-        $dir = dirname($path) . "/";
-        $base = basename($path);
-        
-        G::LoadSystem('inputfilter');
-        $filter = new InputFilter();
-
-        foreach ($options["props"] as $key => $prop) {
-            if ($prop["ns"] == "DAV:") {
-                $options["props"][$key]['status'] = "403 Forbidden";
-            } else {
-                if (isset($prop["val"])) {
-                    $query = "REPLACE INTO properties SET path = '%s', name = '%s', ns= '%s', value = '%s'";
-                    $query = $filter->preventSqlInjection($query, Array($options['path'],$prop['name'],$prop['ns'],$prop['val']));
-                    error_log($query);
-                } else {
-                    $query = "DELETE FROM properties WHERE path = '%s' AND name = '%s' AND ns = '%s'";
-                    $query = $filter->preventSqlInjection($query, Array($options['path'],$prop['name'],$prop['ns']));
-                }
-                mysql_query($query);
-            }
-        }
-        return "";
-    }
-
-    /**
      * LOCK method handler
      *
      * @param array general parameter passing array

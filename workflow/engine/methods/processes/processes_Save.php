@@ -32,15 +32,15 @@
 $function = isset( $_POST['function'] ) ? $_POST['function'] : '';
 $infoProcess = new Process();
 $resultProcessOld = $infoProcess->load($_POST['form']['PRO_UID']);
+unset($resultProcessOld['PRO_DYNAFORMS']);
+
 switch ($function) {
     case 'lookForNameProcess':
         require_once 'classes/model/Content.php';
         $snameProcess = urldecode( $_POST['NAMEPROCESS'] );
         $oCriteria = new Criteria( 'workflow' );
         $oCriteria->addSelectColumn( 'COUNT(*) AS PROCESS' );
-        $oCriteria->add( ContentPeer::CON_CATEGORY, 'PRO_TITLE' );
-        $oCriteria->add( ContentPeer::CON_LANG, SYS_LANG );
-        $oCriteria->add( ContentPeer::CON_VALUE, $snameProcess );
+        $oCriteria->add(ProcessPeer::PRO_TITLE, $snameProcess);
         $oDataset = ContentPeer::doSelectRS( $oCriteria );
         $oDataset->setFetchmode( ResultSet::FETCHMODE_ASSOC );
         $oDataset->next();
@@ -93,8 +93,10 @@ switch ($function) {
         break;
 
 }
+
 $resultProcessNew = $infoProcess->load($_POST['form']['PRO_UID']);
-$oldFields = array_diff_assoc($resultProcessOld,$resultProcessNew);
+unset($resultProcessNew['PRO_DYNAFORMS']);
+
 $newFields = array_diff_assoc($resultProcessNew,$resultProcessOld);
 $fields = array();
 
@@ -114,7 +116,7 @@ if(array_key_exists('PRO_SUMMARY_DYNAFORM', $newFields)) {
     $fields[] = "Dynaform to show a case summary";
 }
 if(array_key_exists('PRO_DERIVATION_SCREEN_TPL', $newFields)) {
-    $fields[] = "Routing Screen Template"; 
+    $fields[] = "Routing Screen Template";
 }
 if(array_key_exists('PRO_DEBUG', $newFields)) {
     $fields[] = G::LoadTranslation('ID_PRO_DEBUG');
@@ -147,7 +149,7 @@ G::auditLog('EditProcess','Edit fields ('.implode(', ',$fields).') in process "'
 
 if(isset($_POST['form']['PRO_UID']) && !empty($_POST['form']['PRO_UID'])) {
     $valuesProcess['PRO_UID'] = $_POST['form']['PRO_UID'];
-    $valuesProcess['PRO_UPDATE_DATE'] = date("Y-m-d H:i:s"); 
+    $valuesProcess['PRO_UPDATE_DATE'] = date("Y-m-d H:i:s");
     G::LoadClass('processes');
     $infoProcess = new Processes();
     $resultProcess = $infoProcess->updateProcessRow($valuesProcess);

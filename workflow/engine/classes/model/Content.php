@@ -410,7 +410,7 @@ class Content extends BaseContent
         mysql_free_result( $result );
         $total = $this->rowsProcessed + $this->rowsInserted;
 
-        $statement = $connection->prepareStatement( "INSERT INTO CONTENT
+        $statement = $connection->prepareStatement( "REPLACE INTO CONTENT
             SELECT CON_CATEGORY, CON_PARENT, CON_ID , CON_LANG, CON_VALUE
             FROM CONTENT_BACKUP" );
         $statement->executeQuery();

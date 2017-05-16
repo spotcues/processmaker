@@ -182,7 +182,9 @@ switch ($request) {
                             // print (FAILED . ',' . $smtp->error['error']) ;
                         }
                     } catch (Exception $e) {
-                        print (FAILED . ',' . $e->getMessage()) ;
+                        $token = strtotime("now");
+                        PMException::registerErrorLog($e, $token);
+                        G::outRes( G::LoadTranslation("ID_EXCEPTION_LOG_INTERFAZ", array($token)) );
                     }
                 } else {
                     print (SUCCESSFUL . ', No authentication required!') ;
@@ -214,7 +216,9 @@ switch ($request) {
                             print (FAILED . ',' . $resp->msg) ;
                         }
                     } catch (Exception $e) {
-                        print (FAILED . ',' . $e->getMessage()) ;
+                        $token = strtotime("now");
+                        PMException::registerErrorLog($e, $token);
+                        G::outRes( G::LoadTranslation("ID_EXCEPTION_LOG_INTERFAZ", array($token)) );
                     }
 
                 } else {

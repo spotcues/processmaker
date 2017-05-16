@@ -340,7 +340,7 @@ class Home extends Controller
         $dateFrom = null,
         $dateTo = null,
         $callback = null,
-        $dir = null,
+        $dir = 'DESC',
         $sort = "APP_CACHE_VIEW.APP_NUMBER",
         $category = null)
     {
@@ -427,34 +427,11 @@ class Home extends Controller
             $dataList['category'] = $category;
             $dataList['action']   = $type;
             /*----------------------------------********---------------------------------*/
-            if (true) {
-                //In enterprise version this block of code should always be executed
-                //In community version this block of code is deleted and is executed the other
-                $list = new \ProcessMaker\BusinessModel\Lists();
-                $listName = 'inbox';
-                switch ($type) {
-                    case 'draft':
-                    case 'todo':
-                        $listName = 'inbox';
-                        $cases = $list->getList($listName, $dataList);
-                        break;
-                    case 'unassigned':
-                        $case = new \ProcessMaker\BusinessModel\Cases();
-                        $cases = $case->getList($dataList);
-                        foreach ($cases['data'] as &$value) {
-                            $value = array_change_key_case($value, CASE_UPPER);
-                        }
-                        break;
-                }
-            } else {
-            /*----------------------------------********---------------------------------*/
                 $case = new \ProcessMaker\BusinessModel\Cases();
                 $cases = $case->getList($dataList);
                 foreach ($cases['data'] as &$value) {
                     $value = array_change_key_case($value, CASE_UPPER);
                 }
-            /*----------------------------------********---------------------------------*/
-            }
             /*----------------------------------********---------------------------------*/
 
         }
@@ -714,15 +691,7 @@ class Home extends Controller
                 $cProcess = new Criteria("workflow");
                 $cProcess->clearSelectColumns();
                 $cProcess->addSelectColumn(ProcessPeer::PRO_UID);
-                $cProcess->addSelectColumn(ContentPeer::CON_VALUE);
-
-                $del = DBAdapter::getStringDelimiter();
-
-                $conds = array();
-                $conds[] = array(ProcessPeer::PRO_UID,      ContentPeer::CON_ID);
-                $conds[] = array(ContentPeer::CON_CATEGORY, $del . "PRO_TITLE" . $del);
-                $conds[] = array(ContentPeer::CON_LANG,     $del . $lang . $del);
-                $cProcess->addJoinMC($conds, Criteria::LEFT_JOIN);
+                $cProcess->addSelectColumn(ProcessPeer::PRO_TITLE);
                 $cProcess->add(ProcessPeer::PRO_STATUS, "ACTIVE");
                 $oDataset = ProcessPeer::doSelectRS($cProcess);
 
@@ -730,7 +699,7 @@ class Home extends Controller
 
                 $oDataset->next();
                 while ($aRow = $oDataset->getRow()) {
-                  $processes[] = array($aRow["PRO_UID"], $aRow["CON_VALUE"]);
+                  $processes[] = array($aRow["PRO_UID"], $aRow["PRO_TITLE"]);
                   $oDataset->next();
                 }
 

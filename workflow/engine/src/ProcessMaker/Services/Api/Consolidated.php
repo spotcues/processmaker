@@ -84,8 +84,8 @@ class Consolidated extends Api
      * @param string $tas_uid {@min 1} {@max 32}
      * @param string $dyn_uid {@min 1} {@max 32}
      * @param string $pro_uid {@min 1} {@max 32}
-     * @param string $start {@from path}
-     * @param string $limit {@from path}
+     * @param int $start {@from path}
+     * @param int $limit {@from path}
      * @param string $search {@from path}
      * @return array
      *
@@ -94,7 +94,7 @@ class Consolidated extends Api
      *
      * @url GET /cases/:tas_uid/:dyn_uid/:pro_uid
      */
-    public function doGetCasesConsolidated($tas_uid, $dyn_uid, $pro_uid, $start = '', $limit = '', $search = '')
+    public function doGetCasesConsolidated($tas_uid, $dyn_uid, $pro_uid, $start = 0, $limit = 0, $search = '')
     {
         try {
             $usr_uid = $this->getUserId();
@@ -135,7 +135,7 @@ class Consolidated extends Api
      *
      * @param string $app_uid {@min 1} {@max 32}
      * @param string $app_number
-     * @param string $del_index
+     * @param int $del_index
      * @param string $field_grid
      * @param string $field_grid_val
      * @return array
@@ -144,13 +144,15 @@ class Consolidated extends Api
      * @copyright Colosa - Bolivia
      *
      * @url POST /derivate/:app_uid/:app_number/:del_index/:field_grid/:field_grid_val
+     * @url POST /derivate/:app_uid/:app_number/:del_index/:field_grid/
      */
-    public function doPostDerivate($app_uid, $app_number, $del_index, $field_grid, $field_grid_val)
+    public function doPostDerivate($app_uid, $app_number, $del_index, $field_grid, $field_grid_val = '')
     {
         try {
             $usr_uid = $this->getUserId();
             $consolidated = new \ProcessMaker\BusinessModel\Consolidated();
-            return $consolidated->postDerivate($app_uid, $app_number, $del_index, $usr_uid,$field_grid, $field_grid_val);
+            return $consolidated->postDerivate($app_uid, $app_number, $del_index, $usr_uid, $field_grid,
+                str_replace('__FRASL__', '/', $field_grid_val));
         } catch (\Exception $e) {
             throw (new RestException(Api::STAT_APP_EXCEPTION, $e->getMessage()));
         }

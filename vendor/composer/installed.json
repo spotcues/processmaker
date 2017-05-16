@@ -17,7 +17,7 @@
         "require": {
             "php": ">=5.2.0"
         },
-        "time": "2013-08-12 16:35:58",
+        "time": "2013-08-12T16:35:58+00:00",
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -46,14 +46,14 @@
     },
     {
         "name": "colosa/pmUI",
-        "version": "3.0.1.8-dev",
-        "version_normalized": "3.0.1.8-dev",
+        "version": "dev-release/3.2",
+        "version_normalized": "dev-release/3.2",
         "source": {
             "type": "git",
             "url": "git@bitbucket.org:colosa/pmui.git",
-            "reference": "851ee86a1006df111ee8b281bf2b033cdbcc6f0b"
+            "reference": "92a59a33da5d53753da641debf140a1e3babc5f3"
         },
-        "time": "2016-02-26 21:41:50",
+        "time": "2017-02-24T20:50:27+00:00",
         "type": "library",
         "installation-source": "source",
         "description": "JS UI Library",
@@ -64,17 +64,17 @@
     },
     {
         "name": "colosa/MichelangeloFE",
-        "version": "3.0.1.8-dev",
-        "version_normalized": "3.0.1.8-dev",
+        "version": "dev-release/3.2",
+        "version_normalized": "dev-release/3.2",
         "source": {
             "type": "git",
             "url": "git@bitbucket.org:colosa/michelangelofe.git",
-            "reference": "7e889f23a7e8397c052a4d9ae6331334b57c9d48"
+            "reference": "cc19932a095b2232bef7998d2c90b2408ad9be19"
         },
         "require": {
-            "colosa/pmui": "3.0.1.8-dev"
+            "colosa/pmui": "release/3.2-dev"
         },
-        "time": "2016-03-09 20:18:44",
+        "time": "2017-04-11T15:29:24+00:00",
         "type": "library",
         "installation-source": "source",
         "description": "ProcessMaker Michelangelo Front End",
@@ -85,14 +85,14 @@
     },
     {
         "name": "colosa/pmDynaform",
-        "version": "3.0.1.8-dev",
-        "version_normalized": "3.0.1.8-dev",
+        "version": "dev-release/3.2",
+        "version_normalized": "dev-release/3.2",
         "source": {
             "type": "git",
             "url": "git@bitbucket.org:colosa/pmdynaform.git",
-            "reference": "c2008027bd721ac42e4a7d98cc773f82ac25921e"
+            "reference": "17ac424d4f51c42c7812fdc117948eef45bddce8"
         },
-        "time": "2016-03-15 17:46:33",
+        "time": "2017-04-11T15:29:14+00:00",
         "type": "library",
         "installation-source": "source",
         "description": "JS Library to render ProcessMaker Dynaforms",
@@ -103,17 +103,17 @@
     },
     {
         "name": "dapphp/securimage",
-        "version": "3.6.4",
-        "version_normalized": "3.6.4.0",
+        "version": "3.6.5",
+        "version_normalized": "3.6.5.0",
         "source": {
             "type": "git",
             "url": "https://github.com/dapphp/securimage.git",
-            "reference": "2ed50264ae5541fec8d8c79e4c9b6235a7cfd506"
+            "reference": "3f5a84fd80b1a35d58332896c944142713a7e802"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/dapphp/securimage/zipball/2ed50264ae5541fec8d8c79e4c9b6235a7cfd506",
-            "reference": "2ed50264ae5541fec8d8c79e4c9b6235a7cfd506",
+            "url": "https://api.github.com/repos/dapphp/securimage/zipball/3f5a84fd80b1a35d58332896c944142713a7e802",
+            "reference": "3f5a84fd80b1a35d58332896c944142713a7e802",
             "shasum": ""
         },
         "require": {
@@ -125,7 +125,7 @@
             "ext-pdo_mysql": "For MySQL database support",
             "ext-pdo_sqlite": "For SQLite3 database support"
         },
-        "time": "2016-03-04 21:08:00",
+        "time": "2016-12-04T17:45:57+00:00",
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -133,7 +133,7 @@
                 "securimage.php"
             ]
         },
-        "notification-url": "http://packagist.org/downloads/",
+        "notification-url": "https://packagist.org/downloads/",
         "license": [
             "BSD"
         ],
@@ -172,7 +172,7 @@
             "phpunit/phpunit": "3.7.*",
             "squizlabs/php_codesniffer": "~2.3"
         },
-        "time": "2015-10-16 22:11:08",
+        "time": "2015-10-16T22:11:08+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -197,26 +197,30 @@
     },
     {
         "name": "luracast/restler",
-        "version": "3.0.0-RC4",
-        "version_normalized": "3.0.0.0-RC4",
+        "version": "3.0.0",
+        "version_normalized": "3.0.0.0",
         "source": {
             "type": "git",
             "url": "https://github.com/Luracast/Restler.git",
-            "reference": "72c28484d6a7677643324744be2ff0aab6795d5a"
+            "reference": "581d8d6dc5d37f439765f89725a92f85e98f1826"
         },
         "dist": {
             "type": "zip",
-            "url": "https://api.github.com/repos/Luracast/Restler/zipball/72c28484d6a7677643324744be2ff0aab6795d5a",
-            "reference": "72c28484d6a7677643324744be2ff0aab6795d5a",
+            "url": "https://api.github.com/repos/Luracast/Restler/zipball/581d8d6dc5d37f439765f89725a92f85e98f1826",
+            "reference": "581d8d6dc5d37f439765f89725a92f85e98f1826",
             "shasum": ""
         },
         "require": {
             "php": ">=5.3.0"
         },
+        "conflict": {
+            "restler/framework": "3.*"
+        },
         "require-dev": {
-            "behat/behat": "2.4.*@stable",
-            "bshaffer/oauth2-server-php": "v0.3",
+            "behat/behat": "2.5.*@stable",
+            "bshaffer/oauth2-server-php": "v1.0",
             "guzzle/guzzle": "~3.1.1",
+            "illuminate/view": "4.2.*",
             "luracast/explorer": "*",
             "mustache/mustache": "dev-master",
             "rodneyrehm/plist": "dev-master",
@@ -228,6 +232,7 @@
             "behat/behat": "Behaviour driven development testing framework (see require-dev for details)",
             "bshaffer/oauth2-server-php": "Restler can provide OAuth2 authentication using this library (see require-dev for details)",
             "guzzle/guzzle": "RESTful api HTTP client framework (see require-dev for details)",
+            "illuminate/view": "Restler can render HtmlView using laravel blade templates (see require-dev for details)",
             "luracast/explorer": "Restler's very own api explorer (see require-dev for details)",
             "mustache/mustache": "Restler can render HtmlView using mustache/handlebar templates (see require-dev for details)",
             "rodneyrehm/plist": "Restler supports tho Apple plist xml format (see require-dev for details)",
@@ -235,7 +240,7 @@
             "twig/twig": "Restler can render HtmlView using twig templates (see require-dev for details)",
             "zendframework/zendamf": "Support for the amf document format  (see require-dev for details)"
         },
-        "time": "2014-04-13 05:38:15",
+        "time": "2017-01-11T03:42:36+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -248,7 +253,7 @@
                 "Luracast\\Restler": "vendor/"
             }
         },
-        "notification-url": "http://packagist.org/downloads/",
+        "notification-url": "https://packagist.org/downloads/",
         "license": [
             "LGPL-2.1"
         ],
@@ -269,6 +274,126 @@
             "framework",
             "rest",
             "server"
+        ]
+    },
+    {
+        "name": "psr/log",
+        "version": "1.0.0",
+        "version_normalized": "1.0.0.0",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/php-fig/log.git",
+            "reference": "fe0936ee26643249e916849d48e3a51d5f5e278b"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/php-fig/log/zipball/fe0936ee26643249e916849d48e3a51d5f5e278b",
+            "reference": "fe0936ee26643249e916849d48e3a51d5f5e278b",
+            "shasum": ""
+        },
+        "time": "2012-12-21T11:40:51+00:00",
+        "type": "library",
+        "installation-source": "dist",
+        "autoload": {
+            "psr-0": {
+                "Psr\\Log\\": ""
+            }
+        },
+        "notification-url": "https://packagist.org/downloads/",
+        "license": [
+            "MIT"
+        ],
+        "authors": [
+            {
+                "name": "PHP-FIG",
+                "homepage": "http://www.php-fig.org/"
+            }
+        ],
+        "description": "Common interface for logging libraries",
+        "keywords": [
+            "log",
+            "psr",
+            "psr-3"
+        ]
+    },
+    {
+        "name": "monolog/monolog",
+        "version": "1.19.0",
+        "version_normalized": "1.19.0.0",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/Seldaek/monolog.git",
+            "reference": "5f56ed5212dc509c8dc8caeba2715732abb32dbf"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/Seldaek/monolog/zipball/5f56ed5212dc509c8dc8caeba2715732abb32dbf",
+            "reference": "5f56ed5212dc509c8dc8caeba2715732abb32dbf",
+            "shasum": ""
+        },
+        "require": {
+            "php": ">=5.3.0",
+            "psr/log": "~1.0"
+        },
+        "provide": {
+            "psr/log-implementation": "1.0.0"
+        },
+        "require-dev": {
+            "aws/aws-sdk-php": "^2.4.9",
+            "doctrine/couchdb": "~1.0@dev",
+            "graylog2/gelf-php": "~1.0",
+            "jakub-onderka/php-parallel-lint": "0.9",
+            "php-amqplib/php-amqplib": "~2.4",
+            "php-console/php-console": "^3.1.3",
+            "phpunit/phpunit": "~4.5",
+            "phpunit/phpunit-mock-objects": "2.3.0",
+            "raven/raven": "^0.13",
+            "ruflin/elastica": ">=0.90 <3.0",
+            "swiftmailer/swiftmailer": "~5.3"
+        },
+        "suggest": {
+            "aws/aws-sdk-php": "Allow sending log messages to AWS services like DynamoDB",
+            "doctrine/couchdb": "Allow sending log messages to a CouchDB server",
+            "ext-amqp": "Allow sending log messages to an AMQP server (1.0+ required)",
+            "ext-mongo": "Allow sending log messages to a MongoDB server",
+            "graylog2/gelf-php": "Allow sending log messages to a GrayLog2 server",
+            "mongodb/mongodb": "Allow sending log messages to a MongoDB server via PHP Driver",
+            "php-amqplib/php-amqplib": "Allow sending log messages to an AMQP server using php-amqplib",
+            "php-console/php-console": "Allow sending log messages to Google Chrome",
+            "raven/raven": "Allow sending log messages to a Sentry server",
+            "rollbar/rollbar": "Allow sending log messages to Rollbar",
+            "ruflin/elastica": "Allow sending log messages to an Elastic Search server"
+        },
+        "time": "2016-04-12T18:29:35+00:00",
+        "type": "library",
+        "extra": {
+            "branch-alias": {
+                "dev-master": "2.0.x-dev"
+            }
+        },
+        "installation-source": "dist",
+        "autoload": {
+            "psr-4": {
+                "Monolog\\": "src/Monolog"
+            }
+        },
+        "notification-url": "https://packagist.org/downloads/",
+        "license": [
+            "MIT"
+        ],
+        "authors": [
+            {
+                "name": "Jordi Boggiano",
+                "email": "j.boggiano@seld.be",
+                "homepage": "http://seld.be"
+            }
+        ],
+        "description": "Sends your logs to files, sockets, inboxes, databases and various web services",
+        "homepage": "http://github.com/Seldaek/monolog",
+        "keywords": [
+            "log",
+            "logging",
+            "psr-3"
         ]
     }
 ]

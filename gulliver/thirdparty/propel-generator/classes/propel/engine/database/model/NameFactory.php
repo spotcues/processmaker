@@ -88,8 +88,8 @@ class NameFactory {
 				}
 				$algorithm = new $name();
 			} catch (BuildException $e) {
-				print $e->getMessage() . "\n";
-				print $e->getTraceAsString();
+				error_log( $e->getMessage() . "\n" );
+				error_log( $e->getTraceAsString() );
 			}
 			$this->algorithms[$name] = $algorithm;
 		}

@@ -84,12 +84,13 @@ class FilesManager
                 }
             }
             foreach ($aFiles as $aFile) {
-                $arrayFileUid = $this->getFileManagerUid($sDirectory.$aFile['FILE']);
+                $arrayFileUid = $this->getFileManagerUid($sDirectory.$aFile['FILE'], $aFile['FILE']);
                 $fcontent = "";
                 if ($getContent === true) {
                     $fcontent = file_get_contents($sDirectory . $aFile['FILE']);
                 }
-                $fileUid =  $arrayFileUid["PRF_UID"];
+                $fileUid = isset($arrayFileUid["PRF_UID"]) ? $arrayFileUid["PRF_UID"] : '';
+                $derivationScreen = isset($arrayFileUid["DERIVATION_SCREEN_TPL"]) ? true : false;
                 if ($fileUid != null) {
                     $oProcessFiles = \ProcessFilesPeer::retrieveByPK($fileUid);
                     $editable = $oProcessFiles->getPrfEditable();
@@ -107,7 +108,8 @@ class FilesManager
                                           'prf_editable' => $editable,
                                           'prf_create_date' => $oProcessFiles->getPrfCreateDate(),
                                           'prf_update_date' => $oProcessFiles->getPrfUpdateDate(),
-                                          'prf_content' => $fcontent);
+                                          'prf_content' => $fcontent,
+                                          'prf_derivation_screen' => $derivationScreen);
                 } else {
                     $extention = end(explode(".", $aFile['FILE']));
                     if ($extention == 'docx' || $extention == 'doc' || $extention == 'html' || $extention == 'php' || $extention == 'jsp'
@@ -125,7 +127,8 @@ class FilesManager
                                          'prf_editable' => $editable,
                                          'prf_create_date' => '',
                                          'prf_update_date' => '',
-                                         'prf_content' => $fcontent);
+                                         'prf_content' => $fcontent,
+                                         'prf_derivation_screen' => false);
                 }
             }
             return $aTheFiles;
@@ -145,7 +148,7 @@ class FilesManager
      *
      * @access public
      */
-    public function addProcessFilesManager($sProcessUID, $userUID, $aData)
+    public function addProcessFilesManager($sProcessUID, $userUID, $aData, $isImport = false)
     {
         try {
             $aData['prf_path'] = rtrim($aData['prf_path'], '/') . '/';
@@ -186,6 +189,11 @@ class FilesManager
                     $sEditable = false;
                     if ($extention == '.exe') {
                         throw new \Exception(\G::LoadTranslation('ID_FILE_UPLOAD_INCORRECT_EXTENSION'));
+                    }
+                    if (\Bootstrap::getDisablePhpUploadExecution() === 1 && $extention === '.php' && !$isImport) {
+                        $message = \G::LoadTranslation('THE_UPLOAD_OF_PHP_FILES_WAS_DISABLED');
+                        \Bootstrap::registerMonologPhpUploadExecution('phpUpload', 550, $message, $aData['prf_filename']);
+                        throw new \Exception($message);
                     }
                     break;
                 default:
@@ -384,13 +392,14 @@ class FilesManager
     }
 
     /**
-     * Get data of unique ids of a file
+     * Get data of unique ids of a file and if the template is used in a derivation screen
      *
      * @param string $path
+     * @param string $fileName the name of template
      *
      * return array
      */
-    public function getFileManagerUid($path)
+    public function getFileManagerUid($path, $fileName = '')
     {
         try {
             if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
@@ -401,11 +410,25 @@ class FilesManager
             $baseName2 = $path[count($path)-2]."/".$path[count($path)-1];
             $criteria = new \Criteria("workflow");
             $criteria->addSelectColumn(\ProcessFilesPeer::PRF_UID);
+            $criteria->addSelectColumn(\ProcessPeer::PRO_DERIVATION_SCREEN_TPL);
+            $criteria->addSelectColumn(\TaskPeer::TAS_DERIVATION_SCREEN_TPL);
+            $criteria->addJoin(\ProcessFilesPeer::PRO_UID, \ProcessPeer::PRO_UID);
+            $criteria->addJoin(\ProcessPeer::PRO_UID, \TaskPeer::PRO_UID);
             $criteria->add( $criteria->getNewCriterion( \ProcessFilesPeer::PRF_PATH, '%' . $baseName . '%', \Criteria::LIKE )->addOr( $criteria->getNewCriterion( \ProcessFilesPeer::PRF_PATH, '%' . $baseName2 . '%', \Criteria::LIKE )));
             $rsCriteria = \ProcessFilesPeer::doSelectRS($criteria);
             $rsCriteria->setFetchmode(\ResultSet::FETCHMODE_ASSOC);
-            $rsCriteria->next();
-            return $rsCriteria->getRow();
+            $row = array();
+            while ($rsCriteria->next()) {
+                $row = $rsCriteria->getRow();
+                if (!empty($row['PRO_DERIVATION_SCREEN_TPL']) && $row['PRO_DERIVATION_SCREEN_TPL'] == $fileName) {
+                    $row['DERIVATION_SCREEN_TPL'] = true;
+                    return $row;
+                } elseif (!empty($row['TAS_DERIVATION_SCREEN_TPL']) && $row['TAS_DERIVATION_SCREEN_TPL'] == $fileName) {
+                    $row['DERIVATION_SCREEN_TPL'] = true;
+                    return $row;
+                }
+            }
+            return $row;
         } catch (\Exception $e) {
             throw $e;
         }
@@ -685,7 +708,7 @@ class FilesManager
      *
      * return void
      */
-    public function processFilesUpgrade($projectUid = "")
+    public function processFilesUpgrade($projectUid = "", $isImport = false)
     {
         try {
             //Set variables
@@ -746,7 +769,7 @@ class FilesManager
                                     if (is_file($f)) {
                                         $arrayProcessFilesData = $this->getFileManagerUid($f);
 
-                                        if (is_null($arrayProcessFilesData["PRF_UID"])) {
+                                        if (empty($arrayProcessFilesData["PRF_UID"])) {
                                             rename($dir . PATH_SEP . $file, $dir . PATH_SEP . $file . ".tmp");
 
                                             $arrayData = array(
@@ -755,7 +778,7 @@ class FilesManager
                                                 "prf_content"  => ""
                                             );
 
-                                            $arrayData = $this->addProcessFilesManager($row["PRJ_UID"], "00000000000000000000000000000001", $arrayData);
+                                            $arrayData = $this->addProcessFilesManager($row["PRJ_UID"], "00000000000000000000000000000001", $arrayData, $isImport);
 
                                             rename($dir . PATH_SEP . $file . ".tmp", $dir . PATH_SEP . $file);
                                         }

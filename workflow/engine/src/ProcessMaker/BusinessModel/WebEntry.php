@@ -26,6 +26,11 @@ class WebEntry
         "userUid"    => "USR_UID"
     );
 
+    private $httpHost;
+    private $sysSkin;
+    private $sysSys;
+    private $pathDataPublic;
+
     /**
      * Constructor of the class
      *
@@ -33,6 +38,10 @@ class WebEntry
      */
     public function __construct()
     {
+        $this->pathDataPublic = defined("PATH_DATA_PUBLIC") ? PATH_DATA_PUBLIC : \G::$pathDataPublic;
+        $this->httpHost = isset($_SERVER["HTTP_HOST"]) ? $_SERVER["HTTP_HOST"] : \G::$httpHost;
+        $this->sysSys = defined("SYS_SYS") ? SYS_SYS : \G::$sysSys;
+        $this->sysSkin = defined("SYS_SKIN") ? SYS_SKIN : \G::$sysSkin;
         try {
             foreach ($this->arrayFieldDefinition as $key => $value) {
                 $this->arrayFieldNameForException[$value["fieldNameAux"]] = $key;
@@ -346,7 +355,7 @@ class WebEntry
 
             $wsRoundRobin = 0; //0, 1 //0 - Cyclical Assignment
 
-            $pathDataPublicProcess = PATH_DATA_PUBLIC . $processUid;
+            $pathDataPublicProcess = $this->pathDataPublic . $processUid;
 
             //Delete previous files
             if (trim($arrayWebEntryData["WE_DATA"]) != "") {
@@ -415,8 +424,8 @@ class WebEntry
                     $template = new \TemplatePower($pluginTpl);
                     $template->prepare();
 
-                    $template->assign("wsdlUrl", $http . $_SERVER["HTTP_HOST"] . "/sys" . SYS_SYS . "/" . SYS_LANG . "/" . SYS_SKIN . "/services/wsdl2");
-                    $template->assign("wsUploadUrl", $http . $_SERVER["HTTP_HOST"] . "/sys" . SYS_SYS . "/" . SYS_LANG . "/" . SYS_SKIN . "/services/upload");
+                    $template->assign("wsdlUrl", $http . $this->httpHost . "/sys" . $this->sysSys . "/" . SYS_LANG . "/" . $this->sysSkin . "/services/wsdl2");
+                    $template->assign("wsUploadUrl", $http . $this->httpHost . "/sys" . $this->sysSys . "/" . SYS_LANG . "/" . $this->sysSkin . "/services/upload");
                     $template->assign("processUid", $processUid);
                     $template->assign("dynaformUid", $dynaFormUid);
                     $template->assign("taskUid", $taskUid);
@@ -434,7 +443,7 @@ class WebEntry
 
                     $template->assign("dynaform", $arrayDynaFormData["DYN_TITLE"]);
                     $template->assign("timestamp", date("l jS \of F Y h:i:s A"));
-                    $template->assign("ws", SYS_SYS);
+                    $template->assign("ws", $this->sysSys);
                     $template->assign("version", \System::getVersion());
 
                     $fileName = $pathDataPublicProcess . PATH_SEP . $weTitle . "Post.php";
@@ -494,12 +503,12 @@ class WebEntry
                     }
 
                     $G_FORM = new \Form($processUid . "/" . $dynaFormUid, PATH_DYNAFORM, SYS_LANG, false);
-                    $G_FORM->action = $http . $_SERVER["HTTP_HOST"] . "/sys" . SYS_SYS . "/" . SYS_LANG . "/" . SYS_SKIN . "/services/cases_StartExternal.php";
+                    $G_FORM->action = $http . $this->httpHost . "/sys" . $this->sysSys . "/" . SYS_LANG . "/" . $this->sysSkin . "/services/cases_StartExternal.php";
 
                     $scriptCode = "";
                     $scriptCode = $G_FORM->render(PATH_TPL . "xmlform" . ".html", $scriptCode);
-                    $scriptCode = str_replace("/controls/", $http . $_SERVER["HTTP_HOST"] . "/controls/", $scriptCode);
-                    $scriptCode = str_replace("/js/maborak/core/images/", $http . $_SERVER["HTTP_HOST"] . "/js/maborak/core/images/", $scriptCode);
+                    $scriptCode = str_replace("/controls/", $http . $this->httpHost . "/controls/", $scriptCode);
+                    $scriptCode = str_replace("/js/maborak/core/images/", $http . $this->httpHost . "/js/maborak/core/images/", $scriptCode);
 
                     //Render the template
                     $pluginTpl = PATH_TPL . "processes" . PATH_SEP . "webentry.tpl";
@@ -512,10 +521,10 @@ class WebEntry
 
                     $template->assign("URL_MABORAK_JS", \G::browserCacheFilesUrl("/js/maborak/core/maborak.js"));
                     $template->assign("URL_TRANSLATION_ENV_JS", \G::browserCacheFilesUrl("/jscore/labels/" . SYS_LANG . ".js"));
-                    $template->assign("siteUrl", $http . $_SERVER["HTTP_HOST"]);
-                    $template->assign("sysSys", SYS_SYS);
+                    $template->assign("siteUrl", $http . $this->httpHost);
+                    $template->assign("sysSys", $this->sysSys);
                     $template->assign("sysLang", SYS_LANG);
-                    $template->assign("sysSkin", SYS_SKIN);
+                    $template->assign("sysSkin", $this->sysSkin);
                     $template->assign("processUid", $processUid);
                     $template->assign("dynaformUid", $dynaFormUid);
                     $template->assign("taskUid", $taskUid);
@@ -526,7 +535,7 @@ class WebEntry
                     if (sizeof($sUidGrids) > 0) {
                         foreach ($sUidGrids as $k => $v) {
                             $template->newBlock("grid_uids");
-                            $template->assign("siteUrl", $http . $_SERVER["HTTP_HOST"]);
+                            $template->assign("siteUrl", $http . $this->httpHost);
                             $template->assign("gridFileName", $processUid . "/" . $v);
                         }
                     }
@@ -562,7 +571,7 @@ class WebEntry
      *
      * return array Return data of the new Web Entry created
      */
-    public function create($processUid, $userUidCreator, array $arrayData)
+    public function create($processUid, $userUidCreator, array $arrayData, $validate = true)
     {
         try {
             //Verify data
@@ -581,7 +590,9 @@ class WebEntry
             //Verify data
             $process->throwExceptionIfNotExistsProcess($processUid, $this->arrayFieldNameForException["processUid"]);
 
-            $this->throwExceptionIfDataIsInvalid("", $processUid, $arrayData);
+            if ($validate === true) {
+                $this->throwExceptionIfDataIsInvalid("", $processUid, $arrayData);
+            }
 
             //Create
             $cnn = \Propel::getConnection("workflow");
@@ -937,5 +948,90 @@ class WebEntry
             throw $e;
         }
     }
+    
+    /**
+     * Check the existence of a file of type web entry, returns true if it exists 
+     * and false otherwise. Verification is done by the field WE_DATA and PRO_UID.
+     * The PRO_UID key and the file path are required.
+     * @param type $proUid
+     * @param type $filePath
+     * @return boolean
+     */
+    public static function isWebEntry($proUid, $filePath)
+    {
+        $fileName = basename($filePath);
+        if (empty($proUid) || empty($fileName)) {
+            return false;
+        }
+        $fileName = trim($fileName);
+        $postfix = "Post.php";
+        $n = strlen($postfix);
+        $string = substr($fileName, 0, -$n);
+        if ($string . $postfix === $fileName) {
+            $fileName = $string . ".php";
+        }
+        $criteria = new \Criteria("workflow");
+        $criteria->addSelectColumn(\WebEntryPeer::WE_DATA);
+        $criteria->add(\WebEntryPeer::PRO_UID, $proUid, \Criteria::EQUAL);
+        $criteria->add(\WebEntryPeer::WE_DATA, $fileName, \Criteria::EQUAL);
+        $resultSet = \WebEntryPeer::doSelectRS($criteria);
+        $resultSet->setFetchmode(\ResultSet::FETCHMODE_ASSOC);
+        $resultSet->next();
+        $row = $resultSet->getRow();
+        return isset($row["WE_DATA"]);
+    }
+
+    /**
+     * Fill the WEB_ENTRY table for the classic processes.
+     * @param type $data
+     */
+    public function createClassic($data)
+    {
+        $cnn = \Propel::getConnection("workflow");
+        $criteria = new \Criteria("workflow");
+        $criteria->add(\WebEntryPeer::PRO_UID, $data["PRO_UID"], \Criteria::EQUAL);
+        $criteria->add(\WebEntryPeer::WE_DATA, $data["WE_DATA"], \Criteria::EQUAL);
+        $result = \WebEntryPeer::doSelect($criteria, $cnn);
+
+        if (isset($result[0])) {
+            $webEntry = $result[0];
+            $webEntry->fromArray($data, \BasePeer::TYPE_FIELDNAME);
+        } else {
+            $webEntry = new \WebEntry();
+            $webEntry->fromArray($data, \BasePeer::TYPE_FIELDNAME);
+            $webEntry->setWeUid(\ProcessMaker\Util\Common::generateUID());
+            $webEntry->setWeCreateDate("now");
+            $webEntry->setWeMethod("WS");
+            $webEntry->setWeInputDocumentAccess(1);
+        }
+        $webEntry->setWeUpdateDate("now");
+
+        if ($webEntry->validate()) {
+            $cnn->begin();
+            $result = $webEntry->save();
+            $cnn->commit();
+        }
+    }
+
+    /**
+     * Removes a record from the WEB_ENTRY table for the classic processes.
+     * The PRO_UID key and the file path are required.
+     * @param type $proUid
+     * @param type $filePath
+     * @return boolean
+     */
+    public function deleteClassic($proUid, $filePath)
+    {
+        $fileName = basename($filePath);
+        if (empty($proUid) || empty($fileName)) {
+            return false;
+        }
+        $criteria = new \Criteria("workflow");
+        $criteria->add(\WebEntryPeer::PRO_UID, $proUid, \Criteria::EQUAL);
+        $criteria->add(\WebEntryPeer::WE_DATA, $fileName, \Criteria::EQUAL);
+        $result = \WebEntryPeer::doDelete($criteria);
+        return $result;
+    }
+
 }
 

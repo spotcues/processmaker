@@ -19,10 +19,27 @@ class pmDynaform
     public $langs = null;
     public $displayMode = null;
     public $onPropertyRead = "onPropertyReadFormInstance";
+    public $isRTL = false;
+    public $pathRTLCss = '';
+    public $serverConf = null;
+    private $cache = array();
+    private $sysSys = null;
+    private $context = array();
+    private $dataSources = null;
+    private $databaseProviders = null;
+    private $propertiesToExclude = array();
+    public static $prefixs = array("@@", "@#", "@%", "@?", "@$", "@=");
 
     public function __construct($fields = array())
     {
+        $this->sysSys = (defined("SYS_SYS")) ? SYS_SYS : "Undefined";
+        $this->context = \Bootstrap::getDefaultContextLog();
+        $this->dataSources = array("database", "dataVariable");
+        $this->pathRTLCss = '/lib/pmdynaform/build/css/PMDynaform-rtl.css';
+        $this->serverConf = &serverConf::getSingleton();
+        $this->isRTL = ($this->serverConf->isRtl(SYS_LANG)) ? 'true' : 'false';
         $this->fields = $fields;
+        $this->propertiesToExclude = array('dataVariable');
         $this->getDynaform();
         $this->getDynaforms();
         $this->synchronizeSubDynaform();
@@ -128,6 +145,14 @@ class pmDynaform
         if ($this->credentials != null) {
             return $this->credentials;
         }
+        if (isset($_SESSION["PMDYNAFORM_CREDENTIALS"]) && isset($_SESSION["PMDYNAFORM_CREDENTIALS_EXPIRES"])) {
+            $time1 = strtotime(date('Y-m-d H:i:s'));
+            $time2 = strtotime($_SESSION["PMDYNAFORM_CREDENTIALS_EXPIRES"]);
+            if ($time1 < $time2) {
+                $this->credentials = $_SESSION["PMDYNAFORM_CREDENTIALS"];
+                return $this->credentials;
+            }
+        }
         $a = $this->clientToken();
         $this->credentials = array(
             "accessToken" => $a["access_token"],
@@ -143,19 +168,26 @@ class pmDynaform
             unset($_SESSION["USER_LOGGED"]);
         }
 
+        $expires = date("Y-m-d H:i:s") . " +" . $this->credentials["expiresIn"] . " seconds";
+        $_SESSION["PMDYNAFORM_CREDENTIALS"] = $this->credentials;
+        $_SESSION["PMDYNAFORM_CREDENTIALS_EXPIRES"] = date("Y-m-d H:i:s", strtotime($expires));
         return $this->credentials;
     }
 
-    public function jsonr(&$json)
+    public function jsonr(&$json, $clearCache = true)
     {
+        if ($clearCache === true) {
+            $this->cache = [];
+        }
         if (empty($json)) {
             return;
         }
+        $dataGridEnvironment = [];
         foreach ($json as $key => &$value) {
             $sw1 = is_array($value);
             $sw2 = is_object($value);
             if ($sw1 || $sw2) {
-                $this->jsonr($value);
+                $this->jsonr($value, false);
             }
             if (!$sw1 && !$sw2) {
                 //read event
@@ -164,11 +196,16 @@ class pmDynaform
                     $fn($json, $key, $value);
                 }
                 //set properties from trigger
-                $prefixs = array("@@", "@#", "@%", "@?", "@$", "@=");
-                if (is_string($value) && in_array(substr($value, 0, 2), $prefixs)) {
+                if (is_string($value) && in_array(substr($value, 0, 2), self::$prefixs)) {
                     $triggerValue = substr($value, 2);
                     if (isset($this->fields["APP_DATA"][$triggerValue])) {
-                        $json->{$key} = $this->fields["APP_DATA"][$triggerValue];
+                        if (!in_array($key, $this->propertiesToExclude)) {
+                            $json->{$key} = $this->fields["APP_DATA"][$triggerValue];
+                        }
+                    } else {
+                        if (!in_array($key, $this->propertiesToExclude)) {
+                            $json->{$key} = "";
+                        }
                     }
                 }
                 //set properties from 'formInstance' variable
@@ -189,50 +226,131 @@ class pmDynaform
                         }
                     }
                 }
-                //options & query
+                //options & query options
                 if ($key === "type" && ($value === "text" || $value === "textarea" || $value === "hidden" || $value === "dropdown" || $value === "checkgroup" || $value === "radio" || $value === "suggest")) {
-                    if (!isset($json->dbConnection))
+                    if (!isset($json->dbConnection)) {
                         $json->dbConnection = "none";
-                    if (!isset($json->sql))
+                    }
+                    if (!isset($json->sql)) {
                         $json->sql = "";
+                    }
+                    if (!isset($json->datasource)) {
+                        $json->datasource = "database";
+                    }
+                    if (!in_array($json->datasource, $this->dataSources)) {
+                        $json->datasource = "database";
+                    }
+
                     $json->optionsSql = array();
 
-                    switch ((isset($json->datasource)) ? $json->datasource : 'database') {
-                        case 'dataVariable':
-                            $dataVariable = (preg_match('/^\s*@.(.+)\s*$/', $json->dataVariable, $arrayMatch)) ?
-                                    $arrayMatch[1] : $json->dataVariable;
-                            if (isset($this->fields['APP_DATA'][$dataVariable]) &&
-                                    is_array($this->fields['APP_DATA'][$dataVariable]) &&
-                                    !empty($this->fields['APP_DATA'][$dataVariable])
-                            ) {
-                                foreach ($this->fields['APP_DATA'][$dataVariable] as $row) {
-                                    $option = new stdClass();
-                                    $option->value = $row[0];
-                                    $option->label = isset($row[1]) ? $row[1] : "";
-                                    $json->optionsSql[] = $option;
+                    if ($json->datasource === "database" && $json->dbConnection !== "" && $json->dbConnection !== "none" && $json->sql !== "") {
+                        if (isset($json->queryField)) {
+                            $dtFields = $json->queryInputData;
+                        } else {
+                            $dtFields = $this->getValuesDependentFields($json);
+                            foreach ($dtFields as $keyF => $valueF) {
+                                if (isset($this->fields["APP_DATA"][$keyF])) {
+                                    $dtFields[$keyF] = $this->fields["APP_DATA"][$keyF];
                                 }
                             }
-                            break;
-                        default:
-                            //database
-                            if ($json->dbConnection !== '' && $json->dbConnection !== 'none' && $json->sql !== '') {
-                                try {
-                                    $cnn = Propel::getConnection($json->dbConnection);
-                                    $stmt = $cnn->createStatement();
-                                    $sql = G::replaceDataField($json->sql, $this->getValuesDependentFields($json));
-                                    $rs = $stmt->executeQuery($sql, \ResultSet::FETCHMODE_NUM);
-                                    while ($rs->next()) {
-                                        $row = $rs->getRow();
-                                        $option = new stdClass();
-                                        $option->value = $row[0];
-                                        $option->label = isset($row[1]) ? $row[1] : "";
-                                        $json->optionsSql[] = $option;
-                                    }
-                                } catch (Exception $e) {
+                        }
+                        $sql = G::replaceDataField($json->sql, $dtFields);
+                        if ($value === "suggest") {
+                            $sql = $this->sqlParse($sql, function($parsed, &$select, &$from, &$where, &$groupBy, &$having, &$orderBy, &$limit) use ($json) {
+                                $dt = $parsed["SELECT"];
 
+                                $isWhere = empty($where);
+                                if ($isWhere === false) {
+                                    $where = substr_replace($where, " (", 5, 0) . ")";
+                                }
+                                if (!isset($json->queryField) && isset($dt[0]["base_expr"])) {
+                                    $col = $dt[0]["base_expr"];
+                                    $dv = str_replace("'", "''", $json->defaultValue);
+                                    if ($dv !== "") {
+                                        $where = $isWhere ? "WHERE " . $col . "='" . $dv . "'" : $where . " AND " . $col . "='" . $dv . "'";
+                                    }
+                                }
+                                if (isset($json->queryField) && isset($dt[0]["base_expr"])) {
+                                    $col = isset($dt[1]["base_expr"]) ? $dt[1]["base_expr"] : $dt[0]["base_expr"];
+                                    $qf = str_replace("'", "''", $json->queryFilter);
+                                    $where = $isWhere ? "WHERE " . $col . " LIKE '%" . $qf . "%'" : $where . " AND " . $col . " LIKE '%" . $qf . "%'";
+                                }
+
+                                $provider = $this->getDatabaseProvider($json->dbConnection);
+                                $start = 0;
+                                $end = 10;
+                                if (isset($json->queryStart)) {
+                                    $start = $json->queryStart;
+                                }
+                                if (isset($json->queryLimit)) {
+                                    $end = $json->queryLimit;
+                                }
+                                if (empty($limit) && $provider === "mysql") {
+                                    $limit = "LIMIT " . $start . "," . $end . "";
+                                }
+                                if (empty($limit) && $provider === "pgsql") {
+                                    $limit = "OFFSET " . $start . " LIMIT " . $end . "";
+                                }
+                                if ($provider === "mssql") {
+                                    $limit = "";
+                                    if (strpos(strtoupper($select), "TOP") === false) {
+                                        $isDistinct = strpos(strtoupper($select), "DISTINCT");
+                                        $isAll = strpos(strtoupper($select), "ALL");
+                                        if ($isDistinct === false && $isAll === false) {
+                                            $select = preg_replace("/SELECT/", "SELECT TOP(" . $end . ")", strtoupper($select), 1);
+                                        }
+                                        if ($isDistinct !== false) {
+                                            $select = preg_replace("/DISTINCT/", "DISTINCT TOP(" . $end . ")", strtoupper($select), 1);
+                                        }
+                                        if ($isAll !== false) {
+                                            $select = preg_replace("/DISTINCT/", "DISTINCT TOP(" . $end . ")", strtoupper($select), 1);
+                                        }
+                                    }
+                                }
+                                if ($provider === "oracle") {
+                                    $limit = "";
+                                    $rowNumber = "";
+                                    if (strpos(strtoupper($where), "ROWNUM") === false) {
+                                        $rowNumber = " AND " . $start . " <= ROWNUM AND ROWNUM <= " . $end;
+                                    }
+                                    $where = empty($where) ? "WHERE " . $start . " <= ROWNUM AND ROWNUM <= " . $end : $where . $rowNumber;
+                                }
+                            });
+                        }
+                        $dt = $this->getCacheQueryData($json->dbConnection, $sql, $json->type);
+                        foreach ($dt as $row) {
+                            $option = new stdClass();
+                            $option->value = isset($row[0]) ? $row[0] : "";
+                            $option->label = isset($row[1]) ? $row[1] : "";
+                            $json->optionsSql[] = $option;
+                        }
+                        if (isset($json->queryField)) {
+                            $json->queryOutputData = $json->optionsSql;
+                        }
+                    }
+
+                    if ($json->datasource === "dataVariable") {
+                        $dataVariable = preg_match('/^\s*@.(.+)\s*$/', $json->dataVariable, $arrayMatch) ? $arrayMatch[1] : $json->dataVariable;
+                        if (isset($this->fields['APP_DATA'][$dataVariable]) && is_array($this->fields['APP_DATA'][$dataVariable])) {
+                            foreach ($this->fields['APP_DATA'][$dataVariable] as $row) {
+                                $option = new stdClass();
+                                $option->value = isset($row[0]) ? $row[0] : "";
+                                $option->label = isset($row[1]) ? $row[1] : "";
+                                $json->optionsSql[] = $option;
+                            }
+                        }
+                        if ($value === "suggest" && isset($json->queryField) && $json->queryField == true) {
+                            $json->queryOutputData = array();
+                            foreach ($json->optionsSql as $option) {
+                                if ($json->queryFilter !== '') {
+                                    if (stripos($option->label, $json->queryFilter) !== false) {
+                                        $json->queryOutputData[] = $option;
+                                    }
+                                } else {
+                                    $json->queryOutputData[] = $option;
                                 }
                             }
-                            break;
+                        }
                     }
                 }
                 //data
@@ -413,26 +531,27 @@ class pmDynaform
                     }
                 }
                 if ($key === "type" && ($value === "file") && isset($this->fields["APP_DATA"]["APPLICATION"])) {
-                    $oCriteria = new Criteria("workflow");
-                    $oCriteria->addSelectColumn(AppDocumentPeer::APP_DOC_UID);
-                    $oCriteria->addSelectColumn(AppDocumentPeer::DOC_VERSION);
-                    $oCriteria->addSelectColumn(ContentPeer::CON_VALUE);
-                    $oCriteria->addJoin(AppDocumentPeer::APP_DOC_UID, ContentPeer::CON_ID, Criteria::LEFT_JOIN);
-                    $oCriteria->add(AppDocumentPeer::APP_UID, $this->fields["APP_DATA"]["APPLICATION"]);
-                    $oCriteria->add(AppDocumentPeer::APP_DOC_FIELDNAME, $json->name);
-                    $oCriteria->add(ContentPeer::CON_CATEGORY, 'APP_DOC_FILENAME');
-                    $oCriteria->add(ContentPeer::CON_LANG, $this->lang);
-                    $oCriteria->addDescendingOrderByColumn(AppDocumentPeer::APP_DOC_CREATE_DATE);
-                    $oCriteria->setLimit(1);
-                    $rs = AppDocumentPeer::doSelectRS($oCriteria);
+                    $oCriteriaAppDocument = new Criteria("workflow");
+                    $oCriteriaAppDocument->addSelectColumn(AppDocumentPeer::APP_DOC_UID);
+                    $oCriteriaAppDocument->addSelectColumn(AppDocumentPeer::DOC_VERSION);
+                    $oCriteriaAppDocument->add(AppDocumentPeer::APP_UID, $this->fields["APP_DATA"]["APPLICATION"]);
+                    $oCriteriaAppDocument->add(AppDocumentPeer::APP_DOC_FIELDNAME, $json->name);
+                    $oCriteriaAppDocument->add(AppDocumentPeer::APP_DOC_STATUS, 'ACTIVE');
+                    $oCriteriaAppDocument->addDescendingOrderByColumn(AppDocumentPeer::APP_DOC_CREATE_DATE);
+                    $oCriteriaAppDocument->setLimit(1);
+                    $rs = AppDocumentPeer::doSelectRS($oCriteriaAppDocument);
                     $rs->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+                    $rs->next();
+
                     $links = array();
                     $labelsFromDb = array();
                     $appDocUids = array();
-                    while ($rs->next()) {
-                        $row = $rs->getRow();
+                    $oAppDocument = new AppDocument();
+
+                    if ($row = $rs->getRow()) {
+                        $oAppDocument->load($row["APP_DOC_UID"], $row["DOC_VERSION"]);
                         $links[] = "../cases/cases_ShowDocument?a=" . $row["APP_DOC_UID"] . "&v=" . $row["DOC_VERSION"];
-                        $labelsFromDb[] = $row["CON_VALUE"];
+                        $labelsFromDb[] = $oAppDocument->getAppDocFilename();
                         $appDocUids[] = $row["APP_DOC_UID"];
                     }
                     $json->data = new stdClass();
@@ -456,6 +575,17 @@ class pmDynaform
                     $row = $rs->getRow();
                     if (isset($row["INP_DOC_UID"])) {
                         $json->inputDocuments = array($row["INP_DOC_UID"]);
+                    }
+                }
+                if ($key === "type" && ($value === "multipleFile")) {
+                    $json->data = new stdClass();
+                    $json->data->value = "";
+                    $json->data->label = "";
+                    if (isset($this->fields["APP_DATA"][$json->name])) {
+                        $json->data->value = $this->fields["APP_DATA"][$json->name];
+                    }
+                    if (isset($this->fields["APP_DATA"][$json->name . "_label"])) {
+                        $json->data->label = $this->fields["APP_DATA"][$json->name . "_label"];
                     }
                 }
                 //synchronize var_label
@@ -515,7 +645,43 @@ class pmDynaform
                 }
                 //grid
                 if ($key === "type" && ($value === "grid")) {
-                    if (isset($this->fields["APP_DATA"][$json->name])) {
+                    $columnsDataVariable = [];
+                    //todo compatibility 'columnWidth'
+                    foreach ($json->columns as $column) {
+                        if (!isset($column->columnWidth) && $column->type !== "hidden") {
+                            $json->layout = "static";
+                            $column->columnWidth = "";
+                        }
+                        $column->parentIsGrid = true;
+                        //save dataVariable value, only for columns control
+                        if (!empty($column->dataVariable) && is_string($column->dataVariable)) {
+                            if (in_array(substr($column->dataVariable, 0, 2), self::$prefixs)) {
+                                $dataVariableValue = substr($column->dataVariable, 2);
+                                if (!in_array($dataVariableValue, $columnsDataVariable)) {
+                                    $columnsDataVariable[] = $dataVariableValue;
+                                }
+                            }
+                        }
+                    }
+                    //data grid environment
+                    $json->dataGridEnvironment = "onDataGridEnvironment";
+                    if (isset($this->fields["APP_DATA"])) {
+                        $dataGridEnvironment = $this->fields["APP_DATA"];
+                        $this->fields["APP_DATA"] = [];
+                        //restore AppData with dataVariable definition, only for columns control
+                        foreach ($columnsDataVariable as $dge) {
+                            if (isset($dataGridEnvironment[$dge])) {
+                                $this->fields["APP_DATA"][$dge] = $dataGridEnvironment[$dge];
+                            }
+                        }
+                    }
+                }
+                if ($key === "dataGridEnvironment" && ($value === "onDataGridEnvironment")) {
+                    if (isset($this->fields["APP_DATA"])) {
+                        $this->fields["APP_DATA"] = $dataGridEnvironment;
+                        $dataGridEnvironment = [];
+                    }
+                    if (isset($this->fields["APP_DATA"][$json->name]) && is_array($this->fields["APP_DATA"][$json->name])) {
                         //rows
                         $rows = $this->fields["APP_DATA"][$json->name];
                         foreach ($rows as $keyRow => $row) {
@@ -523,7 +689,7 @@ class pmDynaform
                             $cells = array();
                             foreach ($json->columns as $column) {
                                 //data
-                                if ($column->type === "text" || $column->type === "textarea" || $column->type === "dropdown" || $column->type === "suggest" || $column->type === "datetime" || $column->type === "checkbox" || $column->type === "file" || $column->type === "link" || $column->type === "hidden") {
+                                if ($column->type === "text" || $column->type === "textarea" || $column->type === "dropdown" || $column->type === "suggest" || $column->type === "datetime" || $column->type === "checkbox" || $column->type === "file" || $column->type === "multipleFile" || $column->type === "link" || $column->type === "hidden") {
                                     array_push($cells, array(
                                         "value" => isset($row[$column->name]) ? $row[$column->name] : "",
                                         "label" => isset($row[$column->name . "_label"]) ? $row[$column->name . "_label"] : (isset($row[$column->name]) ? $row[$column->name] : "")
@@ -534,13 +700,6 @@ class pmDynaform
                         }
                         $json->rows = count($rows);
                         $json->data = $rows;
-                    }
-                    //todo compatibility 'columnWidth'
-                    foreach ($json->columns as $column) {
-                        if (!isset($column->columnWidth) && $column->type !== "hidden") {
-                            $json->layout = "static";
-                            $column->columnWidth = "";
-                        }
                     }
                 }
                 //languages
@@ -591,9 +750,9 @@ class pmDynaform
         }
         $data = array();
         if (isset($json->dbConnection) && isset($json->sql)) {
-            $salida = array();
-            preg_match_all('/\@(?:([\@\%\#\=\!Qq])([a-zA-Z\_]\w*)|([a-zA-Z\_][\w\-\>\:]*)\(((?:[^\\\\\)]*?)*)\))/', $json->sql, $salida, PREG_PATTERN_ORDER | PREG_OFFSET_CAPTURE);
-            $variables = isset($salida[2]) ? $salida[2] : array();
+            $result = array();
+            preg_match_all('/\@(?:([\@\%\#\=\!Qq])([a-zA-Z\_]\w*)|([a-zA-Z\_][\w\-\>\:]*)\(((?:[^\\\\\)]*?)*)\))/', $json->sql, $result, PREG_PATTERN_ORDER | PREG_OFFSET_CAPTURE);
+            $variables = isset($result[2]) ? $result[2] : array();
             foreach ($variables as $key => $value) {
                 $jsonSearch = $this->jsonsf(G::json_decode($this->record["DYN_CONTENT"]), $value[0], $json->variable === "" ? "id" : "variable");
                 $a = $this->getValuesDependentFields($jsonSearch);
@@ -602,18 +761,18 @@ class pmDynaform
                 }
             }
             if ($json->dbConnection !== "" && $json->dbConnection !== "none" && $json->sql !== "") {
-                $cnn = Propel::getConnection($json->dbConnection);
-                $stmt = $cnn->createStatement();
-                try {
-                    $a = G::replaceDataField($json->sql, $data);
-                    $rs = $stmt->executeQuery($a, \ResultSet::FETCHMODE_NUM);
-                    $rs->next();
-                    $row = $rs->getRow();
-                    if (isset($row[0]) && $json->type !== "suggest") {
-                        $data[$json->variable === "" ? $json->id : $json->variable] = $row[0];
+                if (isset($this->fields["APP_DATA"])) {
+                    foreach ($this->fields["APP_DATA"] as $keyA => $valueA) {
+                        if (!isset($data[$keyA]) && !is_array($valueA)) {
+                            $data[$keyA] = $valueA;
+                        }
                     }
-                } catch (Exception $e) {
-
+                }
+                $sql = G::replaceDataField($json->sql, $data);
+                $dt = $this->getCacheQueryData($json->dbConnection, $sql, $json->type);
+                $row = isset($dt[0]) ? $dt[0] : [];
+                if (isset($row[0]) && $json->type !== "suggest" && $json->type !== "radio") {
+                    $data[$json->variable === "" ? $json->id : $json->variable] = $row[0];
                 }
             }
         }
@@ -627,6 +786,245 @@ class pmDynaform
             $data[$json->variable === "" ? $json->id : $json->variable] = $json->defaultValue;
         }
         return $data;
+    }
+
+    private function getCacheQueryData($connection, $sql, $type = "", $clearCache = false)
+    {
+        $data = [];
+        if (!empty($type)) {
+            $type = "-" . $type;
+        }
+        try {
+            if ($clearCache === true) {
+                unset($this->cache[md5($sql)]);
+            }
+            if (isset($this->cache[md5($sql)])) {
+                $data = $this->cache[md5($sql)];
+            } else {
+                $cnn = Propel::getConnection($connection);
+                $stmt = $cnn->createStatement();
+                $rs = $stmt->executeQuery($sql, \ResultSet::FETCHMODE_NUM);
+                while ($rs->next()) {
+                    $data[] = $rs->getRow();
+                }
+                $this->cache[md5($sql)] = $data;
+
+                $this->context["action"] = "execute-sql" . $type;
+                $this->context["sql"] = $sql;
+                \Bootstrap::registerMonolog("sqlExecution", 200, "Sql Execution", $this->context, $this->sysSys, "processmaker.log");
+            }
+        } catch (Exception $e) {
+            $this->context["action"] = "execute-sql" . $type;
+            $this->context["exception"] = (array) $e;
+            \Bootstrap::registerMonolog("sqlExecution", 400, "Sql Execution", $this->context, $this->sysSys, "processmaker.log");
+        }
+        return $data;
+    }
+
+    public function getDatabaseProvider($dbConnection)
+    {
+        if ($dbConnection === "workflow" || $dbConnection === "rbac" || $dbConnection === "rp") {
+            return "mysql";
+        }
+        if ($this->databaseProviders === null) {
+            $a = new Criteria("workflow");
+            $a->addSelectColumn(DbSourcePeer::DBS_UID);
+            $a->addSelectColumn(DbSourcePeer::DBS_TYPE);
+            $ds = DbSourcePeer::doSelectRS($a);
+            $ds->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+            $this->databaseProviders = [];
+            while ($ds->next()) {
+                $this->databaseProviders[] = $ds->getRow();
+            }
+        }
+        foreach ($this->databaseProviders as $key => $value) {
+            if ($value["DBS_UID"] === $dbConnection) {
+                return $value["DBS_TYPE"];
+            }
+        }
+        return null;
+    }
+
+    public function sqlParse($sql, $fn = null)
+    {
+        $sqlParser = new \PHPSQLParser($sql);
+        $parsed = $sqlParser->parsed;
+        if (!empty($parsed["SELECT"])) {
+            $options = isset($parsed["OPTIONS"]) && count($parsed["OPTIONS"]) > 0 ? implode(" ", $parsed["OPTIONS"]) : "";
+            if (!empty($options)) {
+                $options = $options . " ";
+            }
+            $select = "SELECT " . $options;
+            $dt = $parsed["SELECT"];
+            foreach ($dt as $key => $value) {
+                if ($key != 0) {
+                    $select .= ", ";
+                }
+                $sAlias = str_replace("`", "", $dt[$key]["alias"]);
+                $sBaseExpr = $dt[$key]["base_expr"];
+                if (strpos(strtoupper($sBaseExpr), "TOP") !== false) {
+                    $dt[$key]["expr_type"] = "";
+                    $sBaseExpr = trim($sBaseExpr) . " " . trim($sAlias);
+                }
+                switch ($dt[$key]["expr_type"]) {
+                    case "colref":
+                        if ($sAlias === $sBaseExpr) {
+                            $select .= $sAlias;
+                        } else {
+                            $select .= $sBaseExpr . " AS " . $sAlias;
+                        }
+                        break;
+                    case "expression":
+                        if ($sAlias === $sBaseExpr) {
+                            $select .= $sBaseExpr;
+                        } else {
+                            $select .= $sBaseExpr . " AS " . $sAlias;
+                        }
+                        break;
+                    case "subquery":
+                        if (strpos($sAlias, $sBaseExpr, 0) != 0) {
+                            $select .= $sAlias;
+                        } else {
+                            $select .= $sBaseExpr . " AS " . $sAlias;
+                        }
+                        break;
+                    case "operator":
+                        $select .= $sBaseExpr;
+                        break;
+                    default:
+                        $select .= $sBaseExpr;
+                        break;
+                }
+            }
+            $select = trim($select);
+
+            $isOffsetWord = false;
+
+            $from = "";
+            if (!empty($parsed["FROM"])) {
+                $from = "FROM ";
+                $dt = $parsed["FROM"];
+                foreach ($dt as $key => $value) {
+                    //reserved word: OFFSET
+                    if ($dt[$key]["alias"] === "OFFSET") {
+                        $isOffsetWord = true;
+                        $dt[$key]["alias"] = "";
+                    }
+                    if ($key == 0) {
+                        $from .= $dt[$key]["table"]
+                                . ($dt[$key]["table"] == $dt[$key]["alias"] ? "" : " " . $dt[$key]["alias"]);
+                    } else {
+                        $from .= " "
+                                . ($dt[$key]["join_type"] == "JOIN" ? "INNER" : $dt[$key]["join_type"])
+                                . " JOIN "
+                                . $dt[$key]["table"]
+                                . ($dt[$key]["table"] == $dt[$key]["alias"] ? "" : " " . $dt[$key]["alias"]) . " "
+                                . $dt[$key]["ref_type"] . " "
+                                . $dt[$key]["ref_clause"];
+                    }
+                }
+            }
+            $from = trim($from);
+
+            $where = "";
+            if (!empty($parsed["WHERE"])) {
+                $where = "WHERE ";
+                $dt = ($parsed['WHERE'][0]['expr_type'] == 'expression') ? $parsed['WHERE'][0]['sub_tree'] : $parsed["WHERE"];
+                $nw = count($dt);
+                //reserved word: OFFSET
+                if ($dt[$nw - 2]["base_expr"] === "OFFSET") {
+                    $isOffsetWord = true;
+                    if ($dt[$nw - 2]["expr_type"] === "colref") {
+                        $dt[$nw - 2]["base_expr"] = "";
+                    }
+                    if ($dt[$nw - 1]["expr_type"] === "const") {
+                        if (isset($parsed["LIMIT"]["start"])) {
+                            $parsed["LIMIT"]["start"] = $dt[$nw - 1]["base_expr"];
+                        }
+                        $dt[$nw - 1]["base_expr"] = "";
+                    }
+                }
+                foreach ($dt as $key => $value) {
+                    $where .= $value["base_expr"] . " ";
+                }
+            }
+            $where = trim($where);
+
+            $groupBy = "";
+            if (!empty($parsed["GROUP"])) {
+                $groupBy = "GROUP BY ";
+                $dt = $parsed["GROUP"];
+                foreach ($dt as $key => $value) {
+                    $search = preg_replace("/ ASC$/i", "", $value["base_expr"]);
+                    $groupBy .= $search . ", ";
+                }
+                $groupBy = rtrim($groupBy, ", ");
+            }
+            $groupBy = trim($groupBy);
+
+            $having = "";
+            if (!empty($parsed["HAVING"])) {
+                $having = "HAVING ";
+                $dt = $parsed["HAVING"];
+                foreach ($dt as $key => $value) {
+                    $having .= $value["base_expr"] . " ";
+                }
+            }
+            $having = trim($having);
+
+            $orderBy = "";
+            if (!empty($parsed["ORDER"])) {
+                $orderBy = "ORDER BY ";
+                $dt = $parsed["ORDER"];
+                foreach ($dt as $key => $value) {
+                    $search = preg_replace("/ ASC$/i", "", $value["base_expr"]);
+                    $orderBy .= $search . " " . $value["direction"] . ", ";
+                }
+                $orderBy = rtrim($orderBy, ", ");
+            }
+            $orderBy = trim($orderBy);
+
+            $limit = "";
+            if (!empty($parsed["LIMIT"])) {
+                if ($isOffsetWord == false) {
+                    $limit = "LIMIT " . $parsed["LIMIT"]["start"] . ", " . $parsed["LIMIT"]["end"];
+                }
+                if ($isOffsetWord == true) {
+                    $limit = "OFFSET " . $parsed["LIMIT"]["start"] . " LIMIT " . $parsed["LIMIT"]["end"];
+                }
+            }
+
+            if ($fn !== null && (is_callable($fn) || function_exists($fn))) {
+                $fn($parsed, $select, $from, $where, $groupBy, $having, $orderBy, $limit);
+            }
+
+            $dt = [$select, $from, $where, $groupBy, $having, $orderBy, $limit];
+            $query = "";
+            foreach ($dt as $val) {
+                $val = trim($val);
+                if (!empty($val)) {
+                    $query = $query . $val . " ";
+                }
+            }
+            return $query;
+        }
+        if (!empty($parsed["CALL"])) {
+            $sCall = "CALL ";
+            $aCall = $parsed["CALL"];
+            foreach ($aCall as $key => $value) {
+                $sCall .= $value . " ";
+            }
+            return $sCall;
+        }
+        if (!empty($parsed["EXECUTE"])) {
+            $sCall = "EXECUTE ";
+            $aCall = $parsed["EXECUTE"];
+            foreach ($aCall as $key => $value) {
+                $sCall .= $value . " ";
+            }
+            return $sCall;
+        }
+        return $sql;
     }
 
     public function isResponsive()
@@ -670,12 +1068,17 @@ class pmDynaform
                 var fieldsRequired = null;
                 var triggerDebug = false;
                 var sysLang = \"" . SYS_LANG . "\";
+                var isRTL = \"" . $this->isRTL . "\";
+                var pathRTLCss = \"" . $this->pathRTLCss . "\";
+                var delIndex = " . (isset($this->fields["DEL_INDEX"]) ? $this->fields["DEL_INDEX"] : "0") . ";
                 $(window).load(function ()
                 {
                     var data = jsondata;
 
                     window.dynaform = new PMDynaform.core.Project({
                         data: data,
+                        delIndex: delIndex,
+                        dynaformUid:  dyn_uid,
                         keys: {
                             server: httpServerHostname,
                             projectId: prj_uid,
@@ -726,10 +1129,16 @@ class pmDynaform
                 "var fieldsRequired = null;\n" .
                 "var triggerDebug = null;\n" .
                 "var sysLang = '" . SYS_LANG . "';\n" .
+                "var isRTL = " . $this->isRTL . ";\n" .
+                "var pathRTLCss = '" . $this->pathRTLCss . "';\n" .
+                "var delIndex = " . (isset($this->fields["DEL_INDEX"]) ? $this->fields["DEL_INDEX"] : "0") . ";\n" .
+                "var leaveCaseWarning = " . $this->getLeaveCaseWarning() . ";\n" .
                 "$(window).load(function () {\n" .
                 "    var data = jsondata;\n" .
                 "    window.dynaform = new PMDynaform.core.Project({\n" .
                 "        data: data,\n" .
+                "        delIndex: delIndex,\n" .
+                "        dynaformUid:  dyn_uid,\n" .
                 "        keys: {\n" .
                 "            server: httpServerHostname,\n" .
                 "            projectId: prj_uid,\n" .
@@ -785,7 +1194,7 @@ class pmDynaform
                 "</table>\n";
         $javascrip = "" .
                 "<script type='text/javascript'>\n" .
-                "var jsondata = " . G::json_encode($json) . ";\n" .
+                "var jsondata = " . $this->json_encode($json) . ";\n" .
                 "var httpServerHostname = \"" . System::getHttpServerHostnameRequestsFrontEnd() . "\";\n" .
                 "var pm_run_outside_main_app = '" . $this->fields["PM_RUN_OUTSIDE_MAIN_APP"] . "';\n" .
                 "var dyn_uid = '" . $this->fields["CURRENT_DYNAFORM"] . "';\n" .
@@ -799,6 +1208,10 @@ class pmDynaform
                 "var fieldsRequired = null;\n" .
                 "var triggerDebug = " . ($this->fields["TRIGGER_DEBUG"] === 1 ? "true" : "false") . ";\n" .
                 "var sysLang = '" . SYS_LANG . "';\n" .
+                "var isRTL = " . $this->isRTL . ";\n" .
+                "var pathRTLCss = '" . $this->pathRTLCss . "';\n" .
+                "var delIndex = " . (isset($this->fields["DEL_INDEX"]) ? $this->fields["DEL_INDEX"] : "0") . ";\n" .
+                "var leaveCaseWarning = " . $this->getLeaveCaseWarning() . ";\n" .
                 "</script>\n" .
                 "<script type='text/javascript' src='/jscore/cases/core/cases_Step.js'></script>\n" .
                 "<script type='text/javascript' src='/jscore/cases/core/pmDynaform.js'></script>\n" .
@@ -852,6 +1265,10 @@ class pmDynaform
             var fieldsRequired = null;
             var triggerDebug   = null;
             var sysLang = \"" . SYS_LANG . "\";
+            var isRTL = \"" . $this->isRTL . "\";
+            var pathRTLCss = \"" . $this->pathRTLCss . "\";
+            var delIndex = " . (isset($this->fields["DEL_INDEX"]) ? $this->fields["DEL_INDEX"] : "0") . ";
+            var leaveCaseWarning = " . $this->getLeaveCaseWarning() . ";
         </script>
 
         <script type=\"text/javascript\" src=\"/jscore/cases/core/pmDynaform.js\"></script>
@@ -892,6 +1309,10 @@ class pmDynaform
                 "var fieldsRequired = " . G::json_encode(array()) . ";\n" .
                 "var triggerDebug = null;\n" .
                 "var sysLang = '" . SYS_LANG . "';\n" .
+                "var isRTL = " . $this->isRTL . ";\n" .
+                "var pathRTLCss = '" . $this->pathRTLCss . "';\n" .
+                "var delIndex = " . (isset($this->fields["DEL_INDEX"]) ? $this->fields["DEL_INDEX"] : "0") . ";\n" .
+                "var leaveCaseWarning = " . $this->getLeaveCaseWarning() . ";\n" .
                 "</script>\n" .
                 "<script type='text/javascript' src='/jscore/cases/core/pmDynaform.js'></script>\n" .
                 "<div style='width:100%;padding: 0px 10px 0px 10px;margin:15px 0px 0px 0px;'>\n" .
@@ -930,6 +1351,10 @@ class pmDynaform
                 "var fieldsRequired = " . G::json_encode(array()) . ";\n" .
                 "var triggerDebug = null;\n" .
                 "var sysLang = '" . SYS_LANG . "';\n" .
+                "var isRTL = " . $this->isRTL . ";\n" .
+                "var pathRTLCss = '" . $this->pathRTLCss . "';\n" .
+                "var delIndex = " . (isset($this->fields["DEL_INDEX"]) ? $this->fields["DEL_INDEX"] : "0") . ";\n" .
+                "var leaveCaseWarning = " . $this->getLeaveCaseWarning() . ";\n" .
                 "</script>\n" .
                 "<script type='text/javascript' src='/jscore/cases/core/pmDynaform.js'></script>\n" .
                 "<div style='width:100%;padding: 0px 10px 0px 10px;margin:15px 0px 0px 0px;'>\n" .
@@ -951,8 +1376,12 @@ class pmDynaform
         $javascrip = "" .
                 "<script type='text/javascript'>" .
                 "var sysLang = '" . SYS_LANG . "';\n" .
-                "var jsonData = " . G::json_encode($json) . ";\n" .
+                "var isRTL = " . $this->isRTL . ";\n" .
+                "var pathRTLCss = '" . $this->pathRTLCss . "';\n" .
+                "var delIndex = " . (isset($this->fields["DEL_INDEX"]) ? $this->fields["DEL_INDEX"] : "0") . ";\n" .
+                "var jsonData = " . $this->json_encode($json) . ";\n" .
                 "var httpServerHostname = \"" . System::getHttpServerHostnameRequestsFrontEnd() . "\";\n" .
+                "var leaveCaseWarning = " . $this->getLeaveCaseWarning() . ";\n" .
                 $js .
                 "</script>";
 
@@ -985,6 +1414,10 @@ class pmDynaform
                 "var fieldsRequired = " . G::json_encode(array()) . ";\n" .
                 "var triggerDebug = null;\n" .
                 "var sysLang = '" . SYS_LANG . "';\n" .
+                "var isRTL = " . $this->isRTL . ";\n" .
+                "var pathRTLCss = '" . $this->pathRTLCss . "';\n" .
+                "var delIndex = " . (isset($this->fields["DEL_INDEX"]) ? $this->fields["DEL_INDEX"] : "0") . ";\n" .
+                "var leaveCaseWarning = " . $this->getLeaveCaseWarning() . ";\n" .
                 "</script>\n" .
                 "<script type='text/javascript' src='/jscore/cases/core/pmDynaform.js'></script>\n" .
                 "<div style='width:100%;padding: 0px 10px 0px 10px;margin:15px 0px 0px 0px;'>\n" .
@@ -1199,7 +1632,54 @@ class pmDynaform
         return false;
     }
 
-    public function searchField($dyn_uid, $field_id)
+    public function searchField($dyn_uid, $field_id, $pro_uid = null)
+    {
+        //get pro_uid if empty
+        if (empty($pro_uid)) {
+            $a = new Criteria("workflow");
+            $a->addSelectColumn(DynaformPeer::PRO_UID);
+            $a->add(DynaformPeer::DYN_UID, $dyn_uid, Criteria::EQUAL);
+            $ds = DynaformPeer::doSelectRS($a);
+            $ds->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+            $ds->next();
+            $row = $ds->getRow();
+            $pro_uid = $row["PRO_UID"];
+        }
+        //get dynaforms
+        $a = new Criteria("workflow");
+        $a->addSelectColumn(DynaformPeer::DYN_UID);
+        $a->addSelectColumn(DynaformPeer::DYN_CONTENT);
+        $a->add(DynaformPeer::PRO_UID, $pro_uid, Criteria::EQUAL);
+        $ds = DynaformPeer::doSelectRS($a);
+        $ds->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+
+        $json = new stdClass();
+        $dynaforms = array();
+        while ($ds->next()) {
+            $row = $ds->getRow();
+            if ($row["DYN_UID"] === $dyn_uid) {
+                $json = G::json_decode($row["DYN_CONTENT"]);
+            } else {
+                $dynaforms[] = G::json_decode($row["DYN_CONTENT"]);
+            }
+        }
+        //get  subforms
+        $fields = $this->jsonsf2($json, "form", "type");
+        foreach ($fields as $key => $value) {
+            if ($json->items[0]->id !== $value->id) {
+                foreach ($dynaforms as $dynaform) {
+                    if ($value->id === $dynaform->items[0]->id) {
+                        $form = $dynaform->items[0];
+                        $this->jsonReplace($json, $value->id, "id", $form);
+                    }
+                }
+            }
+        }
+
+        return $this->jsonsf($json, $field_id);
+    }
+
+    public function searchFieldByName($dyn_uid, $name)
     {
         $a = new Criteria("workflow");
         $a->addSelectColumn(DynaformPeer::DYN_CONTENT);
@@ -1209,7 +1689,8 @@ class pmDynaform
         $ds->next();
         $row = $ds->getRow();
         $json = G::json_decode($row["DYN_CONTENT"]);
-        return $this->jsonsf($json, $field_id);
+        $this->jsonr($json);
+        return $this->jsonsf($json, $name, "name");
     }
 
     private function jsonsf(&$json, $id, $for = "id")
@@ -1488,6 +1969,12 @@ class pmDynaform
                 if ($validatorClass !== null) {
                     $validatorClass->validatePost($post);
                 }
+                //Clears the data in the appData for grids
+                if (array_key_exists($json->id, $this->fields) && $json->type === 'grid' &&
+                    !array_key_exists($json->id, $post)
+                ) {
+                    $post[$json->variable] = array(array());
+                }
             }
         };
         $json = G::json_decode($this->record["DYN_CONTENT"]);
@@ -1575,6 +2062,152 @@ class pmDynaform
             return "";
         }
         return (string) $value;
+    }
+
+    /**
+     * Get grids and fields
+     *
+     * @param mixed $form
+     * @param bool  $flagGridAssocToVar
+     *
+     * @return array Return an array, FALSE otherwise
+     */
+    public static function getGridsAndFields($form, $flagGridAssocToVar = true)
+    {
+        try {
+            if (!is_object($form)) {
+                //This code it runs only in the first call to the method
+                $object = \ProcessMaker\Util\Common::stringToJson($form);
+
+                if ($object !== false) {
+                    $form = $object->items[0];
+                } else {
+                    return false;
+                }
+            }
+
+            $arrayGrid = [];
+
+            foreach ($form->items as $value) {
+                foreach ($value as $value2) {
+                    $field = $value2;
+
+                    if (isset($field->type)) {
+                        switch ($field->type) {
+                            case 'grid':
+                                $flagInsert = ($flagGridAssocToVar)? (isset($field->var_uid) && $field->var_uid != '' && isset($field->variable) && $field->variable != '') : true;
+
+                                if ($flagInsert) {
+                                    $arrayGrid[$field->id] = $field;
+                                }
+                                break;
+                            case 'form':
+                                $arrayGrid = array_merge(
+                                    $arrayGrid, self::getGridsAndFields($field, $flagGridAssocToVar)
+                                );
+                                break;
+                        }
+                    }
+                }
+            }
+
+            //Return
+            return $arrayGrid;
+        } catch (Exception $e) {
+            throw $e;
+        }
+    }
+
+    /**
+     * Returns a string containing the JSON representation of the object
+     *
+     * @param object $json The object being encoded
+     *
+     * @return string Returns a string
+     */
+    public function json_encode($json)
+    {
+        $jsonData = G::json_encode($json);
+
+        if ($jsonData === false) {
+            $jsonLastError = json_last_error();
+            $jsonLastErrorMsg = json_last_error_msg();
+            $token = time();
+
+            $obj = new stdClass();
+            $obj->type = 'panel';
+            $obj->id = '__json_encode_error__';
+            $obj->content = '
+                <div style="border: 1px solid #9A3A1F; background: #F7DBCE; color: #8C0000; font:0.9em arial, verdana, helvetica, sans-serif;">
+                <div style="margin: 0.5em;">
+                <img src="/images/documents/_log_error.png" alt="" style="margin-right: 0.8em; vertical-align: middle;" />' .
+                G::LoadTranslation('ID_EXCEPTION_LOG_INTERFAZ', [$token]) .
+                '</div></div>';
+            $obj->border = 0;
+
+            $json->items[0]->items = [[$obj]];
+
+            $jsonData = G::json_encode($json);
+
+            //Log
+            \Bootstrap::registerMonolog(
+                'RenderDynaForm',
+                400,
+                'JSON encoded string error ' . $jsonLastError . ': ' . $jsonLastErrorMsg,
+                ['token' => $token, 'projectUid' => $this->record['PRO_UID'], 'dynaFormUid' => $this->record['DYN_UID']],
+                SYS_SYS,
+                'processmaker.log'
+            );
+        }
+
+        //Return
+        return $jsonData;
+    }
+    
+    public function getLeaveCaseWarning()
+    {
+        return defined("LEAVE_CASE_WARNING") ? LEAVE_CASE_WARNING : 0;
+    }
+
+    /**
+     * Unset a json property from the following controls: text, textarea, dropdown,
+     * checkbox, checkgroup, radio, datetime, suggest, hidden, file, grid.
+     * @param stdClass $json
+     * @param string $property
+     * @return void
+     */
+    public function jsonUnsetProperty(&$json, $property)
+    {
+        if (empty($json)) {
+            return;
+        }
+        foreach ($json as $key => &$value) {
+            $sw1 = is_array($value);
+            $sw2 = is_object($value);
+            if ($sw1 || $sw2) {
+                $this->jsonUnsetProperty($value, $property);
+            }
+            if (!$sw1 && !$sw2) {
+                if ($key === "type" && (
+                        $value === "text" ||
+                        $value === "textarea" ||
+                        $value === "dropdown" ||
+                        $value === "checkbox" ||
+                        $value === "checkgroup" ||
+                        $value === "radio" ||
+                        $value === "datetime" ||
+                        $value === "suggest" ||
+                        $value === "hidden" ||
+                        $value === "file" ||
+                        $value === "grid")) {
+                    if ($value === "grid" && $property === "data") {
+                        $json->{$property} = [];
+                    } else {
+                        unset($json->{$property});
+                    }
+                }
+            }
+        }
     }
 
 }

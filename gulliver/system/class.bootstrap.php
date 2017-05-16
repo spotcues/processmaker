@@ -7,6 +7,7 @@
  */
 class Bootstrap
 {
+    const hashFx = 'md5';
     public static $includeClassPaths = array();
     public static $includePaths = array();
     protected $relativeIncludePaths = array();
@@ -77,12 +78,10 @@ class Bootstrap
         self::registerClass("DBRecordSet", PATH_GULLIVER . "class.dbrecordset.php");
         self::registerClass("DBSession", PATH_GULLIVER . "class.dbsession.php");
         self::registerClass("DBTable", PATH_GULLIVER . "class.dbtable.php");
-        self::registerClass("XmlForm_Field_HTML", PATH_GULLIVER . "class.dvEditor.php");
         self::registerClass("dynaFormHandler", PATH_GULLIVER . "class.dynaformhandler.php");
         self::registerClass("G_Error", PATH_GULLIVER . "class.error.php");
         self::registerClass("filterForm", PATH_GULLIVER . "class.filterForm.php");
         self::registerClass("Form", PATH_GULLIVER . "class.form.php");
-        self::registerClass("functionTest", PATH_GULLIVER . "class.functionTest.php");
         self::registerClass("G", PATH_GULLIVER . "class.g.php");
         self::registerClass("headPublisher", PATH_GULLIVER . "class.headPublisher.php");
         self::registerClass("Helper", PATH_GULLIVER . "class.helper.php");
@@ -99,6 +98,7 @@ class Bootstrap
         self::registerClass("PMException", PATH_GULLIVER . "class.pmException.php");
         self::registerClass("Publisher", PATH_GULLIVER . "class.publisher.php");
         self::registerClass("RBAC", PATH_GULLIVER . "class.rbac.php");
+        self::registerClass("MonologProvider", PATH_GULLIVER . "class.monologProvider.php");
         self::registerClass("RestClient", PATH_GULLIVER . "class.restClient.php");
         self::registerClass("soapNtlm", PATH_GULLIVER . "class.soapNtlm.php");
         self::registerClass("NTLMSoapClient", PATH_GULLIVER . "class.soapNtlm.php");
@@ -107,9 +107,7 @@ class Bootstrap
         self::registerClass("Table", PATH_GULLIVER . "class.table.php");
         self::registerClass("TemplatePowerParser", PATH_GULLIVER . "class.templatePower.php");
         self::registerClass("TemplatePower", PATH_GULLIVER . "class.templatePower.php");
-        self::registerClass("testTools", PATH_GULLIVER . "class.testTools.php");
         self::registerClass("Tree", PATH_GULLIVER . "class.tree.php");
-        self::registerClass("unitTest", PATH_GULLIVER . "class.unitTest.php");
         self::registerClass("WebResource", PATH_GULLIVER . "class.webResource.php");
         self::registerClass("XmlForm_Field_WYSIWYG_EDITOR", PATH_GULLIVER . "class.wysiwygEditor.php");
         self::registerClass("Xml_Node", PATH_GULLIVER . "class.xmlDocument.php");
@@ -162,8 +160,6 @@ class Bootstrap
         self::registerClass("XmlForm_Field_DVEditor", PATH_GULLIVER . "class.xmlformExtension.php");
         self::registerClass("XmlForm_Field_FastSearch", PATH_GULLIVER . "class.xmlformExtension.php");
         self::registerClass("xmlformTemplate", PATH_GULLIVER . "class.xmlformTemplate.php");
-        self::registerClass("ymlDomain", PATH_GULLIVER . "class.ymlDomain.php");
-        self::registerClass("ymlTestCases", PATH_GULLIVER . "class.ymlTestCases.php");
 
         // ProcessMaker classes
         self::registerClass("InvalidIndexSearchTextException", PATH_CLASSES . "class.AppSolr.php");
@@ -578,9 +574,11 @@ class Bootstrap
      * @author Fernando Ontiveros Lira <fernando@colosa.com>
      * @access public
      * @param string $urlLink
+     * @param array  $arrayFriendlyUri
+     *
      * @return string
      */
-    static public function parseURI($uri)
+    static public function parseURI($uri, array $arrayFriendlyUri = null)
     {
         // *** process the $_POST with magic_quotes enabled
         // The magic_quotes_gpc feature has been DEPRECATED as of PHP 5.3.0.
@@ -589,7 +587,7 @@ class Bootstrap
         }
 
         $aRequestUri = explode('/', $uri);
-        $args = self::parseNormalUri($aRequestUri);
+        $args = self::parseNormalUri($aRequestUri, $arrayFriendlyUri);
 
         if (! empty($args)) {
             define("SYS_LANG", $args ['SYS_LANG']);
@@ -615,9 +613,12 @@ class Bootstrap
      * 0 to delete the temporary file flag
      * 1 to set the temporary file flag.
      * 2 or bigger to check if the temporary file exists.
+     * @content Contains the content of the temporary file
+     * true to all workspace
+     * nameWorkspace to specific workspace
      * return true if the file exists, otherwise false.
      */
-    public function isPMUnderUpdating($setFlag = 2)
+    public function isPMUnderUpdating($setFlag = 2, $content="true")
     {
         if (!defined('PATH_DATA')) {
             return false;
@@ -630,12 +631,16 @@ class Bootstrap
             }
         } elseif ($setFlag == 1) {
             $fp = fopen($fileCheck, 'w');
-            $line = fputs($fp, "true");
+            $line = fputs($fp, $content);
         }
         // checking temporary file
         if ($setFlag >= 1) {
             if (file_exists($fileCheck)) {
-                return true;
+                $res['action'] = true;
+                $fp = fopen($fileCheck, "r");
+                $res['workspace'] = fread($fp, filesize($fileCheck));
+                fclose($fp);
+                return $res;
             }
         }
         return false;
@@ -841,7 +846,10 @@ class Bootstrap
                 $skinEngine = new SkinEngine('publish', 'blank', '');
                 $skinEngine->dispatch();
             } else {
-                die($e->getMessage());
+                $token = strtotime("now");
+                PMException::registerErrorLog($e, $token);
+                G::outRes( G::LoadTranslation("ID_EXCEPTION_LOG_INTERFAZ", array($token)) );
+                die;
             }
         }
     }
@@ -1121,7 +1129,6 @@ class Bootstrap
 
         $outputHeader = "/* Autogenerated CSS file by gulliver framework \n";
         $outputHeader .= "   Skin: $filename\n";
-        $outputHeader .= "   Configuration: $configurationFile\n";
         $mtimeNow = date('U');
         $gmt_mtimeNow = gmdate("D, d M Y H:i:s", $mtimeNow) . " GMT";
         $outputHeader .= "   Date: $gmt_mtimeNow*/\n";
@@ -1154,7 +1161,7 @@ class Bootstrap
         //Read Configuration File
         $xmlConfiguration = file_get_contents($configurationFile);
         $xmlConfigurationObj = Bootstrap::xmlParser($xmlConfiguration);
-        
+
         if (!isset($xmlConfigurationObj->result['skinConfiguration']['__CONTENT__']['cssFiles']['__CONTENT__'][$skinVariant]['__CONTENT__'])) {
             $xmlConfigurationObj->result['skinConfiguration']['__CONTENT__']['cssFiles']['__CONTENT__'][$skinVariant]['__CONTENT__'] = array('cssFile' => array());
         }
@@ -2087,9 +2094,11 @@ class Bootstrap
     /**
      *
      * @param unknown_type $aRequestUri
+     * @param array        $arrayFriendlyUri
+     *
      * @return multitype:string mixed Ambigous <number, string>
      */
-    public function parseNormalUri($aRequestUri)
+    public function parseNormalUri($aRequestUri, array $arrayFriendlyUri = null)
     {
         if (substr($aRequestUri[1], 0, 3) == 'sys') {
             define('SYS_TEMP', substr($aRequestUri[1], 3));
@@ -2152,8 +2161,21 @@ class Bootstrap
         $args["SYS_TARGET"] = array_shift($uriVars);
 
         //to enable more than 2 directories...in the methods structure
-        while (!empty($uriVars)) {
-            $args["SYS_TARGET"] = $args["SYS_TARGET"] . "/" . array_shift($uriVars);
+        $key = $args['SYS_COLLECTION'] . '/' . $args['SYS_TARGET'];
+        $flagSysTarget = true;
+
+        if (!is_null($arrayFriendlyUri) && !empty($arrayFriendlyUri) && isset($arrayFriendlyUri[$key])) {
+            if (!preg_match($arrayFriendlyUri[$key], array_shift($uriVars))) {
+                $args['SYS_TARGET'] = false;
+            }
+
+            $flagSysTarget = false;
+        }
+
+        if ($flagSysTarget) {
+            while (!empty($uriVars)) {
+                $args['SYS_TARGET'] = $args['SYS_TARGET'] . '/' . array_shift($uriVars);
+            }
         }
 
         /* Fix to prevent use uxs skin outside siplified interface,
@@ -2327,92 +2349,6 @@ class Bootstrap
                 }
             }
         }
-    }
-
-    /* Returns a sql string with @@parameters replaced with its values defined
-     * in array $result using the next notation:
-     * NOTATION:
-     *     @@  Quoted parameter acording to the SYSTEM's Database
-     *     @Q  Double quoted parameter \\  \"
-     *     @q  Single quoted parameter \\  \'
-     *     @%  URL string
-     *     @#  Non-quoted parameter
-     *     @!  Evaluate string : Replace the parameters in value and then in the sql string
-     *     @fn()  Evaluate string with the function "fn"
-     * @author David Callizaya <calidavidx21@hotmail.com>
-     */
-
-    public function replaceDataField($sqlString, $result, $DBEngine = 'mysql')
-    {
-        if (!is_array($result)) {
-            $result = array();
-        }
-        $result = $result + Bootstrap::getSystemConstants();
-        $__textoEval = "";
-        $u = 0;
-        //$count=preg_match_all('/\@(?:([\@\%\#\!Qq])([a-zA-Z\_]\w*)|([a-zA-Z\_][\w\-\>\:]*)\(((?:[^\\\\\)]*(?:[\\\\][\w\W])?)*)\))/',$sqlString,$match,PREG_PATTERN_ORDER | PREG_OFFSET_CAPTURE);
-        $count = preg_match_all('/\@(?:([\@\%\#\=\!Qq])([a-zA-Z\_]\w*)|([a-zA-Z\_][\w\-\>\:]*)\(((?:[^\\\\\)]*?)*)\))/', $sqlString, $match, PREG_PATTERN_ORDER | PREG_OFFSET_CAPTURE);
-        if ($count) {
-            for ($r = 0; $r < $count; $r++) {
-                if (!isset($result[$match[2][$r][0]])) {
-                    $result[$match[2][$r][0]] = '';
-                }
-                if (!is_array($result[$match[2][$r][0]])) {
-                    $__textoEval .= substr($sqlString, $u, $match[0][$r][1] - $u);
-                    $u = $match[0][$r][1] + strlen($match[0][$r][0]);
-                    //Mysql quotes scape
-                    if (($match[1][$r][0] == '@') && (isset($result[$match[2][$r][0]]))) {
-                        $__textoEval .= "\"" . Bootstrap::sqlEscape($result[$match[2][$r][0]], $DBEngine) . "\"";
-                        continue;
-                    }
-                    //URL encode
-                    if (($match[1][$r][0] == '%') && (isset($result[$match[2][$r][0]]))) {
-                        $__textoEval.=urlencode($result[$match[2][$r][0]]);
-                        continue;
-                    }
-                    //Double quoted parameter
-                    if (($match[1][$r][0] == 'Q') && (isset($result[$match[2][$r][0]]))) {
-                        $__textoEval.='"' . addcslashes($result[$match[2][$r][0]], '\\"') . '"';
-                        continue;
-                    }
-                    //Single quoted parameter
-                    if (($match[1][$r][0] == 'q') && (isset($result[$match[2][$r][0]]))) {
-                        $__textoEval.="'" . addcslashes($result[$match[2][$r][0]], '\\\'') . "'";
-                        continue;
-                    }
-                    //Substring (Sub replaceDataField)
-                    if (($match[1][$r][0] == '!') && (isset($result[$match[2][$r][0]]))) {
-                        $__textoEval.=Bootstrap::replaceDataField($result[$match[2][$r][0]], $result);
-                        continue;
-                    }
-                    //Call function
-                    if (($match[1][$r][0] === '') && ($match[2][$r][0] === '') && ($match[3][$r][0] !== '')) {
-                        eval('$strAux = ' . $match[3][$r][0] . '(\'' . addcslashes(Bootstrap::replaceDataField(stripslashes($match[4][$r][0]), $result), '\\\'') . '\');');
-
-                        if ($match[3][$r][0] == "Bootstrap::LoadTranslation") {
-                            $arraySearch = array("'");
-                            $arrayReplace = array("\\'");
-                            $strAux = str_replace($arraySearch, $arrayReplace, $strAux);
-                        }
-
-                        $__textoEval .= $strAux;
-                        continue;
-                    }
-                    //Non-quoted
-                    if (($match[1][$r][0] == '#') && (isset($result[$match[2][$r][0]]))) {
-                        $__textoEval.=Bootstrap::replaceDataField($result[$match[2][$r][0]], $result);
-                        continue;
-                    }
-                    //Non-quoted =
-                    if (($match[1][$r][0] == '=') && (isset($result[$match[2][$r][0]]))) {
-                        $__textoEval.=Bootstrap::replaceDataField($result[$match[2][$r][0]], $result);
-                        continue;
-                    }
-                }
-            }
-        }
-        $__textoEval.=substr($sqlString, $u);
-        return $__textoEval;
     }
 
     /**
@@ -2946,16 +2882,15 @@ class Bootstrap
         }
         return false;
     }
+
     /**
-    * encryptOld
-    *
-    * @param string $string
-    *
-    * @return md5($string)
-    */
+     * @param $string
+     * @return mixed
+     */
     public function encryptOld ($string)
     {
-        return md5($string);
+        $consthashFx = self::hashFx;
+        return $consthashFx($string);
     }
 
     /**
@@ -2994,5 +2929,97 @@ class Bootstrap
         }
         return $isIE;
     }
+
+    /**
+     * Stores a message in the log file, if the file size exceeds
+     *
+     * @param string $channel
+     * @param string $message
+     * @param array  $context
+     * @param string $file
+     * @param string $pathData
+     * @param string $ws workspace
+     *
+     * @return void
+     */
+    public static function registerMonolog($channel, $level, $message, $context, $ws, $file = 'cron.log', $pathData = PATH_DATA)
+    {
+        $fileLog = $pathData .'sites'. PATH_SEP . $ws . PATH_SEP . 'log' . PATH_SEP . $file;
+
+        $registerLogger = &MonologProvider::getSingleton($channel, $fileLog);
+        $registerLogger->addLog($level, $message, $context);
+    }
+
+    /**
+     * Get the default information from the context
+     *
+     * @return array $aContext void
+     */
+    public static function getDefaultContextLog(){
+        $sysSys = (defined("SYS_SYS"))? SYS_SYS : "Undefined";
+        $date = \ProcessMaker\Util\DateTime::convertUtcToTimeZone(date('Y-m-d H:m:s'));
+        $aContext = array(
+            'ip'           => \G::getIpAddress()
+            ,'timeZone'    => $date
+            ,'workspace'   => $sysSys
+        );
+        return $aContext;
+    }
+
+    /**
+     * get DISABLE_PHP_UPLOAD_EXECUTION value defined in env.ini
+     * @return int
+     */
+    public static function getDisablePhpUploadExecution()
+    {
+        $disablePhpUploadExecution = 0;
+        if (defined("DISABLE_PHP_UPLOAD_EXECUTION")) {
+            $disablePhpUploadExecution = (int) DISABLE_PHP_UPLOAD_EXECUTION;
+        }
+        return $disablePhpUploadExecution;
+    }
+
+    /**
+     * Record the action of executing a php file or attempting to upload a php
+     * file in server.
+     * @param type $channel
+     * @param type $level
+     * @param type $message
+     * @param type $fileName
+     */
+    public static function registerMonologPhpUploadExecution($channel, $level, $message, $fileName)
+    {
+        $context = \Bootstrap::getDefaultContextLog();
+        $context['action'] = $channel;
+        $context['filename'] = $fileName;
+        if (defined("SYS_CURRENT_URI") && defined("SYS_CURRENT_PARMS")) {
+            $context['url'] = SYS_CURRENT_URI . '?' . SYS_CURRENT_PARMS;
+        }
+        $context['usrUid'] = isset($_SESSION['USER_LOGGED']) ? $_SESSION['USER_LOGGED'] : '';
+        $sysSys = defined("SYS_SYS") ? SYS_SYS : "Undefined";
+        \Bootstrap::registerMonolog($channel, $level, $message, $context, $sysSys, 'processmaker.log');
+    }
+
+    /*
+     * Set the constant to related the Workspaces
+     *
+     * @param string $workspace
+     *
+     * @return void
+     */
+    public static function setConstantsRelatedWs($wsName = null) {
+        if (!defined('SYS_SYS') && !is_null($wsName)) {
+            //If SYS_SYS exists, is not update with $wsName
+            define('SYS_SYS', $wsName);
+        }
+        if (defined('SYS_SYS') && !defined('PATH_DATA_SITE')) {
+            define('PATH_DATA_SITE', PATH_DATA . 'sites' . PATH_SEP . SYS_SYS . PATH_SEP);
+        }
+        if (defined('PATH_DATA_SITE') && !defined('PATH_WORKSPACE')) {
+            define('PATH_WORKSPACE', PATH_DATA_SITE);
+        }
+        set_include_path(get_include_path() . PATH_SEPARATOR . PATH_DATA_SITE);
+    }
+
 }
 

@@ -38,6 +38,16 @@ switch ($RBAC->userCanAccess( 'PM_SUPERVISOR' )) {
         die();
         break;
 }
+
+//If the user does not have the permission and the user can be access from url
+$processUser = new ProcessUser();
+$userAccess = $processUser->validateUserAccess($_GET['PRO_UID'], $_SESSION['USER_LOGGED']);
+if(!$userAccess) {
+    G::SendTemporalMessage( 'ID_USER_HAVENT_RIGHTS_PAGE', 'error', 'labels' );
+    G::header( 'location: ../login/login' );
+    die();
+}
+
 $_SESSION = $filter->xssFilterHard($_SESSION,"url");
 if ((int) $_SESSION['INDEX'] < 1) {
     $_SERVER['HTTP_REFERER'] = $filter->xssFilterHard($_SERVER['HTTP_REFERER']);
@@ -48,10 +58,6 @@ if ((int) $_SESSION['INDEX'] < 1) {
 /* Includes */
 G::LoadClass( 'case' );
 G::LoadClass( 'derivation' );
-
-/* GET , POST & $_SESSION Vars */
-//$_SESSION['STEP_POSITION'] = (int)$_GET['POSITION'];
-
 
 /* Menues */
 $G_MAIN_MENU = 'processmaker';
@@ -80,7 +86,6 @@ $oHeadPublisher->addScriptCode( '
     var leimnud = new maborak();
     leimnud.make();
     leimnud.Package.Load("rpc,drag,drop,panel,app,validator,fx,dom,abbr",{Instance:leimnud,Type:"module"});
-    leimnud.Package.Load("json",{Type:"file"});
     leimnud.Package.Load("cases",{Type:"file",Absolute:true,Path:"/jscore/cases/core/cases.js"});
     leimnud.Package.Load("cases_Step",{Type:"file",Absolute:true,Path:"/jscore/cases/core/cases_Step.js"});
     leimnud.Package.Load("processmap",{Type:"file",Absolute:true,Path:"/jscore/processmap/core/processmap.js"});
@@ -97,8 +102,8 @@ if (! isset( $_GET['type'] )) {
 }
 if (! isset( $_GET['position'] )) {
     $_GET['position'] = $_SESSION['STEP_POSITION'];
-}else{    
-    if($_GET['type'] == 'DYNAFORM'){        
+}else{
+    if($_GET['type'] == 'DYNAFORM'){
         $criteria = new Criteria();
 
         $criteria->addSelectColumn(StepSupervisorPeer::STEP_POSITION);
@@ -108,7 +113,7 @@ if (! isset( $_GET['position'] )) {
         $rsCriteria = StepSupervisorPeer::doSelectRS($criteria);
         $rsCriteria->setFetchmode(ResultSet::FETCHMODE_ASSOC);
         $rsCriteria->next();
-        $aRow = $rsCriteria->getRow();    
+        $aRow = $rsCriteria->getRow();
 
         $_GET['position'] = $aRow['STEP_POSITION'];
     }else{
@@ -133,6 +138,10 @@ $Fields['APP_DATA']['__DYNAFORM_OPTIONS']['NEXT_STEP_LABEL'] = '';
  * date: 16-05-08
  * Description: this was added for the additional database connections
  */
+if (! isset( $_GET['ex'] )) {
+    $_GET['ex'] = $_GET['position'];
+}
+
 G::LoadClass( 'dbConnections' );
 $oDbConnections = new dbConnections( $_SESSION['PROCESS'] );
 $oDbConnections->loadAdditionalConnections();
@@ -148,15 +157,11 @@ if ($_GET['DYN_UID'] != '') {
     if ($a->isResponsive()) {
         $a->printEditSupervisor();
     }else{
-        $G_PUBLISH->AddContent( 'dynaform', 'xmlform', $_SESSION['PROCESS'] . '/' . $_GET['DYN_UID'], '', $Fields['APP_DATA'], 'cases_SaveDataSupervisor?UID=' . $_GET['DYN_UID'] );
+        $G_PUBLISH->AddContent( 'dynaform', 'xmlform', $_SESSION['PROCESS'] . '/' . $_GET['DYN_UID'], '', $Fields['APP_DATA'], 'cases_SaveDataSupervisor?UID=' . $_GET['DYN_UID'] . '&ex=' .  $_GET['ex']);
     }
 }
 
 G::RenderPage( 'publish', 'blank' );
-
-if (! isset( $_GET['ex'] )) {
-    $_GET['ex'] = $_GET['position'];
-}
 ?>
 
 <script>

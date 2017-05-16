@@ -101,6 +101,10 @@ class pmTables extends Controller
             }
         }
 
+        if (preg_match("/^PMT_(.*)$/", $table['ADD_TAB_NAME'], $match)) {
+            $table['ADD_TAB_NAME'] = $match[1];
+        }
+
         $this->includeExtJS( 'pmTables/' . $jsFile );
 
         $this->setJSVar( 'flagProcessmap', (isset($_REQUEST['flagProcessmap'])) ? $_REQUEST['flagProcessmap'] : 0);
@@ -112,13 +116,6 @@ class pmTables extends Controller
         $this->setJSVar( 'dataNumRows', $dataNumRows );
         $this->setJSVar( '_plugin_permissions', $repTabPluginPermissions );
         $this->setJSVar( 'sizeTableName', $this->getSizeTableName());
-
-        $isBpmn = 0;
-        if (isset( $_GET['PRO_UID'] )) {
-            $process = new Process();
-            $isBpmn = $process->isBpmnProcess($_GET['PRO_UID']);
-        }
-        $this->setJSVar( 'isBpmn', $isBpmn );
 
         G::RenderPage( 'publish', 'extJs' );
     }

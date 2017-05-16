@@ -33,7 +33,6 @@
 G::LoadSystem('inputfilter');
 $filter = new InputFilter();
 $_POST = $filter->xssFilterHard($_POST);
-$_SESSION = $filter->xssFilterHard($_SESSION);
 
 if (isset( $_POST['action'] ) || isset( $_POST['function'] )) {
     $action = (isset( $_POST['action'] )) ? $_POST['action'] : $_POST['function'];
@@ -185,6 +184,8 @@ switch ($action) {
         $oContent->addContent( 'DBS_DESCRIPTION', '', $newid, SYS_LANG, $_POST['desc'] );
         break;
     case 'deleteDbConnection':
+        $result = new stdclass();
+
         try {
             $oDBSource = new DbSource();
             $oContent = new Content();
@@ -343,16 +344,17 @@ switch ($action) {
         }
         break;
     case 'showEncodes':
-        //G::LoadThirdParty( 'pear/json', 'class.json' );
-        //$oJSON = new Services_JSON();
+        G::LoadSystem('inputfilter');
+        $filter = new InputFilter();
         $engine = $_POST['engine'];
 
         if ($engine != "0") {
             $dbs = new dbConnections();
-            echo Bootstrap::json_encode( $dbs->getEncondeList( $engine ) );
+            $var = Bootstrap::json_encode($dbs->getEncondeList($filter->xssFilterHard($engine)));
+            G::outRes($var);
 
         } else {
-            echo '[["0","..."]]';
+            G::outRes('[["0","..."]]');
         }
         break;
 }

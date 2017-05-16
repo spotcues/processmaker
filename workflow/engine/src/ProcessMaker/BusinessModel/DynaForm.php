@@ -99,27 +99,16 @@ class DynaForm
     public function existsTitle($processUid, $dynaFormTitle, $dynaFormUidExclude = "")
     {
         try {
-            $delimiter = \DBAdapter::getStringDelimiter();
-
             $criteria = new \Criteria("workflow");
-
             $criteria->addSelectColumn(\DynaformPeer::DYN_UID);
-
-            $criteria->addAlias("CT", \ContentPeer::TABLE_NAME);
-
-            $arrayCondition = array();
-            $arrayCondition[] = array(\DynaformPeer::DYN_UID, "CT.CON_ID", \Criteria::EQUAL);
-            $arrayCondition[] = array("CT.CON_CATEGORY", $delimiter . "DYN_TITLE" . $delimiter, \Criteria::EQUAL);
-            $arrayCondition[] = array("CT.CON_LANG", $delimiter . SYS_LANG . $delimiter, \Criteria::EQUAL);
-            $criteria->addJoinMC($arrayCondition, \Criteria::LEFT_JOIN);
-
+            $criteria->addSelectColumn(\DynaformPeer::DYN_TITLE);
             $criteria->add(\DynaformPeer::PRO_UID, $processUid, \Criteria::EQUAL);
 
             if ($dynaFormUidExclude != "") {
                 $criteria->add(\DynaformPeer::DYN_UID, $dynaFormUidExclude, \Criteria::NOT_EQUAL);
             }
 
-            $criteria->add("CT.CON_VALUE", $dynaFormTitle, \Criteria::EQUAL);
+            $criteria->add(\DynaformPeer::DYN_TITLE, $dynaFormTitle, \Criteria::EQUAL);
 
             $rsCriteria = \DynaformPeer::doSelectRS($criteria);
 
@@ -158,12 +147,9 @@ class DynaForm
 
             $oCriteria = new \Criteria( 'workflow' );
             $oCriteria->addSelectColumn( \DynaformPeer::DYN_UID );
-            $oCriteria->addSelectColumn( \ContentPeer::CON_VALUE );
+            $oCriteria->addSelectColumn( \DynaformPeer::DYN_TITLE );
             $oCriteria->add( \DynaformPeer::PRO_UID, $proUid );
             $oCriteria->add( \DynaformPeer::DYN_TYPE, "xmlform" );
-            $oCriteria->add( \ContentPeer::CON_CATEGORY, 'DYN_TITLE');
-            $oCriteria->add( \ContentPeer::CON_LANG, SYS_LANG);
-            $oCriteria->addJoin( \DynaformPeer::DYN_UID, \ContentPeer::CON_ID, \Criteria::INNER_JOIN);
             $oDataset = \DynaformPeer::doSelectRS( $oCriteria );
             $oDataset->setFetchmode( \ResultSet::FETCHMODE_ASSOC );
 
@@ -177,7 +163,7 @@ class DynaForm
                         $sxmlgrid = \Step::getAttribute( $field, 'xmlgrid' );
                         $aGridInfo = explode( "/", $sxmlgrid );
                         if ($aGridInfo[0] == $proUid && $aGridInfo[1] == $dynUid) {
-                            $formsDepend[] = $dataForms["CON_VALUE"];
+                            $formsDepend[] = $dataForms["DYN_TITLE"];
                         }
                     }
                 }
@@ -637,35 +623,10 @@ class DynaForm
                         $dynaFormGridUidCopyImport = $value[1];
 
                         //Get data
-                        $criteria = new \Criteria();
-
-                        $criteria->addSelectColumn(\ContentPeer::CON_VALUE);
-                        $criteria->add(\ContentPeer::CON_ID, $dynaFormGridUidCopyImport);
-                        $criteria->add(\ContentPeer::CON_CATEGORY, "DYN_TITLE");
-                        $criteria->add(\ContentPeer::CON_LANG, SYS_LANG);
-
-                        $rsCriteria = \ContentPeer::doSelectRS($criteria);
-                        $rsCriteria->setFetchmode(\ResultSet::FETCHMODE_ASSOC);
-
-                        $rsCriteria->next();
-                        $row = $rsCriteria->getRow();
-
-                        $dynGrdTitleCopyImport = $row["CON_VALUE"];
-
-                        $criteria = new \Criteria();
-
-                        $criteria->addSelectColumn(\ContentPeer::CON_VALUE);
-                        $criteria->add(\ContentPeer::CON_ID, $dynaFormGridUidCopyImport);
-                        $criteria->add(\ContentPeer::CON_CATEGORY, "DYN_DESCRIPTION");
-                        $criteria->add(\ContentPeer::CON_LANG, SYS_LANG);
-
-                        $rsCriteria = \ContentPeer::doSelectRS($criteria);
-                        $rsCriteria->setFetchmode(\ResultSet::FETCHMODE_ASSOC);
-
-                        $rsCriteria->next();
-                        $row = $rsCriteria->getRow();
-
-                        $dynGrdDescriptionCopyImport = $row["CON_VALUE"];
+                        $dynaForm = new \Dynaform();
+                        $row = $dynaForm->Load($dynaFormGridUidCopyImport);
+                        $dynGrdTitleCopyImport = $row["DYN_TITLE"];
+                        $dynGrdDescriptionCopyImport = $row["DYN_DESCRIPTION"];
 
                         //Create Grid
                         $dynaFormGrid = new \Dynaform();
@@ -967,33 +928,14 @@ class DynaForm
     public function getDynaFormCriteria()
     {
         try {
-            $delimiter = \DBAdapter::getStringDelimiter();
-
             $criteria = new \Criteria("workflow");
-
             $criteria->addSelectColumn(\DynaformPeer::DYN_UID);
-            $criteria->addAsColumn("DYN_TITLE", "CT.CON_VALUE");
-            $criteria->addAsColumn("DYN_DESCRIPTION", "CD.CON_VALUE");
+            $criteria->addSelectColumn(\DynaformPeer::DYN_TITLE);
+            $criteria->addSelectColumn(\DynaformPeer::DYN_DESCRIPTION);
             $criteria->addSelectColumn(\DynaformPeer::DYN_TYPE);
             $criteria->addSelectColumn(\DynaformPeer::DYN_CONTENT);
             $criteria->addSelectColumn(\DynaformPeer::DYN_VERSION);
             $criteria->addSelectColumn(\DynaformPeer::DYN_UPDATE_DATE);
-
-            $criteria->addAlias("CT", \ContentPeer::TABLE_NAME);
-            $criteria->addAlias("CD", \ContentPeer::TABLE_NAME);
-
-            $arrayCondition = array();
-            $arrayCondition[] = array(\DynaformPeer::DYN_UID, "CT.CON_ID", \Criteria::EQUAL);
-            $arrayCondition[] = array("CT.CON_CATEGORY", $delimiter . "DYN_TITLE" . $delimiter, \Criteria::EQUAL);
-            $arrayCondition[] = array("CT.CON_LANG", $delimiter . SYS_LANG . $delimiter, \Criteria::EQUAL);
-            $criteria->addJoinMC($arrayCondition, \Criteria::LEFT_JOIN);
-
-            $arrayCondition = array();
-            $arrayCondition[] = array(\DynaformPeer::DYN_UID, "CD.CON_ID", \Criteria::EQUAL);
-            $arrayCondition[] = array("CD.CON_CATEGORY", $delimiter . "DYN_DESCRIPTION" . $delimiter, \Criteria::EQUAL);
-            $arrayCondition[] = array("CD.CON_LANG", $delimiter . SYS_LANG . $delimiter, \Criteria::EQUAL);
-            $criteria->addJoinMC($arrayCondition, \Criteria::LEFT_JOIN);
-
             return $criteria;
         } catch (\Exception $e) {
             throw $e;
@@ -1010,16 +952,6 @@ class DynaForm
     public function getDynaFormDataFromRecord($record)
     {
         try {
-            if ($record["DYN_TITLE"] . "" == "") {
-                //There is no transaltion for this Document name, try to get/regenerate the label
-                $record["DYN_TITLE"] = \Content::load("DYN_TITLE", "", $record["DYN_UID"], SYS_LANG);
-            }
-
-            if ($record["DYN_DESCRIPTION"] . "" == "") {
-                //There is no transaltion for this Document name, try to get/regenerate the label
-                $record["DYN_DESCRIPTION"] = \Content::load("DYN_DESCRIPTION", "", $record["DYN_UID"], SYS_LANG);
-            }
-
             if ($record["DYN_VERSION"] == 0) {
                 $record["DYN_VERSION"] = 1;
             }

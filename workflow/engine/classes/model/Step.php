@@ -418,14 +418,12 @@ class Step extends BaseStep
         $res = array();
         $oCriteria = new Criteria();
         $oCriteria->addSelectColumn( StepPeer::TAS_UID );
-        $oCriteria->addSelectColumn( ContentPeer::CON_VALUE );
         $oCriteria->addSelectColumn( StepPeer::STEP_POSITION );
+        $oCriteria->addAsColumn('CON_VALUE', TaskPeer::TAS_TITLE);
         $oCriteria->add( StepPeer::PRO_UID, $proUid );
         $oCriteria->add( StepPeer::STEP_UID_OBJ, $dynUid );
         $oCriteria->add( StepPeer::STEP_TYPE_OBJ, 'DYNAFORM' );
-        $oCriteria->add( ContentPeer::CON_CATEGORY, 'TAS_TITLE');
-        $oCriteria->add( ContentPeer::CON_LANG, SYS_LANG);
-        $oCriteria->addJoin( StepPeer::TAS_UID, ContentPeer::CON_ID, Criteria::INNER_JOIN);
+        $oCriteria->addJoin( StepPeer::TAS_UID, TaskPeer::TAS_UID, Criteria::INNER_JOIN);
         $oDataset = StepPeer::doSelectRS( $oCriteria );
         $oDataset->setFetchmode( ResultSet::FETCHMODE_ASSOC );
         while($oDataset->next()) {

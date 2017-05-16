@@ -41,6 +41,11 @@ if (($_REQUEST['action']) != 'renameFolder') {
 
     $functionName ($functionParams);
 } else {
+    if (!isset($_REQUEST['item']) ||
+            !isset($_REQUEST['newitemname']) ||
+            !isset($_REQUEST['selitems'])) {
+        exit();
+    }
     $functionName = 'renameFolder';
     $functionParams = isset ($_REQUEST ['params']) ? $_REQUEST ['params'] : array ();
     $oldname = $_REQUEST ['item'];
@@ -1374,10 +1379,7 @@ function copyMoveExecuteTree($uidFolder, $newUidFolder)
 {
     require_once ("classes/model/AppDocument.php");
     require_once ('classes/model/AppFolder.php');
-    if($newUidFolder==="root") {
-        return $newUidFolder;
-    }
-    
+
     $appFoder = new AppFolder ();
     $folderContent = $appFoder->getFolderContent($uidFolder);
     $folderOrigin = $appFoder->getFolderStructure($uidFolder);
@@ -1417,7 +1419,7 @@ function copyMoveExecuteTree($uidFolder, $newUidFolder)
             //Copy file
             $arrayPathFromFile = G::getPathFromFileUID($docInfo["APP_UID"], $docUid);
             $newFile = $arrayPathFromFile[0] . PATH_SEP . $arrayPathFromFile[1] . "_" . $docInfo["DOC_VERSION"] . "." . $extension;
-            
+
             if(!file_exists($path . $arrayPathFromFile[0])) {
                 mkdir( $path . $arrayPathFromFile[0], 0777, true );
             }
@@ -1511,7 +1513,7 @@ function uploadExternalDocument()
                     $response['success']= 'success';
                     $response['node']   = '';
                     $_POST ['node']     = "";
-                    $newFolderUid = checkTree($_REQUEST['dir'], $_REQUEST['new_dir']);
+                    $newFolderUid = checkTree($_REQUEST['dir'], ($_REQUEST['new_dir'] == 'root')? '/' : $_REQUEST['new_dir']);
                 }
                 $_POST['selitems'] = array();
             } else {
@@ -1532,6 +1534,18 @@ function uploadExternalDocument()
 
         //Read. Instance Document classes
         if (!empty($quequeUpload)) {
+            foreach ($quequeUpload as $key => $fileObj) {
+                $extension = pathinfo($fileObj['fileName'], PATHINFO_EXTENSION);
+                if (\Bootstrap::getDisablePhpUploadExecution() === 1 && $extension === 'php') {
+                    $message = \G::LoadTranslation('THE_UPLOAD_OF_PHP_FILES_WAS_DISABLED');
+                    \Bootstrap::registerMonologPhpUploadExecution('phpUpload', 550, $message, $fileObj['fileName']);
+                    $response['error'] = $message;
+                    $response['message'] = $message;
+                    $response['success'] = false;
+                    print_r(G::json_encode($response));
+                    exit();
+                }
+            }
             $docUid=$_POST['docUid'];
             $appDocUid=isset($_POST['APP_DOC_UID'])?$_POST['APP_DOC_UID']:"";
             $docVersion=isset($_POST['docVersion'])?$_POST['docVersion']:"";
@@ -1992,4 +2006,3 @@ function extPathName($p_path, $p_addtrailingslash = false)
     }
     return $retval;
 }
-

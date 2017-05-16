@@ -13,8 +13,8 @@ class FilesManager extends Api
 {
     /**
      * @param string $prj_uid {@min 32} {@max 32}
-     * @param string $path
-     * @param string $get_content
+     * @param string $path {@from query}
+     * @param bool $get_content {@from query}
      *
      * @url GET /:prj_uid/file-manager
      */
@@ -176,12 +176,12 @@ class FilesManager extends Api
 
 class ProcessFilesManagerStructurePost
 {   /**
-     * @var string {@from body}
+     * @var string {@from body} {@required false}
      */
     public $prf_filename;
 
     /**
-     * @var string {@from body}
+     * @var string {@from body} {@required false}
      */
     public $prf_path;
 }
@@ -189,17 +189,17 @@ class ProcessFilesManagerStructurePost
 class ProcessFilesManagerStructure
 {
     /**
-     * @var string {@from body}
+     * @var string {@from body} {@required false}
      */
     public $prf_filename;
 
     /**
-     * @var string {@from body}
+     * @var string {@from body} {@required false}
      */
     public $prf_path;
 
     /**
-     * @var string {@from body}
+     * @var string {@from body} {@required false}
      */
     public $prf_content;
 }

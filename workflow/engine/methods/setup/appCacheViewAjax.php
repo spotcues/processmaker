@@ -288,7 +288,10 @@ switch ($request) {
             $confParams = array('lang' => $lang, 'status' => 'failed');
             $appCacheViewEngine = $oServerConf->setProperty('APP_CACHE_VIEW_ENGINE', $confParams);
 
-            echo '{success: false, msg:"' . $e->getMessage() . '"}';
+            $token = strtotime("now");
+            PMException::registerErrorLog($e, $token);
+            $varRes = '{success: false, msg:"' . G::LoadTranslation("ID_EXCEPTION_LOG_INTERFAZ", array($token)) . '"}';
+            G::outRes( $varRes );
         }
         break;
     case 'recreate-root':

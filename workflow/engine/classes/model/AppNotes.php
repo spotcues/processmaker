@@ -226,7 +226,7 @@ class AppNotes extends BaseAppNotes
 
             $case = new Cases();
 
-            $p = $case->getUsersParticipatedInCase($applicationUid);
+            $p = $case->getUsersParticipatedInCase($applicationUid, 'ACTIVE');
             $noteRecipientsList = array();
 
             foreach ($p["array"] as $key => $userParticipated) {

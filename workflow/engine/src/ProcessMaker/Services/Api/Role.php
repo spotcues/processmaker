@@ -43,6 +43,8 @@ class Role extends Api
     }
 
     /**
+     * @access protected
+     * @class  AccessControl {@permission PM_USERS}
      * @url GET
      */
     public function index($filter = null, $start = null, $limit = null)
@@ -57,6 +59,8 @@ class Role extends Api
     }
 
     /**
+     * @access protected
+     * @class  AccessControl {@permission PM_USERS}
      * @url GET /:rol_uid
      *
      * @param string $rol_uid {@min 32}{@max 32}
@@ -73,6 +77,8 @@ class Role extends Api
     }
 
     /**
+     * @access protected
+     * @class  AccessControl {@permission PM_USERS}
      * @url POST
      *
      * @param array $request_data
@@ -93,6 +99,8 @@ class Role extends Api
     }
 
     /**
+     * @access protected
+     * @class  AccessControl {@permission PM_USERS}
      * @url PUT /:rol_uid
      *
      * @param string $rol_uid      {@min 32}{@max 32}
@@ -108,6 +116,8 @@ class Role extends Api
     }
 
     /**
+     * @access protected
+     * @class  AccessControl {@permission PM_USERS}
      * @url DELETE /:rol_uid
      *
      * @param string $rol_uid {@min 32}{@max 32}

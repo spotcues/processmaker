@@ -231,8 +231,8 @@ class AdditionalTables extends BaseAdditionalTables
                     $oConnection->begin();
                     $iResult = $oAdditionalTables->save();
                     $oConnection->commit();
-                    $addTabDescription = ($aData["ADD_TAB_DESCRIPTION"] != "")? ", Description: " . $aData["ADD_TAB_DESCRIPTION"] : ".";
-                    G::auditLog("UpdatePmtable", "PM Table Name: ".$aData['ADD_TAB_NAME'] . $addTabDescription . ", PM Table ID: (".$aData['ADD_TAB_UID'].") ");
+                    $addTabDescription = (isset($aData["ADD_TAB_DESCRIPTION"]) && $aData["ADD_TAB_DESCRIPTION"] != "") ? ", Description: " . $aData["ADD_TAB_DESCRIPTION"] : ".";
+                    G::auditLog("UpdatePmtable", "PM Table Name: " . ( isset($aData['ADD_TAB_NAME']) ? $aData['ADD_TAB_NAME'] : $aData['ADD_TAB_TAG']) . $addTabDescription . ", PM Table ID: (" . $aData['ADD_TAB_UID'] . ") ");
                 } else {
                     $sMessage = '';
                     $aValidationFailures = $oAdditionalTables->getValidationFailures();
@@ -376,7 +376,7 @@ class AdditionalTables extends BaseAdditionalTables
         }
     }
 
-    public function getAllData($sUID, $start = null, $limit = null, $keyOrderUppercase = true, $filter = '', $appUid = false)
+    public function getAllData($sUID, $start = null, $limit = null, $keyOrderUppercase = true, $filter = '', $appUid = false, $search = '')
     {
         $addTab = new AdditionalTables();
         $aData = $addTab->load($sUID, true);
@@ -443,7 +443,48 @@ class AdditionalTables extends BaseAdditionalTables
             }
             $stringOr = $stringOr . '$oCriteria->add($a);';
             eval($stringOr);
-
+        }
+        if ($search !== '' && is_string($search)) {
+            try {
+                $object = G::json_decode($search);
+                if (isset($object->where)) {
+                    $stringAnd = "";
+                    $closure = "";
+                    $fields = $object->where;
+                    foreach ($fields as $key => $value) {
+                        if (is_string($value)) {
+                            $stringAnd = $stringAnd . '$a = $oCriteria->getNewCriterion(' . $sClassPeerName . '::' . G::toUpper($key) . ', "' . $value . '", Criteria::EQUAL)' . $closure . ';';
+                            $closure = '->addAnd($a)';
+                        }
+                        if (is_object($value)) {
+                            $defined = defined("Base" . $sClassPeerName . "::" . G::toUpper($key));
+                            if ($defined === false) {
+                                throw new Exception(G::loadTranslation("ID_FIELD_NOT_FOUND") . ": " . $key . "");
+                            }
+                            if (isset($value->neq) && $defined) {
+                                $stringAnd = $stringAnd . '$a = $oCriteria->getNewCriterion(' . $sClassPeerName . '::' . G::toUpper($key) . ', "' . $value->neq . '", Criteria::NOT_EQUAL)' . $closure . ';';
+                                $closure = '->addAnd($a)';
+                            }
+                            if (isset($value->like) && $defined) {
+                                $stringAnd = $stringAnd . '$a = $oCriteria->getNewCriterion(' . $sClassPeerName . '::' . G::toUpper($key) . ', "' . $value->like . '", Criteria::LIKE)' . $closure . ';';
+                                $closure = '->addAnd($a)';
+                            }
+                            if (isset($value->nlike) && $defined) {
+                                $stringAnd = $stringAnd . '$a = $oCriteria->getNewCriterion(' . $sClassPeerName . '::' . G::toUpper($key) . ', "' . $value->nlike . '", Criteria::NOT_LIKE)' . $closure . ';';
+                                $closure = '->addAnd($a)';
+                            }
+                        }
+                    }
+                    if (!empty($stringAnd)) {
+                        $stringAnd = $stringAnd . '$oCriteria->add($a);';
+                        eval($stringAnd);
+                    }
+                }
+            } catch (Exception $oError) {
+                throw($oError);
+            }
+        }
+        if ($filter != '' && is_string($filter) || $search !== '' && is_string($search)) {
             $oCriteriaCount = clone $oCriteria;
             eval('$count = ' . $sClassPeerName . '::doCount($oCriteria);');
         }
@@ -737,6 +778,10 @@ class AdditionalTables extends BaseAdditionalTables
             // quick fix
             // map all empty values as NULL for Database
             foreach ($caseData as $dKey => $dValue) {
+                if (is_array($dValue) && count($dValue)) {
+                    $j = key($dValue);
+                    $dValue = (is_array($dValue[$j])) ? $dValue : $dValue[$j];
+                }
                 if (!is_array($dValue)) {
                     foreach ($fieldTypes as $key => $fieldType) {
                         foreach ($fieldType as $name => $theType) {
@@ -856,6 +901,10 @@ class AdditionalTables extends BaseAdditionalTables
                         $caseData = unserialize($caseData);
                     }
                     foreach ($caseData as $i => $v) {
+                        if (is_array($v) && count($v)) {
+                            $j = key($v);
+                            $v = (is_array($v[$j])) ? $v : $v[$j];
+                        }
                         foreach ($fieldTypes as $key => $fieldType) {
                             foreach ($fieldType as $name => $type) {
                                 if ( strtoupper ( $i) == $name) {
@@ -1055,15 +1104,14 @@ class AdditionalTables extends BaseAdditionalTables
             //now get the labels for all process, using an array of Uids,
             $c = new Criteria('workflow');
             //$c->add ( ContentPeer::CON_CATEGORY, 'PRO_TITLE', Criteria::EQUAL );
-            $c->add(ContentPeer::CON_LANG, defined('SYS_LANG') ? SYS_LANG : 'en', Criteria::EQUAL);
-            $c->add(ContentPeer::CON_ID, $proUids, Criteria::IN);
-
-            $dt = ContentPeer::doSelectRS($c);
+            $c->add(ProcessPeer::PRO_UID, $proUids, Criteria::IN);
+            $dt = ProcessPeer::doSelectRS($c);
             $dt->setFetchmode(ResultSet::FETCHMODE_ASSOC);
 
             while ($dt->next()) {
                 $row = $dt->getRow();
-                $procDetails[$row['CON_ID']][$row['CON_CATEGORY']] = $row['CON_VALUE'];
+                $procDetails[$row['PRO_UID']]['PRO_TITLE'] = $row['PRO_TITLE'];
+                $procDetails[$row['PRO_UID']]['PRO_DESCRIPTION'] = $row['PRO_DESCRIPTION'];
             }
 
             foreach ($addTables as $i => $addTable) {

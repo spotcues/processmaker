@@ -118,7 +118,8 @@ if (isset( $_REQUEST['action'] )) {
                 G::auditLog("CreateCategory", "Category Name: ".$catName);
                 echo '{success: true}';
             } catch (Exception $ex) {
-                echo '{success: false, error: ' . $ex->getMessage() . '}';
+                $varEcho = '{success: false, error: ' . $ex->getMessage() . '}';
+                G::outRes( $varEcho );
             }
             break;
         case 'checkEditCategoryName':
@@ -149,7 +150,8 @@ if (isset( $_REQUEST['action'] )) {
                 g::auditLog("UpdateCategory", "Category Name: ".$catName." Category ID: (".$catUID.") ");
                 echo '{success: true}';
             } catch (Exception $ex) {
-                echo '{success: false, error: ' . $ex->getMessage() . '}';
+                $varEcho = '{success: false, error: ' . $ex->getMessage() . '}';
+                G::outRes( $varEcho );
             }
             break;
         case 'canDeleteCategory':
@@ -169,9 +171,13 @@ if (isset( $_REQUEST['action'] )) {
                 $catName = $cat->loadByCategoryId( $catUID );
                 $cat->delete();
                 G::auditLog("DeleteCategory", "Category Name: ".$catName." Category ID: (".$catUID.") ");
-                echo '{success: true}';
+                $varEcho = '{success: true}';
+                G::outRes( $varEcho );
             } catch (Exception $ex) {
-                echo '{success: false, error: ' . $ex->getMessage() . '}';
+                $token = strtotime("now");
+                PMException::registerErrorLog($ex, $token);
+                $resJson = '{success: false, error: ' . G::LoadTranslation("ID_EXCEPTION_LOG_INTERFAZ", array($token)) . '}';
+                G::outRes( $resJson );
             }
             break;
         default:

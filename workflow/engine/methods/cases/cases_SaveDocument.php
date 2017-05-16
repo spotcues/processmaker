@@ -84,12 +84,13 @@ $_SESSION["TRIGGER_DEBUG"]["ERRORS"] = array();
 $_SESSION["TRIGGER_DEBUG"]["DATA"] = array();
 $_SESSION["TRIGGER_DEBUG"]["TRIGGERS_NAMES"] = array();
 $_SESSION["TRIGGER_DEBUG"]["TRIGGERS_VALUES"] = array();
+$_SESSION['TRIGGER_DEBUG']['TRIGGERS_EXECUTION_TIME'] = [];
 
 $_SESSION["TRIGGER_DEBUG"]["NUM_TRIGGERS"] = count($arrayTrigger);
 $_SESSION["TRIGGER_DEBUG"]["TIME"] = "AFTER";
 
 if ($_SESSION["TRIGGER_DEBUG"]["NUM_TRIGGERS"] > 0) {
-    $_SESSION["TRIGGER_DEBUG"]["TRIGGERS_NAMES"] = $case->getTriggerNames($arrayTrigger);
+    $_SESSION["TRIGGER_DEBUG"]["TRIGGERS_NAMES"] = array_column($arrayTrigger, 'TRI_TITLE');
     $_SESSION["TRIGGER_DEBUG"]["TRIGGERS_VALUES"] = $arrayTrigger;
 }
 
@@ -229,4 +230,3 @@ $_SESSION['BREAKSTEP']['NEXT_STEP'] = $aNextStep;
       $G_PUBLISH->AddContent('xmlform', 'xmlform', 'login/showMessage', '', $aMessage );
       G::RenderPage( 'publish' );
   }*/
-

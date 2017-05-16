@@ -25,11 +25,14 @@ abstract class BaseAppAssignSelfServiceValuePeer
     const CLASS_DEFAULT = 'classes.model.AppAssignSelfServiceValue';
 
     /** The total number of columns. */
-    const NUM_COLUMNS = 5;
+    const NUM_COLUMNS = 6;
 
     /** The number of lazy-loaded columns. */
     const NUM_LAZY_LOAD_COLUMNS = 0;
 
+
+    /** the column name for the ID field */
+    const ID = 'APP_ASSIGN_SELF_SERVICE_VALUE.ID';
 
     /** the column name for the APP_UID field */
     const APP_UID = 'APP_ASSIGN_SELF_SERVICE_VALUE.APP_UID';
@@ -57,10 +60,10 @@ abstract class BaseAppAssignSelfServiceValuePeer
      * e.g. self::$fieldNames[self::TYPE_PHPNAME][0] = 'Id'
      */
     private static $fieldNames = array (
-        BasePeer::TYPE_PHPNAME => array ('AppUid', 'DelIndex', 'ProUid', 'TasUid', 'GrpUid', ),
-        BasePeer::TYPE_COLNAME => array (AppAssignSelfServiceValuePeer::APP_UID, AppAssignSelfServiceValuePeer::DEL_INDEX, AppAssignSelfServiceValuePeer::PRO_UID, AppAssignSelfServiceValuePeer::TAS_UID, AppAssignSelfServiceValuePeer::GRP_UID, ),
-        BasePeer::TYPE_FIELDNAME => array ('APP_UID', 'DEL_INDEX', 'PRO_UID', 'TAS_UID', 'GRP_UID', ),
-        BasePeer::TYPE_NUM => array (0, 1, 2, 3, 4, )
+        BasePeer::TYPE_PHPNAME => array ('Id', 'AppUid', 'DelIndex', 'ProUid', 'TasUid', 'GrpUid', ),
+        BasePeer::TYPE_COLNAME => array (AppAssignSelfServiceValuePeer::ID, AppAssignSelfServiceValuePeer::APP_UID, AppAssignSelfServiceValuePeer::DEL_INDEX, AppAssignSelfServiceValuePeer::PRO_UID, AppAssignSelfServiceValuePeer::TAS_UID, AppAssignSelfServiceValuePeer::GRP_UID, ),
+        BasePeer::TYPE_FIELDNAME => array ('ID', 'APP_UID', 'DEL_INDEX', 'PRO_UID', 'TAS_UID', 'GRP_UID', ),
+        BasePeer::TYPE_NUM => array (0, 1, 2, 3, 4, 5, )
     );
 
     /**
@@ -70,10 +73,10 @@ abstract class BaseAppAssignSelfServiceValuePeer
      * e.g. self::$fieldNames[BasePeer::TYPE_PHPNAME]['Id'] = 0
      */
     private static $fieldKeys = array (
-        BasePeer::TYPE_PHPNAME => array ('AppUid' => 0, 'DelIndex' => 1, 'ProUid' => 2, 'TasUid' => 3, 'GrpUid' => 4, ),
-        BasePeer::TYPE_COLNAME => array (AppAssignSelfServiceValuePeer::APP_UID => 0, AppAssignSelfServiceValuePeer::DEL_INDEX => 1, AppAssignSelfServiceValuePeer::PRO_UID => 2, AppAssignSelfServiceValuePeer::TAS_UID => 3, AppAssignSelfServiceValuePeer::GRP_UID => 4, ),
-        BasePeer::TYPE_FIELDNAME => array ('APP_UID' => 0, 'DEL_INDEX' => 1, 'PRO_UID' => 2, 'TAS_UID' => 3, 'GRP_UID' => 4, ),
-        BasePeer::TYPE_NUM => array (0, 1, 2, 3, 4, )
+        BasePeer::TYPE_PHPNAME => array ('Id' => 0, 'AppUid' => 1, 'DelIndex' => 2, 'ProUid' => 3, 'TasUid' => 4, 'GrpUid' => 5, ),
+        BasePeer::TYPE_COLNAME => array (AppAssignSelfServiceValuePeer::ID => 0, AppAssignSelfServiceValuePeer::APP_UID => 1, AppAssignSelfServiceValuePeer::DEL_INDEX => 2, AppAssignSelfServiceValuePeer::PRO_UID => 3, AppAssignSelfServiceValuePeer::TAS_UID => 4, AppAssignSelfServiceValuePeer::GRP_UID => 5, ),
+        BasePeer::TYPE_FIELDNAME => array ('ID' => 0, 'APP_UID' => 1, 'DEL_INDEX' => 2, 'PRO_UID' => 3, 'TAS_UID' => 4, 'GRP_UID' => 5, ),
+        BasePeer::TYPE_NUM => array (0, 1, 2, 3, 4, 5, )
     );
 
     /**
@@ -174,6 +177,8 @@ abstract class BaseAppAssignSelfServiceValuePeer
     public static function addSelectColumns(Criteria $criteria)
     {
 
+        $criteria->addSelectColumn(AppAssignSelfServiceValuePeer::ID);
+
         $criteria->addSelectColumn(AppAssignSelfServiceValuePeer::APP_UID);
 
         $criteria->addSelectColumn(AppAssignSelfServiceValuePeer::DEL_INDEX);
@@ -186,8 +191,8 @@ abstract class BaseAppAssignSelfServiceValuePeer
 
     }
 
-    const COUNT = 'COUNT(*)';
-    const COUNT_DISTINCT = 'COUNT(DISTINCT *)';
+    const COUNT = 'COUNT(APP_ASSIGN_SELF_SERVICE_VALUE.ID)';
+    const COUNT_DISTINCT = 'COUNT(DISTINCT APP_ASSIGN_SELF_SERVICE_VALUE.ID)';
 
     /**
      * Returns the number of rows matching criteria.
@@ -358,6 +363,8 @@ abstract class BaseAppAssignSelfServiceValuePeer
             $criteria = $values->buildCriteria(); // build Criteria from AppAssignSelfServiceValue object
         }
 
+                //$criteria->remove(AppAssignSelfServiceValuePeer::ID); // remove pkey col since this table uses auto-increment
+                
 
         // Set the correct dbName
         $criteria->setDbName(self::DATABASE_NAME);
@@ -395,6 +402,9 @@ abstract class BaseAppAssignSelfServiceValuePeer
 
         if ($values instanceof Criteria) {
             $criteria = clone $values; // rename for clarity
+
+            $comparison = $criteria->getComparison(AppAssignSelfServiceValuePeer::ID);
+            $selectCriteria->add(AppAssignSelfServiceValuePeer::ID, $criteria->remove(AppAssignSelfServiceValuePeer::ID), $comparison);
 
         } else {
             $criteria = $values->buildCriteria(); // gets full criteria
@@ -453,22 +463,11 @@ abstract class BaseAppAssignSelfServiceValuePeer
             $criteria = clone $values; // rename for clarity
         } elseif ($values instanceof AppAssignSelfServiceValue) {
 
-            $criteria = $values->buildCriteria();
+            $criteria = $values->buildPkeyCriteria();
         } else {
             // it must be the primary key
             $criteria = new Criteria(self::DATABASE_NAME);
-            // primary key is composite; we therefore, expect
-            // the primary key passed to be an array of pkey
-            // values
-            if (count($values) == count($values, COUNT_RECURSIVE)) {
-                // array is not multi-dimensional
-                $values = array($values);
-            }
-            $vals = array();
-            foreach ($values as $value) {
-
-            }
-
+            $criteria->add(AppAssignSelfServiceValuePeer::ID, (array) $values, Criteria::IN);
         }
 
         // Set the correct dbName
@@ -525,6 +524,54 @@ abstract class BaseAppAssignSelfServiceValuePeer
         }
 
         return BasePeer::doValidate(AppAssignSelfServiceValuePeer::DATABASE_NAME, AppAssignSelfServiceValuePeer::TABLE_NAME, $columns);
+    }
+
+    /**
+     * Retrieve a single object by pkey.
+     *
+     * @param      mixed $pk the primary key.
+     * @param      Connection $con the connection to use
+     * @return     AppAssignSelfServiceValue
+     */
+    public static function retrieveByPK($pk, $con = null)
+    {
+        if ($con === null) {
+            $con = Propel::getConnection(self::DATABASE_NAME);
+        }
+
+        $criteria = new Criteria(AppAssignSelfServiceValuePeer::DATABASE_NAME);
+
+        $criteria->add(AppAssignSelfServiceValuePeer::ID, $pk);
+
+
+        $v = AppAssignSelfServiceValuePeer::doSelect($criteria, $con);
+
+        return !empty($v) > 0 ? $v[0] : null;
+    }
+
+    /**
+     * Retrieve multiple objects by pkey.
+     *
+     * @param      array $pks List of primary keys
+     * @param      Connection $con the connection to use
+     * @throws     PropelException Any exceptions caught during processing will be
+     *       rethrown wrapped into a PropelException.
+     */
+    public static function retrieveByPKs($pks, $con = null)
+    {
+        if ($con === null) {
+            $con = Propel::getConnection(self::DATABASE_NAME);
+        }
+
+        $objs = null;
+        if (empty($pks)) {
+            $objs = array();
+        } else {
+            $criteria = new Criteria();
+            $criteria->add(AppAssignSelfServiceValuePeer::ID, $pks, Criteria::IN);
+            $objs = AppAssignSelfServiceValuePeer::doSelect($criteria, $con);
+        }
+        return $objs;
     }
 }
 

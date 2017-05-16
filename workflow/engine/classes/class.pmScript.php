@@ -52,6 +52,10 @@ function __autoload ($sClassName)
     }
 }
 
+if (defined('SYS_SYS') && (!defined('PATH_DATA_SITE') || !defined('PATH_WORKSPACE'))) {
+    Bootstrap::setConstantsRelatedWs(SYS_SYS);
+}
+
 //Start - Custom functions
 G::LoadClass( 'pmFunctions' );
 //End - Custom functions
@@ -118,6 +122,10 @@ class PMScript
      * Affected fields
      */
     public $affected_fields;
+
+    public $scriptExecutionTime = 0;
+
+    public $sRegexp = '/\@(?:([\@\%\#\?\$\=\&])([a-zA-Z\_]\w*)|([a-zA-Z\_][\w\-\>\:]*)\(((?:[^\\\\\)]*(?:[\\\\][\w\W])?)*)\))((?:\s*\[[\'"]?\w+[\'"]?\])+|\-\>([a-zA-Z\_]\w*))?/';
 
     /**
      * Constructor of the class PMScript
@@ -220,7 +228,7 @@ class PMScript
     {
         $sScript = "";
         $iAux = 0;
-        $iOcurrences = preg_match_all( '/\@(?:([\@\%\#\?\$\=])([a-zA-Z\_]\w*)|([a-zA-Z\_][\w\-\>\:]*)\(((?:[^\\\\\)]' . '*(?:[\\\\][\w\W])?)*)\))((?:\s*\[[\'"]?\w+[\'"]?\])+)?/', $this->sScript, $aMatch, PREG_PATTERN_ORDER | PREG_OFFSET_CAPTURE );
+        $iOcurrences = preg_match_all( $this->sRegexp, $this->sScript, $aMatch, PREG_PATTERN_ORDER | PREG_OFFSET_CAPTURE );
         if ($iOcurrences) {
             for ($i = 0; $i < $iOcurrences; $i ++) {
                 $bEqual = false;
@@ -241,9 +249,16 @@ class PMScript
                 }
                 if ($bEqual) {
                     if (! isset( $aMatch[5][$i][0] )) {
-                        eval( "if (!isset(\$this->aFields['" . $aMatch[2][$i][0] . "'])) { \$this->aFields['" . $aMatch[2][$i][0] . "'] = null; }" );
+                        eval( "if (!isset(\$this->aFields['" . $aMatch[2][$i][0] . "'])) { \$this->aFields['" . $aMatch[2][$i][0] . "'] = " . ($aMatch[1][$i][0] == "&" ? "new stdclass()" : "null") . "; }" );
                     } else {
+                        if ($aMatch[1][$i][0] == "&") {
+                            eval( "if (!isset(\$this->aFields['" . $aMatch[2][$i][0] . "'])) { \$this->aFields['" . $aMatch[2][$i][0] . "'] = new stdclass(); }" );
+                        }
                         eval( "if (!isset(\$this->aFields" . (isset( $aMatch[2][$i][0] ) ? "['" . $aMatch[2][$i][0] . "']" : '') . $aMatch[5][$i][0] . ")) { \$this->aFields" . (isset( $aMatch[2][$i][0] ) ? "['" . $aMatch[2][$i][0] . "']" : '') . $aMatch[5][$i][0] . " = null; }" );
+                    }
+                } else {
+                    if ($aMatch[1][$i][0] == "&") {
+                        eval( "if (!isset(\$this->aFields['" . $aMatch[2][$i][0] . "'])) { \$this->aFields['" . $aMatch[2][$i][0] . "'] = new stdclass(); }" );
                     }
                 }
                 $sScript .= $sAux;
@@ -325,6 +340,7 @@ class PMScript
                         }
                         break;
                     case '=':
+                    case '&':
                         if ($bEqual) {
                             if (! isset( $aMatch[5][$i][0] )) {
                                 $sScript .= "\$this->aFields['" . $aMatch[2][$i][0] . "']";
@@ -346,7 +362,15 @@ class PMScript
         $sScript .= substr( $this->sScript, $iAux );
         $sScript = "try {\n" . $sScript . "\n} catch (Exception \$oException) {\n " . " \$this->aFields['__ERROR__'] = utf8_encode(\$oException->getMessage());\n}";
         //echo '<pre>-->'; print_r($this->aFields); echo '<---</pre>';
-        $this->executeAndCatchErrors( $sScript, $this->sScript );
+
+        $timeStart = microtime(true);
+
+        $this->executeAndCatchErrors($sScript, $this->sScript);
+
+        $timeEnd = microtime(true);
+
+        $this->scriptExecutionTime = round($timeEnd - $timeStart, 5);
+
         $this->aFields["__VAR_CHANGED__"] = implode(",", $this->affected_fields);
         for ($i = 0; $i < count( $this->affected_fields ); $i ++) {
             $_SESSION['TRIGGER_DEBUG']['DATA'][] = Array ('key' => $this->affected_fields[$i],'value' => isset( $this->aFields[$this->affected_fields[$i]] ) ? $this->aFields[$this->affected_fields[$i]] : ''
@@ -358,7 +382,7 @@ class PMScript
     /**
      * Evaluate the current script
      *
-     * @return void
+     * @return boolean
      */
     public function evaluate ()
     {
@@ -367,21 +391,25 @@ class PMScript
         $iAux = 0;
         $bEqual = false;
         $variableIsDefined = true;
-        $iOcurrences = preg_match_all( '/\@(?:([\@\%\#\?\$\=])([a-zA-Z\_]\w*)|([a-zA-Z\_][\w\-\>\:]*)\(((?:[^\\\\\)]' . '*(?:[\\\\][\w\W])?)*)\))((?:\s*\[[\'"]?\w+[\'"]?\])+)?/', $this->sScript, $aMatch, PREG_PATTERN_ORDER | PREG_OFFSET_CAPTURE );
+        $iOcurrences = preg_match_all( $this->sRegexp, $this->sScript, $aMatch, PREG_PATTERN_ORDER | PREG_OFFSET_CAPTURE );
         if ($iOcurrences) {
             for ($i = 0; $i < $iOcurrences; $i ++) {
                 // if the variables for that condition has not been previously defined then $variableIsDefined
                 // is set to false
                 if (!isset($this->aFields[$aMatch[2][$i][0]]) && !isset($aMatch[5][$i][0])) {
-                    $this->aFields[$aMatch[2][$i][0]] = '';
+                    eval( "if (!isset(\$this->aFields['" . $aMatch[2][$i][0] . "'])) { \$this->aFields['" . $aMatch[2][$i][0] . "'] = " . ($aMatch[1][$i][0] == "&" ? "new stdclass()" : "null") . "; }" );
                 } else {
+                    if ($aMatch[1][$i][0] == "&") {
+                        eval( "if (!isset(\$this->aFields['" . $aMatch[2][$i][0] . "'])) { \$this->aFields['" . $aMatch[2][$i][0] . "'] = new stdclass(); }" );
+                    }
                     if (!isset($this->aFields[$aMatch[2][$i][0]])) {
                         eval("\$this->aFields['" . $aMatch[2][$i][0] . "']" . $aMatch[5][$i][0] . " = '';");
+
                     } else {
                         if (isset($aMatch[5][$i][0])) {
                             eval("if (!isset(\$this->aFields['" . $aMatch[2][$i][0] . "']" . $aMatch[5][$i][0] . ")) {\$this->aFields['" . $aMatch[2][$i][0] . "']" . $aMatch[5][$i][0] . " = '';}");
                         } else {
-                            eval("if (!isset(\$this->aFields['" . $aMatch[2][$i][0] . "'])) {\$this->aFields['" . $aMatch[2][$i][0] . "'] = '';}");
+                            eval("if (!isset(\$this->aFields['" . $aMatch[2][$i][0] . "'])) {\$this->aFields['" . $aMatch[2][$i][0] . "'] = " . ($aMatch[1][$i][0] == "&" ? "new stdclass()" : "''") . ";}");
                         }
                     }
                 }
@@ -475,6 +503,7 @@ class PMScript
                         }
                         break;
                     case '=':
+                    case '&':
                         if ($bEqual) {
                             if (! isset( $aMatch[5][$i][0] )) {
                                 $sScript .= "\$this->aFields['" . $aMatch[2][$i][0] . "']";
@@ -508,7 +537,7 @@ class PMScript
         }
         return $bResult;
     }
-    
+
     Public function evaluateVariable ()
     {
         $process = new Process();
@@ -530,7 +559,7 @@ class PMScript
                 if(strpos($var, '_label') === false) {
                     if(in_array($var,$processVariables)) {
                         if(isset($this->aFields[$var]) && is_array($this->aFields[$var][1]) ) {
-                            $varLabel = $var.'_label';   
+                            $varLabel = $var.'_label';
                             $arrayValue = $this->aFields[$var];
                             if(is_array($arrayValue) && sizeof($arrayValue)) {
                                 foreach($arrayValue as $val) {
@@ -546,7 +575,7 @@ class PMScript
                                         $varType = $varInfo['VAR_FIELD_TYPE'];
                                         switch($varType) {
                                             case 'array':
-                                                $arrayLabels = '["'.implode('","',$arrayLabels).'"]'; 
+                                                $arrayLabels = '["'.implode('","',$arrayLabels).'"]';
                                                 $newFields[$var] = $arrayValues;
                                                 $newFields[$varLabel] = $arrayLabels;
                                             break;
@@ -555,7 +584,7 @@ class PMScript
                                                 $newFields[$varLabel] = $arrayLabels[0];
                                             break;
                                         }
-                                        $this->affected_fields[] = $varLabel; 
+                                        $this->affected_fields[] = $varLabel;
                                         $this->aFields = array_merge($this->aFields,$newFields);
                                         unset($newFields);
                                         unset($arrayValues);
@@ -586,13 +615,13 @@ class PMScript
                                         }
                                     }
                                 } catch (Exception $e) {
-                                    
+
                                 }
                             }
                         }
                     }
                 }
-            }            
+            }
         }
     }
 }

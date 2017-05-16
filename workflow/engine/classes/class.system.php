@@ -57,6 +57,7 @@ class System
         'wsdl_cache' => 1,
         'memory_limit' => "256M",
         'time_zone' => 'America/New_York',
+        'expiration_year' => '1',
         'memcached' => 0,
         'memcached_server' => '',
         'default_skin' => 'neoclassic',
@@ -71,8 +72,15 @@ class System
         'safari_cookie_lifetime' => 1,
         'error_reporting' => "",
         'display_errors' => 'On',
+        'enable_blacklist' => 0,
         'system_utc_time_zone' => 0,
-        'server_hostname_requests_frontend' => ''
+        'server_protocol' => '',
+        'leave_case_warning' => 0,
+        'server_hostname_requests_frontend' => '',
+        'load_headers_ie' => 0,
+        'redirect_to_mobile' => 0,
+        'disable_php_upload_execution' => 0,
+        'disable_download_documents_session_validation' => 0
     );
 
     /**
@@ -755,40 +763,40 @@ class System
      * @param string $sSchemaFile schema filename
      * @return $sContent
      */
-    public static function getSchema ($sSchemaFile)
+    public static function getSchema($sSchemaFile)
     {
         /* This is the MySQL mapping that Propel uses (from MysqlPlatform.php) */
-        $mysqlTypes = array ('NUMERIC' => "DECIMAL",'LONGVARCHAR' => "MEDIUMTEXT",'TIMESTAMP' => "DATETIME",'BU_TIMESTAMP' => "DATETIME",'BINARY' => "BLOB",'VARBINARY' => "MEDIUMBLOB",'LONGVARBINARY' => "LONGBLOB",'BLOB' => "LONGBLOB",'CLOB' => "LONGTEXT",
-        /* This is not from Propel, but is required to get INT right */
-        'INTEGER' => "INT"
+        $mysqlTypes = array('NUMERIC' => "DECIMAL", 'LONGVARCHAR' => "MEDIUMTEXT", 'TIMESTAMP' => "DATETIME", 'BU_TIMESTAMP' => "DATETIME", 'BINARY' => "BLOB", 'VARBINARY' => "MEDIUMBLOB", 'LONGVARBINARY' => "LONGBLOB", 'BLOB' => "LONGBLOB", 'CLOB' => "LONGTEXT",
+            /* This is not from Propel, but is required to get INT right */
+            'INTEGER' => "INT"
         );
 
-        $aSchema = array ();
+        $aSchema = array();
         $oXml = new DomDocument();
-        $oXml->load( $sSchemaFile );
-        $aTables = $oXml->getElementsByTagName( 'table' );
+        $oXml->load($sSchemaFile);
+        $aTables = $oXml->getElementsByTagName('table');
         foreach ($aTables as $oTable) {
-            $aPrimaryKeys = array ();
-            $sTableName = $oTable->getAttribute( 'name' );
-            $aSchema[$sTableName] = array ();
-            $aColumns = $oTable->getElementsByTagName( 'column' );
+            $aPrimaryKeys = array();
+            $sTableName = $oTable->getAttribute('name');
+            $aSchema[$sTableName] = array();
+            $aColumns = $oTable->getElementsByTagName('column');
             foreach ($aColumns as $oColumn) {
-                $sColumName = $oColumn->getAttribute( 'name' );
+                $sColumName = $oColumn->getAttribute('name');
 
                 /* Get the field type. Propel uses VARCHAR if nothing else is specified */
-                $type = $oColumn->hasAttribute( 'type' ) ? strtoupper( $oColumn->getAttribute( 'type' ) ) : "VARCHAR";
+                $type = $oColumn->hasAttribute('type') ? strtoupper($oColumn->getAttribute('type')) : "VARCHAR";
 
                 /* Convert type to MySQL type according to Propel */
-                if (array_key_exists( $type, $mysqlTypes )) {
+                if (array_key_exists($type, $mysqlTypes)) {
                     $type = $mysqlTypes[$type];
                 }
 
-                $size = $oColumn->hasAttribute( 'size' ) ? $oColumn->getAttribute( 'size' ) : null;
+                $size = $oColumn->hasAttribute('size') ? $oColumn->getAttribute('size') : null;
                 /* Add default sizes from MySQL */
-                if ($type == "TINYINT" && ! $size) {
+                if ($type == "TINYINT" && !$size) {
                     $size = "4";
                 }
-                if ($type == "INT" && ! $size) {
+                if ($type == "INT" && !$size) {
                     $size = "11";
                 }
 
@@ -796,35 +804,43 @@ class System
                     $type = "$type($size)";
                 }
 
-                $required = $oColumn->hasAttribute( 'required' ) ? $oColumn->getAttribute( 'required' ) : null;
+                $required = $oColumn->hasAttribute('required') ? $oColumn->getAttribute('required') : null;
                 /* Convert $required to a bool */
-                $required = (in_array( strtolower( $required ), array ('1','true'
-                ) ));
+                $required = (in_array(strtolower($required), array('1', 'true'
+                )));
+                $autoIncrement = $oColumn->hasAttribute('autoIncrement') ? $oColumn->hasAttribute('autoIncrement') : false;
+                $unique = $oColumn->hasAttribute('unique') ? $oColumn->hasAttribute('unique') : false;
+                $default = $oColumn->hasAttribute('default') ? $oColumn->getAttribute('default') : null;
 
-                $default = $oColumn->hasAttribute( 'default' ) ? $oColumn->getAttribute( 'default' ) : null;
-
-                $primaryKey = $oColumn->hasAttribute( 'primaryKey' ) ? $oColumn->getAttribute( 'primaryKey' ) : null;
+                $primaryKey = $oColumn->hasAttribute('primaryKey') ? $oColumn->getAttribute('primaryKey') : null;
                 /* Convert $primaryKey to a bool */
-                $primaryKey = (in_array( strtolower( $primaryKey ), array ('1','true'
-                ) ));
+                $primaryKey = (in_array(strtolower($primaryKey), array('1', 'true'
+                )));
                 if ($primaryKey) {
                     $aPrimaryKeys[] = $sColumName;
                 }
-                $aSchema[$sTableName][$sColumName] = array ('Field' => $sColumName,'Type' => $type,'Null' => $required ? "NO" : "YES",'Default' => $default
+                $aSchema[$sTableName][$sColumName] = array(
+                    'Field' => $sColumName,
+                    'Type' => $type,
+                    'Null' => $required ? "NO" : "YES",
+                    'Default' => $default,
+                    'AutoIncrement' => $autoIncrement,
+                    'Unique' => $unique,
+                    'PrimaryKey' => $primaryKey
                 );
             }
 
-            if (is_array( $aPrimaryKeys ) && count( $aPrimaryKeys ) > 0) {
+            if (is_array($aPrimaryKeys) && count($aPrimaryKeys) > 0) {
                 $aSchema[$sTableName]['INDEXES']['PRIMARY'] = $aPrimaryKeys;
             }
-            $aIndexes = $oTable->getElementsByTagName( 'index' );
+            $aIndexes = $oTable->getElementsByTagName('index');
             foreach ($aIndexes as $oIndex) {
-                $aIndex = array ();
-                $aIndexesColumns = $oIndex->getElementsByTagName( 'index-column' );
+                $aIndex = array();
+                $aIndexesColumns = $oIndex->getElementsByTagName('index-column');
                 foreach ($aIndexesColumns as $oIndexColumn) {
-                    $aIndex[] = $oIndexColumn->getAttribute( 'name' );
+                    $aIndex[] = $oIndexColumn->getAttribute('name');
                 }
-                $aSchema[$sTableName]['INDEXES'][$oIndex->getAttribute( 'name' )] = $aIndex;
+                $aSchema[$sTableName]['INDEXES'][$oIndex->getAttribute('name')] = $aIndex;
             }
         }
         return $aSchema;
@@ -982,7 +998,7 @@ class System
         return $aChanges;
     }
 
-    public function getEmailConfiguration ()
+    public static function getEmailConfiguration()
     {
         $emailServer = new \ProcessMaker\BusinessModel\EmailServer();
 
@@ -1264,15 +1280,17 @@ class System
         try {
             $arraySystemConfiguration = self::getSystemConfiguration();
 
+            $serverProtocol = $arraySystemConfiguration['server_protocol'];
+            $serverProtocol = ($serverProtocol != '')? $serverProtocol : ((G::is_https())? 'https' : 'http');
+
             $serverHostname = $arraySystemConfiguration['server_hostname_requests_frontend'];
             $serverHostname = ($serverHostname != '')? $serverHostname : $_SERVER['HTTP_HOST'];
 
             //Return
-            return ((G::is_https())? 'https://' : 'http://') . $serverHostname;
+            return $serverProtocol . '://' . $serverHostname;
         } catch (Exception $e) {
             throw $e;
         }
     }
 }
 // end System class
-

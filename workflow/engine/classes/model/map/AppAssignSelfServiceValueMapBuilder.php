@@ -63,7 +63,9 @@ class AppAssignSelfServiceValueMapBuilder
         $tMap = $this->dbMap->addTable('APP_ASSIGN_SELF_SERVICE_VALUE');
         $tMap->setPhpName('AppAssignSelfServiceValue');
 
-        $tMap->setUseIdGenerator(false);
+        $tMap->setUseIdGenerator(true);
+
+        $tMap->addPrimaryKey('ID', 'Id', 'int', CreoleTypes::INTEGER, true, null);
 
         $tMap->addColumn('APP_UID', 'AppUid', 'string', CreoleTypes::VARCHAR, true, 32);
 

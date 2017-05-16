@@ -142,7 +142,6 @@ $docuroot = explode ( PATH_SEP , $_SERVER['DOCUMENT_ROOT'] );
   G::LoadSystem('form');
   G::LoadSystem('menu');
   G::LoadSystem("xmlMenu");
-  G::LoadSystem('dvEditor');
   G::LoadSystem('table');
   G::LoadSystem('pagedTable');
   G::LoadSystem('tree');

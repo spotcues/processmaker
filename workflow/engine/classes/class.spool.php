@@ -638,7 +638,8 @@ class spoolRun
                         array_push( $this->aWarnings, $strAux );
                         continue;
                     } else {
-                        throw $e;
+                        error_log('<400> '.$strAux);
+                        continue;
                     }
                 }
             }

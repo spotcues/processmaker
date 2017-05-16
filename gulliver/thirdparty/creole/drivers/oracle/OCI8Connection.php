@@ -140,30 +140,27 @@ class OCI8Connection extends ConnectionCommon implements Connection
      */
     function executeQuery( $sql, $fetchmode = null )
     {
-        $this->lastQuery		= $sql;
+        $this->lastQuery = $sql;
 
-        // $result = @oci_parse( $this->dblink, $sql );
-        $result					= oci_parse( $this->dblink, $sql );
+        $result = @oci_parse($this->dblink, $sql);
 
-        if ( ! $result )
-		{
-            throw new SQLException( 'Unable to prepare query'
-				, $this->nativeError()
-				, $sql
-			);
+        if (!$result) {
+            throw new SQLException('Unable to prepare query'
+            , $this->nativeError()
+            , $sql
+            );
         }
 
         $success = @oci_execute($result, $this->execMode);
 
-        if ( ! $success )
-		{
-            throw new SQLException( 'Unable to execute query'
-				, $this->nativeError( $result )
-				, $sql
-			);
+        if (!$success) {
+            throw new SQLException('Unable to execute query'
+            , $this->nativeError($result)
+            , $sql
+            );
         }
-        
-        return new OCI8ResultSet( $this, $result, $fetchmode );
+
+        return new OCI8ResultSet($this, $result, $fetchmode);
     }
 
     

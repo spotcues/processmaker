@@ -90,7 +90,6 @@ class PmBootstrap extends Bootstrap
         $this->autoloader->registerClass('form', PATH_GULLIVER . 'class.form');
         $this->autoloader->registerClass('menu', PATH_GULLIVER . 'class.menu');
         $this->autoloader->registerClass('xmlMenu', PATH_GULLIVER . 'class.xmlMenu');
-        $this->autoloader->registerClass('dvEditor', PATH_GULLIVER . 'class.dvEditor');
         $this->autoloader->registerClass('wysiwygEditor', PATH_GULLIVER . 'class.wysiwygEditor');
         $this->autoloader->registerClass('Controller', PATH_GULLIVER . 'class.controller');
         $this->autoloader->registerClass('HttpProxyController', PATH_GULLIVER . 'class.httpProxyController');

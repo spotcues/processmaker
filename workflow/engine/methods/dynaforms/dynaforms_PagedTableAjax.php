@@ -43,7 +43,7 @@ G::LoadSystem( 'pagedTable' );
 G::LoadInclude( 'ajax' );
 
 $id = get_ajax_value( 'ptID' );
-$ntable = unserialize( $_SESSION['pagedTable[' . $id . ']'] );
+$ntable = unserialize(base64_decode($_SESSION['pagedTable[' . $id . ']']));
 $page = get_ajax_value( 'page' );
 $function = get_ajax_value( 'function' );
 

@@ -1,7 +1,21 @@
 <?php
+$filter = new InputFilter();
+
+list($_GET['UID'], $_GET['TYPE'], $_GET['POSITION'], $_GET['ACTION']) = $filter->xssRegexFilter(
+    [$_GET['UID'], $_GET['TYPE'], $_GET['POSITION'], $_GET['ACTION']], '/[\-\w]/'
+);
+
 if (!isset($_SESSION['USER_LOGGED'])) {
-	G::SendTemporalMessage( 'ID_LOGIN_AGAIN', 'warning', 'labels' );
-	die( '<script type="text/javascript">
+    if(!strpos($_SERVER['REQUEST_URI'], 'gmail')) {
+        $responseObject = new stdclass();
+        $responseObject->error = G::LoadTranslation('ID_LOGIN_AGAIN');
+        $responseObject->success = true;
+        $responseObject->lostSession = true;
+        print G::json_encode( $responseObject );
+        die();
+    } else {
+        G::SendTemporalMessage( 'ID_LOGIN_AGAIN', 'warning', 'labels' );
+        die( '<script type="text/javascript">
 				try
 				{
 				var olink = document.location.href;
@@ -36,18 +50,25 @@ if (!isset($_SESSION['USER_LOGGED'])) {
 				parent.location = parent.location;
 			}
 		</script>');
+    }
 }
 
 require_once 'classes/model/AppDelegation.php';
 $delegation = new AppDelegation();
-if( $delegation->alreadyRouted($_SESSION['APPLICATION'],$_SESSION['INDEX']) ) {
-	if(array_key_exists('gmail',$_SESSION) && $_SESSION['gmail'] == 1){
-		$mUrl = '../cases/cases_Open?APP_UID='.$_SESSION['APPLICATION'].'&DEL_INDEX='.$_SESSION['INDEX'].'&action=sent';
-		header( 'location:' . $mUrl );
-		die();
-	}
-	G::header('location: ../cases/casesListExtJs');
-	die();
+if ($delegation->alreadyRouted($_SESSION['APPLICATION'], $_SESSION['INDEX'])) {
+    if (array_key_exists('gmail', $_SESSION) && $_SESSION['gmail'] == 1) {
+        $mUrl = '../cases/cases_Open?APP_UID=' . $_SESSION['APPLICATION'] . '&DEL_INDEX=' . $_SESSION['INDEX'] . '&action=sent';
+        header('location:' . $mUrl);
+        die();
+    }
+    if (SYS_SKIN === "uxs") {
+        G::header('location: ../home/appList');
+        die();
+    } else {
+        die('<script type="text/javascript">'
+                . 'window.parent.location="casesListExtJs?action=todo";'
+                . '</script>');
+    }
 }
 /**
  * cases_Step.php
@@ -181,13 +202,14 @@ if ($flagExecuteBeforeTriggers) {
     $_SESSION['TRIGGER_DEBUG']['DATA'] = Array ();
     $_SESSION['TRIGGER_DEBUG']['TRIGGERS_NAMES'] = Array ();
     $_SESSION['TRIGGER_DEBUG']['TRIGGERS_VALUES'] = Array ();
+    $_SESSION['TRIGGER_DEBUG']['TRIGGERS_EXECUTION_TIME'] = [];
 
     $triggers = $oCase->loadTriggers( $_SESSION['TASK'], $_GET['TYPE'], $_GET['UID'], 'BEFORE' );
 
     $_SESSION['TRIGGER_DEBUG']['NUM_TRIGGERS'] = count( $triggers );
     $_SESSION['TRIGGER_DEBUG']['TIME'] = G::toUpper(G::loadTranslation('ID_BEFORE'));
     if ($_SESSION['TRIGGER_DEBUG']['NUM_TRIGGERS'] != 0) {
-        $_SESSION['TRIGGER_DEBUG']['TRIGGERS_NAMES'] = $oCase->getTriggerNames( $triggers );
+        $_SESSION['TRIGGER_DEBUG']['TRIGGERS_NAMES'] = array_column($triggers, 'TRI_TITLE');
         $_SESSION['TRIGGER_DEBUG']['TRIGGERS_VALUES'] = $triggers;
     }
 
@@ -195,6 +217,18 @@ if ($flagExecuteBeforeTriggers) {
         //Execute before triggers - Start
         $Fields['APP_DATA'] = $oCase->ExecuteTriggers( $_SESSION['TASK'], $_GET['TYPE'], $_GET['UID'], 'BEFORE', $Fields['APP_DATA'] );
         //Execute before triggers - End
+
+        $_SESSION['TRIGGER_DEBUG']['TRIGGERS_EXECUTION_TIME'] = $oCase->arrayTriggerExecutionTime;
+        $arrayInfoTriggerExecutionTime = [];
+
+        foreach ($_SESSION['TRIGGER_DEBUG']['TRIGGERS_EXECUTION_TIME'] as $key => $value) {
+            $arrayInfoTriggerExecutionTime[] = ['triUid' => $key, 'triExecutionTime' => $value];
+        }
+
+        //Log
+        if(sizeof($arrayInfoTriggerExecutionTime)>0){
+            Bootstrap::registerMonolog('triggerExecutionTime', 200, 'Trigger execution time', ['proUid' => $Fields['APP_DATA']['PROCESS'], 'tasUid' => $Fields['APP_DATA']['TASK'], 'appUid' => $Fields['APP_DATA']['APPLICATION'], 'before' => $_GET['TYPE'], 'triggerInfo' => $arrayInfoTriggerExecutionTime], SYS_SYS, 'processmaker.log');
+        }
     } else {
         unset( $_SESSION['_NO_EXECUTE_TRIGGERS_'] );
     }
@@ -264,7 +298,7 @@ try {
     $array['APP_TITLE'] = $sTitleCase;
     $array['CASE'] = G::LoadTranslation( 'ID_CASE' );
     $array['TITLE'] = G::LoadTranslation( 'ID_TITLE' );
-
+    $Fields['TITLE'] = $sTitleCase;
     $noShowTitle = 0;
     if (isset( $oProcessFieds['PRO_SHOW_MESSAGE'] )) {
         $noShowTitle = $oProcessFieds['PRO_SHOW_MESSAGE'];
@@ -384,7 +418,7 @@ try {
 
 
                     $oHeadPublisher = & headPublisher::getSingleton();
-                    $titleDocument = "<h3>" . $Fields['INP_DOC_TITLE'] . "<br><small>" . G::LoadTranslation( 'ID_INPUT_DOCUMENT' ) . "</small></h3>";
+                    $titleDocument = "<h3>" . htmlspecialchars($Fields['INP_DOC_TITLE'], ENT_QUOTES) . "<br><small>" . G::LoadTranslation('ID_INPUT_DOCUMENT') . "</small></h3>";
                     if ($Fields['INP_DOC_DESCRIPTION']) {
                         $titleDocument .= " " . str_replace( "\n", "", str_replace( "'", "\'", nl2br( html_entity_decode($Fields['INP_DOC_DESCRIPTION'], ENT_COMPAT, "UTF-8") ) ) ) . "";
                     }
@@ -617,6 +651,8 @@ try {
                     $Fields['TAS_UID'] = $_SESSION['TASK'];
                     //Execute after triggers - End
 
+                    $_SESSION['TRIGGER_DEBUG']['TRIGGERS_EXECUTION_TIME'] = $oCase->arrayTriggerExecutionTime;
+
                     //Save data - Start
                     unset($Fields['APP_STATUS']);
                     unset($Fields['APP_PROC_STATUS']);
@@ -778,14 +814,19 @@ try {
             $aFields['TAS_TYPE_DAY'] = G::LoadTranslation( 'ID_COUNT_DAYS' );
             $aFields['TAS_CALENDAR'] = G::LoadTranslation( 'ID_CALENDAR' );
 
-            $aFields['TASK'] = $oDerivation->prepareInformation( array ('USER_UID' => $_SESSION['USER_LOGGED'],'APP_UID' => $_SESSION['APPLICATION'],'DEL_INDEX' => $_SESSION['INDEX']
-            ) );
+            $oRoute = new \ProcessMaker\Core\RoutingScreen();
+            $arrayData = array(
+                'USER_UID' => $_SESSION['USER_LOGGED'],
+                'APP_UID' => $_SESSION['APPLICATION'],
+                'DEL_INDEX' => $_SESSION['INDEX']
+            );
+            $aFields['TASK'] = $oRoute->prepareRoutingScreen($arrayData);
 
             if (empty( $aFields['TASK'] )) {
                 throw (new Exception( G::LoadTranslation( 'ID_NO_DERIVATION_RULE' ) ));
             }
 
-            //take the first derivation rule as the task derivation rule type.
+            //Take the first derivation rule as the task derivation rule type.
             $aFields['PROCESS']['ROU_TYPE'] = $aFields['TASK'][1]['ROU_TYPE'];
             $aFields['PROCESS']['ROU_FINISH_FLAG'] = false;
 
@@ -943,11 +984,17 @@ try {
                 $optionTaskType = (isset($aFields["TASK"][$sKey]["NEXT_TASK"]["TAS_TYPE"]))? $aFields["TASK"][$sKey]["NEXT_TASK"]["TAS_TYPE"] : "";
 
                 switch ($optionTaskType) {
+                    case "SERVICE-TASK":
+                        $aFields["TASK"][$sKey]["NEXT_TASK"]["USR_UID"] = G::LoadTranslation("ID_ROUTE_TO_TASK_SERVICE_TASK");
+                        break;
                     case "SCRIPT-TASK":
                         $aFields["TASK"][$sKey]["NEXT_TASK"]["USR_UID"] = G::LoadTranslation("ID_ROUTE_TO_TASK_SCRIPT_TASK");
                         break;
                     case "INTERMEDIATE-CATCH-TIMER-EVENT":
                         $aFields["TASK"][$sKey]["NEXT_TASK"]["USR_UID"] = G::LoadTranslation("ID_ROUTE_TO_TASK_INTERMEDIATE_CATCH_TIMER_EVENT");
+                        break;
+                    case "INTERMEDIATE-THROW-EMAIL-EVENT":
+                        $aFields["TASK"][$sKey]["NEXT_TASK"]["TAS_TITLE"] = G::LoadTranslation("ID_ROUTE_TO_TASK_INTERMEDIATE-THROW-EMAIL-EVENT");
                         break;
                 }
 
@@ -962,7 +1009,7 @@ try {
                     $aFields['TASK'][$sKey]['NEXT_TASK']['TAS_TRANSFER_HIDDEN_FLY'] = "<input type=hidden name='" . $hiddenName . "[NEXT_TASK][TAS_TRANSFER_HIDDEN_FLY]' id='" . $hiddenName . "[NEXT_TASK][TAS_TRANSFER_HIDDEN_FLY]' value=" . $aValues['NEXT_TASK']['TAS_TRANSFER_FLY'] . ">";
                     if ($aValues['NEXT_TASK']['TAS_TRANSFER_FLY'] == 'true') {
                         $aFields['TASK'][$sKey]['NEXT_TASK']['TAS_DURATION'] = '<input type="text" size="5" name="' . $hiddenName . '[NEXT_TASK][TAS_DURATION]" id="' . $hiddenName . '[NEXT_TASK][TAS_DURATION]" value="' . $aValues['NEXT_TASK']['TAS_DURATION'] . '">';
-                        $hoursSelected = $daysSelected = '';
+                        $hoursSelected = $daysSelected = $minSelected = '';
                         if ($aFields['TASK'][$sKey]['NEXT_TASK']['TAS_TIMEUNIT'] == 'HOURS') {
                             $hoursSelected = "selected = 'selected'";
                         } else {
@@ -1026,6 +1073,9 @@ try {
                     if(isset($aValues['ROU_CONDITION'])){
                         $aFields['TASK'][$sKey]['NEXT_TASK']['ROU_CONDITION'] = '<input type="hidden" name="' . $hiddenName . '[ROU_CONDITION]"        id="' . $hiddenName . '[ROU_CONDITION]"        value="' . $aValues['ROU_CONDITION'] . '">';
                     }
+                    if(isset($aValues['SOURCE_UID'])){
+                        $aFields['TASK'][$sKey]['NEXT_TASK']['SOURCE_UID'] = '<input type="hidden" name="' . $hiddenName . '[SOURCE_UID]"        id="' . $hiddenName . '[SOURCE_UID]"        value="' . $aValues['SOURCE_UID'] . '">';
+                    }
                 }
             }
 
@@ -1056,6 +1106,7 @@ try {
             $title = htmlentities($aFields['TASK'][$sKey]['NEXT_TASK']['TAS_TITLE'], ENT_QUOTES, 'UTF-8');
             $aFields['TASK'][$sKey]['NEXT_TASK']['TAS_TITLE'] = $title;
 
+            //todo These two conditions must go to the RoutingScreen class
             if (!preg_match("/\-1$/", $aFields["TASK"][$sKey]["NEXT_TASK"]["TAS_UID"]) &&
                 $aFields["TASK"][$sKey]["NEXT_TASK"]["TAS_TYPE"] == "INTERMEDIATE-CATCH-MESSAGE-EVENT"
             ) {
@@ -1169,4 +1220,3 @@ if ($_SESSION['TRIGGER_DEBUG']['ISSET'] && !$isIE) {
       showdebug();
     }' );
 }
-

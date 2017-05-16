@@ -80,7 +80,7 @@ class CaseScheduler extends BaseCaseScheduler
                     break;
 
             }
-            G::auditLog("CreateCaseScheduler", "Scheduler Name: ".$aData['SCH_NAME'].", Task: ".$aData['TAS_UID'].", Perform this task: ".$perform.", Start Date: ".$aData['SCH_START_DATE'].", End Date: ".$aData['SCH_END_DATE'].",  Execution time  : ".$aData['SCH_START_TIME']);
+            G::auditLog("CreateCaseScheduler", "Scheduler Name: ".$aData['SCH_NAME'].", Task: ".$aData['TAS_UID'].", Perform this task: ".$perform.", Start Date: ".$aData['SCH_START_DATE'].", End Date: " . ((array_key_exists('SCH_END_DATE', $aData))? $aData['SCH_END_DATE'] : '') . ",  Execution time  : ".$aData['SCH_START_TIME']);
 
             return $result;
         } catch (Exception $e) {

@@ -54,6 +54,24 @@ class InputDocument extends Api
     }
 
     /**
+     * @url GET /:app_uid/input-document/:app_doc_uid/file
+     *
+     * @param string $app_uid {@min 32}{@max 32}
+     * @param string $app_doc_uid {@min 32}{@max 32}
+     * @param int $v {@from path}
+     * @throws \Exception
+     */
+    public function doDownloadInputDocument($app_uid, $app_doc_uid, $v = 0)
+    {
+        try {
+            $inputDocument = new \ProcessMaker\BusinessModel\Cases\InputDocument();
+            $inputDocument->downloadInputDocument($app_uid, $app_doc_uid, $v);
+        } catch (\Exception $e) {
+            throw new RestException(Api::STAT_APP_EXCEPTION, $e->getMessage());
+        }
+    }
+
+    /**
      * @url DELETE /:app_uid/:del_index/input-document/:app_doc_uid
      *
      * @param string $app_uid     {@min 32}{@max 32}
@@ -85,8 +103,9 @@ class InputDocument extends Api
     {
         try {
             $userUid = $this->getUserId();
+
             $inputDocument = new \ProcessMaker\BusinessModel\Cases\InputDocument();
-            $response = $inputDocument->addCasesInputDocument($app_uid, $tas_uid, $app_doc_comment, $inp_doc_uid, $userUid);
+            $response = $inputDocument->addCasesInputDocument($app_uid, $tas_uid, $app_doc_comment, $inp_doc_uid, $userUid, false);
             return $response;
         } catch (\Exception $e) {
             throw (new RestException(Api::STAT_APP_EXCEPTION, $e->getMessage()));

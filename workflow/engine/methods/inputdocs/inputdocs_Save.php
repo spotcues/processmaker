@@ -54,26 +54,14 @@ try {
             $oCriteria = new Criteria( 'workflow' );
             $oCriteria->addSelectColumn( InputDocumentPeer::INP_DOC_UID );
             $oCriteria->add( InputDocumentPeer::PRO_UID, $sPRO_UID );
+            $oCriteria->add( InputDocumentPeer::INP_DOC_TITLE, $snameInput );
             $oDataset = InputDocumentPeer::doSelectRS( $oCriteria );
             $oDataset->setFetchmode( ResultSet::FETCHMODE_ASSOC );
             $flag = true;
-            while ($oDataset->next() && $flag) {
-                $aRow = $oDataset->getRow();
-
-                $oCriteria1 = new Criteria( 'workflow' );
-                $oCriteria1->addSelectColumn( 'COUNT(*) AS INPUTS' );
-                $oCriteria1->add( ContentPeer::CON_CATEGORY, 'INP_DOC_TITLE' );
-                $oCriteria1->add( ContentPeer::CON_ID, $aRow['INP_DOC_UID'] );
-                $oCriteria1->add( ContentPeer::CON_VALUE, $snameInput );
-                $oCriteria1->add( ContentPeer::CON_LANG, SYS_LANG );
-                $oDataset1 = ContentPeer::doSelectRS( $oCriteria1 );
-                $oDataset1->setFetchmode( ResultSet::FETCHMODE_ASSOC );
-                $oDataset1->next();
-                $aRow1 = $oDataset1->getRow();
-
-                if ($aRow1['INPUTS']) {
-                    $flag = false;
-                }
+            $oDataset->next();
+            $aRow = $oDataset->getRow();
+            if ($aRow) {
+                $flag = false;
             }
             print $flag;
             break;
@@ -113,6 +101,9 @@ try {
             break;
     }
 } catch (Exception $oException) {
-    die( $oException->getMessage() );
+    $token = strtotime("now");
+    PMException::registerErrorLog($oException, $token);
+    G::outRes( G::LoadTranslation("ID_EXCEPTION_LOG_INTERFAZ", array($token)) );
+    die;
 }
 

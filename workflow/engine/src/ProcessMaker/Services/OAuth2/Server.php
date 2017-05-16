@@ -147,7 +147,7 @@ class Server implements iAuthenticate
 
     public function index()
     {
-        $http = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') ? 'https' : 'http';
+        $http = \G::is_https() ? 'https' : 'http';
         $host = $_SERVER['SERVER_NAME'] . ($_SERVER['SERVER_PORT'] != '80' ? ':' . $_SERVER['SERVER_PORT'] : '');
         $host = $http .'://'. $host;
 
@@ -183,7 +183,7 @@ class Server implements iAuthenticate
         session_start();
 
         if (! isset($_SESSION['USER_LOGGED'])) {
-            $http = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') ? 'https' : 'http';
+            $http = \G::is_https() ? 'https' : 'http';
             $host = $http . '://' . $_SERVER['SERVER_NAME'] . ($_SERVER['SERVER_PORT'] != '80' ? ':' . $_SERVER['SERVER_PORT'] : '');
             $redirect = urlencode($host.'/'.self::$workspace.$_SERVER['REQUEST_URI']);
 

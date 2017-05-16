@@ -617,54 +617,6 @@
             return ($new && !$existing_col) ? "201 Created" : "204 No Content";         
         }
 
-        /**
-         * PROPPATCH method handler
-         *
-         * @param  array  general parameter passing array
-         * @return bool   true on success
-         */
-        function PROPPATCH(&$options) 
-        {
-            global $prefs, $tab;
-
-            $msg = "";
-            
-            $path = $options["path"];
-            
-            $dir = dirname($path)."/";
-            $base = basename($path);
-            
-            if (!class_exists('G')) {
-                $realdocuroot = str_replace( '\\', '/', $_SERVER['DOCUMENT_ROOT'] );
-                $docuroot = explode( '/', $realdocuroot );
-                array_pop( $docuroot );
-                $pathhome = implode( '/', $docuroot ) . '/';  
-                array_pop( $docuroot );
-                $pathTrunk = implode( '/', $docuroot ) . '/';  
-                require_once($pathTrunk.'gulliver/system/class.g.php');
-            }
-            G::LoadSystem('inputfilter');
-            $filter = new InputFilter();
-            
-            foreach($options["props"] as $key => $prop) {
-                if ($prop["ns"] == "DAV:") {
-                    $options["props"][$key]['status'] = "403 Forbidden";
-                } else {
-                    if (isset($prop["val"])) {
-                        $query = "REPLACE INTO properties SET path = '%s', name = '%s', ns= '%s', value = '%s'";
-                        $query = $filter->preventSqlInjection($query, Array($options['path'],$prop['name'],$prop['ns'],$prop['val']));
-                        error_log($query);
-                    } else {
-                        $query = "DELETE FROM properties WHERE path = '%s' AND name = '%s' AND ns = '%s'";
-                        $query = $filter->preventSqlInjection($query, Array($options['path'],$prop['name'],$prop['ns']));
-                    }       
-                    mysql_query($query);
-                }
-            }
-                        
-            return "";
-        }
-
 
         /**
          * LOCK method handler

@@ -21,13 +21,12 @@
  * For more information, contact Colosa Inc, 2566 Le Jeune Rd.,
  * Coral Gables, FL, 33134, USA, or email info@colosa.com.
  */
- 
+
 G::LoadSystem('inputfilter');
 $filter = new InputFilter();
 $_GET = $filter->xssFilterHard($_GET);
 $_POST = $filter->xssFilterHard($_POST);
 $_REQUEST = $filter->xssFilterHard($_REQUEST);
-$_SESSION = $filter->xssFilterHard($_SESSION); 
 
 $actionAjax = isset( $_REQUEST['actionAjax'] ) ? $_REQUEST['actionAjax'] : null;
 
@@ -394,7 +393,7 @@ if ($actionAjax == 'dynaformChangeLogViewHistory') {
     $FieldsPmDynaform = $Fields;
     $FieldsPmDynaform["PRO_UID"] = $_SESSION['PROCESS'];
     $FieldsPmDynaform["CURRENT_DYNAFORM"] = $_GET['DYN_UID'];
-    $a = new pmDynaform($FieldsPmDynaform);
+    $a = new pmDynaform(\ProcessMaker\Util\DateTime::convertUtcToTimeZone($FieldsPmDynaform));
     if ($a->isResponsive()) {
         $a->printView();
     } else {
@@ -485,7 +484,7 @@ if ($actionAjax == 'historyDynaformGridPreview') {
     G::LoadClass('pmDynaform');
     $FieldsPmDynaform = $Fields;
     $FieldsPmDynaform["CURRENT_DYNAFORM"] = $_GET['DYN_UID'];
-    $a = new pmDynaform($FieldsPmDynaform);
+    $a = new pmDynaform(\ProcessMaker\Util\DateTime::convertUtcToTimeZone($FieldsPmDynaform));
     if ($a->isResponsive()) {
         $a->printView();
     } else {

@@ -48,7 +48,7 @@ class PMmemcached
 
     public function __construct ($workspace)
     {
-        $this->enabled = MEMCACHED_ENABLED;
+        $this->enabled = defined("MEMCACHED_ENABLED") ? MEMCACHED_ENABLED : \G::$memcachedEnabled;
         $this->connected = false;
         $this->workspace = $workspace;
         if (class_exists( 'Memcached' )) {
@@ -81,7 +81,7 @@ class PMmemcached
             }
         }
 
-        if (! MEMCACHED_ENABLED) {
+        if (!$this->enabled) {
             $this->connected = false;
             return false;
         }

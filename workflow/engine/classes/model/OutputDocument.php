@@ -41,30 +41,6 @@
 class OutputDocument extends BaseOutputDocument
 {
 
-    /**
-     * This value goes in the content table
-     * @var string
-     */
-    protected $out_doc_title = '';
-
-    /**
-     * This value goes in the content table
-     * @var   string
-     */
-    protected $out_doc_description = '';
-
-    /**
-     * This value goes in the content table
-     * @var string
-     */
-    protected $out_doc_filename = '';
-
-    /**
-     * This value goes in the content table
-     * @var string
-     */
-    protected $out_doc_template = '';
-
     public function __construct()
     {
         $javaInput = PATH_C . 'javaBridgePM' . PATH_SEP . 'input' . PATH_SEP;
@@ -84,10 +60,6 @@ class OutputDocument extends BaseOutputDocument
             }
 
             $aFields = $oOutputDocument->toArray(BasePeer::TYPE_FIELDNAME);
-            $aFields['OUT_DOC_TITLE'] = $oOutputDocument->getOutDocTitle();
-            $aFields['OUT_DOC_DESCRIPTION'] = $oOutputDocument->getOutDocDescription();
-            $aFields['OUT_DOC_FILENAME'] = $oOutputDocument->getOutDocFilename();
-            $aFields['OUT_DOC_TEMPLATE'] = $oOutputDocument->getOutDocTemplate();
             $this->fromArray($aFields, BasePeer::TYPE_FIELDNAME);
 
             return $aFields;
@@ -109,11 +81,6 @@ class OutputDocument extends BaseOutputDocument
 
             if (!is_null($oOutputDocument)) {
                 $aFields = $oOutputDocument->toArray(BasePeer::TYPE_FIELDNAME);
-                $aFields['OUT_DOC_TITLE'] = $oOutputDocument->getOutDocTitle();
-                $aFields['PRO_UID'] = $oOutputDocument->getProUid();
-                $aFields['OUT_DOC_DESCRIPTION'] = $oOutputDocument->getOutDocDescription();
-                $aFields['OUT_DOC_FILENAME'] = $oOutputDocument->getOutDocFilename();
-                $aFields['OUT_DOC_TEMPLATE'] = $oOutputDocument->getOutDocTemplate();
                 $this->fromArray($aFields, BasePeer::TYPE_FIELDNAME);
 
                 return $aFields;
@@ -158,17 +125,17 @@ class OutputDocument extends BaseOutputDocument
                 $oConnection->begin();
 
                 if (isset($aData['OUT_DOC_TITLE'])) {
-                    $oOutputDocument->setOutDocTitle($aData['OUT_DOC_TITLE']);
+                    $oOutputDocument->setOutDocTitleContent($aData['OUT_DOC_TITLE']);
                 }
 
                 if (isset($aData['OUT_DOC_DESCRIPTION'])) {
-                    $oOutputDocument->setOutDocDescription($aData['OUT_DOC_DESCRIPTION']);
+                    $oOutputDocument->setOutDocDescriptionContent($aData['OUT_DOC_DESCRIPTION']);
                 }
 
-                $oOutputDocument->setOutDocFilename($aData['OUT_DOC_FILENAME']);
+                $oOutputDocument->setOutDocFilenameContent($aData['OUT_DOC_FILENAME']);
 
                 if (isset($aData['OUT_DOC_TEMPLATE'])) {
-                    $oOutputDocument->setOutDocTemplate($aData['OUT_DOC_TEMPLATE']);
+                    $oOutputDocument->setOutDocTemplateContent($aData['OUT_DOC_TEMPLATE']);
                 }
 
                 $iResult = $oOutputDocument->save();
@@ -246,25 +213,34 @@ class OutputDocument extends BaseOutputDocument
                     $oConnection->begin();
 
                     if (isset($aData['OUT_DOC_TITLE'])) {
-                        $oOutputDocument->setOutDocTitle($aData['OUT_DOC_TITLE']);
+                        $oOutputDocument->setOutDocTitleContent($aData['OUT_DOC_TITLE']);
                     }
 
                     if (isset($aData['OUT_DOC_DESCRIPTION'])) {
-                        $oOutputDocument->setOutDocDescription($aData['OUT_DOC_DESCRIPTION']);
+                        $oOutputDocument->setOutDocDescriptionContent($aData['OUT_DOC_DESCRIPTION']);
                     }
 
                     if (isset($aData['OUT_DOC_FILENAME'])) {
-                        $oOutputDocument->setOutDocFilename($aData['OUT_DOC_FILENAME']);
+                        $oOutputDocument->setOutDocFilenameContent($aData['OUT_DOC_FILENAME']);
                     }
 
                     if (isset($aData['OUT_DOC_TEMPLATE'])) {
-                        $oOutputDocument->setOutDocTemplate($aData['OUT_DOC_TEMPLATE']);
+                        $oOutputDocument->setOutDocTemplateContent($aData['OUT_DOC_TEMPLATE']);
                     }
 
                     $iResult = $oOutputDocument->save();
                     $oConnection->commit();
                     //Add Audit Log
-                    $description = "Output Document Name: ".$aData['OUT_DOC_TITLE'].", Output Document Uid: ".$aData['OUT_DOC_UID'].", Filename generated: ".$aData['OUT_DOC_FILENAME'];
+                    $description = 'Output Document Uid: ' . $aData['OUT_DOC_UID'];
+
+                    if (array_key_exists('OUT_DOC_TITLE', $aData) && (string)($aData['OUT_DOC_TITLE']) != '') {
+                        $description .= ', Output Document Name: ' . $aData['OUT_DOC_TITLE'];
+                    }
+
+                    if (array_key_exists('OUT_DOC_FILENAME', $aData) && (string)($aData['OUT_DOC_FILENAME']) != '') {
+                        $description .= ', Filename generated: ' . $aData['OUT_DOC_FILENAME'];
+                    }
+
                     if(!empty($aData['OUT_DOC_DESCRIPTION'])){
                       $description .= ", Description: ".$aData['OUT_DOC_DESCRIPTION'];
                     }
@@ -274,12 +250,11 @@ class OutputDocument extends BaseOutputDocument
                     if(!empty($aData['OUT_DOC_REPORT_GENERATOR'])){
                         $description .= ", Output Document to Generate: ".$aData['OUT_DOC_GENERATE'];
                     }
-                    if($aData['OUT_DOC_PDF_SECURITY_ENABLED']==0){
-                      $pdfSecurity = 'Disabled';
-                    }else{
-                      $pdfSecurity = 'Enabled';
+
+                    if (array_key_exists('OUT_DOC_PDF_SECURITY_ENABLED', $aData) && (string)($aData['OUT_DOC_PDF_SECURITY_ENABLED']) != '') {
+                        $description .= ', PDF Security: ' . (((int)($aData['OUT_DOC_PDF_SECURITY_ENABLED']) != 0)? 'Enabled' : 'Disabled');
                     }
-                    $description .= ", PDF Security: ".$pdfSecurity;
+
                     if(!empty($aData['OUT_DOC_VERSIONING'])){
                       $description .= ", Enable Versioning: Yes";
                     }
@@ -363,7 +338,7 @@ class OutputDocument extends BaseOutputDocument
      * Get the [out_doc_title] column value.
      * @return string
      */
-    public function getOutDocTitle()
+    public function getOutDocTitleContent()
     {
         if ($this->out_doc_title == '') {
             try {
@@ -384,13 +359,12 @@ class OutputDocument extends BaseOutputDocument
      * @param string $sValue new value
      * @return void
      */
-    public function setOutDocTitle($sValue)
+    public function setOutDocTitleContent($sValue)
     {
         if ($sValue !== null && !is_string($sValue)) {
             $sValue = (string) $sValue;
         }
-
-        if ($this->out_doc_title !== $sValue || $sValue === '') {
+        if (in_array(OutputDocumentPeer::OUT_DOC_TITLE, $this->modifiedColumns) || $sValue === '') {
             try {
                 $this->out_doc_title = $sValue;
 
@@ -409,7 +383,7 @@ class OutputDocument extends BaseOutputDocument
      * Get the [out_doc_comment] column value.
      * @return string
      */
-    public function getOutDocDescription()
+    public function getOutDocDescriptionContent()
     {
         if ($this->out_doc_description == '') {
             try {
@@ -430,13 +404,13 @@ class OutputDocument extends BaseOutputDocument
      * @param string $sValue new value
      * @return void
      */
-    public function setOutDocDescription($sValue)
+    public function setOutDocDescriptionContent($sValue)
     {
         if ($sValue !== null && !is_string($sValue)) {
             $sValue = (string) $sValue;
         }
 
-        if ($this->out_doc_description !== $sValue || $sValue === '') {
+        if (in_array(OutputDocumentPeer::OUT_DOC_DESCRIPTION, $this->modifiedColumns) || $sValue === '') {
             try {
                 $this->out_doc_description = $sValue;
 
@@ -455,7 +429,7 @@ class OutputDocument extends BaseOutputDocument
      * Get the [out_doc_filename] column value.
      * @return string
      */
-    public function getOutDocFilename()
+    public function getOutDocFilenameContent()
     {
         if ($this->out_doc_filename == '') {
             try {
@@ -476,13 +450,13 @@ class OutputDocument extends BaseOutputDocument
      * @param string $sValue new value
      * @return void
      */
-    public function setOutDocFilename($sValue)
+    public function setOutDocFilenameContent($sValue)
     {
         if ($sValue !== null && !is_string($sValue)) {
             $sValue = (string) $sValue;
         }
 
-        if ($this->out_doc_filename !== $sValue || $sValue === '') {
+        if (in_array(OutputDocumentPeer::OUT_DOC_FILENAME, $this->modifiedColumns) || $sValue === '') {
             try {
                 $this->out_doc_filename = $sValue;
 
@@ -501,7 +475,7 @@ class OutputDocument extends BaseOutputDocument
      * Get the [out_doc_template] column value.
      * @return string
      */
-    public function getOutDocTemplate()
+    public function getOutDocTemplateContent()
     {
         if ($this->out_doc_template == '') {
             try {
@@ -522,13 +496,13 @@ class OutputDocument extends BaseOutputDocument
      * @param string $sValue new value
      * @return void
      */
-    public function setOutDocTemplate($sValue)
+    public function setOutDocTemplateContent($sValue)
     {
         if ($sValue !== null && !is_string($sValue)) {
             $sValue = (string) $sValue;
         }
 
-        if ($this->out_doc_template !== $sValue || $sValue === '') {
+        if (in_array(OutputDocumentPeer::OUT_DOC_TEMPLATE, $this->modifiedColumns) || $sValue === '') {
             try {
                 $this->out_doc_template = $sValue;
 
@@ -1179,7 +1153,7 @@ class OutputDocument extends BaseOutputDocument
 
         copy($sPath . $sFilename . '.html', PATH_OUTPUT_FILE_DIRECTORY . $sFilename . '.html');
         try {
-            $status = $pipeline->process(((isset($_SERVER['HTTPS'])) && ($_SERVER['HTTPS'] == 'on') ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . '/files/' . $_SESSION['APPLICATION'] . '/outdocs/' . $sFilename . '.html', $g_media);
+            $status = $pipeline->process((G::is_https() ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . '/files/' . $_SESSION['APPLICATION'] . '/outdocs/' . $sFilename . '.html', $g_media);
             copy(PATH_OUTPUT_FILE_DIRECTORY . $sFilename . '.pdf', $sPath . $sFilename . '.pdf');
             unlink(PATH_OUTPUT_FILE_DIRECTORY . $sFilename . '.pdf');
             unlink(PATH_OUTPUT_FILE_DIRECTORY . $sFilename . '.html');

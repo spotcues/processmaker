@@ -34,6 +34,18 @@ abstract class BaseDynaform extends BaseObject implements Persistent
     protected $dyn_uid = '';
 
     /**
+     * The value for the dyn_title field.
+     * @var        string
+     */
+    protected $dyn_title;
+
+    /**
+     * The value for the dyn_description field.
+     * @var        string
+     */
+    protected $dyn_description;
+
+    /**
      * The value for the pro_uid field.
      * @var        string
      */
@@ -98,6 +110,28 @@ abstract class BaseDynaform extends BaseObject implements Persistent
     {
 
         return $this->dyn_uid;
+    }
+
+    /**
+     * Get the [dyn_title] column value.
+     * 
+     * @return     string
+     */
+    public function getDynTitle()
+    {
+
+        return $this->dyn_title;
+    }
+
+    /**
+     * Get the [dyn_description] column value.
+     * 
+     * @return     string
+     */
+    public function getDynDescription()
+    {
+
+        return $this->dyn_description;
     }
 
     /**
@@ -219,6 +253,50 @@ abstract class BaseDynaform extends BaseObject implements Persistent
         }
 
     } // setDynUid()
+
+    /**
+     * Set the value of [dyn_title] column.
+     * 
+     * @param      string $v new value
+     * @return     void
+     */
+    public function setDynTitle($v)
+    {
+
+        // Since the native PHP type for this column is string,
+        // we will cast the input to a string (if it is not).
+        if ($v !== null && !is_string($v)) {
+            $v = (string) $v;
+        }
+
+        if ($this->dyn_title !== $v) {
+            $this->dyn_title = $v;
+            $this->modifiedColumns[] = DynaformPeer::DYN_TITLE;
+        }
+
+    } // setDynTitle()
+
+    /**
+     * Set the value of [dyn_description] column.
+     * 
+     * @param      string $v new value
+     * @return     void
+     */
+    public function setDynDescription($v)
+    {
+
+        // Since the native PHP type for this column is string,
+        // we will cast the input to a string (if it is not).
+        if ($v !== null && !is_string($v)) {
+            $v = (string) $v;
+        }
+
+        if ($this->dyn_description !== $v) {
+            $this->dyn_description = $v;
+            $this->modifiedColumns[] = DynaformPeer::DYN_DESCRIPTION;
+        }
+
+    } // setDynDescription()
 
     /**
      * Set the value of [pro_uid] column.
@@ -400,26 +478,30 @@ abstract class BaseDynaform extends BaseObject implements Persistent
 
             $this->dyn_uid = $rs->getString($startcol + 0);
 
-            $this->pro_uid = $rs->getString($startcol + 1);
+            $this->dyn_title = $rs->getString($startcol + 1);
 
-            $this->dyn_type = $rs->getString($startcol + 2);
+            $this->dyn_description = $rs->getString($startcol + 2);
 
-            $this->dyn_filename = $rs->getString($startcol + 3);
+            $this->pro_uid = $rs->getString($startcol + 3);
 
-            $this->dyn_content = $rs->getString($startcol + 4);
+            $this->dyn_type = $rs->getString($startcol + 4);
 
-            $this->dyn_label = $rs->getString($startcol + 5);
+            $this->dyn_filename = $rs->getString($startcol + 5);
 
-            $this->dyn_version = $rs->getInt($startcol + 6);
+            $this->dyn_content = $rs->getString($startcol + 6);
 
-            $this->dyn_update_date = $rs->getTimestamp($startcol + 7, null);
+            $this->dyn_label = $rs->getString($startcol + 7);
+
+            $this->dyn_version = $rs->getInt($startcol + 8);
+
+            $this->dyn_update_date = $rs->getTimestamp($startcol + 9, null);
 
             $this->resetModified();
 
             $this->setNew(false);
 
             // FIXME - using NUM_COLUMNS may be clearer.
-            return $startcol + 8; // 8 = DynaformPeer::NUM_COLUMNS - DynaformPeer::NUM_LAZY_LOAD_COLUMNS).
+            return $startcol + 10; // 10 = DynaformPeer::NUM_COLUMNS - DynaformPeer::NUM_LAZY_LOAD_COLUMNS).
 
         } catch (Exception $e) {
             throw new PropelException("Error populating Dynaform object", $e);
@@ -627,24 +709,30 @@ abstract class BaseDynaform extends BaseObject implements Persistent
                 return $this->getDynUid();
                 break;
             case 1:
-                return $this->getProUid();
+                return $this->getDynTitle();
                 break;
             case 2:
-                return $this->getDynType();
+                return $this->getDynDescription();
                 break;
             case 3:
-                return $this->getDynFilename();
+                return $this->getProUid();
                 break;
             case 4:
-                return $this->getDynContent();
+                return $this->getDynType();
                 break;
             case 5:
-                return $this->getDynLabel();
+                return $this->getDynFilename();
                 break;
             case 6:
-                return $this->getDynVersion();
+                return $this->getDynContent();
                 break;
             case 7:
+                return $this->getDynLabel();
+                break;
+            case 8:
+                return $this->getDynVersion();
+                break;
+            case 9:
                 return $this->getDynUpdateDate();
                 break;
             default:
@@ -668,13 +756,15 @@ abstract class BaseDynaform extends BaseObject implements Persistent
         $keys = DynaformPeer::getFieldNames($keyType);
         $result = array(
             $keys[0] => $this->getDynUid(),
-            $keys[1] => $this->getProUid(),
-            $keys[2] => $this->getDynType(),
-            $keys[3] => $this->getDynFilename(),
-            $keys[4] => $this->getDynContent(),
-            $keys[5] => $this->getDynLabel(),
-            $keys[6] => $this->getDynVersion(),
-            $keys[7] => $this->getDynUpdateDate(),
+            $keys[1] => $this->getDynTitle(),
+            $keys[2] => $this->getDynDescription(),
+            $keys[3] => $this->getProUid(),
+            $keys[4] => $this->getDynType(),
+            $keys[5] => $this->getDynFilename(),
+            $keys[6] => $this->getDynContent(),
+            $keys[7] => $this->getDynLabel(),
+            $keys[8] => $this->getDynVersion(),
+            $keys[9] => $this->getDynUpdateDate(),
         );
         return $result;
     }
@@ -710,24 +800,30 @@ abstract class BaseDynaform extends BaseObject implements Persistent
                 $this->setDynUid($value);
                 break;
             case 1:
-                $this->setProUid($value);
+                $this->setDynTitle($value);
                 break;
             case 2:
-                $this->setDynType($value);
+                $this->setDynDescription($value);
                 break;
             case 3:
-                $this->setDynFilename($value);
+                $this->setProUid($value);
                 break;
             case 4:
-                $this->setDynContent($value);
+                $this->setDynType($value);
                 break;
             case 5:
-                $this->setDynLabel($value);
+                $this->setDynFilename($value);
                 break;
             case 6:
-                $this->setDynVersion($value);
+                $this->setDynContent($value);
                 break;
             case 7:
+                $this->setDynLabel($value);
+                break;
+            case 8:
+                $this->setDynVersion($value);
+                break;
+            case 9:
                 $this->setDynUpdateDate($value);
                 break;
         } // switch()
@@ -758,31 +854,39 @@ abstract class BaseDynaform extends BaseObject implements Persistent
         }
 
         if (array_key_exists($keys[1], $arr)) {
-            $this->setProUid($arr[$keys[1]]);
+            $this->setDynTitle($arr[$keys[1]]);
         }
 
         if (array_key_exists($keys[2], $arr)) {
-            $this->setDynType($arr[$keys[2]]);
+            $this->setDynDescription($arr[$keys[2]]);
         }
 
         if (array_key_exists($keys[3], $arr)) {
-            $this->setDynFilename($arr[$keys[3]]);
+            $this->setProUid($arr[$keys[3]]);
         }
 
         if (array_key_exists($keys[4], $arr)) {
-            $this->setDynContent($arr[$keys[4]]);
+            $this->setDynType($arr[$keys[4]]);
         }
 
         if (array_key_exists($keys[5], $arr)) {
-            $this->setDynLabel($arr[$keys[5]]);
+            $this->setDynFilename($arr[$keys[5]]);
         }
 
         if (array_key_exists($keys[6], $arr)) {
-            $this->setDynVersion($arr[$keys[6]]);
+            $this->setDynContent($arr[$keys[6]]);
         }
 
         if (array_key_exists($keys[7], $arr)) {
-            $this->setDynUpdateDate($arr[$keys[7]]);
+            $this->setDynLabel($arr[$keys[7]]);
+        }
+
+        if (array_key_exists($keys[8], $arr)) {
+            $this->setDynVersion($arr[$keys[8]]);
+        }
+
+        if (array_key_exists($keys[9], $arr)) {
+            $this->setDynUpdateDate($arr[$keys[9]]);
         }
 
     }
@@ -798,6 +902,14 @@ abstract class BaseDynaform extends BaseObject implements Persistent
 
         if ($this->isColumnModified(DynaformPeer::DYN_UID)) {
             $criteria->add(DynaformPeer::DYN_UID, $this->dyn_uid);
+        }
+
+        if ($this->isColumnModified(DynaformPeer::DYN_TITLE)) {
+            $criteria->add(DynaformPeer::DYN_TITLE, $this->dyn_title);
+        }
+
+        if ($this->isColumnModified(DynaformPeer::DYN_DESCRIPTION)) {
+            $criteria->add(DynaformPeer::DYN_DESCRIPTION, $this->dyn_description);
         }
 
         if ($this->isColumnModified(DynaformPeer::PRO_UID)) {
@@ -881,6 +993,10 @@ abstract class BaseDynaform extends BaseObject implements Persistent
      */
     public function copyInto($copyObj, $deepCopy = false)
     {
+
+        $copyObj->setDynTitle($this->dyn_title);
+
+        $copyObj->setDynDescription($this->dyn_description);
 
         $copyObj->setProUid($this->pro_uid);
 

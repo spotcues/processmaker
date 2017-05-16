@@ -9,7 +9,7 @@ class actionsByEmailCoreClass extends PMPlugin
 
     public function setup()
     {
-        
+
     }
 
     public function getFieldsForPageSetup()
@@ -21,7 +21,12 @@ class actionsByEmailCoreClass extends PMPlugin
     {
     }
 
-    public function sendActionsByEmail($data)
+    /**
+     * @param $data
+     * @param $dataAbe
+     * @throws Exception
+     */
+    public function sendActionsByEmail($data, $dataAbe)
     {
         try {
             // Validations
@@ -66,12 +71,18 @@ class actionsByEmailCoreClass extends PMPlugin
                     error_log('The parameter $data->USR_UID is empty, the routed task may be a self-service type, actions by email does not work with self-service task types.', 0);
                 }
             } catch(Exception $e) {
-                echo $e->getMessage().' Please contact to your system administrator.';
+                $token = strtotime("now");
+                PMException::registerErrorLog($e, $token);
+                G::outRes( G::LoadTranslation("ID_EXCEPTION_LOG_INTERFAZ", array($token)) );
                 die;
             }
             G::LoadClass('pmFunctions');
 
-            $emailSetup = getEmailConfiguration();
+            $emailServer = new \ProcessMaker\BusinessModel\EmailServer();
+
+            $emailSetup = (!is_null(\EmailServerPeer::retrieveByPK($dataAbe['ABE_EMAIL_SERVER_UID']))) ?
+                $emailServer->getEmailServer($dataAbe['ABE_EMAIL_SERVER_UID'], true) :
+                $emailServer->getEmailServerDefault();
 
             if (!empty($emailSetup)) {
                 require_once 'classes/model/AbeConfiguration.php';
@@ -142,15 +153,22 @@ class actionsByEmailCoreClass extends PMPlugin
                             // Email
                             $_SESSION['CURRENT_DYN_UID'] = $configuration['DYN_UID'];
 
-                            $scriptCode = '';
-//                            foreach ($dynaform->fields as $fieldName => $field) {
-//                                if ($field->type == 'submit') {
-//                                    unset($dynaform->fields[$fieldName]);
-//                                }
-//                            }
-
                             $__ABE__ = '';
-                            $link = (G::is_https() ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . '/sys' . SYS_SYS . '/' . SYS_LANG . '/' . SYS_SKIN . '/services/ActionsByEmail';
+                            $conf = new Configurations();
+                            $envSkin = defined("SYS_SKIN") ? SYS_SKIN : $conf->getConfiguration('SKIN_CRON', '');
+                            $envHost = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : SERVER_NAME;
+                            $envProtocol = defined("REQUEST_SCHEME") && REQUEST_SCHEME === "https";
+                            if (isset($_SERVER['SERVER_PORT'])) {
+                                $envPort = ($_SERVER['SERVER_PORT'] != "80") ? ":" . $_SERVER['SERVER_PORT'] : "";
+                            } else if (defined('SERVER_PORT')) {
+                                $envPort = (SERVER_PORT . "" != "80") ? ":" . SERVER_PORT : "";
+                            } else {
+                                $envPort = ""; // Empty by default
+                            }
+                            if (!empty($envPort) && strpos($envHost, $envPort) === false) {
+                                $envHost = $envHost . $envPort;
+                            }
+                            $link = (G::is_https() || $envProtocol ? 'https://' : 'http://') . $envHost . '/sys' . SYS_SYS . '/' . SYS_LANG . '/' . $envSkin . '/services/ActionsByEmail';
 
                             switch ($configuration['ABE_TYPE']) {
                                 case 'CUSTOM':
@@ -159,28 +177,27 @@ class actionsByEmailCoreClass extends PMPlugin
                                     $variables = $variableService->doGetVariables($caseFields['PRO_UID']);
                                     $field = new stdClass();
                                     $field->label = '';
-                                    $actionField = str_replace(array('@@','@#','@=','@%','@?','@$'), '', $configuration['ABE_ACTION_FIELD']);
+                                    $actionField = str_replace(array('@@', '@#', '@=', '@%', '@?', '@$'), '', $configuration['ABE_ACTION_FIELD']);
                                     G::LoadClass('pmDynaform');
                                     $obj = new pmDynaform($configuration['DYN_UID']);
                                     $configuration['CURRENT_DYNAFORM'] = $configuration['DYN_UID'];
                                     $file = $obj->printPmDynaformAbe($configuration);
                                     $__ABE__ .= $file;
-                                    $__ABE__ .= '<strong>' . $field->label . '</strong><br /><br /><table align="left" border="0"><tr>';
+                                    $__ABE__ .= '<div style="width: 100%"></div><strong>' . $field->label . '</strong><table align="left" border="0"><tr>';
                                     $index = 1;
-                                    $__ABE__.='<br /><td><table align="left" cellpadding="2"><tr>';
-                                    foreach ($customGrid as $key => $value) {    
-                                        $__ABE__ .= '<td align="center"><a style="'.$value['abe_custom_format'].'" ';
-                                        $__ABE__ .= 'href="' .urldecode(urlencode($link)). '?ACTION='.G::encrypt('processABE', URL_KEY).'&APP_UID=';
+                                    $__ABE__ .= '<td><table align="left" cellpadding="2"><tr>';
+                                    foreach ($customGrid as $key => $value) {
+                                        $__ABE__ .= '<td align="center"><a style="' . $value['abe_custom_format'] . '" ';
+                                        $__ABE__ .= 'href="' . urldecode(urlencode($link)) . '?ACTION=' . G::encrypt('processABE', URL_KEY) . '&APP_UID=';
                                         $__ABE__ .= G::encrypt($data->APP_UID, URL_KEY) . '&DEL_INDEX=' . G::encrypt($data->DEL_INDEX, URL_KEY);
                                         $__ABE__ .= '&FIELD=' . G::encrypt($actionField, URL_KEY) . '&VALUE=' . G::encrypt($value['abe_custom_value'], URL_KEY);
                                         $__ABE__ .= '&ABER=' . G::encrypt($abeRequest['ABE_REQ_UID'], URL_KEY) . '" target="_blank" >' . $value['abe_custom_label'];
                                         $__ABE__ .= '</a></td>' . (($index % 5 == 0) ? '</tr><tr>' : '  ');
                                         $index++;
                                     }
-                                    $__ABE__.='</tr></table><br />';
+                                    $__ABE__ .= '</tr></table></div>';
                                     break;
                                 case 'LINK':
-                                    // $__ABE__ .= $dynaform->render(PATH_FEATURES . 'actionsByEmail/xmlform.html', $scriptCode) . '<br />';
                                     $__ABE__ .= '<a href="' . $link . 'DataForm?APP_UID=' . G::encrypt($data->APP_UID, URL_KEY) . '&DEL_INDEX=' . G::encrypt($data->DEL_INDEX, URL_KEY) . '&DYN_UID=' . G::encrypt($configuration['DYN_UID'], URL_KEY) . '&ABER=' . G::encrypt($abeRequest['ABE_REQ_UID'], URL_KEY) . '" target="_blank">Please complete this form</a>';
                                     break;
                                 // coment
@@ -266,30 +283,41 @@ class actionsByEmailCoreClass extends PMPlugin
                             G::LoadClass("Users");
 
                             $user = new Users();
-                            $userDetails = $user->loadDetails($data->PREVIOUS_USR_UID);
 
-                            if($configuration['ABE_MAILSERVER_OR_MAILCURRENT'] == 1 && $configuration['ABE_TYPE'] !== ''){
-                                $emailFrom = ($userDetails["USR_FULLNAME"] . ' <' . $userDetails["USR_EMAIL"] . '>');
-                            }else{                          
-                                if(isset($emailSetup["MESS_FROM_NAME"]) && isset($emailSetup["MESS_FROM_MAIL"] )){
+                            if (!$configuration['ABE_MAILSERVER_OR_MAILCURRENT'] && $configuration['ABE_TYPE'] !== '') {
+                                if ($data->PREVIOUS_USR_UID !== '') {
+                                    $userDetails = $user->loadDetails($data->PREVIOUS_USR_UID);
+                                    $emailFrom = ($userDetails["USR_FULLNAME"] . ' <' . $userDetails["USR_EMAIL"] . '>');
+                                } else {
+                                    global $RBAC;
+                                    $currentUser = $RBAC->aUserInfo['USER_INFO'];
+                                    $emailFrom = ($currentUser["USR_FIRSTNAME"] . ' ' . $currentUser["USR_LASTNAME"] . ' <' . $currentUser["USR_EMAIL"] . '>');
+                                }
+                            } else {
+                                if (isset($emailSetup["MESS_FROM_NAME"]) && isset($emailSetup["MESS_FROM_MAIL"])) {
                                     $emailFrom = ($emailSetup["MESS_FROM_NAME"] . ' <' . $emailSetup["MESS_FROM_MAIL"] . '>');
-                                }else{
+                                } else {
                                     $emailFrom = ((isset($emailSetup["MESS_FROM_NAME"])) ? $emailSetup["MESS_FROM_NAME"] : $emailSetup["MESS_FROM_MAIL"]);
                                 }
                             }
-                            
-                            G::LoadClass('wsBase');
 
+                            G::LoadClass('wsBase');
                             $wsBaseInstance = new wsBase();
-                            $result = $wsBaseInstance->sendMessage($data->APP_UID,
-                                                                   $emailFrom,
-                                                                   $email,
-                                                                   '',
-                                                                   '',
-                                                                   $subject,
-                                                                   $configuration['ABE_TEMPLATE'],
-                                                                   $caseFields['APP_DATA'],
-                                                                   '');
+                            $result = $wsBaseInstance->sendMessage(
+                                $data->APP_UID,
+                                $emailFrom,
+                                $email,
+                                '',
+                                '',
+                                $subject,
+                                $configuration['ABE_TEMPLATE'],
+                                $caseFields['APP_DATA'],
+                                null,
+                                true,
+                                0,
+                                $emailSetup,
+                                0
+                            );
                             $abeRequest['ABE_REQ_STATUS'] = ($result->status_code == 0 ? 'SENT' : 'ERROR');
 
                             $body = '';

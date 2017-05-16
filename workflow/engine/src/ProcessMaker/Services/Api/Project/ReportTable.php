@@ -87,7 +87,7 @@ class ReportTable extends Api
     {
         try {
             $oReportTable = new \ProcessMaker\BusinessModel\Table();
-            $response = $oReportTable->getTableData($rep_uid, $prj_uid, true);
+            $response = $oReportTable->getTableData($rep_uid, $prj_uid, null, true);
             return $response;
         } catch (\Exception $e) {
             throw (new RestException(Api::STAT_APP_EXCEPTION, $e->getMessage()));

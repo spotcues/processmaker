@@ -49,12 +49,15 @@ try {
     //refresh dbarray with the last change in outputDocument
     $oMap = new processMap();
     $oCriteria = $oMap->getOutputDocumentsCriteria( $fields['PRO_UID'] );
+
+    $result = new stdClass();
     $result->success = true;
     $result->msg = G::LoadTranslation( 'ID_OUTPUTDOCUMENT_REMOVED' );
 } catch (Exception $e) {
+    $result = new stdClass();
     $result->success = false;
     $result->msg = $e->getMessage();
-    //die($oException->getMessage());
 }
+
 print G::json_encode( $result );
 

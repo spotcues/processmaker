@@ -115,7 +115,7 @@ class Variable extends Api
      * @param string $var_name
      * @param array  $request_data
      */
-    public function doPostVariableExecuteSql($prj_uid, $var_name, $request_data)
+    public function doPostVariableExecuteSql($prj_uid, $var_name = '', $request_data = array())
     {
         try {
             $variable = new \ProcessMaker\BusinessModel\Variable();

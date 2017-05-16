@@ -255,8 +255,8 @@ class Column extends XMLElement {
 			try {
 				$this->phpName = NameFactory::generateName(NameFactory::PHP_GENERATOR, $inputs);
 			} catch (EngineException $e) {
-				print $e->getMessage() . "\n";
-				print $e->getTraceAsString();
+				error_log( $e->getMessage() . "\n" );
+				error_log( $e->getTraceAsString() );
 			}
 		}
 		return $this->phpName;

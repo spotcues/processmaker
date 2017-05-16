@@ -458,4 +458,47 @@ class AddonsManager extends BaseAddonsManager
         }
         return true;
     }
+
+    /**
+     *  Exists in Addons Manager Table
+     *
+     * @param string $addonId
+     * @param string $storeId
+     * @return type
+     * @throws type
+     */
+    public function exists($addonId, $storeId)
+    {
+        $oAddManager = AddonsManagerPeer::retrieveByPK($addonId, $storeId);
+
+        return (!is_null($oAddManager));
+    }
+
+    /**
+     *  Update Addons Manager Table
+     *
+     * @param type $data
+     * @return type
+     * @throws type
+     */
+    public function update($data)
+    {
+        $con = Propel::getConnection( AddonsManagerPeer::DATABASE_NAME );
+        try {
+            $con->begin();
+            $this->setNew( false );
+            $this->fromArray( $data, BasePeer::TYPE_FIELDNAME );
+            if ($this->validate()) {
+                $result = $this->save();
+                $con->commit();
+                return $result;
+            } else {
+                $con->rollback();
+                throw (new Exception( "Failed Validation in class " . get_class( $this ) . "." ));
+            }
+        } catch (Exception $e) {
+            $con->rollback();
+            throw ($e);
+        }
+    }
 }

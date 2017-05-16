@@ -19,6 +19,7 @@ SELECT LANG_ID, LANG_NAME FROM langOptions
   <en><![CDATA[Language]]></en>
 </USER_LANG>
   <URL type="hidden"/>
+  <FAILED_LOGINS type="hidden"/>
   <LOGIN_VERIFY_MSG type="private" showInTable="0"/>
   <BSUBMIT type="button">
     <en><![CDATA[Login]]></en>

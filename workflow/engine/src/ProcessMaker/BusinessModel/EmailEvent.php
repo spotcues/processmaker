@@ -65,13 +65,9 @@ class EmailEvent
             $accountsArray = array();
             while ($aRow = $result->getRow()) {
                 if ($aRow['MESS_UID'] != null) {
-                    if($aRow['MESS_FROM_MAIL'] == "") {
-                        $aRow['EMAIL'] = $aRow['MESS_ACCOUNT'];
-                    } else {
-                        $aRow['EMAIL'] = $aRow['MESS_FROM_MAIL'];
-                    } 
+                    $aRow['EMAIL'] = $aRow['MESS_ACCOUNT'];
                     if($aRow['EMAIL'] != "") {
-                        $accountsArray[] = array_change_key_case($aRow, CASE_LOWER);    
+                        $accountsArray[] = array_change_key_case($aRow, CASE_LOWER);
                     }
                 }
                 $result->next();
@@ -355,6 +351,32 @@ class EmailEvent
             $criteria->addSelectColumn(\EmailEventPeer::EMAIL_EVENT_TO);
             $criteria->addSelectColumn(\EmailEventPeer::EMAIL_EVENT_SUBJECT);
             $criteria->addSelectColumn(\EmailEventPeer::PRF_UID);
+            $criteria->addSelectColumn(\EmailEventPeer::EMAIL_SERVER_UID);
+
+            return $criteria;
+        } catch (\Exception $e) {
+            throw $e;
+        }
+    }
+
+    /**
+     * @return \Criteria
+     * @throws \Exception
+     */
+    public function getEmailEventCriteriaEmailServer()
+    {
+        try {
+            $criteria = new \Criteria("workflow");
+
+            $criteria->addSelectColumn(\EmailEventPeer::EMAIL_EVENT_UID);
+            $criteria->addSelectColumn(\EmailEventPeer::PRJ_UID);
+            $criteria->addSelectColumn(\EmailEventPeer::EVN_UID);
+            $criteria->addSelectColumn(\EmailEventPeer::EMAIL_EVENT_FROM);
+            $criteria->addSelectColumn(\EmailEventPeer::EMAIL_EVENT_TO);
+            $criteria->addSelectColumn(\EmailEventPeer::EMAIL_EVENT_SUBJECT);
+            $criteria->addSelectColumn(\EmailEventPeer::PRF_UID);
+            $criteria->addSelectColumn(\EmailEventPeer::EMAIL_SERVER_UID);
+            $criteria->add(\EmailEventPeer::EMAIL_SERVER_UID, '',\Criteria::EQUAL);
 
             return $criteria;
         } catch (\Exception $e) {
@@ -411,19 +433,21 @@ class EmailEvent
             throw new \Exception(\G::LoadTranslation("ID_EMAIL_EVENT_DEFINITION_DOES_NOT_EXIST"));
         }
         $arrayData = $this->existsEvent($prj_uid, $eventUid);
-        if(sizeof($arrayData)) {
+        if (sizeof($arrayData)) {
+            $oEmailServer = new EmailServer();
+            $configEmailData = $oEmailServer->getEmailServer($arrayData[7]);
             $emailGroupTo = array();
             $emailTo = "";
             $prfUid = $arrayData[6];
             $filesManager = new \ProcessMaker\BusinessModel\FilesManager();
             $contentFile = $filesManager->getProcessFileManager($prj_uid, $prfUid);
-            if(strpos($arrayData[4],",")) {
-                $emailsArray = explode(",",$arrayData[4]);
-                foreach($emailsArray as $email) {
-                    if(substr($email,0,1) == "@") {
-                        $email = substr($email, 2,strlen($email));
-                        if(isset($arrayApplicationData['APP_DATA'])) {
-                            if(is_array($arrayApplicationData['APP_DATA']) && isset( $arrayApplicationData['APP_DATA'][$email])) {
+            if (strpos($arrayData[4], ",")) {
+                $emailsArray = explode(",", $arrayData[4]);
+                foreach ($emailsArray as $email) {
+                    if (substr($email, 0, 1) == "@") {
+                        $email = substr($email, 2, strlen($email));
+                        if (isset($arrayApplicationData['APP_DATA'])) {
+                            if (is_array($arrayApplicationData['APP_DATA']) && isset($arrayApplicationData['APP_DATA'][$email])) {
                                 $emailGroupTo[] = $arrayApplicationData['APP_DATA'][$email];
                             }
                         }
@@ -431,13 +455,13 @@ class EmailEvent
                         $emailGroupTo[] = $email;
                     }
                 }
-                $emailTo = implode(",",array_unique(array_filter($emailGroupTo)));
+                $emailTo = implode(",", array_unique(array_filter($emailGroupTo)));
             } else {
                 $email = $arrayData[4];
-                if(substr($email,0,1) == "@") {
-                    $email = substr($email, 2,strlen($email));
-                    if(isset($arrayApplicationData['APP_DATA'])) {
-                        if(is_array($arrayApplicationData['APP_DATA']) && isset( $arrayApplicationData['APP_DATA'][$email])) {
+                if (substr($email, 0, 1) == "@") {
+                    $email = substr($email, 2, strlen($email));
+                    if (isset($arrayApplicationData['APP_DATA'])) {
+                        if (is_array($arrayApplicationData['APP_DATA']) && isset($arrayApplicationData['APP_DATA'][$email])) {
                             $emailTo = $arrayApplicationData['APP_DATA'][$email];
                         }
                     }
@@ -445,10 +469,13 @@ class EmailEvent
                     $emailTo = $email;
                 }
             }
-            if(!empty($emailTo)) {
+            if (!empty($emailTo)) {
                 $subject = $arrayData[5];
                 $subject = \G::replaceDataField($arrayData[5], $arrayApplicationData['APP_DATA']);
-                \PMFSendMessage($appUID, $arrayData[3], $emailTo, '', '', $subject, $contentFile['prf_filename'], array());
+                \PMFSendMessage($appUID, $configEmailData['MESS_ACCOUNT'], $emailTo, '', '', $subject,
+                    $contentFile['prf_filename'], array(), array(), true, 0, $configEmailData);
+            } else {
+                \Bootstrap::registerMonolog('EmailEventMailError', 200, \G::LoadTranslation('ID_EMAIL_EVENT_CONFIGURATION_EMAIL', array($eventUid, $prj_uid)), ['eventUid' => $eventUid, 'prj_uid' => $prj_uid], SYS_SYS, 'processmaker.log');
             }
         }
     }
@@ -503,4 +530,3 @@ class EmailEvent
         }
     }
 }
-

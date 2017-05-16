@@ -91,11 +91,13 @@ try {
             $oTasks = new Tasks();
             switch ((int) $_POST['TU_RELATION']) {
                 case 1:
-                    echo $oTasks->assignUser($_POST['TAS_UID'], $_POST['USR_UID'], $_POST['TU_TYPE']);
+                    $resh = htmlentities($oTasks->assignUser($_POST['TAS_UID'], $_POST['USR_UID'], $_POST['TU_TYPE']), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                    G::outRes($resh);
                     G::auditlog("AssignUserTask","Assign a User to a Task -> ".$_POST['TAS_UID'].' User UID -> '.$_POST['USR_UID']);
                     break;
                 case 2:
-                    echo $oTasks->assignGroup($_POST['TAS_UID'], $_POST['USR_UID'], $_POST['TU_TYPE']);
+                    $resh = htmlentities($oTasks->assignGroup($_POST['TAS_UID'], $_POST['USR_UID'], $_POST['TU_TYPE']), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                    G::outRes($resh);
                     G::auditlog("AssignGroupTask","Assign a Group to a Task -> ".$_POST['TAS_UID'].' User UID -> '.$_POST['USR_UID']);
                     break;
             }
@@ -210,17 +212,15 @@ try {
             $objectPermision = $doSelectRS->getRow();
             if (isset($objectPermision["USR_UID"])) {
                 $criteria = new Criteria("workflow");
-                $criteria->addSelectColumn(ContentPeer::CON_VALUE);
-                $criteria->add(ContentPeer::CON_CATEGORY, 'PRO_TITLE', Criteria::EQUAL);
-                $criteria->add(ContentPeer::CON_ID, $objectPermision["PRO_UID"], Criteria::EQUAL);
-                $criteria->add(ContentPeer::CON_LANG, SYS_LANG, Criteria::EQUAL);
-                $doSelectRS = ContentPeer::doSelectRS($criteria);
+                $criteria->addSelectColumn(ProcessPeer::PRO_TITLE);
+                $criteria->add(ProcessPeer::PRO_UID, $objectPermision["PRO_UID"], Criteria::EQUAL);
+                $doSelectRS = ProcessPeer::doSelectRS($criteria);
                 $doSelectRS->setFetchmode(ResultSet::FETCHMODE_ASSOC);
                 $doSelectRS->next();
                 $content = $doSelectRS->getRow();
                 echo G::json_encode(array(
                     "status" => 'ERROR',
-                    "message" => G::LoadTranslation('ID_USER_CANT_BE_DELETED_FOR_THE_PROCESS', array('processTitle' => isset($content["CON_VALUE"]) ? $content["CON_VALUE"] : $objectPermision['PRO_UID']))
+                    "message" => G::LoadTranslation('ID_USER_CANT_BE_DELETED_FOR_THE_PROCESS', array('processTitle' => isset($content["PRO_TITLE"]) ? $content["PRO_TITLE"] : $objectPermision['PRO_UID']))
                 ));
                 break;
             }
@@ -440,11 +440,11 @@ try {
             $oCriteria->addSelectColumn(UsersPeer::USR_LASTNAME);
             $oCriteria->addSelectColumn(UsersPeer::USR_EMAIL);
             $oCriteria->addSelectColumn(UsersPeer::USR_ROLE);
-            $oCriteria->addSelectColumn(UsersPeer::USR_TOTAL_PARTICIPATED);
             $oCriteria->addSelectColumn(UsersPeer::USR_DUE_DATE);
             $oCriteria->addSelectColumn(UsersPeer::USR_STATUS);
             $oCriteria->addSelectColumn(UsersPeer::USR_UX);
             $oCriteria->addSelectColumn(UsersPeer::DEP_UID);
+            $oCriteria->addSelectColumn(UsersPeer::USR_LAST_LOGIN);
             $oCriteria->addAsColumn('LAST_LOGIN', 0);
             $oCriteria->addAsColumn('DEP_TITLE', 0);
             $oCriteria->addAsColumn('TOTAL_CASES', 0);
@@ -471,9 +471,6 @@ try {
             $oCriteria->setLimit($limit);
             $oDataset = UsersPeer::DoSelectRs($oCriteria);
             $oDataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
-
-            $Login = new LoginLog();
-            $aLogin = $Login->getLastLoginAllUsers();
             $Department = new Department();
             $aDepart = $Department->getAllDepartmentsByUser();
             $aAuthSources = $RBAC->getAllAuthSourcesByUser();
@@ -482,6 +479,8 @@ try {
             $uxList = adminProxy::getUxTypesList();
 
             $oRoles = new Roles();
+            $oParticipated = new ListParticipatedLast();
+            $oAppCache = new AppCacheView();
             $rows = Array();
             $uRole = Array();
             while ($oDataset->next()) {
@@ -490,15 +489,23 @@ try {
                 try {
                     $uRole = $oRoles->loadByCode($row['USR_ROLE']);
                 } catch (exception $oError) {
-                    $uRole['ROL_NAME'] = G::loadTranslation( 'ID_DELETED' );
+                    $uRole['ROL_NAME'] = G::loadTranslation('ID_DELETED');
                 }
-
+                /*----------------------------------********---------------------------------*/
+                if (true) {
+                    $total = $oParticipated->getCountList($row['USR_UID']);
+                } else {
+                /*----------------------------------********---------------------------------*/
+                    $total = $oAppCache->getListCounters('sent', $row['USR_UID'], false);
+                /*----------------------------------********---------------------------------*/
+                }
+                /*----------------------------------********---------------------------------*/
                 $row['USR_ROLE_ID'] = $row['USR_ROLE'];
                 $row['USR_ROLE'] = isset($uRole['ROL_NAME']) ? ($uRole['ROL_NAME'] != '' ? $uRole['ROL_NAME'] : $uRole['ROL_CODE']) : $uRole['ROL_CODE'];
 
                 $row['DUE_DATE_OK'] = (date('Y-m-d') > date('Y-m-d', strtotime($row['USR_DUE_DATE']))) ? 0 : 1;
-                $row['LAST_LOGIN'] = isset($aLogin[$row['USR_UID']]) ? $aLogin[$row['USR_UID']] : '';
-                $row['TOTAL_CASES'] = isset($row['USR_TOTAL_PARTICIPATED']) ? $row['USR_TOTAL_PARTICIPATED'] : 0;
+                $row['LAST_LOGIN'] = isset($row['USR_LAST_LOGIN']) ? \ProcessMaker\Util\DateTime::convertUtcToTimeZone($row['USR_LAST_LOGIN']) : '';
+                $row['TOTAL_CASES'] = $total;
                 $row['DEP_TITLE'] = isset($aDepart[$row['USR_UID']]) ? $aDepart[$row['USR_UID']] : '';
                 $row['USR_UX'] = isset($uxList[$row['USR_UX']]) ? $uxList[$row['USR_UX']] : $uxList['NORMAL'];
                 $row['USR_AUTH_SOURCE'] = isset($aAuthSources[$row['USR_UID']]) ? $aAuthSources[$row['USR_UID']] : 'ProcessMaker (MYSQL)';
@@ -584,6 +591,8 @@ try {
             break;
     }
 } catch (Exception $oException) {
-    die($oException->getMessage());
+    $token = strtotime("now");
+    PMException::registerErrorLog($oException, $token);
+    G::outRes( G::LoadTranslation("ID_EXCEPTION_LOG_INTERFAZ", array($token)) );
+    die;
 }
-

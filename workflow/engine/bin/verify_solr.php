@@ -46,9 +46,17 @@ if((count ($argv) > 2)){
   $usrUid = $argv [3];
 }
 
+$debug = 1;//enable o disable notice, this mechanism is inherited from '/processmaker/workflow/engine/bin/reindex_solr.php'
+
 ini_set ('display_errors', 1);
-error_reporting (E_ALL);
+
 ini_set ('memory_limit', '256M'); // set enough memory for the script
+
+$e_all = defined( 'E_DEPRECATED' ) ? E_ALL & ~ E_DEPRECATED : E_ALL;
+$e_all = defined( 'E_STRICT' ) ? $e_all & ~ E_STRICT : $e_all;
+$e_all = $debug ? $e_all : $e_all & ~ E_NOTICE;
+
+ini_set( 'error_reporting', $e_all );
 
 if (! defined ('SYS_LANG')) {
   define ('SYS_LANG', 'en');
@@ -74,8 +82,61 @@ if (! defined ('PATH_HOME')) {
   define ('PATH_HOME', $pathhome);
   define ('PATH_TRUNK', $pathTrunk);
   define ('PATH_OUTTRUNK', $pathOutTrunk);
+  define( 'PATH_CLASSES', PATH_HOME . "engine" . PATH_SEP . "classes" . PATH_SEP );
 
+  require_once PATH_TRUNK . "framework/src/Maveriks/Util/ClassLoader.php";
   require_once (PATH_HOME . 'engine' . PATH_SEP . 'config' . PATH_SEP . 'paths.php');
+  require_once (PATH_GULLIVER . "class.bootstrap.php");
+  Bootstrap::registerSystemClasses();
+  spl_autoload_register(array('Bootstrap', 'autoloadClass'));
+
+    Bootstrap::registerClass('BaseAppAssignSelfServiceValue', PATH_HOME . "engine/classes/model/om/BaseAppAssignSelfServiceValue.php");
+    Bootstrap::registerClass('BaseAppAssignSelfServiceValuePeer', PATH_HOME . "engine/classes/model/om/BaseAppAssignSelfServiceValuePeer.php");
+    Bootstrap::registerClass('AppAssignSelfServiceValue', PATH_HOME . "engine/classes/model/AppAssignSelfServiceValue.php");
+    Bootstrap::registerClass('AppAssignSelfServiceValuePeer', PATH_HOME . "engine/classes/model/AppAssignSelfServiceValuePeer.php");
+    Bootstrap::registerClass('BaseGroupwf', PATH_HOME . "engine/classes/model/om/BaseGroupwf.php");
+    Bootstrap::registerClass('BaseGroupwfPeer', PATH_HOME . "engine/classes/model/om/BaseGroupwfPeer.php");
+    Bootstrap::registerClass('BaseLanguage', PATH_HOME . "engine/classes/model/om/BaseLanguage.php");
+    Bootstrap::registerClass('BaseLanguagePeer', PATH_HOME . "engine/classes/model/om/BaseLanguagePeer.php");
+    Bootstrap::registerClass('AddonsManagerPeer', PATH_HOME . "engine/classes/model/AddonsManagerPeer.php");
+    Bootstrap::registerClass('BaseAppCacheView', PATH_HOME . "engine/classes/model/om/BaseAppCacheView.php");
+    Bootstrap::registerClass('BaseAppCacheViewPeer', PATH_HOME . "engine/classes/model/om/BaseAppCacheViewPeer.php");
+    Bootstrap::registerClass('AppCacheView', PATH_HOME . "engine/classes/model/AppCacheView.php");
+    Bootstrap::registerClass('AppCacheViewPeer', PATH_HOME . "engine/classes/model/AppCacheViewPeer.php");
+    Bootstrap::registerClass('BaseConfiguration', PATH_HOME . "engine/classes/model/om/BaseConfiguration.php");
+    Bootstrap::registerClass('BaseConfigurationPeer', PATH_HOME . "engine/classes/model/om/BaseConfigurationPeer.php");
+    
+    Bootstrap::registerClass('BaseProcess', PATH_HOME . "engine/classes/model/om/BaseProcess.php");
+    Bootstrap::registerClass('ProcessPeer', PATH_HOME . "engine/classes/model/ProcessPeer.php");
+    Bootstrap::registerClass('BaseAppSolrQueue', PATH_HOME . "engine/classes/model/om/BaseAppSolrQueue.php");
+    Bootstrap::registerClass('BaseDynaform', PATH_HOME . "engine/classes/model/om/BaseDynaform.php");
+    Bootstrap::registerClass('DynaformPeer', PATH_HOME . "engine/classes/model/DynaformPeer.php");
+    Bootstrap::registerClass('BaseTaskUser', PATH_HOME . "engine/classes/model/om/BaseTaskUser.php");
+    Bootstrap::registerClass('BaseTask', PATH_HOME . "engine/classes/model/om/BaseTask.php");
+    Bootstrap::registerClass('BaseGroupUserPeer', PATH_HOME . "engine/classes/model/om/BaseGroupUserPeer.php");
+    Bootstrap::registerClass('BaseGroupUser', PATH_HOME . "engine/classes/model/om/BaseGroupUser.php");
+    Bootstrap::registerClass('BaseUsers', PATH_HOME . "engine/classes/model/om/BaseUsers.php");
+    Bootstrap::registerClass('BaseContent', PATH_HOME . "engine/classes/model/om/BaseContent.php");
+    Bootstrap::registerClass('BaseContentPeer', PATH_HOME . "engine/classes/model/om/BaseContentPeer.php");
+    Bootstrap::registerClass('ContentPeer', PATH_HOME . "engine/classes/model/ContentPeer.php");
+    Bootstrap::registerClass('BaseAppThread', PATH_HOME . "engine/classes/model/om/BaseAppThread.php");
+    Bootstrap::registerClass('AppThreadPeer', PATH_HOME . "engine/classes/model/AppThreadPeer.php");
+    Bootstrap::registerClass('BaseApplication', PATH_HOME . "engine/classes/model/om/BaseApplication.php");
+    Bootstrap::registerClass('ApplicationPeer', PATH_HOME . "engine/classes/model/ApplicationPeer.php");
+    Bootstrap::registerClass('BaseAppDelegation', PATH_HOME . "engine/classes/model/om/BaseAppDelegation.php");
+    Bootstrap::registerClass('BaseAppDelegationPeer', PATH_HOME . "engine/classes/model/om/BaseAppDelegationPeer.php");
+    Bootstrap::registerClass('BaseEvent', PATH_HOME . "engine/classes/model/om/BaseEvent.php");
+    Bootstrap::registerClass('BaseEventPeer', PATH_HOME . "engine/classes/model/om/BaseEventPeer.php");
+    Bootstrap::registerClass('BaseAppEvent', PATH_HOME . "engine/classes/model/om/BaseAppEvent.php");
+    Bootstrap::registerClass('AppEventPeer', PATH_HOME . "engine/classes/model/AppEventPeer.php");
+    Bootstrap::registerClass('BaseCaseScheduler', PATH_HOME . "engine/classes/model/om/BaseCaseScheduler.php");
+    Bootstrap::registerClass('BaseCaseSchedulerPeer', PATH_HOME . "engine/classes/model/om/BaseCaseSchedulerPeer.php");
+    Bootstrap::registerClass('CaseSchedulerPeer', PATH_HOME . "engine/classes/model/CaseSchedulerPeer.php");
+
+  require_once 'classes/model/AppDelegation.php';
+  require_once 'classes/model/Event.php';
+  require_once 'classes/model/AppEvent.php';
+  require_once 'classes/model/CaseScheduler.php';
 
   G::LoadThirdParty ('pear/json', 'class.json');
   G::LoadThirdParty ('smarty/libs', 'Smarty.class');
@@ -93,7 +154,6 @@ if (! defined ('PATH_HOME')) {
   G::LoadSystem ('form');
   G::LoadSystem ('menu');
   G::LoadSystem ("xmlMenu");
-  G::LoadSystem ('dvEditor');
   G::LoadSystem ('table');
   G::LoadSystem ('pagedTable');
   G::LoadClass ('system');
@@ -101,10 +161,6 @@ if (! defined ('PATH_HOME')) {
   require_once ("creole/Creole.php");
 }
 
-require_once 'classes/model/AppDelegation.php';
-require_once 'classes/model/Event.php';
-require_once 'classes/model/AppEvent.php';
-require_once 'classes/model/CaseScheduler.php';
 // G::loadClass('pmScript');
 
 print "PATH_HOME: " . PATH_HOME . "\n";
@@ -225,7 +281,9 @@ if (! defined ('SYS_SYS')) {
         processWorkspace ();
       }
       catch (Exception $e) {
-        echo $e->getMessage ();
+        $token = strtotime("now");
+        PMException::registerErrorLog($e, $token);
+        G::outRes( G::LoadTranslation("ID_EXCEPTION_LOG_INTERFAZ", array($token)) );
         eprintln ("Problem in workspace: " . $sObject . ' it was omitted.', 'red');
       }
       eprintln ();
