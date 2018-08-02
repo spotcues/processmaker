@@ -1,5 +1,8 @@
 <?php
 
+use ProcessMaker\Core\System;
+use ProcessMaker\Plugins\PluginRegistry;
+
 /**
  * Main Controller for processMaker v2.1
  * @date Jul 17, 2011
@@ -14,8 +17,7 @@ class Main extends Controller
 
     public function __construct ()
     {
-        G::LoadClass( 'memcached' );
-        $this->memcache = & PMmemcached::getSingleton( defined( 'SYS_SYS' ) ? SYS_SYS : '' );
+        $this->memcache = & PMmemcached::getSingleton( !empty(config("system.workspace")) ? config("system.workspace") : '' );
 
         define( 'ERROR_EXCEPTION', 1 );
         define( 'INFO_EXCEPTION', 3 );
@@ -38,14 +40,14 @@ class Main extends Controller
         $this->setVar( 'pipe', isset( $_SESSION['USR_USERNAME'] ) ? ' | ' : '' );
         $this->setVar( 'rolename', $this->getUserRole() );
         $this->setVar( 'logout', G::LoadTranslation( 'ID_LOGOUT' ) );
-        $this->setVar( 'workspace', defined( 'SYS_SYS' ) ? ucfirst( SYS_SYS ) : '' );
+        $this->setVar( 'workspace', !empty(config("system.workspace")) ? ucfirst( config("system.workspace") ) : '' );
         $this->setVar( 'user_avatar', 'users/users_ViewPhotoGrid?pUID=' . $_SESSION['USER_LOGGED'] . '&h=' . rand() );
 
         // license notification
         $expireInLabel = '';
 
         require_once ("classes" . PATH_SEP . "class.pmLicenseManager.php");
-        $pmLicenseManager = &pmLicenseManager::getSingleton();
+        $pmLicenseManager = &PmLicenseManager::getSingleton();
         $expireIn = $pmLicenseManager->getExpireIn();
         $expireInLabel = $pmLicenseManager->getExpireInLabel();
 
@@ -107,9 +109,6 @@ class Main extends Controller
      */
     public function login ()
     {
-        require_once 'classes/model/LoginLog.php';
-        G::LoadClass( 'system' );
-        G::loadClass( 'configuration' );
         $this->conf = new Configurations();
 
         // getting posibles errors passed by GET method
@@ -160,7 +159,7 @@ class Main extends Controller
             $this->memcache->delete( 'rbacSession' . session_id() );
         } else {
             // Execute SSO trigger
-            $pluginRegistry = & PMPluginRegistry::getSingleton();
+            $pluginRegistry = PluginRegistry::loadSingleton();
             if (defined( 'PM_SINGLE_SIGN_ON' )) {
                 if ($pluginRegistry->existsTrigger( PM_SINGLE_SIGN_ON )) {
                     if ($pluginRegistry->executeTriggers( PM_SINGLE_SIGN_ON, null )) {
@@ -197,13 +196,11 @@ class Main extends Controller
 
         $availableLangArray = $this->getLanguagesList();
 
-        G::LoadClass( "serverConfiguration" );
-
         $sflag = 0;
 
         if (($nextBeatDate = $this->memcache->get( 'nextBeatDate' )) === false) {
             //get the serverconf singleton, and check if we can send the heartbeat
-            $oServerConf = & serverConf::getSingleton();
+            $oServerConf = & ServerConf::getSingleton();
             $sflag = $oServerConf->getHeartbeatProperty( 'HB_OPTION', 'HEART_BEAT_CONF' );
             $sflag = (trim( $sflag ) != '') ? $sflag : '1';
             //get date of next beat
@@ -236,7 +233,6 @@ class Main extends Controller
 
         $this->setJSVar( 'flagGettingStarted', ($flagGettingStarted == 0) );
 
-        G::loadClass( 'configuration' );
         $oConf = new Configurations();
         $oConf->loadConfig( $obj, 'ENVIRONMENT_SETTINGS', '' );
 
@@ -292,10 +288,7 @@ class Main extends Controller
      */
     public function sysLogin ()
     {
-        require_once ("propel/Propel.php");
-        require_once ("creole/Creole.php");
-        G::LoadClass( 'system' );
-        G::LoadThirdParty( "pake", "pakeColor.class" );
+
         Propel::init( PATH_CORE . "config/databases.php" );
         Creole::registerDriver( 'dbarray', 'creole.contrib.DBArrayConnection' );
 
@@ -313,8 +306,7 @@ class Main extends Controller
         $aField['LOGIN_VERIFY_MSG'] = G::loadTranslation( 'LOGIN_VERIFY_MSG' );
 
         //Get Server Configuration
-        G::LoadClass( 'serverConfiguration' );
-        $oServerConf = & serverConf::getSingleton();
+        $oServerConf = & ServerConf::getSingleton();
 
         $availableLangArray = $this->getLanguagesList();
 
@@ -357,9 +349,6 @@ class Main extends Controller
     {
         $this->setResponseType( 'json' );
         global $RBAC;
-        require_once PATH_RBAC . "model/RbacUsers.php";
-        require_once 'classes/model/Users.php';
-        G::LoadClass( "system" );
 
         $rbacUser = new RbacUsers();
         $user = new Users();
@@ -475,10 +464,9 @@ class Main extends Controller
     {
         $sCompanyLogo = '/images/processmaker2.logo2.png';
 
-        if (defined( "SYS_SYS" )) {
+        if (!empty(config("system.workspace"))) {
             if (($aFotoSelect = $this->memcache->get( 'aFotoSelect' )) === false) {
-                G::LoadClass( 'replacementLogo' );
-                $oLogoR = new replacementLogo();
+                $oLogoR = new ReplacementLogo();
                 $aFotoSelect = $oLogoR->getNameLogo( (isset( $_SESSION['USER_LOGGED'] )) ? $_SESSION['USER_LOGGED'] : '' );
                 $this->memcache->set( 'aFotoSelect', $aFotoSelect, 1 * 3600 );
             }
@@ -487,14 +475,14 @@ class Main extends Controller
                 $sWspaceSelect = trim( $aFotoSelect['WORKSPACE_LOGO_NAME'] );
             }
         }
-        if (class_exists( 'PMPluginRegistry' )) {
-            $oPluginRegistry = &PMPluginRegistry::getSingleton();
+        if (class_exists( 'ProcessMaker\Plugins\PluginRegistry' )) {
+            $oPluginRegistry = PluginRegistry::loadSingleton();
             $logoPlugin = $oPluginRegistry->getCompanyLogo( $sCompanyLogo );
             if ($logoPlugin != '/images/processmaker2.logo2.png') {
                 $sCompanyLogo = $logoPlugin;
-            } elseif (isset( $sFotoSelect ) && $sFotoSelect != '' && ! (strcmp( $sWspaceSelect, SYS_SYS ))) {
+            } elseif (isset( $sFotoSelect ) && $sFotoSelect != '' && ! (strcmp( $sWspaceSelect, config("system.workspace") ))) {
                 $sCompanyLogo = $oPluginRegistry->getCompanyLogo( $sFotoSelect );
-                $sCompanyLogo = "/sys" . SYS_SYS . "/" . SYS_LANG . "/" . SYS_SKIN . "/adminProxy/showLogoFile?id=" . base64_encode( $sCompanyLogo );
+                $sCompanyLogo = "/sys" . config("system.workspace") . "/" . SYS_LANG . "/" . SYS_SKIN . "/adminProxy/showLogoFile?id=" . base64_encode( $sCompanyLogo );
             }
         }
         return $sCompanyLogo;
@@ -528,8 +516,7 @@ class Main extends Controller
 
     private function getWorkspacesAvailable ()
     {
-        G::LoadClass( 'serverConfiguration' );
-        $oServerConf = & serverConf::getSingleton();
+        $oServerConf = & ServerConf::getSingleton();
         $dir = PATH_DB;
         $filesArray = array ();
         if (file_exists( $dir )) {
@@ -688,7 +675,6 @@ class Main extends Controller
 
     private function _getSystemInfo ()
     {
-        G::LoadClass( "system" );
 
         if (getenv( 'HTTP_CLIENT_IP' )) {
             $ip = getenv( 'HTTP_CLIENT_IP' );
@@ -710,12 +696,10 @@ class Main extends Controller
 
         $redhat .= " (" . PHP_OS . ")";
         if (defined( "DB_HOST" )) {
-            G::LoadClass( 'net' );
-            G::LoadClass( 'dbConnections' );
-            $dbNetView = new NET( DB_HOST );
+            $dbNetView = new Net( DB_HOST );
             $dbNetView->loginDbServer( DB_USER, DB_PASS );
 
-            $dbConns = new dbConnections( '' );
+            $dbConns = new DbConnections( '' );
             $availdb = '';
             foreach ($dbConns->getDbServicesAvailables() as $key => $val) {
                 if ($availdb != '') {
@@ -745,7 +729,8 @@ class Main extends Controller
         $pmSection = G::LoadTranslation('ID_PROCESS_INFORMATION');
 
         $properties = array ();
-        $ee = class_exists( 'pmLicenseManager' ) ? " - Enterprise Edition" : '';
+        $ee = '';
+        /*----------------------------------********---------------------------------*/
         $systemName = 'ProcessMaker';
         if (defined('SYSTEM_NAME')) {
             $systemName = SYSTEM_NAME;
@@ -794,7 +779,7 @@ class Main extends Controller
             );
         }
 
-        $properties[] = array ( G::LoadTranslation('ID_WORKSPACE') ,defined( "SYS_SYS" ) ? SYS_SYS : "Not defined",$pmSection
+        $properties[] = array ( G::LoadTranslation('ID_WORKSPACE') ,!empty(config("system.workspace")) ? config("system.workspace") : "Not defined",$pmSection
         );
 
         $properties[] = array ( G::LoadTranslation('ID_SERVER_PROTOCOL') ,getenv( 'SERVER_PROTOCOL' ),$sysSection

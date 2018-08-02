@@ -25,11 +25,7 @@
  *
  */
 
-//require_once 'classes/model/om/BaseAppDelegation.php';
-//require_once ("classes/model/HolidayPeer.php");
-//require_once ("classes/model/TaskPeer.php");
-//require_once ("classes/model/Task.php");
-//G::LoadClass( "dates" );
+use ProcessMaker\Plugins\PluginRegistry;
 
 /**
  * Skeleton subclass for representing a row from the 'APP_DELEGATION' table.
@@ -264,7 +260,7 @@ class AppDelegation extends BaseAppDelegation
             }
 
             if ($flagActionsByEmail) {
-                $oPluginRegistry = &PMPluginRegistry::getSingleton();
+                $oPluginRegistry = PluginRegistry::loadSingleton();
                 $oPluginRegistry->executeTriggers(PM_CREATE_NEW_DELEGATION, $data);
             }
         }
@@ -439,7 +435,7 @@ class AppDelegation extends BaseAppDelegation
         }
 
         //Calendar - Use the dates class to calculate dates
-        $calendar = new calendar();
+        $calendar = new Calendar();
 
         $arrayCalendarData = $calendar->getCalendarData($aCalendarUID);
 
@@ -475,7 +471,7 @@ class AppDelegation extends BaseAppDelegation
             $riskTime = $data['TAS_DURATION'] - ($data['TAS_DURATION'] * $risk);
 
             //Calendar - Use the dates class to calculate dates
-            $calendar = new calendar();
+            $calendar = new Calendar();
 
             $arrayCalendarData = array();
 
@@ -509,11 +505,11 @@ class AppDelegation extends BaseAppDelegation
 		$rs->next();
 		$row = $rs->getRow();
 		$i = 0;
-		$calendar = new calendar();
+		$calendar = new Calendar();
 		$now = new DateTime();
 		while (is_array ($row)) {
 			$oAppDel = AppDelegationPeer::retrieveByPk( $row['APP_UID'], $row['DEL_INDEX'] );
-            $calendar = new calendar();
+            $calendar = new Calendar();
             $calendar->getCalendar($row['USR_UID'], $row['PRO_UID'], $row['TAS_UID']);
             $calData = $calendar->getCalendarData();
             $calculatedValues = $this->getValuesToStoreForCalculateDuration($row, $calendar, $calData, $now);
@@ -758,18 +754,26 @@ class AppDelegation extends BaseAppDelegation
         return $data['TAS_UID'];
     }
 
+    /**
+     * This function get the current user related to the specific case and index
+     * @param string $appUid, Uid related to the case
+     * @param integer $index, Index to review
+     * @return array
+    */
     public function getCurrentUsers($appUid, $index)
     {
-        $oCriteria = new Criteria();
-        $oCriteria->addSelectColumn( AppDelegationPeer::USR_UID );
-        $oCriteria->add( AppDelegationPeer::APP_UID, $appUid );
-        $oCriteria->add( AppDelegationPeer::DEL_THREAD_STATUS, 'OPEN' );
-        $oCriteria->add( AppDelegationPeer::DEL_INDEX, $index );
-        $oRuleSet = AppDelegationPeer::doSelectRS( $oCriteria );
-        $oRuleSet->setFetchmode( ResultSet::FETCHMODE_ASSOC );
-        $oRuleSet->next();
-        $data = $oRuleSet->getRow();
-        return $data;
+        $criteria = new Criteria();
+        $criteria->addSelectColumn( AppDelegationPeer::USR_UID );
+        $criteria->add( AppDelegationPeer::APP_UID, $appUid );
+        $criteria->add( AppDelegationPeer::DEL_THREAD_STATUS, 'OPEN' );
+        $criteria->add( AppDelegationPeer::DEL_INDEX, $index );
+        $dataResult = AppDelegationPeer::doSelectRS( $criteria );
+        $dataResult->setFetchmode( ResultSet::FETCHMODE_ASSOC );
+        if($dataResult->next()) {
+            return $dataResult->getRow();
+        } else {
+            return [];
+        }
     }
 
     /**
@@ -882,6 +886,39 @@ class AppDelegation extends BaseAppDelegation
             $index[$c++] = $row['DEL_INDEX'];
         }
         return $index;
+    }
+
+    /**
+     * This function get the columns by Id indexing
+     *
+     * @param string $appUid
+     * @param integer $delIndex
+     *
+     * @return array|null
+     * @throws Exception
+     */
+    public function getColumnIds($appUid, $delIndex)
+    {
+        try {
+            $columnsId = [];
+            if ($delIndex > 0) {
+                $row = AppDelegationPeer::retrieveByPK($appUid, $delIndex);
+                if (!is_null($row)) {
+                    $fields = $row->toArray(BasePeer::TYPE_FIELDNAME);
+                    $this->fromArray($fields, BasePeer::TYPE_FIELDNAME);
+                    $columnsId['APP_NUMBER'] = $fields['APP_NUMBER'];
+                    $columnsId['USR_ID'] = $fields['USR_ID'];
+                    $columnsId['TAS_ID'] = $fields['TAS_ID'];
+                    $columnsId['PRO_ID'] = $fields['PRO_ID'];
+                    return $columnsId;
+                } else {
+                    throw (new Exception("The row '" . $appUid . "' , '" . $delIndex . "' in table APP_DELEGATION doesn't exist!"));
+                }
+            }
+
+        } catch (Exception $e) {
+            throw $e;
+        }
     }
 
 }

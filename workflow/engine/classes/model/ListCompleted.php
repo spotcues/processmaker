@@ -15,8 +15,10 @@ require_once 'classes/model/om/BaseListCompleted.php';
  * @package    classes.model
  */
 // @codingStandardsIgnoreStart
-class ListCompleted extends BaseListCompleted
+class ListCompleted extends BaseListCompleted implements ListInterface
 {
+    use ListBaseTrait;
+
     // @codingStandardsIgnoreEnd
     /**
      * Create List Completed Table
@@ -271,7 +273,7 @@ class ListCompleted extends BaseListCompleted
         }
     }
 
-    public function loadList($usr_uid, $filters = array(), $callbackRecord = null)
+    public function loadList($usr_uid, $filters = array(), callable $callbackRecord = null)
     {
         $resp = array();
         $criteria = new Criteria();
@@ -324,23 +326,16 @@ class ListCompleted extends BaseListCompleted
     }
 
     /**
-     * Returns the number of cases of a user
+     * Returns the number of cases of a user.
+     *
      * @param $usrUid
      * @param array $filters
+     *
      * @return int
      */
     public function getCountList($usrUid, $filters = array())
     {
-        $criteria = new Criteria();
-        $criteria->addSelectColumn('COUNT(*) AS TOTAL');
-        $criteria->add(ListCompletedPeer::USR_UID, $usrUid, Criteria::EQUAL);
-        if (count($filters)) {
-            self::loadFilters($criteria, $filters);
-        }
-        $dataset = ListCompletedPeer::doSelectRS($criteria);
-        $dataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
-        $dataset->next();
-        $aRow = $dataset->getRow();
-        return (int)$aRow['TOTAL'];
+        return $this->getCountListFromPeer
+                (ListCompletedPeer::class, $usrUid, $filters);
     }
 } // ListCompleted

@@ -1,6 +1,8 @@
 <?php
 global $RBAC;
 
+use ProcessMaker\Core\System;
+
 require_once 'classes/model/Users.php';
 unset( $_SESSION['CURRENT_USER'] );
 $oUser = new Users();
@@ -41,7 +43,7 @@ if (file_exists($envFile) ) {
 $languageManagement = 0;
 /*----------------------------------********---------------------------------*/
 
-$arraySystemConfiguration = System::getSystemConfiguration('', '', SYS_SYS);
+$arraySystemConfiguration = System::getSystemConfiguration('', '', config("system.workspace"));
 
 $oHeadPublisher = & headPublisher::getSingleton();
 $oHeadPublisher->addExtJsScript( 'users/users', true ); //adding a javascript file .js

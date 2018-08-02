@@ -1,7 +1,7 @@
 <?php
 
-// @codingStandardsIgnoreStart
 require_once 'classes/model/om/BaseListParticipatedLast.php';
+use ProcessMaker\BusinessModel\Cases as BmCases;
 
 /**
  * Skeleton subclass for representing a row from the 'LIST_PARTICIPATED_LAST' table.
@@ -12,15 +12,17 @@ require_once 'classes/model/om/BaseListParticipatedLast.php';
  * application requirements.  This class will only be generated as
  * long as it does not already exist in the output directory.
  */
-class ListParticipatedLast extends BaseListParticipatedLast
+class ListParticipatedLast extends BaseListParticipatedLast implements ListInterface
 {
-    // @codingStandardsIgnoreEnd
+    use ListBaseTrait;
+
     /**
      * Create List Participated History Table.
      *
      * @param type $data
      *
      * @return type
+     * @throws Exception
      */
     public function create($data)
     {
@@ -33,6 +35,7 @@ class ListParticipatedLast extends BaseListParticipatedLast
         $aRow = $dataset->getRow();
         $data['APP_STATUS'] = $aRow['APP_STATUS'];
 
+        $currentInformation = array();
         if ($data['USR_UID'] != 'SELF_SERVICES') {
             if ($data['USR_UID'] != '') {
                 $criteria = new Criteria();
@@ -48,19 +51,24 @@ class ListParticipatedLast extends BaseListParticipatedLast
                 $data['DEL_CURRENT_USR_FIRSTNAME'] = $aRow['USR_FIRSTNAME'];
                 $data['DEL_CURRENT_USR_LASTNAME'] = $aRow['USR_LASTNAME'];
                 $data['DEL_CURRENT_TAS_TITLE'] = $data['APP_TAS_TITLE'];
+                $currentInformation = array(
+                    'DEL_CURRENT_USR_USERNAME' => $data['DEL_CURRENT_USR_USERNAME'],
+                    'DEL_CURRENT_USR_FIRSTNAME' => $data['DEL_CURRENT_USR_FIRSTNAME'],
+                    'DEL_CURRENT_USR_LASTNAME' => $data['DEL_CURRENT_USR_LASTNAME'],
+                    'DEL_CURRENT_TAS_TITLE' => $data['APP_TAS_TITLE']
+                );
             }
         } else {
             $getData['USR_UID'] = $data['USR_UID_CURRENT'];
             $getData['APP_UID'] = $data['APP_UID'];
             $row = $this->getRowFromList($getData);
             if (is_array($row) && sizeof($row)) {
-                $set = array(
+                $currentInformation = array(
                     'DEL_CURRENT_USR_USERNAME' => '',
                     'DEL_CURRENT_USR_FIRSTNAME' => '',
                     'DEL_CURRENT_USR_LASTNAME' => '',
-                    'APP_TAS_TITLE' => $data['APP_TAS_TITLE'],
-                    'DEL_CURRENT_TAS_TITLE' => $data['APP_TAS_TITLE'], );
-                $this->updateCurrentUser($row, $set);
+                    'DEL_CURRENT_TAS_TITLE' => $data['APP_TAS_TITLE']
+                );
             }
         }
 
@@ -83,6 +91,11 @@ class ListParticipatedLast extends BaseListParticipatedLast
         if (!empty($data['APP_STATUS'])) {
             $data['APP_STATUS_ID'] = Application::$app_status_values[$data['APP_STATUS']];
         }
+        //We will update the current information
+        if (count($currentInformation) > 0) {
+            $this->updateCurrentInfoByAppUid($data['APP_UID'], $currentInformation);
+        }
+
         $con = Propel::getConnection(ListParticipatedLastPeer::DATABASE_NAME);
         try {
             $this->fromArray($data, BasePeer::TYPE_FIELDNAME);
@@ -103,13 +116,34 @@ class ListParticipatedLast extends BaseListParticipatedLast
     }
 
     /**
+     * This function update the row related to the appUid with the current information
+     * @param string $appUid
+     * @param array $currentInformation
+     * @return void
+    */
+    private function updateCurrentInfoByAppUid($appUid, $currentInformation)
+    {
+        //Update - WHERE
+        $criteriaWhere = new Criteria('workflow');
+        $criteriaWhere->add(ListParticipatedLastPeer::APP_UID, $appUid, Criteria::EQUAL);
+        //Update - SET
+        $criteriaSet = new Criteria('workflow');
+        $criteriaSet->add(ListParticipatedLastPeer::DEL_CURRENT_USR_USERNAME, $currentInformation['DEL_CURRENT_USR_USERNAME']);
+        $criteriaSet->add(ListParticipatedLastPeer::DEL_CURRENT_USR_FIRSTNAME, $currentInformation['DEL_CURRENT_USR_FIRSTNAME']);
+        $criteriaSet->add(ListParticipatedLastPeer::DEL_CURRENT_USR_LASTNAME, $currentInformation['DEL_CURRENT_USR_LASTNAME']);
+        $criteriaSet->add(ListParticipatedLastPeer::DEL_CURRENT_TAS_TITLE, $currentInformation['DEL_CURRENT_TAS_TITLE']);
+
+        BasePeer::doUpdate($criteriaWhere, $criteriaSet, Propel::getConnection('workflow'));
+    }
+
+    /**
      *  Update List Participated History Table.
      *
      * @param type $data
      *
      * @return type
      *
-     * @throws type
+     * @throws Exception
      */
     public function update($data)
     {
@@ -147,11 +181,12 @@ class ListParticipatedLast extends BaseListParticipatedLast
     /**
      * Refresh List Participated Last.
      *
-     * @param type $seqName
+     * @param array $data
+     * @param boolean $isSelfService
      *
      * @return type
      *
-     * @throws type
+     * @throws Exception
      */
     public function refresh($data, $isSelfService = false)
     {
@@ -202,11 +237,13 @@ class ListParticipatedLast extends BaseListParticipatedLast
     /**
      * Remove List Participated History.
      *
-     * @param type $seqName
+     * @param string $app_uid
+     * @param string $usr_uid
+     * @param integer $del_index
      *
      * @return type
      *
-     * @throws type
+     * @throws Exception
      */
     public function remove($app_uid, $usr_uid, $del_index)
     {
@@ -234,10 +271,18 @@ class ListParticipatedLast extends BaseListParticipatedLast
         }
     }
 
-    public function loadFilters(&$criteria, $filters)
+    /**
+     * This function add restriction in the query related to the filters
+     * @param Criteria $criteria, must be contain only select of columns
+     * @param array $filters
+     * @param array $additionalColumns information about the new columns related to custom cases list
+     * @throws PropelException
+     */
+    public function loadFilters(&$criteria, $filters, $additionalColumns = array())
     {
         $filter = isset($filters['filter']) ? $filters['filter'] : '';
         $search = isset($filters['search']) ? $filters['search'] : '';
+        $caseLink = isset($filters['caseLink']) ? $filters['caseLink'] : '';
         $process = isset($filters['process']) ? $filters['process'] : '';
         $category = isset($filters['category']) ? $filters['category'] : '';
         $dateFrom = isset($filters['dateFrom']) ? $filters['dateFrom'] : '';
@@ -271,25 +316,30 @@ class ListParticipatedLast extends BaseListParticipatedLast
                 break;
         }
 
+        //Filter Search
         if ($search != '') {
-            $criteria->add(
-                $criteria->getNewCriterion(ListParticipatedLastPeer::APP_TITLE, '%'.$search.'%', Criteria::LIKE)
-                ->addOr(
-                    $criteria->getNewCriterion(ListParticipatedLastPeer::APP_TAS_TITLE, '%'.$search.'%', Criteria::LIKE)
-                    ->addOr(
-                        $criteria->getNewCriterion(ListParticipatedLastPeer::APP_UID, $search, Criteria::EQUAL)
-                        ->addOr(
-                            $criteria->getNewCriterion(ListParticipatedLastPeer::APP_NUMBER, $search, Criteria::EQUAL)
-                        )
-                    )
-                )
-            );
+            //Check if we need to search to the APP_UID
+            if (!empty($caseLink)) {
+                $criteria->add(ListParticipatedLastPeer::APP_UID, $search, Criteria::EQUAL);
+            } else {
+                //If we have additional tables configured in the custom cases list, prepare the variables for search
+                $casesList = new BmCases();
+                $casesList->getSearchCriteriaListCases(
+                    $criteria,
+                    __CLASS__ . 'Peer',
+                    $search,
+                    $this->getAdditionalClassName(),
+                    $additionalColumns
+                );
+            }
         }
 
+        //Filter Process Id
         if ($process != '') {
             $criteria->add(ListParticipatedLastPeer::PRO_UID, $process, Criteria::EQUAL);
         }
 
+        //Filter Category
         if ($category != '') {
             $criteria->addSelectColumn(ProcessPeer::PRO_CATEGORY);
             $aConditions = array();
@@ -308,10 +358,21 @@ class ListParticipatedLast extends BaseListParticipatedLast
         }
     }
 
-    public function loadList($usr_uid, $filters = array(), $callbackRecord = null, $appUid = '')
+    /**
+     * This function get the information in the corresponding cases list
+     * @param string $usr_uid, must be show cases related to this user
+     * @param array $filters for apply in the result
+     * @param callable $callbackRecord
+     * @param string $appUid related to the specific case
+     * @return array $data
+     * @throws PropelException
+     */
+    public function loadList($usr_uid, $filters = array(), callable $callbackRecord = null, $appUid = '')
     {
         $pmTable = new PmTable();
         $criteria = $pmTable->addPMFieldsToList('sent');
+        $this->setAdditionalClassName($pmTable->tableClassName);
+        $additionalColumns = $criteria->getSelectColumns();
 
         $criteria->addSelectColumn(ListParticipatedLastPeer::APP_UID);
         $criteria->addSelectColumn(ListParticipatedLastPeer::DEL_INDEX);
@@ -343,20 +404,39 @@ class ListParticipatedLast extends BaseListParticipatedLast
             $criteria->add(ListParticipatedLastPeer::APP_UID, $appUid, Criteria::EQUAL);
         }
 
-        self::loadFilters($criteria, $filters);
+        self::loadFilters($criteria, $filters, $additionalColumns);
 
-        $sort = (!empty($filters['sort'])) ?
-            ListParticipatedLastPeer::TABLE_NAME.'.'.$filters['sort'] :
-            'DEL_DELEGATE_DATE';
+        //We will be defined the sort
+        $casesList = new BmCases();
+        $sort = $casesList->getSortColumn(
+            __CLASS__ . 'Peer',
+            BasePeer::TYPE_FIELDNAME,
+            empty($filters['sort']) ? "DEL_DELEGATE_DATE" : $filters['sort'],
+            "DEL_DELEGATE_DATE",
+            $this->getAdditionalClassName(),
+            $additionalColumns,
+            $this->getUserDisplayFormat()
+        );
+
         $dir = isset($filters['dir']) ? $filters['dir'] : 'ASC';
         $start = isset($filters['start']) ? $filters['start'] : '0';
         $limit = isset($filters['limit']) ? $filters['limit'] : '25';
         $paged = isset($filters['paged']) ? $filters['paged'] : 1;
 
-        if ($dir == 'DESC') {
-            $criteria->addDescendingOrderByColumn($sort);
+        if (is_array($sort) && count($sort) > 0) {
+            foreach ($sort as $key) {
+                if ($dir == 'DESC') {
+                    $criteria->addDescendingOrderByColumn($key);
+                } else {
+                    $criteria->addAscendingOrderByColumn($key);
+                }
+            }
         } else {
-            $criteria->addAscendingOrderByColumn($sort);
+            if ($dir == 'DESC') {
+                $criteria->addDescendingOrderByColumn($sort);
+            } else {
+                $criteria->addAscendingOrderByColumn($sort);
+            }
         }
 
         if ($paged == 1) {
@@ -421,6 +501,26 @@ class ListParticipatedLast extends BaseListParticipatedLast
         return false;
     }
 
+    /**
+     * Returns the number of cases of a user.
+     *
+     * @param string $usrUid
+     * @param array  $filters
+     *
+     * @return int
+     */
+    public function getCountList($usrUid, $filters = array())
+    {
+        return $this->getCountListFromPeer
+                (ListParticipatedLastPeer::class, $usrUid, $filters);
+    }
+
+    /**
+     * @deprecated This function is deprecated, it hasn’t been removed because of its compatibility with the External Registration plugin
+     * @param $where
+     * @param $set
+     * @return void
+     */
     public function updateCurrentUser($where, $set)
     {
         $con = Propel::getConnection('workflow');
@@ -432,32 +532,8 @@ class ListParticipatedLast extends BaseListParticipatedLast
         //Update - SET
         $criteriaSet = new Criteria('workflow');
         foreach ($set as $k => $v) {
-            eval('$criteriaSet->add( ListParticipatedLastPeer::'.$k.',$v, Criteria::EQUAL);');
+            eval('$criteriaSet->add( ListParticipatedLastPeer::' . $k . ',$v, Criteria::EQUAL);');
         }
         BasePeer::doUpdate($criteriaWhere, $criteriaSet, $con);
-    }
-
-    /**
-     * Returns the number of cases of a user.
-     *
-     * @param string $usrUid
-     * @param array  $filters
-     *
-     * @return int
-     */
-    public function getCountList($usrUid, $filters = array())
-    {
-        $criteria = new Criteria();
-        $criteria->addSelectColumn('COUNT(*) AS TOTAL');
-        $criteria->add(ListParticipatedLastPeer::USR_UID, $usrUid, Criteria::EQUAL);
-        if (count($filters)) {
-            self::loadFilters($criteria, $filters);
-        }
-        $dataset = ListParticipatedLastPeer::doSelectRS($criteria);
-        $dataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
-        $dataset->next();
-        $aRow = $dataset->getRow();
-
-        return (int) $aRow['TOTAL'];
     }
 }

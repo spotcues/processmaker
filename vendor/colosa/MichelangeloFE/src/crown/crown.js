@@ -56,9 +56,11 @@ Corona.prototype.init = function (options) {
         this.setParent(options.parent);
         this.setParentType(options.parentType);
         config = this.getConfigItems(options.parentType);
-        this.populateItemsCrown(config);
-        this.setRows(config.rows);
-        this.setCols(config.cols);
+        if (config) {
+            this.populateItemsCrown(config);
+            this.setRows(config.rows);
+            this.setCols(config.cols);
+        }
     }
     return this;
 };
@@ -142,7 +144,7 @@ Corona.prototype.setCols = function (cols) {
     return this;
 };
 /**
- * Redimention width and height of the Crown
+ * Resize crown
  * @returns {Corona}
  */
 Corona.prototype.adjustSize = function () {
@@ -156,7 +158,21 @@ Corona.prototype.adjustSize = function () {
     if (this.html) {
         this.html.style.width = width + "px";
         this.html.style.height = height + 'px';
+        this.updatePosition();
     }
+    return this;
+};
+/**
+ * Changes position
+ * @returns {Corona}
+ */
+Corona.prototype.updatePosition = function () {
+    jQuery(this.html).position({
+        of: jQuery(this.parent.html),
+        my: "left top",
+        at: "right top",
+        collision: 'none'
+    });
     return this;
 };
 /**
@@ -176,7 +192,7 @@ Corona.prototype.getConfigItems = function (especificType) {
  * @returns {Corona}
  */
 Corona.prototype.populateItemsCrown = function (config) {
-    var order = config.order,
+    var order = (config && config.order) || [],
         itemsDefault = PMDesigner.modelCrown.getItemsDefault(),
         itemCrownDefault,
         itemCrown,
@@ -216,7 +232,7 @@ Corona.prototype.paint = function () {
  * @returns {Corona}
  */
 Corona.prototype.createHTML = function () {
-    var htmlParent = this.getParent().html,
+    var htmlParent = this.getCanvas().html,
         htmlCrown,
         htmlRow,
         itemCrown,
@@ -283,14 +299,11 @@ Corona.prototype.show = function () {
     }
     if (!this.html) {
         this.createHTML();
+    } else {
+        jQuery(this.html).show();
+        this.updatePosition();
+        this.setZOrder(this.getParent().getZOrder() + 1 || 1);
     }
-    jQuery(this.html).position({
-        of: jQuery(this.parent.html),
-        my: "left top",
-        at: "right top",
-        collision: 'none'
-    });
-    this.html.style.visibility = 'visible';
     return this;
 };
 /**
@@ -299,7 +312,7 @@ Corona.prototype.show = function () {
  */
 Corona.prototype.hide = function () {
     if (this && this.html) {
-        this.html.style.visibility = 'hidden';
+        jQuery(this.html).hide();
     }
     return this;
 };

@@ -101,6 +101,10 @@ class AppMessageMapBuilder
 
         $tMap->addColumn('APP_MSG_ERROR', 'AppMsgError', 'string', CreoleTypes::LONGVARCHAR, false, null);
 
+        $tMap->addColumn('TAS_ID', 'TasId', 'int', CreoleTypes::INTEGER, false, null);
+
+        $tMap->addColumn('APP_NUMBER', 'AppNumber', 'int', CreoleTypes::INTEGER, false, null);
+
     } // doBuild()
 
 } // AppMessageMapBuilder

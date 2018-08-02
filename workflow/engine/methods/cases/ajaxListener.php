@@ -1,38 +1,6 @@
 <?php
-/**
- * cases/ajaxListener.php Ajax Listener for Cases rpc requests
- *
- * ProcessMaker Open Source Edition
- * Copyright (C) 2004 - 2008 Colosa Inc.23
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- *
- * For more information, contact Colosa Inc, 2566 Le Jeune Rd.,
- * Coral Gables, FL, 33134, USA, or email info@colosa.com.
- */
 
-/**
- *
- * @author Erik Amaru Ortiz <erik@colosa.com>
- * @date Jan 3th, 2010
- */
-//require_once 'classes/model/Application.php';
-//require_once 'classes/model/Users.php';
-//require_once 'classes/model/AppThread.php';
-//require_once 'classes/model/AppDelay.php';
-//require_once 'classes/model/Process.php';
-//require_once 'classes/model/Task.php';
+use ProcessMaker\Plugins\PluginRegistry;
 
 if (!isset($_SESSION['USER_LOGGED'])) {
     $responseObject = new stdclass();
@@ -43,7 +11,6 @@ if (!isset($_SESSION['USER_LOGGED'])) {
     die();
 }
 
-G::LoadSystem('inputfilter');
 $filter = new InputFilter();
 $_REQUEST = $filter->xssFilterHard($_REQUEST);
 $_POST = $filter->xssFilterHard($_POST);
@@ -66,9 +33,9 @@ if(isset($_REQUEST['action']) && $_REQUEST['action'] == "verifySession" ) {
         } elseif ($RBAC->userCanAccess('PM_REASSIGNCASE_SUPERVISOR') == 1) {
             $response->reassigncase = false;
             $response->message = G::LoadTranslation('ID_NOT_ABLE_REASSIGN');
-            $oAppCache = new AppCacheView();
-            $aProcesses = $oAppCache->getProUidSupervisor($_SESSION['USER_LOGGED']);
-            if(in_array($_SESSION['PROCESS'], $aProcesses)){
+            $processUser = new ProcessUser();
+            $listProcess = $processUser->getProUidSupervisor($_SESSION['USER_LOGGED']);
+            if (in_array($_SESSION['PROCESS'], $listProcess)) {
                 $response->reassigncase = true;
             }
         }
@@ -82,9 +49,6 @@ class Ajax
 
     public function getCaseMenu($params)
     {
-
-        G::LoadClass("configuration");
-        G::LoadClass("case");
         global $G_TMP_MENU;
         global $sStatus;
         $sStatus = $params['app_status'];
@@ -123,7 +87,7 @@ class Ajax
             print G::json_encode( $response );
             die();
         }
-        G::LoadClass('applications');
+
         $applications = new Applications();
 
         $proUid = isset($_SESSION['PROCESS']) ? $_SESSION['PROCESS'] : '';
@@ -268,8 +232,6 @@ class Ajax
         global $G_TABLE;
         global $RBAC;
 
-        G::LoadClass('processMap');
-
         $oTemplatePower = new TemplatePower(PATH_TPL . 'processes/processes_Map.html');
         $oTemplatePower->prepare();
         $G_PUBLISH = new Publisher();
@@ -278,7 +240,7 @@ class Ajax
 
         //$oHeadPublisher->addScriptfile('/jscore/processmap/core/processmap.js');
         $oHeadPublisher->addScriptCode('
-    var maximunX = ' . processMap::getMaximunTaskX($_SESSION['PROCESS']) . ';
+    var maximunX = ' . ProcessMap::getMaximunTaskX($_SESSION['PROCESS']) . ';
     window.onload = function(){
       var pb=leimnud.dom.capture("tag.body 0");
       Pm=new processmap();
@@ -381,7 +343,6 @@ class Ajax
             $processData['PRO_AUTHOR'] = '(USER DELETED)';
         }
 
-        G::LoadClass('configuration');
         $conf = new Configurations();
         $conf->getFormats();
         $processData['PRO_CREATE_DATE'] = $conf->getSystemDate($processData['PRO_CREATE_DATE']);
@@ -397,7 +358,7 @@ class Ajax
             print G::json_encode( $response );
             die();
         }
-        G::LoadClass('tasks');
+
         $task = new Task();
         if ($_SESSION['TASK'] == '-1') {
             $_SESSION['TASK'] = $_SESSION['CURRENT_TASK'];
@@ -412,7 +373,6 @@ class Ajax
     public function caseHistory()
     {
         global $G_PUBLISH;
-        G::loadClass('configuration');
 
         $oHeadPublisher = & headPublisher::getSingleton();
         $conf = new Configurations();
@@ -425,7 +385,6 @@ class Ajax
     public function messageHistory()
     {
         global $G_PUBLISH;
-        G::loadClass('configuration');
 
         $oHeadPublisher = & headPublisher::getSingleton();
         $conf = new Configurations();
@@ -438,7 +397,6 @@ class Ajax
     public function dynaformHistory()
     {
         global $G_PUBLISH;
-        G::loadClass('configuration');
 
         $oHeadPublisher = & headPublisher::getSingleton();
         $conf = new Configurations();
@@ -451,7 +409,7 @@ class Ajax
     public function changeLogHistory()
     {
         global $G_PUBLISH;
-        G::loadClass('configuration');
+
         $idHistory = sprintf(
             '%s_%s_%s',
             $_SESSION['PROCESS'],
@@ -477,7 +435,6 @@ class Ajax
             die();
         }
         global $G_PUBLISH;
-        G::loadClass('configuration');
 
         $oHeadPublisher = & headPublisher::getSingleton();
         $conf = new Configurations();
@@ -491,7 +448,6 @@ class Ajax
     public function uploadedDocumentsSummary()
     {
         global $G_PUBLISH;
-        G::loadClass('configuration');
 
         $oHeadPublisher = & headPublisher::getSingleton();
         $conf = new Configurations();
@@ -505,7 +461,6 @@ class Ajax
     public function generatedDocuments()
     {
         global $G_PUBLISH;
-        G::loadClass('configuration');
 
         $oHeadPublisher = & headPublisher::getSingleton();
         $conf = new Configurations();
@@ -519,7 +474,6 @@ class Ajax
     public function generatedDocumentsSummary()
     {
         global $G_PUBLISH;
-        G::loadClass('configuration');
 
         $oHeadPublisher = & headPublisher::getSingleton();
         $conf = new Configurations();
@@ -985,11 +939,11 @@ class Ajax
         $Fields["APP_DATA"]["__DYNAFORM_OPTIONS"]["NEXT_STEP_LABEL"] = "";
         $Fields["APP_DATA"]["__DYNAFORM_OPTIONS"]["NEXT_STEP"] = "#";
         $Fields["APP_DATA"]["__DYNAFORM_OPTIONS"]["NEXT_ACTION"] = "return false;";
-        G::LoadClass('pmDynaform');
+
         $FieldsPmDynaform = $Fields;
         $FieldsPmDynaform["PRO_UID"] = $_SESSION['PROCESS'];
         $FieldsPmDynaform["CURRENT_DYNAFORM"] = $_REQUEST['DYN_UID'];
-        $a = new pmDynaform($FieldsPmDynaform);
+        $a = new PmDynaform($FieldsPmDynaform);
         if ($a->isResponsive()) {
             $a->printView();
         } else {
@@ -1035,7 +989,7 @@ class Ajax
     }
 }
 
-$pluginRegistry = & PMPluginRegistry::getSingleton();
+$pluginRegistry = PluginRegistry::loadSingleton();
 if ($pluginRegistry->existsTrigger(PM_GET_CASES_AJAX_LISTENER)) {
     $ajax = $pluginRegistry->executeTriggers(PM_GET_CASES_AJAX_LISTENER, null);
 } else {
@@ -1046,7 +1000,6 @@ if (!($ajax instanceof Ajax)) {
     $ajax = new Ajax();
 }
 
-G::LoadClass('case');
 
 $action = $_REQUEST['action'];
 

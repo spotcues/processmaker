@@ -340,7 +340,7 @@
             verifyHtml: false,
             themeAdvancedButtons1: "pmSimpleUploader,|,pmVariablePicker,|,bold,italic,underline,|,justifyleft,justifycenter,justifyright,justifyfull,|,fontselect,fontsizeselect,|,cut,copy,paste,|,bullist,numlist,|,outdent,indent,blockquote",
             themeAdvancedButtons2: "tablecontrols,|,undo,redo,|,link,unlink,image,|,forecolor,backcolor,styleprops,|,hr,removeformat,visualaid,|,sub,sup,|,ltr,rtl,|,code",
-            popupCss: "/js/tinymce/jscripts/tiny_mce/themes/advanced/skins/default/dialog.css",
+            popupCss: "/js/tinymce/jscripts/tiny_mce/themes/advanced/skins/default/dialogTinyBpmn.css",
             skin: "o2k7",
             skin_variant: "silver"
         });

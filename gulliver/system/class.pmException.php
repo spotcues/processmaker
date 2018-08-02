@@ -20,8 +20,8 @@ class PMException extends Exception
         return __CLASS__ . ": [{$this->code}]: {$this->message}\n";
     }
 
-    public function registerErrorLog($error, $token){
-        $ws = (defined("SYS_SYS"))? SYS_SYS : "Wokspace Undefined";
+    public static function registerErrorLog($error, $token){
+        $ws = (!empty(config("system.workspace")))? config("system.workspace") : "Undefined Workspace";
         Bootstrap::registerMonolog('ExceptionCron', 400, $error->getMessage(), array('token'=>$token), $ws, 'processmaker.log');
     }
 }

@@ -81,27 +81,29 @@
         that.iframe[0].src = this.srcPreview;
         that.iframe[0].onload = function () {
             var pm = this.contentWindow.window;
-            pm.dynaform = new pm.PMDynaform.core.Project({
-                data: this.contentWindow.window.jsonData,
-                keys: {
-                    server: HTTP_SERVER_HOSTNAME,
-                    projectId: PMDesigner.project.id,
-                    workspace: WORKSPACE
-                },
-                token: {
-                    accessToken: PMDesigner.project.keys.access_token
-                },
-                isPreview : true,
-                isRTL: this.contentWindow ? this.contentWindow.window.isRTL : false
-            });
-            $(this.contentWindow.document).find('form').submit(function (e) {
-                e.preventDefault();
-                return false;
-            });
-            if (pm.PMDynaform.view && pm.PMDynaform.view.ModalProgressBar) {
-                pm.PMDynaform.view.ModalProgressBar.prototype.render = function () {
-                    return this;
-                };
+            if (pm && pm.PMDynaform) {
+                pm.dynaform = new pm.PMDynaform.core.Project({
+                    data: this.contentWindow.window.jsonData,
+                    keys: {
+                        server: HTTP_SERVER_HOSTNAME,
+                        projectId: PMDesigner.project.id,
+                        workspace: WORKSPACE
+                    },
+                    token: {
+                        accessToken: PMDesigner.project.keys.access_token
+                    },
+                    isPreview: true,
+                    isRTL: this.contentWindow ? this.contentWindow.window.isRTL : false
+                });
+                $(this.contentWindow.document).find('form').submit(function (e) {
+                    e.preventDefault();
+                    return false;
+                });
+                if (pm.PMDynaform.view && pm.PMDynaform.view.ModalProgressBar) {
+                    pm.PMDynaform.view.ModalProgressBar.prototype.render = function () {
+                        return this;
+                    };
+                }
             }
         };
     };

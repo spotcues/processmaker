@@ -571,6 +571,7 @@
             return false;
         };
         this.form1.onSelect = function (properties) {
+            listProperties.body.find('input').focus();
             listProperties.clear();
             listProperties.load(properties);
             that.areaToolBox.accordion.accordion("option", "active", (window.distribution === "1") ? 2 : 1);
@@ -597,202 +598,247 @@
             }
         };
         this.form1.onSetProperty = function (prop, value, target) {
-            if (prop === "name" && target.properties[prop].node && target instanceof FormDesigner.main.Form) {
-                if (target === that.form1) {
-                    that.title.text(value).attr("title", value);
-                }
+            var dialogMessage,
+                object,
+                oldValue,
+                required,
+                duplicated,
+                regExp,
+                type,
+                existRegExp;
+            switch (prop) {
+                case "name":
+                    if (target.properties[prop].node && target instanceof FormDesigner.main.Form) {
+                        if (target === that.form1) {
+                            that.title.text(value).attr("title", value);
+                        }
+                        if (value === "" || !value.replace(/\s/g, '').length) {
+                            dialogMessage = new FormDesigner.main.DialogInvalid(null, prop, "required");
+                            dialogMessage.onClose = function () {
+                                oldValue = target.properties[prop].oldValue;
+                                object = target.properties.set(prop, oldValue);
+                                if (object.node) {
+                                    object.node.value = oldValue;
+                                }
+                            };
+                            dialogMessage.onAccept = function () {
+                                dialogMessage.dialog.dialog("close");
+                            };
+                        }
+                    }
+                    break;
+                case "id":
+                    if (target.properties[prop].node) {
+                        if ($.isOpenValidator === false) {
+                            required = value === "";
+                            duplicated = $.countValue(that.getData(), prop, value, true) > 1;
+                            regExp = target.properties[prop].regExp && target.properties[prop].regExp.test(target.properties[prop].value) === false;
+                            type = required? "required" : duplicated? "duplicated" : regExp? "invalid" : "";
+                            if (type !== "") {
+                                dialogMessage = new FormDesigner.main.DialogInvalid(null, prop, type);
+                                dialogMessage.onClose = function () {
+                                    existRegExp = target.properties[prop].regExp && target.properties[prop].regExpInv;
+                                    oldValue = target.properties[prop].oldValue;
+                                    if (existRegExp && target.properties[prop].regExp.test(oldValue) === false) {
+                                        oldValue = oldValue.replace(target.properties[prop].regExpInv, "");
+                                    }
+                                    object = target.properties.set(prop, oldValue);
+                                    if (object.node) {
+                                        object.node.value = oldValue;
+                                    }
+                                };
+                                dialogMessage.onAccept = function () {
+                                    dialogMessage.dialog.dialog("close");
+                                };
+                            }
+                        }
+                        if (target instanceof FormDesigner.main.GridItem) {
+                            target.properties["name"].value = value;
+                        }
+                    }
+                    break;
+                case "maxLength":
+                    if (target.properties[prop].node) {
+                        if (value === "") {
+                            dialogMessage = new FormDesigner.main.DialogInvalid(null, prop, "required");
+                            dialogMessage.onClose = function () {
+                                oldValue = target.properties[prop].oldValue;
+                                object = target.properties.set(prop, oldValue);
+                                if (object.node) {
+                                    object.node.value = oldValue;
+                                }
+                            };
+                            dialogMessage.onAccept = function () {
+                                dialogMessage.dialog.dialog("close");
+                            };
+                        }
+                    }
+                    break;
+                case "variable":
+                    if (target.properties[prop].node && value !== "" && $.countValue(that.getData(), prop, value) > 1) {
+                        $.isOpenValidator = true;
+                        dialogMessage = new FormDesigner.main.DialogInvalid(null, prop, "duplicated");
+                        dialogMessage.onClose = function () {
+                            $.isOpenValidator = false;
 
-                if (value === "" || !value.replace(/\s/g, '').length) {
-                    var a, b, old;
-                    a = new FormDesigner.main.DialogInvalid(null, prop, "required");
-                    a.onClose = function () {
-                        old = target.properties[prop].oldValue;
-                        b = target.properties.set(prop, old);
-                        if (b.node) {
-                            b.node.value = old;
-                        }
-                    };
-                    a.onAccept = function () {
-                        a.dialog.dialog("close");
-                    };
-                }
-            }
-            if (prop === "id" && target.properties[prop].node && $.isOpenValidator === false) {
-                var sw1 = value === "";
-                var sw2 = $.countValue(that.getData(), prop, value, true) > 1;
-                var sw3 = target.properties[prop].regExp && target.properties[prop].regExp.test(target.properties[prop].value) === false;
-                if (sw1 || sw2 || sw3) {
-                    var a, b, old, type;
-                    if (sw1)
-                        type = "required";
-                    if (sw2)
-                        type = "duplicated";
-                    if (sw3)
-                        type = "invalid";
-                    a = new FormDesigner.main.DialogInvalid(null, prop, type);
-                    a.onClose = function () {
-                        var existRegExp = target.properties[prop].regExp && target.properties[prop].regExpInv;
-                        old = target.properties[prop].oldValue;
-                        if (existRegExp && target.properties[prop].regExp.test(old) === false) {
-                            old = old.replace(target.properties[prop].regExpInv, "");
-                        }
-                        b = target.properties.set(prop, old);
-                        if (b.node) {
-                            b.node.value = old;
-                        }
-                    };
-                    a.onAccept = function () {
-                        a.dialog.dialog("close");
-                    };
-                }
-            }
-            if (prop === "id" && target.properties[prop].node && target instanceof FormDesigner.main.GridItem) {
-                target.properties["name"].value = value;
-            }
-            if (prop === "maxLength" && target.properties[prop].node) {
-                if (value === "") {
-                    var a, b, old;
-                    a = new FormDesigner.main.DialogInvalid(null, prop, "required");
-                    a.onClose = function () {
-                        old = target.properties[prop].oldValue;
-                        b = target.properties.set(prop, old);
-                        if (b.node) {
-                            b.node.value = old;
-                        }
-                    };
-                    a.onAccept = function () {
-                        a.dialog.dialog("close");
-                    };
-                }
-            }
-            if (prop === "variable" && target.properties[prop].node) {
-                if (value !== "" && $.countValue(that.getData(), prop, value) > 1) {
-                    $.isOpenValidator = true;
-                    var a, b, old;
-                    a = new FormDesigner.main.DialogInvalid(null, prop, "duplicated");
-                    a.onClose = function () {
-                        $.isOpenValidator = false;
-                        old = target.properties[prop].oldValue;
-                        b = target.properties.set(prop, old);
-                        if (b.node) {
-                            b.node.textContent = old === "" ? "..." : old;
-                        }
+                            oldValue = target.properties[prop].oldValue;
+                            object = target.properties.set(prop, oldValue);
+                            if (object.node) {
+                                object.node.textContent = oldValue === "" ? "..." : oldValue;
+                            }
 
-                        old = target.properties["dataType"].oldValue;
-                        b = target.properties.set("dataType", old);
-                        if (b.node) {
-                            b.node.textContent = old;
+                            oldValue = target.properties["dataType"].oldValue;
+                            object = target.properties.set("dataType", oldValue);
+                            if (object.node) {
+                                object.node.textContent = oldValue;
+                            }
+
+                            oldValue = target.properties["name"].oldValue;
+                            target.properties.set("name", oldValue);
+
+                            oldValue = target.properties["dbConnectionLabel"].oldValue;
+                            object = target.properties.set("dbConnectionLabel", oldValue);
+                            if (object.node) {
+                                object.node.textContent = oldValue;
+                            }
+
+                            oldValue = target.properties["dbConnection"].oldValue;
+                            target.properties.set("dbConnection", oldValue);
+
+                            oldValue = target.properties["sql"].oldValue;
+                            object = target.properties.set("sql", oldValue);
+                            if (object.node) {
+                                object.node.textContent = oldValue === "" ? "..." : oldValue;
+                            }
+
+                            oldValue = target.properties["options"].oldValue;
+                            object = target.properties.set("options", oldValue);
+                            if (object.node) {
+                                object.node.textContent = JSON.stringify(oldValue);
+                            }
+
+                            oldValue = target.properties["id"].oldValue;
+                            object = target.properties.set("id", oldValue);
+                            if (object.node) {
+                                object.node.value = oldValue;
+                            }
+                        };
+                        dialogMessage.onAccept = function () {
+                            dialogMessage.dialog.dialog("close");
+                        };
+                    }
+                    if (target.properties.type.value === FormDesigner.main.TypesControl.checkbox) {
+                        target.properties.options.type = value === "" ? "hidden" : "labelbutton";
+                        if (target.properties[prop].node) {
+                            listProperties.clear();
+                            listProperties.load(target.properties);
                         }
-
-                        old = target.properties["name"].oldValue;
-                        target.properties.set("name", old);
-
-                        old = target.properties["dbConnectionLabel"].oldValue;
-                        b = target.properties.set("dbConnectionLabel", old);
-                        if (b.node) {
-                            b.node.textContent = old;
+                    }
+                    break;
+                case "gridStore":
+                    if (target.properties.type.value === FormDesigner.main.TypesControl.form) {
+                        if (target.properties.gridStore.value === false) {
+                            target.properties.variable.value = "";
+                            target.properties.dataType.value = "";
+                            target.properties.protectedValue.value = false;
                         }
-
-                        old = target.properties["dbConnection"].oldValue;
-                        target.properties.set("dbConnection", old);
-
-                        old = target.properties["sql"].oldValue;
-                        b = target.properties.set("sql", old);
-                        if (b.node) {
-                            b.node.textContent = old === "" ? "..." : old;
+                        target.properties.variable.type = target.properties.gridStore.value ? "labelbutton" : "hidden";
+                        target.properties.dataType.type = target.properties.gridStore.value ? "label" : "hidden";
+                        target.properties.protectedValue.type = target.properties.gridStore.value ? "checkbox" : "hidden";
+                        if (target.properties[prop].node) {
+                            listProperties.clear();
+                            listProperties.load(target.properties);
                         }
-
-                        old = target.properties["options"].oldValue;
-                        b = target.properties.set("options", old);
-                        if (b.node) {
-                            b.node.textContent = JSON.stringify(old);
+                    }
+                    break;
+                case "datasource":
+                    if (value === "database") {
+                        target.properties.dbConnectionLabel.type = "labelbutton";
+                        target.properties.sql.type = "labelbutton";
+                        target.properties.dataVariable.type = "hidden";
+                    }
+                    if (value === "dataVariable") {
+                        target.properties.dbConnectionLabel.type = "hidden";
+                        target.properties.sql.type = "hidden";
+                        target.properties.dataVariable.type = "textbutton";
+                    }
+                    if (target.properties[prop].node) {
+                        target.properties.dbConnectionLabel.value = "PM Database";
+                        target.properties.dbConnection.value = "workflow";
+                        target.properties.sql.value = "";
+                        target.properties.dataVariable.value = "";
+                        listProperties.clear();
+                        listProperties.load(target.properties);
+                    }
+                    break;
+                case "inp_doc_uid":
+                    if (target.properties.type.value === FormDesigner.main.TypesControl.file) {
+                        if (target.properties.inp_doc_uid.value !== "") {
+                            target.properties.size.disabled = true;
+                            target.properties.sizeUnity.disabled = true;
+                            target.properties.extensions.disabled = true;
                         }
-
-                        old = target.properties["id"].oldValue;
-                        b = target.properties.set("id", old);
-                        if (b.node) {
-                            b.node.value = old;
+                        if (target.properties.variable.node) {
+                            listProperties.clear();
+                            listProperties.load(target.properties);
                         }
-                    };
-                    a.onAccept = function () {
-                        a.dialog.dialog("close");
-                    };
-                }
-            }
-            if (prop === "gridStore" && target.properties.type.value === FormDesigner.main.TypesControl.form) {
-                var sw = target.properties.gridStore.value;
-                if (sw === false) {
-                    target.properties.variable.value = "";
-                    target.properties.dataType.value = "";
-                    target.properties.protectedValue.value = false;
-                }
-                target.properties.variable.type = sw ? "labelbutton" : "hidden";
-                target.properties.dataType.type = sw ? "label" : "hidden";
-                target.properties.protectedValue.type = sw ? "checkbox" : "hidden";
-                if (target.properties[prop].node) {
-                    listProperties.clear();
-                    listProperties.load(target.properties);
-                }
-            }
-            if (prop === "datasource") {
-                if (value === "database") {
-                    target.properties.dbConnectionLabel.type = "labelbutton";
-                    target.properties.sql.type = "labelbutton";
-                    target.properties.dataVariable.type = "hidden";
-                }
-                if (value === "dataVariable") {
-                    target.properties.dbConnectionLabel.type = "hidden";
-                    target.properties.sql.type = "hidden";
-                    target.properties.dataVariable.type = "textbutton";
-                }
-                if (target.properties[prop].node) {
-                    target.properties.dbConnectionLabel.value = "PM Database";
-                    target.properties.dbConnection.value = "workflow";
-                    target.properties.sql.value = "";
-                    target.properties.dataVariable.value = "";
-                    listProperties.clear();
-                    listProperties.load(target.properties);
-                }
-            }
-            if (prop === "variable" && target.properties.type.value === FormDesigner.main.TypesControl.checkbox) {
-                target.properties.options.type = value === "" ? "hidden" : "labelbutton";
-                if (target.properties[prop].node) {
-                    listProperties.clear();
-                    listProperties.load(target.properties);
-                }
-            }
-            if (prop === "inp_doc_uid" && target.properties.type.value === FormDesigner.main.TypesControl.file) {
-                if (target.properties.inp_doc_uid.value !== "") {
-                    target.properties.size.disabled = true;
-                    target.properties.sizeUnity.disabled = true;
-                    target.properties.extensions.disabled = true;
-                }
-                if (target.properties.variable.node) {
-                    listProperties.clear();
-                    listProperties.load(target.properties);
-                }
-            }
-            if (prop === "useRelative" && target.properties.type.value === FormDesigner.main.TypesControl.datetime) {
-                target.properties.minDate.disabled = value;
-                target.properties.maxDate.disabled = value;
-                target.properties.relativeMinDate.disabled = !value;
-                target.properties.relativeMaxDate.disabled = !value;
-                if (target.properties[prop].node) {
-                    listProperties.clear();
-                    listProperties.load(target.properties);
-                }
-            }
-            if (prop === "defaultDate" && target.properties.type.value === FormDesigner.main.TypesControl.datetime) {
-                if (value === "today") {
-                    target.properties.defaultDate.disabledTodayOption = true;
-                    listProperties.clear();
-                    listProperties.load(target.properties);
-                }
-                if (value === "") {
-                    target.properties.defaultDate.disabledTodayOption = false;
-                    listProperties.clear();
-                    listProperties.load(target.properties);
-                }
+                    }
+                    break;
+                case "useRelative":
+                    if (target.properties.type.value === FormDesigner.main.TypesControl.datetime) {
+                        target.properties.minDate.disabled = value;
+                        target.properties.maxDate.disabled = value;
+                        target.properties.relativeMinDate.disabled = !value;
+                        target.properties.relativeMaxDate.disabled = !value;
+                        if (target.properties[prop].node) {
+                            listProperties.clear();
+                            listProperties.load(target.properties);
+                        }
+                    }
+                    break;
+                case "defaultDate":
+                    if (target.properties.type.value === FormDesigner.main.TypesControl.datetime) {
+                        if (value === "today") {
+                            target.properties.defaultDate.disabledTodayOption = true;
+                            listProperties.clear();
+                            listProperties.load(target.properties);
+                        }
+                        if (value === "") {
+                            target.properties.defaultDate.disabledTodayOption = false;
+                            listProperties.clear();
+                            listProperties.load(target.properties);
+                        }
+                    }
+                    break;
+                case "maxDate":
+                    if (target.properties.type.value === FormDesigner.main.TypesControl.datetime) {
+                        if (target.properties.maxDate.value < target.properties.defaultDate.value &&
+                            target.properties.defaultDate.value !== "" && target.properties.maxDate.value !== "") {
+                            dialogMessage = new FormDesigner.main.DialogMessage(null, "success", "Default date is out of range.".translate());
+                            dialogMessage.onClose = function () {
+                                target.properties.set("defaultDate", target.properties.maxDate.value);
+                                target.properties.defaultDate.node.value = target.properties.maxDate.value;
+                            };
+                        }
+                    }
+                    break;
+                case "minDate":
+                    if (target.properties.type.value === FormDesigner.main.TypesControl.datetime) {
+                        if (target.properties.minDate.value > target.properties.defaultDate.value &&
+                            target.properties.defaultDate.value !== "" && target.properties.minDate.value !== "") {
+                            dialogMessage = new FormDesigner.main.DialogMessage(null, "success", "Default date is out of range.".translate());
+                            dialogMessage.onClose = function () {
+                                target.properties.set("defaultDate", target.properties.minDate.value);
+                                target.properties.defaultDate.node.value = target.properties.minDate.value;
+                            };
+                        }
+                    }
+                    break;
+                case "required":
+                    if (target.properties["requiredFieldErrorMessage"].node) {
+                        target.properties.requiredFieldErrorMessage.node.disabled = !value;
+                    }
+                    break;
             }
         };
         this.form1.onSynchronizeVariables = function (variables) {

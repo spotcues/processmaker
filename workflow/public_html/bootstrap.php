@@ -23,6 +23,8 @@
  *
  */
 
+use ProcessMaker\Plugins\PluginRegistry;
+
 /**
  * sysGeneric - ProcessMaker Bootstrap
  * this file is used initialize main variables, redirect and dispatch all requests
@@ -62,14 +64,14 @@
   ini_set('session.cookie_lifetime', $timelife);
   session_start();
 
-  $config = System::getSystemConfiguration();
+  $config = PmSystem::getSystemConfiguration();
 
   //$e_all  = defined('E_DEPRECATED') ? E_ALL  & ~E_DEPRECATED : E_ALL;
   //$e_all  = defined('E_STRICT')     ? $e_all & ~E_STRICT     : $e_all;
   //$e_all  = $config['debug']        ? $e_all                 : $e_all & ~E_NOTICE;
   //$e_all = E_ALL & ~ E_DEPRECATED & ~ E_STRICT & ~ E_NOTICE  & ~E_WARNING;
 
-  G::LoadSystem('inputfilter');
+
   $filter = new InputFilter();
   $config['display_errors'] = $filter->validateInput($config['display_errors']);
   $config['error_reporting'] = $filter->validateInput($config['error_reporting']);
@@ -245,37 +247,36 @@
   // defining the serverConf singleton
   if (defined('PATH_DATA') && file_exists(PATH_DATA)) {
     //Instance Server Configuration Singleton
-    G::LoadClass('serverConfiguration');
-    $oServerConf =& serverConf::getSingleton();
+    $oServerConf =& ServerConf::getSingleton();
   }
 
   // Call Gulliver Classes
-  G::LoadThirdParty('smarty/libs','Smarty.class');
-  G::LoadSystem('error');
-  G::LoadSystem('dbconnection');
-  G::LoadSystem('dbsession');
-  G::LoadSystem('dbrecordset');
-  G::LoadSystem('dbtable');
-  G::LoadSystem('rbac' );
-  G::LoadSystem('publisher');
-  G::LoadSystem('templatePower');
-  G::LoadSystem('xmlDocument');
-  G::LoadSystem('xmlform');
-  G::LoadSystem('xmlformExtension');
-  G::LoadSystem('form');
-  G::LoadSystem('menu');
-  G::LoadSystem("xmlMenu");
-  G::LoadSystem('wysiwygEditor');
-  G::LoadSystem('controller');
-  G::LoadSystem('httpProxyController');
-  G::LoadSystem('pmException');
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   // Create headPublisher singleton
-  G::LoadSystem('headPublisher');
+
   $oHeadPublisher =& headPublisher::getSingleton();
 
   //Load filter class
-  G::LoadSystem('inputfilter');
+
   $filter = new InputFilter();
 
   // Installer, redirect to install if we don't have a valid shared data folder
@@ -283,8 +284,8 @@
 
     // new installer, extjs based
     define('PATH_DATA', PATH_C);
-    require_once ( PATH_CONTROLLERS . 'installer.php' );
-    $controller = 'Installer';
+    require_once ( PATH_CONTROLLERS . 'InstallerModule.php' );
+    $controller = InstallerModule::class;
 
     // if the method name is empty set default to index method
     if (strpos(SYS_TARGET, '/') !== false) {
@@ -297,7 +298,7 @@
     $controllerAction = ($controllerAction != '' && $controllerAction != 'login')? $controllerAction: 'index';
 
     // create the installer controller and call its method
-    if( is_callable(Array('Installer', $controllerAction)) ) {
+    if (is_callable([InstallerModule::class, $controllerAction])) {
       $installer = new $controller();
       $installer->setHttpRequestData($_REQUEST);
       $installer->call($controllerAction);
@@ -331,7 +332,7 @@
       define ( 'SYS_SYS' , SYS_TEMP );
 
       // defining constant for workspace shared directory
-      define ( 'PATH_WORKSPACE' , PATH_DB . SYS_SYS . PATH_SEP );
+      define ( 'PATH_WORKSPACE' , PATH_DB . config("system.workspace") . PATH_SEP );
       // including workspace shared classes -> particularlly for pmTables
       set_include_path(get_include_path() . PATH_SEPARATOR . PATH_WORKSPACE);
     }
@@ -381,7 +382,7 @@
   }
 
   // PM Paths DATA
-  define('PATH_DATA_SITE',                 PATH_DATA      . 'sites/' . SYS_SYS . '/');
+  define('PATH_DATA_SITE',                 PATH_DATA      . 'sites/' . config("system.workspace") . '/');
   define('PATH_DOCUMENT',                  PATH_DATA_SITE . 'files/');
   define('PATH_DATA_MAILTEMPLATES',        PATH_DATA_SITE . 'mailTemplates/');
   define('PATH_DATA_PUBLIC',               PATH_DATA_SITE . 'public/');
@@ -393,8 +394,7 @@
   define('SERVER_PORT',  $_SERVER ['SERVER_PORT']);
 
   // create memcached singleton
-  G::LoadClass ( 'memcached' );
-  $memcache = & PMmemcached::getSingleton(SYS_SYS);
+  $memcache = & PMmemcached::getSingleton(config("system.workspace"));
 
   // verify configuration for rest service
   if ($isRestRequest) {
@@ -419,17 +419,9 @@
       }
   }
 
-  // load Plugins base class
-  G::LoadClass('plugin');
-
   //here we are loading all plugins registered
   //the singleton has a list of enabled plugins
-  $sSerializedFile = PATH_DATA_SITE . 'plugin.singleton';
-  $oPluginRegistry =& PMPluginRegistry::getSingleton();
-
-  if (file_exists ($sSerializedFile)) {
-    $oPluginRegistry->unSerializeInstance(file_get_contents($sSerializedFile));
-  }
+  $oPluginRegistry = PluginRegistry::loadSingleton();
 
   // setup propel definitions and logging
   require_once ( "propel/Propel.php" );
@@ -447,7 +439,7 @@
 
     // unified log file for all databases
     $logFile = PATH_DATA . 'log' . PATH_SEP . 'propel.log';
-    $logger = Log::singleton('file', $logFile, 'wf ' . SYS_SYS, null, PEAR_LOG_INFO);
+    $logger = Log::singleton('file', $logFile, 'wf ' . config("system.workspace"), null, PEAR_LOG_INFO);
     Propel::setLogger($logger);
     // log file for workflow database
     $con = Propel::getConnection('workflow');
@@ -581,13 +573,13 @@
   }
 
   //redirect to login, if user changed the workspace in the URL
-  if (! $avoidChangedWorkspaceValidation && isset($_SESSION['WORKSPACE']) && $_SESSION['WORKSPACE'] != SYS_SYS) {
-    $_SESSION['WORKSPACE'] = SYS_SYS;
+  if (! $avoidChangedWorkspaceValidation && isset($_SESSION['WORKSPACE']) && $_SESSION['WORKSPACE'] != config("system.workspace")) {
+    $_SESSION['WORKSPACE'] = config("system.workspace");
     G::SendTemporalMessage ('ID_USER_HAVENT_RIGHTS_SYSTEM', "error");
     // verify if the current skin is a 'ux' variant
     $urlPart = substr(SYS_SKIN, 0, 2) == 'ux' && SYS_SKIN != 'uxs' ? '/main/login' : '/login/login';
 
-    header('Location: /sys' . SYS_SYS . '/' . SYS_LANG . '/' . SYS_SKIN . $urlPart);
+    header('Location: /sys' . config("system.workspace") . '/' . SYS_LANG . '/' . SYS_SKIN . $urlPart);
     die;
   }
 
@@ -636,7 +628,7 @@
 
       $noLoginFolders[] = 'services';
       $noLoginFolders[] = 'tracker';
-      $noLoginFolders[] = 'installer';
+      $noLoginFolders[] = 'InstallerModule';
 
       // This sentence is used when you lost the Session
       if (! in_array(SYS_TARGET, $noLoginFiles)
@@ -647,14 +639,12 @@
         $bRedirect = true;
 
         if (isset($_GET['sid'])) {
-          G::LoadClass('sessions');
           $oSessions = new Sessions();
           if ($aSession = $oSessions->verifySession($_GET['sid'])) {
             require_once 'classes/model/Users.php';
             $oUser = new Users();
             $aUser = $oUser->load($aSession['USR_UID']);
-            $_SESSION['USER_LOGGED']  = $aUser['USR_UID'];
-            $_SESSION['USR_USERNAME'] = $aUser['USR_USERNAME'];
+            initUserSession($aUser['USR_UID'], $aUser['USR_USERNAME']);
             $bRedirect = false;
             if (PHP_VERSION < 5.2) {
               setcookie(session_name(), session_id(), time() + $timelife, '/', '; HttpOnly');

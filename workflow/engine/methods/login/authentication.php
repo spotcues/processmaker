@@ -1,27 +1,7 @@
 <?php
-/**
- * authentication.php
- *
- * ProcessMaker Open Source Edition
- * Copyright (C) 2004 - 2008 Colosa Inc.23
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * For more information, contact Colosa Inc, 2566 Le Jeune Rd.,
- * Coral Gables, FL, 33134, USA, or email info@colosa.com.
- *
- */
+
+use ProcessMaker\Core\System;
+use ProcessMaker\Plugins\PluginRegistry;
 
 try {
     $usr = '';
@@ -135,7 +115,7 @@ try {
                         $errLabel = G::LoadTranslation('ID_ACCOUNT') . ' "' . $usr . '" ' . G::LoadTranslation('ID_ACCOUNT_DISABLED_CONTACT_ADMIN');
                     }
                     //Log failed authentications
-            	    $message  = "| Many failed authentication attempts for USER: " . $usr . " | IP: " . G::getIpAddress() . " |  WS: " . SYS_SYS;
+            	    $message  = "| Many failed authentication attempts for USER: " . $usr . " | IP: " . G::getIpAddress() . " |  WS: " . config("system.workspace");
             	    $message .= " | BROWSER: " . $_SERVER['HTTP_USER_AGENT'];
 
             	    G::log($message, PATH_DATA, 'loginFailed.log');
@@ -160,26 +140,23 @@ try {
         }
 
         if (!isset( $_SESSION['WORKSPACE'] ) ) {
-            $_SESSION['WORKSPACE'] = SYS_SYS;
+            $_SESSION['WORKSPACE'] = config("system.workspace");
         }
 
         //Execute the SSO Script from plugin
-        $oPluginRegistry =& PMPluginRegistry::getSingleton();
+        $oPluginRegistry = PluginRegistry::loadSingleton();
         $lSession="";
         $loginInfo = new loginInfo ($usr, $pwd, $lSession  );
         if ($oPluginRegistry->existsTrigger ( PM_LOGIN )) {
             $oPluginRegistry->executeTriggers ( PM_LOGIN , $loginInfo );
         }
-        G::LoadClass("enterprise");
-        enterpriseClass::enterpriseSystemUpdate($loginInfo);
-        $_SESSION['USER_LOGGED']  = $uid;
-        $_SESSION['USR_USERNAME'] = $usr;
+        EnterpriseClass::enterpriseSystemUpdate($loginInfo);
+        initUserSession($uid, $usr);
     } else {
         setcookie("singleSignOn", '1', time() + (24 * 60 * 60), '/');
         $uid = $RBAC->userObj->fields['USR_UID'];
         $usr = $RBAC->userObj->fields['USR_USERNAME'];
-        $_SESSION['USER_LOGGED']  = $uid;
-        $_SESSION['USR_USERNAME'] = $usr;
+        initUserSession($uid, $usr);
     }
 
     //Set default Languaje
@@ -221,8 +198,6 @@ try {
         }
     }
 
-    /*----------------------------------********---------------------------------*/
-
     //Set User Time Zone
     $user = UsersPeer::retrieveByPK($_SESSION['USER_LOGGED']);
 
@@ -230,7 +205,7 @@ try {
         $userTimeZone = $user->getUsrTimeZone();
 
         if (trim($userTimeZone) == '') {
-            $arraySystemConfiguration = System::getSystemConfiguration('', '', SYS_SYS);
+            $arraySystemConfiguration = System::getSystemConfiguration('', '', config("system.workspace"));
 
             $userTimeZone = $arraySystemConfiguration['time_zone'];
         }
@@ -249,14 +224,9 @@ try {
 
     unset($_SESSION['FAILED_LOGINS']);
 
-    // increment logins in heartbeat
-    G::LoadClass('serverConfiguration');
-    $oServerConf =& serverConf::getSingleton();
-    $oServerConf->sucessfulLogin();
-
     // Assign the uid of user to userloggedobj
     $RBAC->loadUserRolePermission($RBAC->sSystem, $uid);
-    $res = $RBAC->userCanAccess('PM_LOGIN');
+    $res = $RBAC->userCanAccess('PM_LOGIN/strict');
     if ($res != 1 ) {
         if ($res == -2) {
             G::SendTemporalMessage ('ID_USER_HAVENT_RIGHTS_SYSTEM', "error");
@@ -280,15 +250,6 @@ try {
     $aLog['USR_UID']            = $_SESSION['USER_LOGGED'];
     $weblog->create($aLog);
     /**end log**/
-
-    //************** background processes, here we are putting some back office routines **********
-    $heartBeatNWIDate = $oServerConf->getHeartbeatProperty('HB_NEXT_GWI_DATE','HEART_BEAT_CONF');
-    if (is_null($heartBeatNWIDate)) {
-        $heartBeatNWIDate = time();
-    }
-    if (time() >= $heartBeatNWIDate) {
-        $oServerConf->setHeartbeatProperty('HB_NEXT_GWI_DATE', strtotime('+1 day'), 'HEART_BEAT_CONF');
-    }
 
     //**** defining and saving server info, this file has the values of the global array $_SERVER ****
     //this file is useful for command line environment (no Browser), I mean for triggers, crons and other executed over command line
@@ -379,25 +340,18 @@ try {
         die;
     }
 
-    $configS = System::getSystemConfiguration('', '', SYS_SYS);
+    $configS = System::getSystemConfiguration('', '', config("system.workspace"));
     $activeSession = isset($configS['session_block']) ? !(int)$configS['session_block']:true;
     if ($activeSession){
         setcookie("PM-TabPrimary", 101010010, time() + (24 * 60 * 60), '/');
     }
 
-    $oHeadPublisher = &headPublisher::getSingleton();
-    $oHeadPublisher->extJsInit = true;
-
-    $oHeadPublisher->addExtJsScript('login/init', false);    //adding a javascript file .js
-    $oHeadPublisher->assign('uriReq', $sLocation);
-
-    $oPluginRegistry =& PMPluginRegistry::getSingleton();
+    $oPluginRegistry = PluginRegistry::loadSingleton();
     if ($oPluginRegistry->existsTrigger ( PM_AFTER_LOGIN )) {
         $oPluginRegistry->executeTriggers ( PM_AFTER_LOGIN , $_SESSION['USER_LOGGED'] );
     }
 
-    G::RenderPage('publish', 'extJs');
-    //G::header('Location: ' . $sLocation);
+    G::header('Location: ' . $sLocation);
     die;
 } catch ( Exception $e ) {
     $aMessage['MESSAGE'] = $e->getMessage();

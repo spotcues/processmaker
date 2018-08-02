@@ -366,13 +366,12 @@ class MessageApplication
     public function catchMessageEvent($frontEnd = false)
     {
         try {
-            \G::LoadClass("wsBase");
 
             //Set variables
-            $ws = new \wsBase();
+            $ws = new \WsBase();
             $case = new \Cases();
             $common = new \ProcessMaker\Util\Common();
-            $sysSys = (defined("SYS_SYS"))? SYS_SYS : "Undefined";
+            $sysSys = (!empty(config("system.workspace")))? config("system.workspace") : "Undefined";
 
             $common->setFrontEnd($frontEnd);
 
@@ -684,7 +683,7 @@ class MessageApplication
     )
     {
         try {
-            \Bootstrap::registerMonolog('MessageEventCron', $level, $message, $aContext, SYS_SYS, 'processmaker.log');
+            \Bootstrap::registerMonolog('MessageEventCron', $level, $message, $aContext, config("system.workspace"), 'processmaker.log');
         } catch (\Exception $e) {
             throw $e;
         }

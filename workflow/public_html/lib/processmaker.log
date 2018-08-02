@@ -1,30 +1,30 @@
-[2 days ago] 8116c62  (origin/feature/HOR-3114-A) HOR-3114 Change text on help screen that shows up after install <dheeyi william>
-[2 days ago] ae08ccf  (origin/bugfix/HOR-3103) fix in post and remove OutputDocumentStructure of put <qronald>
-[2 days ago] 22b69c2  HOR-3114 Change text on help screen that shows up after install <dheeyi william>
-[2 days ago] 7225db2  HOR-3103 <qronald>
-[3 days ago] d932e77  (origin/bugfix/HOR-3096) HOR-3096 Community>Home Lists>The list participated is reflected in the other lists <dheeyi william>
-[4 days ago] c37dc04  (origin/bugfix/HOR-3098) HOR-3098 <Roly Rudy Gutierrez Pinto>
-[11 days ago] 6789acc  (origin/bugfix/HOR-3037, bugfix/HOR-3037) HOR-3037 <Roly Rudy Gutierrez Pinto>
-[11 days ago] 4056bbd  Improving the timezone management <Dante>
-[11 days ago] 73f1ee9  (origin/bugfix/HOR-3041) HOR-3041 <Roly Rudy Gutierrez Pinto>
-[11 days ago] 0eec4ae  (origin/bugfix/HOR-3021) HOR-3021 <Paula Quispe>
-[11 days ago] 51ce719  HOR-3042 <Dante>
-[11 days ago] b2b0749  (origin/bugfix/HOR-2944) HOR-2944 [3.2] Email setup success results show incorrect email test result <dheeyi william>
-[11 days ago] 46d4eb0  FBI-1605: Update composer lock for release/3.2 branch <Rodrigo Quelca>
-[11 days ago] 8ff269a  (origin/bugfix/HOR-2981) HOR-2981 <Paula Quispe>
-[11 days ago] 0371c03  (origin/bugfix/HOR-2980) HOR-2980 <Paula Quispe>
-[11 days ago] 085dd55  (origin/bugfix/HOR-3024) PR observations <Paula Quispe>
-[11 days ago] f2c81af  HOR-3024 <Paula Quispe>
-[2 weeks ago] d6190d8  HOR-3037 <Roly Rudy Gutierrez Pinto>
-[2 weeks ago] 1f2cf9e  (origin/bugfix/HOR-3030) HOR-3030 [Designer] does not works export function when is in RTL. <dheeyi william>
-[2 weeks ago] a57179d  (origin/bugfix/HOR-3019) HOR-3019 <Paula Quispe>
-[2 weeks ago] 6357ec8  (origin/bugfix/HOR-3020, bugfix/HOR-3020) HOR-3020 (Cases) We can not execute created cases because an error is displayed in an upgrade 3018 to 32 <dheeyi william>
-[2 weeks ago] 2ceedd7  (origin/bugfix/HOR-2957) HOR-3006 (Debug) The triggers are not displaying the description in the correct order of execution <dheeyi william>
-[2 weeks ago] 48c681d  (origin/bugfix/HOR-3015) HOR-3015 <Julio Cesar Laura Avendaño>
-[3 weeks ago] 0eb7e47  (origin/bugfix/HOR-3005) HOR-3005 <Roly Rudy Gutierrez Pinto>
-[3 weeks ago] 8fa0574  (origin/bugfix/HOR-3009) HOR-3009 <Roly Rudy Gutierrez Pinto>
-[3 weeks ago] 568fd40  HOR-2957 [Debug Panel] Orden Incorrecto en la panel de detalle de los triggers <dheeyi william>
-[3 weeks ago] c9ed345  (origin/bugfix/HOR-3003) HOR-3003 <Paula Quispe>
-[3 weeks ago] fe4d507  (origin/bugfix/HOR-2998) HOR-2998 <Julio Cesar Laura Avendaño>
-[3 weeks ago] 43d59a1  (origin/bugfix/HOR-2988) reopen <qronald>
-[3 weeks ago] ab4369b  (origin/bugfix/HOR-2983) HOR-2983 <Roly Rudy Gutierrez Pinto>
+[13 days ago] b824a87  HOR-4751 <Julio Cesar Laura Avendano>
+[13 days ago] 3bd6f73  HOR-4749 <Julio Cesar Laura Avendaño>
+[13 days ago] bb88703  (origin/bugfix/HOR-4748) HOR-4748 <Paula Quispe>
+[2 weeks ago] 34a374c  Merged in bugfix/HOR-4735 (pull request #6555) <Gustavo Cruz>
+[4 weeks ago] 905ba63  (origin/bugfix/HOR-4716) HOR-4716 <Roly Rudy Gutierrez Pinto>
+[4 weeks ago] 3aa23b3  HOR-4713 <Julio Cesar Laura Avendaño>
+[6 weeks ago] 7c452f0  (origin/bugfix/HOR-4674) HOR-4674 <Roly Rudy Gutierrez Pinto>
+[7 weeks ago] 678b60e  (origin/bugfix/HOR-4668) HOR-4668 <Paula Quispe>
+[7 weeks ago] 52b53a4  (origin/bugfix/HOR-4662) HOR-4662 <Julio Cesar Laura Avendaño>
+[8 weeks ago] 4d037b4  (origin/bugfix/HOR-4632) HOR-4632 <Roly Rudy Gutierrez Pinto>
+[8 weeks ago] a9ea4d9  (origin/bugfix/HOR-4609) HOR-4609 <Julio Cesar Laura Avendaño>
+[9 weeks ago] 5d2b2e0  HOR-4606: Does check the permission PM_SETUP_EMAIL from GET endpoint <Gustavo Silva>
+[9 weeks ago] d9e0aa2  (origin/bugfix/HOR-4599) HOR-4599 <Roly Rudy Gutierrez Pinto>
+[9 weeks ago] 7a4825e  HOR-4605: Ouput_Document > The documents are not being exported with their extensions <Gustavo Silva>
+[9 weeks ago] 9f51282  HOR-4385: Capture Email credentials in clear text <Gustavo Silva>
+[9 weeks ago] b9ab3da  (origin/bugfix/HOR-4576) HOR-4576 <Paula Quispe>
+[10 weeks ago] f6b2d5e  (origin/bugfix/HOR-4573) HOR-4573 <Paula Quispe>
+[10 weeks ago] 44b7a13  (origin/bugfix/HOR-4589) HOR-4589 <Paula Quispe>
+[3 months ago] 03376eb  (origin/bugfix/HOR-4575) HOR-4575 <Julio Cesar Laura Avendaño>
+[3 months ago] d273956  (origin/bugfix/HOR-4577) HOR-4577 <Paula Quispe>
+[3 months ago] 49e344c  (origin/bugfix/HOR-4572) HOR-4572 <Julio Cesar Laura Avendaño>
+[3 months ago] 2bd249f  FBI-2401:RTL> Styles have been broken in 3.2.3 with an RTL language <Fabio Guachalla>
+[3 months ago] a9b2089  (origin/bugfix/HOR-4521-B) HOR-4521 <Julio Cesar Laura Avendaño>
+[3 months ago] 9a940ca  (origin/bugfix/HOR-4512) HOR-4512 <Roly Rudy Gutierrez Pinto>
+[4 months ago] 0e65d8c  FBI-2377:HTML editor >> Buttons overlap preview panel <Fabio Guachalla>
+[4 months ago] b7b0061  (origin/bugfix/HOR-4496) HOR-4496 <Paula Quispe>
+[4 months ago] ba0b9f0  (origin/bugfix/HOR-4500) HOR-4450 <Roly Rudy Gutierrez Pinto>
+[4 months ago] 6a18d96  HOR-4410 <Roly Rudy Gutierrez Pinto>
+[4 months ago] d70d4fa  HOR-4185 <dante>
+[4 months ago] 2c64b9d  (origin/bugfix/FBI-2356_B) FBI-2356: when we enter a Template, ouputDocument, IEE, the buttons come out one on top of the other <Rodrigo Quelca>

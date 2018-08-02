@@ -22,8 +22,6 @@
  * Coral Gables, FL, 33134, USA, or email info@colosa.com.
  */
 
-G::LoadClass( "configuration" );
-
 $conf = new Configurations();
 
 $oHeadPublisher = &headPublisher::getSingleton();
@@ -31,7 +29,7 @@ $oHeadPublisher->addExtJsScript( "cases/main", false ); //Adding a javascript fi
 $oHeadPublisher->addContent( "cases/main" ); //Adding a html file  .html.
 
 $keyMem = "USER_PREFERENCES" . $_SESSION["USER_LOGGED"];
-$memcache = &PMmemcached::getSingleton( SYS_SYS );
+$memcache = &PMmemcached::getSingleton( config("system.workspace") );
 
 if (($arrayConfig = $memcache->get( $keyMem )) === false) {
     $conf->loadConfig( $x, "USER_PREFERENCES", "", "", $_SESSION["USER_LOGGED"], "" );
@@ -124,7 +122,7 @@ if (isset($_SESSION['__OPEN_APPLICATION_UID__'])) {
     }
 }
 
-$oServerConf = & serverConf::getSingleton();
+$oServerConf = & ServerConf::getSingleton();
 if ($oServerConf->isRtl( SYS_LANG )) {
     $regionTreePanel = 'east';
     $regionDebug = 'west';

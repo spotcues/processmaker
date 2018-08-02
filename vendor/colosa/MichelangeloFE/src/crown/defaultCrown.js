@@ -84,6 +84,7 @@ var defaultCrown = {
             className: 'mafe-corona-delete',
             eventOnClick: function (item) {
                 PMUI.getActiveCanvas().removeElements();
+                item.parent.hide();
             }
         }
     ]

@@ -2,6 +2,27 @@
 
 namespace ProcessMaker\BusinessModel;
 
+use AbeConfiguration;
+use AbeConfigurationPeer;
+use AbeRequests;
+use AbeRequestsPeer;
+use AbeResponsesPeer;
+use ApplicationPeer;
+use AppDelegationPeer;
+use Criteria;
+use Exception;
+use G;
+use Publisher;
+use ProcessMaker\Core\System;
+use ProcessMaker\Plugins\PluginRegistry;
+use PmDynaform;
+use PMLicensedFeatures;
+use ResultSet;
+use SpoolRun;
+use stdClass;
+use UsersPeer;
+use TaskPeer;
+
 /**
  * Description of ActionsByEmailService
  *
@@ -11,14 +32,14 @@ class ActionsByEmail
 
     public function saveConfiguration($params)
     {
-        if (\PMLicensedFeatures
+        if (PMLicensedFeatures
                 ::getSingleton()
                 ->verifyfeature('zLhSk5TeEQrNFI2RXFEVktyUGpnczV1WEJNWVp6cjYxbTU3R29mVXVZNWhZQT0=')) {
             $feature = $params['ActionsByEmail'];
             switch ($feature['type']) {
                 case 'configuration':
                     require_once 'classes/model/AbeConfiguration.php';
-                    $abeConfigurationInstance = new \AbeConfiguration();
+                    $abeConfigurationInstance = new AbeConfiguration();
 
                     if (isset($feature['fields']['ABE_CASE_NOTE_IN_RESPONSE'])) {
                         $arrayAux = json_decode($feature['fields']['ABE_CASE_NOTE_IN_RESPONSE']);
@@ -43,7 +64,7 @@ class ActionsByEmail
     public function loadConfiguration($params)
     {
         if ($params['type'] != 'activity'
-            || !\PMLicensedFeatures
+            || !PMLicensedFeatures
                 ::getSingleton()
                 ->verifyfeature('zLhSk5TeEQrNFI2RXFEVktyUGpnczV1WEJNWVp6cjYxbTU3R29mVXVZNWhZQT0='))
         {
@@ -51,11 +72,11 @@ class ActionsByEmail
         }
         require_once 'classes/model/AbeConfiguration.php';
 
-        $criteria = new \Criteria();
-        $criteria->add(\AbeConfigurationPeer::PRO_UID, $params['PRO_UID']);
-        $criteria->add(\AbeConfigurationPeer::TAS_UID, $params['TAS_UID']);
-        $result = \AbeConfigurationPeer::doSelectRS($criteria);
-        $result->setFetchmode(\ResultSet::FETCHMODE_ASSOC);
+        $criteria = new Criteria();
+        $criteria->add(AbeConfigurationPeer::PRO_UID, $params['PRO_UID']);
+        $criteria->add(AbeConfigurationPeer::TAS_UID, $params['TAS_UID']);
+        $result = AbeConfigurationPeer::doSelectRS($criteria);
+        $result->setFetchmode(ResultSet::FETCHMODE_ASSOC);
         $result->next();
         $configuration = array();
         if ($configuration = $result->getRow()) {
@@ -87,7 +108,7 @@ class ActionsByEmail
         }
 
         if ($arrayData['TEMPLATE'] == '') {
-            throw new Exception(\G::LoadTranslation('ID_TEMPLATE_PARAMETER_EMPTY'));
+            throw new Exception(G::LoadTranslation('ID_TEMPLATE_PARAMETER_EMPTY'));
         }
 
         $data = array(
@@ -99,10 +120,10 @@ class ActionsByEmail
 
         global $G_PUBLISH;
 
-        $G_PUBLISH = new \Publisher();
+        $G_PUBLISH = new Publisher();
         $G_PUBLISH->AddContent('xmlform', 'xmlform', 'actionsByEmail/actionsByEmail_FileEdit', '', $data);
 
-        \G::RenderPage('publish', 'raw');
+        G::RenderPage('publish', 'raw');
         die();
     }
 
@@ -118,7 +139,7 @@ class ActionsByEmail
         }
 
         if ($arrayData['TEMPLATE'] == '') {
-            throw new Exception(\G::LoadTranslation('ID_TEMPLATE_PARAMETER_EMPTY'));
+            throw new Exception(G::LoadTranslation('ID_TEMPLATE_PARAMETER_EMPTY'));
         }
 
         $templateFile = fopen(PATH_DATA_MAILTEMPLATES . $arrayData['PRO_UID'] . PATH_SEP . $arrayData['TEMPLATE'], 'w');
@@ -140,8 +161,9 @@ class ActionsByEmail
             $arrayData['PRO_UID'] = '';
         }
 
-        $response->emailFields = array();
-        $response->actionFields = array();
+        $response = new stdClass();
+        $response->emailFields = [];
+        $response->actionFields = [];
 
         if ($arrayData['PRO_UID'] != '' && $arrayData['DYN_UID']) {
             $dynaform = new Form($arrayData['PRO_UID'] . PATH_SEP . $arrayData['DYN_UID'], PATH_DYNAFORM, SYS_LANG, false);
@@ -207,30 +229,31 @@ class ActionsByEmail
         }
 
         if ($arrayData['PRO_UID'] == '') {
-            throw new Exception(\G::LoadTranslation('ID_PRO_UID_PARAMETER_IS_EMPTY'));
+            throw new Exception(G::LoadTranslation('ID_PRO_UID_PARAMETER_IS_EMPTY'));
         }
 
         if ($arrayData['TAS_UID'] == '') {
-            throw new Exception(\G::LoadTranslation('ID_TAS_UID_PARAMETER_IS_EMPTY'));
+            throw new Exception(G::LoadTranslation('ID_TAS_UID_PARAMETER_IS_EMPTY'));
         }
 
-        $abeConfigurationInstance = new \AbeConfiguration();
+        $abeConfigurationInstance = new AbeConfiguration();
 
+        $response = new stdClass();
         if ($arrayData['ABE_TYPE'] != '') {
             if ($arrayData['DYN_UID'] == '') {
-                throw new Exception(\G::LoadTranslation('ID_DYN_UID_PARAMETER_IS_EMPTY'));
+                throw new Exception(G::LoadTranslation('ID_DYN_UID_PARAMETER_IS_EMPTY'));
             }
 
             try {
                 $response->ABE_UID = $abeConfigurationInstance->createOrUpdate($arrayData);
-            } catch (\Exception $error) {
+            } catch (Exception $error) {
                 throw $error;
             }
         } else {
             try {
                 $abeConfigurationInstance->deleteByTasUid($arrayData['TAS_UID']);
                 $response->ABE_UID = '';
-            } catch (\Exception $error) {
+            } catch (Exception $error) {
                 throw $error;
             }
         }
@@ -241,51 +264,51 @@ class ActionsByEmail
 
     public function loadActionByEmail(array $arrayData)
     {
-        $criteria = new \Criteria();
+        $criteria = new Criteria();
         $criteria->addSelectColumn('COUNT(*)');
 
-        $criteria->addJoin(\AbeConfigurationPeer::ABE_UID, \AbeRequestsPeer::ABE_UID);
-        $criteria->addJoin(\AppDelegationPeer::APP_UID, \AbeRequestsPeer::APP_UID);
-        $criteria->addJoin(\AppDelegationPeer::DEL_INDEX, \AbeRequestsPeer::DEL_INDEX);
-        $result = \AbeConfigurationPeer::doSelectRS($criteria);
-        $result->setFetchmode(\ResultSet::FETCHMODE_ASSOC);
+        $criteria->addJoin(AbeConfigurationPeer::ABE_UID, AbeRequestsPeer::ABE_UID);
+        $criteria->addJoin(AppDelegationPeer::APP_UID, AbeRequestsPeer::APP_UID);
+        $criteria->addJoin(AppDelegationPeer::DEL_INDEX, AbeRequestsPeer::DEL_INDEX);
+        $result = AbeConfigurationPeer::doSelectRS($criteria);
+        $result->setFetchmode(ResultSet::FETCHMODE_ASSOC);
         $result->next();
         $totalCount = $result->getRow();
         $totalCount = $totalCount['COUNT(*)'];
 
-        $criteria = new \Criteria();
-        $criteria->addSelectColumn(\AbeConfigurationPeer::ABE_UID);
-        $criteria->addSelectColumn(\AbeConfigurationPeer::PRO_UID);
-        $criteria->addSelectColumn(\AbeConfigurationPeer::TAS_UID);
-        $criteria->addSelectColumn(\AbeConfigurationPeer::ABE_UPDATE_DATE);
-        $criteria->addSelectColumn(\AbeConfigurationPeer::ABE_TEMPLATE);
-        $criteria->addSelectColumn(\AbeConfigurationPeer::ABE_ACTION_FIELD);
-        $criteria->addSelectColumn(\AbeConfigurationPeer::DYN_UID);
+        $criteria = new Criteria();
+        $criteria->addSelectColumn(AbeConfigurationPeer::ABE_UID);
+        $criteria->addSelectColumn(AbeConfigurationPeer::PRO_UID);
+        $criteria->addSelectColumn(AbeConfigurationPeer::TAS_UID);
+        $criteria->addSelectColumn(AbeConfigurationPeer::ABE_UPDATE_DATE);
+        $criteria->addSelectColumn(AbeConfigurationPeer::ABE_TEMPLATE);
+        $criteria->addSelectColumn(AbeConfigurationPeer::ABE_ACTION_FIELD);
+        $criteria->addSelectColumn(AbeConfigurationPeer::DYN_UID);
 
-        $criteria->addSelectColumn(\AbeRequestsPeer::ABE_REQ_UID);
-        $criteria->addSelectColumn(\AbeRequestsPeer::APP_UID);
-        $criteria->addSelectColumn(\AbeRequestsPeer::DEL_INDEX);
-        $criteria->addSelectColumn(\AbeRequestsPeer::ABE_REQ_SENT_TO);
-        $criteria->addSelectColumn(\AbeRequestsPeer::ABE_REQ_STATUS);
-        $criteria->addSelectColumn(\AbeRequestsPeer::ABE_REQ_SUBJECT);
-        $criteria->addSelectColumn(\AbeRequestsPeer::ABE_REQ_ANSWERED);
-        $criteria->addSelectColumn(\AbeRequestsPeer::ABE_REQ_BODY);
-        $criteria->addSelectColumn(\AbeRequestsPeer::ABE_REQ_DATE);
+        $criteria->addSelectColumn(AbeRequestsPeer::ABE_REQ_UID);
+        $criteria->addSelectColumn(AbeRequestsPeer::APP_UID);
+        $criteria->addSelectColumn(AbeRequestsPeer::DEL_INDEX);
+        $criteria->addSelectColumn(AbeRequestsPeer::ABE_REQ_SENT_TO);
+        $criteria->addSelectColumn(AbeRequestsPeer::ABE_REQ_STATUS);
+        $criteria->addSelectColumn(AbeRequestsPeer::ABE_REQ_SUBJECT);
+        $criteria->addSelectColumn(AbeRequestsPeer::ABE_REQ_ANSWERED);
+        $criteria->addSelectColumn(AbeRequestsPeer::ABE_REQ_BODY);
+        $criteria->addSelectColumn(AbeRequestsPeer::ABE_REQ_DATE);
 
-        $criteria->addSelectColumn(\ApplicationPeer::APP_NUMBER);
+        $criteria->addSelectColumn(ApplicationPeer::APP_NUMBER);
 
-        $criteria->addSelectColumn(\AppDelegationPeer::DEL_PREVIOUS);
+        $criteria->addSelectColumn(AppDelegationPeer::DEL_PREVIOUS);
 
-        $criteria->addJoin(\AbeConfigurationPeer::ABE_UID, \AbeRequestsPeer::ABE_UID);
-        $criteria->addJoin(\ApplicationPeer::APP_UID, \AbeRequestsPeer::APP_UID);
+        $criteria->addJoin(AbeConfigurationPeer::ABE_UID, AbeRequestsPeer::ABE_UID);
+        $criteria->addJoin(ApplicationPeer::APP_UID, AbeRequestsPeer::APP_UID);
 
-        $criteria->addJoin(\AppDelegationPeer::APP_UID, \AbeRequestsPeer::APP_UID);
-        $criteria->addJoin(\AppDelegationPeer::DEL_INDEX, \AbeRequestsPeer::DEL_INDEX);
-        $criteria->addDescendingOrderByColumn(\AbeRequestsPeer::ABE_REQ_DATE);
+        $criteria->addJoin(AppDelegationPeer::APP_UID, AbeRequestsPeer::APP_UID);
+        $criteria->addJoin(AppDelegationPeer::DEL_INDEX, AbeRequestsPeer::DEL_INDEX);
+        $criteria->addDescendingOrderByColumn(AbeRequestsPeer::ABE_REQ_DATE);
         $criteria->setLimit($arrayData['limit']);
         $criteria->setOffset($arrayData['start']);
-        $result = \AbeConfigurationPeer::doSelectRS($criteria);
-        $result->setFetchmode(\ResultSet::FETCHMODE_ASSOC);
+        $result = AbeConfigurationPeer::doSelectRS($criteria);
+        $result->setFetchmode(ResultSet::FETCHMODE_ASSOC);
         $data = Array();
         $arrayPro = Array();
         $arrayTAS = Array();
@@ -293,18 +316,18 @@ class ActionsByEmail
 
         while ($result->next()) {
             $data[] = $result->getRow();
-            $criteriaRes = new \Criteria();
+            $criteriaRes = new Criteria();
 
-            $criteriaRes->addSelectColumn(\AbeResponsesPeer::ABE_RES_UID);
-            $criteriaRes->addSelectColumn(\AbeResponsesPeer::ABE_RES_CLIENT_IP);
-            $criteriaRes->addSelectColumn(\AbeResponsesPeer::ABE_RES_DATA);
-            $criteriaRes->addSelectColumn(\AbeResponsesPeer::ABE_RES_STATUS);
-            $criteriaRes->addSelectColumn(\AbeResponsesPeer::ABE_RES_MESSAGE);
+            $criteriaRes->addSelectColumn(AbeResponsesPeer::ABE_RES_UID);
+            $criteriaRes->addSelectColumn(AbeResponsesPeer::ABE_RES_CLIENT_IP);
+            $criteriaRes->addSelectColumn(AbeResponsesPeer::ABE_RES_DATA);
+            $criteriaRes->addSelectColumn(AbeResponsesPeer::ABE_RES_STATUS);
+            $criteriaRes->addSelectColumn(AbeResponsesPeer::ABE_RES_MESSAGE);
 
-            $criteriaRes->add(\AbeResponsesPeer::ABE_REQ_UID, $data[$index]['ABE_REQ_UID']);
+            $criteriaRes->add(AbeResponsesPeer::ABE_REQ_UID, $data[$index]['ABE_REQ_UID']);
 
-            $resultRes = \AbeResponsesPeer::doSelectRS($criteriaRes);
-            $resultRes->setFetchmode(\ResultSet::FETCHMODE_ASSOC);
+            $resultRes = AbeResponsesPeer::doSelectRS($criteriaRes);
+            $resultRes->setFetchmode(ResultSet::FETCHMODE_ASSOC);
             $resultRes->next();
             $dataRes = Array();
 
@@ -322,17 +345,17 @@ class ActionsByEmail
                 $data[$index]['ABE_RES_MESSAGE'] = '';
             }
 
-            $criteriaRes = new \Criteria();
+            $criteriaRes = new Criteria();
 
-            $criteriaRes->addSelectColumn(\AppDelegationPeer::USR_UID);
-            $criteriaRes->addSelectColumn(\UsersPeer::USR_FIRSTNAME);
-            $criteriaRes->addSelectColumn(\UsersPeer::USR_LASTNAME);
+            $criteriaRes->addSelectColumn(AppDelegationPeer::USR_UID);
+            $criteriaRes->addSelectColumn(UsersPeer::USR_FIRSTNAME);
+            $criteriaRes->addSelectColumn(UsersPeer::USR_LASTNAME);
 
-            $criteria->addJoin(\AppDelegationPeer::APP_UID, $data[$index]['APP_UID']);
-            $criteria->addJoin(\AppDelegationPeer::DEL_INDEX, $data[$index]['DEL_PREVIOUS']);
-            $criteria->addJoin(\AppDelegationPeer::USR_UID, \UsersPeer::USR_UID);
-            $resultRes = \AppDelegationPeer::doSelectRS($criteriaRes);
-            $resultRes->setFetchmode(\ResultSet::FETCHMODE_ASSOC);
+            $criteria->addJoin(AppDelegationPeer::APP_UID, $data[$index]['APP_UID']);
+            $criteria->addJoin(AppDelegationPeer::DEL_INDEX, $data[$index]['DEL_PREVIOUS']);
+            $criteria->addJoin(AppDelegationPeer::USR_UID, UsersPeer::USR_UID);
+            $resultRes = AppDelegationPeer::doSelectRS($criteriaRes);
+            $resultRes->setFetchmode(ResultSet::FETCHMODE_ASSOC);
             $resultRes->next();
 
             if ($dataRes = $resultRes->getRow()) {
@@ -365,52 +388,51 @@ class ActionsByEmail
             $arrayData['REQ_UID'] = '';
         }
 
-        $criteria = new \Criteria();
-        $criteria->addSelectColumn(\AbeConfigurationPeer::ABE_UID);
-        $criteria->addSelectColumn(\AbeConfigurationPeer::PRO_UID);
-        $criteria->addSelectColumn(\AbeConfigurationPeer::TAS_UID);
-
-        $criteria->addSelectColumn(\AbeRequestsPeer::ABE_REQ_UID);
-        $criteria->addSelectColumn(\AbeRequestsPeer::APP_UID);
-        $criteria->addSelectColumn(\AbeRequestsPeer::DEL_INDEX);
-        $criteria->addSelectColumn(\AbeRequestsPeer::ABE_REQ_SENT_TO);
-        $criteria->addSelectColumn(\AbeRequestsPeer::ABE_REQ_SUBJECT);
-        $criteria->addSelectColumn(\AbeRequestsPeer::ABE_REQ_BODY);
-        $criteria->addSelectColumn(\AbeRequestsPeer::ABE_REQ_ANSWERED);
-        $criteria->addSelectColumn(\AbeRequestsPeer::ABE_REQ_STATUS);
-
-        $criteria->addSelectColumn(\AppDelegationPeer::DEL_FINISH_DATE);
-
-        $criteria->add(\AbeRequestsPeer::ABE_REQ_UID, $arrayData['REQ_UID']);
-        $criteria->addJoin(\AbeRequestsPeer::ABE_UID, \AbeConfigurationPeer::ABE_UID);
-        $criteria->addJoin(\AppDelegationPeer::APP_UID, \AbeRequestsPeer::APP_UID);
-        $criteria->addJoin(\AppDelegationPeer::DEL_INDEX, \AbeRequestsPeer::DEL_INDEX);
-        $resultRes = \AbeRequestsPeer::doSelectRS($criteria);
-        $resultRes->setFetchmode(\ResultSet::FETCHMODE_ASSOC);
-
+        $criteria = new Criteria();
+        $criteria->addSelectColumn(AbeConfigurationPeer::ABE_UID);
+        $criteria->addSelectColumn(AbeConfigurationPeer::PRO_UID);
+        $criteria->addSelectColumn(AbeConfigurationPeer::TAS_UID);
+        $criteria->addSelectColumn(TaskPeer::TAS_ID);
+        $criteria->addSelectColumn(AbeRequestsPeer::ABE_REQ_UID);
+        $criteria->addSelectColumn(AbeRequestsPeer::APP_UID);
+        $criteria->addSelectColumn(AbeRequestsPeer::DEL_INDEX);
+        $criteria->addSelectColumn(AbeRequestsPeer::ABE_REQ_SENT_TO);
+        $criteria->addSelectColumn(AbeRequestsPeer::ABE_REQ_SUBJECT);
+        $criteria->addSelectColumn(AbeRequestsPeer::ABE_REQ_BODY);
+        $criteria->addSelectColumn(AbeRequestsPeer::ABE_REQ_ANSWERED);
+        $criteria->addSelectColumn(AbeRequestsPeer::ABE_REQ_STATUS);
+        $criteria->addSelectColumn(AppDelegationPeer::DEL_FINISH_DATE);
+        $criteria->addSelectColumn(AppDelegationPeer::APP_NUMBER);
+        $criteria->addJoin(AbeConfigurationPeer::TAS_UID, TaskPeer::TAS_UID, Criteria::LEFT_JOIN);
+        $criteria->addJoin(AbeConfigurationPeer::ABE_UID, AbeRequestsPeer::ABE_UID, Criteria::LEFT_JOIN);
+        $conditions[] = [AbeRequestsPeer::APP_UID, AppDelegationPeer::APP_UID];
+        $conditions[] = [AbeRequestsPeer::DEL_INDEX, AppDelegationPeer::DEL_INDEX];
+        $criteria->addJoinMC($conditions, Criteria::LEFT_JOIN);
+        $criteria->add(AbeRequestsPeer::ABE_REQ_UID, $arrayData['REQ_UID']);
+        $resultRes = AbeRequestsPeer::doSelectRS($criteria);
+        $resultRes->setFetchmode(ResultSet::FETCHMODE_ASSOC);
         $resultRes->next();
-        $dataRes = Array();
+        $dataRes = [];
 
         if ($dataRes = $resultRes->getRow()) {
             if (is_null($dataRes['DEL_FINISH_DATE'])) {
-                \G::LoadClass('spool');
 
                 $emailServer = new \ProcessMaker\BusinessModel\EmailServer();
                 $criteria = $emailServer->getEmailServerCriteria();
                 $rsCriteria = \EmailServerPeer::doSelectRS($criteria);
-                $rsCriteria->setFetchmode(\ResultSet::FETCHMODE_ASSOC);
+                $rsCriteria->setFetchmode(ResultSet::FETCHMODE_ASSOC);
                 if ($rsCriteria->next()) {
                     $row = $rsCriteria->getRow();
 
                     $arrayConfigAux = $row;
                     $arrayConfigAux["SMTPSecure"] = $row["SMTPSECURE"];
                 }
-                $aSetup = (!empty($arrayConfigAux))? $arrayConfigAux : \System::getEmailConfiguration();
+                $aSetup = (!empty($arrayConfigAux))? $arrayConfigAux : System::getEmailConfiguration();
 
-                $spool = new \spoolRun();
+                $spool = new SpoolRun();
                 $spool->setConfig($aSetup);
 
-                $spool->create(array(
+                $spool->create([
                     'msg_uid' => '',
                     'app_uid' => $dataRes['APP_UID'],
                     'del_index' => $dataRes['DEL_INDEX'],
@@ -423,29 +445,30 @@ class ActionsByEmail
                     'app_msg_bcc' => '',
                     'app_msg_attach' => '',
                     'app_msg_template' => '',
-                    'app_msg_status' => 'pending'
-                ));
+                    'app_msg_status' => 'pending',
+                    "tas_id" => $dataRes['TAS_ID'],
+                    "app_number" => isset($dataRes['APP_NUMBER']) ? $dataRes['APP_NUMBER'] : ''
+                ]);
 
                 if ($spool->sendMail()) {
                     $dataRes['ABE_REQ_STATUS'] = 'SENT';
-
-                    $message = \G::LoadTranslation('ID_EMAIL_RESENT_TO') . ': '. $dataRes['ABE_REQ_SENT_TO'];
+                    $message = G::LoadTranslation('ID_EMAIL_RESENT_TO') . ': ' . $dataRes['ABE_REQ_SENT_TO'];
                 } else {
                     $dataRes['ABE_REQ_STATUS'] = 'ERROR';
-                    $message = \G::LoadTranslation('ID_THERE_PROBLEM_SENDING_EMAIL') . ': '. $dataRes['ABE_REQ_SENT_TO'] . ', ' . G::LoadTranslation('ID_PLEASE_TRY_LATER');
+                    $message = G::LoadTranslation('ID_THERE_PROBLEM_SENDING_EMAIL') . ': ' . $dataRes['ABE_REQ_SENT_TO'] . ', ' . G::LoadTranslation('ID_PLEASE_TRY_LATER');
                 }
 
                 try {
-                    $abeRequestsInstance = new \AbeRequests();
+                    $abeRequestsInstance = new AbeRequests();
                     $abeRequestsInstance->createOrUpdate($dataRes);
-                } catch (\Exception $error) {
+                } catch (Exception $error) {
                     throw $error;
                 }
             } else {
-                $message =  \G::LoadTranslation('ID_UNABLE_TO_SEND_EMAIL');
+                $message =  G::LoadTranslation('ID_UNABLE_TO_SEND_EMAIL');
             }
         } else {
-             $message = \G::LoadTranslation('ID_UNEXPECTED_ERROR_OCCURRED_PLEASE');
+             $message = G::LoadTranslation('ID_UNEXPECTED_ERROR_OCCURRED_PLEASE');
         }
 
         //Return
@@ -465,29 +488,29 @@ class ActionsByEmail
             $arrayData['REQ_UID'] = '';
         }
 
-        $criteria = new \Criteria();
-        $criteria->addSelectColumn(\AbeConfigurationPeer::ABE_UID);
-        $criteria->addSelectColumn(\AbeConfigurationPeer::PRO_UID);
-        $criteria->addSelectColumn(\AbeConfigurationPeer::TAS_UID);
-        $criteria->addSelectColumn(\AbeConfigurationPeer::DYN_UID);
-        $criteria->addSelectColumn(\AbeConfigurationPeer::ABE_ACTION_FIELD);
+        $criteria = new Criteria();
+        $criteria->addSelectColumn(AbeConfigurationPeer::ABE_UID);
+        $criteria->addSelectColumn(AbeConfigurationPeer::PRO_UID);
+        $criteria->addSelectColumn(AbeConfigurationPeer::TAS_UID);
+        $criteria->addSelectColumn(AbeConfigurationPeer::DYN_UID);
+        $criteria->addSelectColumn(AbeConfigurationPeer::ABE_ACTION_FIELD);
 
-        $criteria->addSelectColumn(\AbeRequestsPeer::ABE_REQ_UID);
-        $criteria->addSelectColumn(\AbeRequestsPeer::APP_UID);
-        $criteria->addSelectColumn(\AbeRequestsPeer::DEL_INDEX);
+        $criteria->addSelectColumn(AbeRequestsPeer::ABE_REQ_UID);
+        $criteria->addSelectColumn(AbeRequestsPeer::APP_UID);
+        $criteria->addSelectColumn(AbeRequestsPeer::DEL_INDEX);
 
-        $criteria->addSelectColumn(\AbeResponsesPeer::ABE_RES_UID);
-        $criteria->addSelectColumn(\AbeResponsesPeer::ABE_RES_DATA);
+        $criteria->addSelectColumn(AbeResponsesPeer::ABE_RES_UID);
+        $criteria->addSelectColumn(AbeResponsesPeer::ABE_RES_DATA);
 
-        $criteria->add(\AbeRequestsPeer::ABE_REQ_UID, $arrayData['REQ_UID']);
-        $criteria->addJoin(\AbeRequestsPeer::ABE_UID, \AbeConfigurationPeer::ABE_UID);
-        $criteria->addJoin(\AbeResponsesPeer::ABE_REQ_UID, \AbeRequestsPeer::ABE_REQ_UID);
-        $resultRes = \AbeRequestsPeer::doSelectRS($criteria);
-        $resultRes->setFetchmode(\ResultSet::FETCHMODE_ASSOC);
+        $criteria->add(AbeRequestsPeer::ABE_REQ_UID, $arrayData['REQ_UID']);
+        $criteria->addJoin(AbeRequestsPeer::ABE_UID, AbeConfigurationPeer::ABE_UID);
+        $criteria->addJoin(AbeResponsesPeer::ABE_REQ_UID, AbeRequestsPeer::ABE_REQ_UID);
+        $resultRes = AbeRequestsPeer::doSelectRS($criteria);
+        $resultRes->setFetchmode(ResultSet::FETCHMODE_ASSOC);
 
         $resultRes->next();
         $dataRes = Array();
-        $message = \G::LoadTranslation('ID_USER_NOT_RESPONDED_REQUEST');
+        $message = G::LoadTranslation('ID_USER_NOT_RESPONDED_REQUEST');
         if ($dataRes = $resultRes->getRow()) {
             $_SESSION['CURRENT_DYN_UID'] = trim($dataRes['DYN_UID']);
 
@@ -568,23 +591,22 @@ class ActionsByEmail
         $configuration['CURRENT_DYNAFORM'] = trim($dataRes['DYN_UID']);
         $configuration['PRO_UID']          = trim($dataRes['PRO_UID']);
 
-        $criteriaD = new \Criteria();
+        $criteriaD = new Criteria();
         $criteriaD->addSelectColumn(\DynaformPeer::DYN_CONTENT);
         $criteriaD->addSelectColumn(\DynaformPeer::PRO_UID);
         $criteriaD->add(\DynaformPeer::DYN_UID, trim($dataRes['DYN_UID']));
         $resultD = \DynaformPeer::doSelectRS($criteriaD);
-        $resultD->setFetchmode(\ResultSet::FETCHMODE_ASSOC);
+        $resultD->setFetchmode(ResultSet::FETCHMODE_ASSOC);
         $resultD->next();
         $configuration = $resultD->getRow();
 
-        \G::LoadClass('pmDynaform');
         $field = new \stdClass();
-        $obj = new \pmDynaform($configuration);
+        $obj = new PmDynaform($configuration);
 
         if ($dataRes['ABE_RES_DATA'] !== '') {
             $value       = unserialize($dataRes['ABE_RES_DATA']);
             $actionField = str_replace(array('@@','@#','@=','@%','@?','@$'), '', $dataRes['ABE_ACTION_FIELD']);
-            $variables   = \G::json_decode($configuration['DYN_CONTENT'], true);
+            $variables   = G::json_decode($configuration['DYN_CONTENT'], true);
             if (is_array($value)) {
                 if(isset($variables['items'][0]['items'])) {
                     $fields = $variables['items'][0]['items'];
@@ -651,13 +673,13 @@ class ActionsByEmail
             );
 
             //Verify login
-            $criteria = new \Criteria('workflow');
+            $criteria = new Criteria('workflow');
 
-            $criteria->add(\AbeConfigurationPeer::PRO_UID, $arrayAppDelegationData['PRO_UID'], \Criteria::EQUAL);
-            $criteria->add(\AbeConfigurationPeer::TAS_UID, $arrayAppDelegationData['TAS_UID'], \Criteria::EQUAL);
+            $criteria->add(AbeConfigurationPeer::PRO_UID, $arrayAppDelegationData['PRO_UID'], Criteria::EQUAL);
+            $criteria->add(AbeConfigurationPeer::TAS_UID, $arrayAppDelegationData['TAS_UID'], Criteria::EQUAL);
 
-            $rsCriteria = \AbeConfigurationPeer::doSelectRS($criteria);
-            $rsCriteria->setFetchmode(\ResultSet::FETCHMODE_ASSOC);
+            $rsCriteria = AbeConfigurationPeer::doSelectRS($criteria);
+            $rsCriteria->setFetchmode(ResultSet::FETCHMODE_ASSOC);
 
             if ($rsCriteria->next()) {
                 $record = $rsCriteria->getRow();
@@ -667,31 +689,9 @@ class ActionsByEmail
 
                     if (!isset($_SESSION['USER_LOGGED'])) {
                         /*----------------------------------********---------------------------------*/
-                        //SSO
-                        if (\PMLicensedFeatures::getSingleton()->verifyfeature('x4TTzlISnp2K2tnSTJoMC8rTDRMTjlhMCtZeXV0QnNCLzU=')) {
-                            \G::LoadClass('pmSso');
-
-                            $sso = new \pmSsoClass();
-
-                            if ($sso->ssocVerifyUser()) {
-                                global $RBAC;
-
-                                //Start new session
-                                @session_destroy();
-                                session_start();
-                                session_regenerate_id();
-
-                                //Authenticate
-                                $_GET['u'] = $_SERVER['REQUEST_URI'];
-
-                                require_once(PATH_METHODS . 'login' . PATH_SEP . 'authenticationSso.php');
-                                exit(0);
-                            }
-                        }
-                        /*----------------------------------********---------------------------------*/
 
                         if (defined('PM_SINGLE_SIGN_ON')) {
-                            $pluginRegistry = &\PMPluginRegistry::getSingleton();
+                            $pluginRegistry = PluginRegistry::loadSingleton();
 
                             if ($pluginRegistry->existsTrigger(PM_SINGLE_SIGN_ON)) {
                                 if ($pluginRegistry->executeTriggers(PM_SINGLE_SIGN_ON, null)) {
@@ -714,7 +714,7 @@ class ActionsByEmail
                         $flagLogin = true;
                     } else {
                         if ($_SESSION['USER_LOGGED'] != $arrayAppDelegationData['USR_UID']) {
-                            \G::SendTemporalMessage('ID_CASE_ASSIGNED_ANOTHER_USER', 'error', 'label');
+                            G::SendTemporalMessage('ID_CASE_ASSIGNED_ANOTHER_USER', 'error', 'label');
 
                             $flagLogin = true;
                         }
@@ -722,7 +722,7 @@ class ActionsByEmail
 
                     if ($flagLogin) {
                         header(
-                            'Location: /sys' . SYS_SYS . '/' . SYS_LANG . '/' . SYS_SKIN .
+                            'Location: /sys' . config("system.workspace") . '/' . SYS_LANG . '/' . SYS_SKIN .
                             '/login/login?u=' . urlencode($_SERVER['REQUEST_URI'])
                         );
 
@@ -730,7 +730,7 @@ class ActionsByEmail
                     }
                 }
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             throw $e;
         }
     }

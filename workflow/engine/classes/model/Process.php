@@ -327,7 +327,6 @@ class Process extends BaseProcess
             $uids[] = $processes[sizeof( $processes ) - 1]['PRO_UID'];
         }
 
-        G::loadClass( 'configuration' );
         $oConf = new Configurations();
         $oConf->loadConfig( $obj, 'ENVIRONMENT_SETTINGS', '' );
 
@@ -667,7 +666,6 @@ class Process extends BaseProcess
             $uids[] = $processes[sizeof( $processes ) - 1]['PRO_UID'];
         }
 
-        G::loadClass( 'configuration' );
         $oConf = new Configurations();
         $oConf->loadConfig( $obj, 'ENVIRONMENT_SETTINGS', '' );
 
@@ -741,7 +739,7 @@ class Process extends BaseProcess
 
         }
 
-        $memcache = & PMmemcached::getSingleton( SYS_SYS );
+        $memcache = & PMmemcached::getSingleton( config("system.workspace") );
         if (isset($memcache) && $memcache->enabled == 1 ) {
         	return $aProcesses;
         }
@@ -768,7 +766,7 @@ class Process extends BaseProcess
           GROUP BY PRO_UID, APP_STATUS*/
         require_once 'classes/model/Application.php';
 
-        $memcache = & PMmemcached::getSingleton( SYS_SYS );
+        $memcache = & PMmemcached::getSingleton( config("system.workspace") );
         $memkey = 'getCasesCountInAllProcesses';
         if (($aProcesses = $memcache->get( $memkey )) === false) {
             $oCriteria = new Criteria( 'workflow' );
@@ -879,7 +877,7 @@ class Process extends BaseProcess
         $limit = 25;
         $start = 0;
 
-        $memcache = PMmemcached::getSingleton( SYS_SYS );
+        $memcache = PMmemcached::getSingleton( config("system.workspace") );
 
         for ($start = 0; $start <= 50 - 1; $start ++) {
             $memkey = "processList-allProcesses-" . ($start * $limit) . "-" . $limit;
@@ -1026,5 +1024,17 @@ class Process extends BaseProcess
             );
             $users->update($newData);
         }
+    }
+
+    /**
+     * Load a process object by PRO_ID
+     *
+     * @param type $id
+     * @return Process
+     */
+    public static function loadById($id) {
+        $criteria = new Criteria(ProcessPeer::DATABASE_NAME);
+        $criteria->add(ProcessPeer::PRO_ID, $id);
+        return ProcessPeer::doSelect($criteria)[0];
     }
 }

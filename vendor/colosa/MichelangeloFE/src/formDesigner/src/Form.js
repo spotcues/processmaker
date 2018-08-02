@@ -797,21 +797,19 @@
                 xhr.setRequestHeader("Authorization", "Bearer " + PMDesigner.project.keys.access_token);
             },
             success: function (data) {
-                var variables = that.getData().variables, i, j, sw;
+                var variables = that.getData().variables,
+                    i,
+                    j,
+                    changeName;
                 for (i = 0; i < variables.length; i++) {
-                    sw = typeof variables[i].var_accepted_values === "string";
-                    variables[i].var_accepted_values = sw ? JSON.parse(variables[i].var_accepted_values) : variables[i].var_accepted_values;
+                    variables[i].var_accepted_values = that._getVarAcceptedValues(variables[i]);
                     variables[i].var_uid_old = variables[i].var_uid;
                     variables[i].var_name_old = variables[i].var_name;
                     variables[i].prj_uid_old = variables[i].prj_uid;
+                    changeName = true;
                     for (j = 0; j < data.length; j++) {
-                        if (
-                            variables[i].var_name === data[j].var_name &&
-                            variables[i].var_field_type === data[j].var_field_type &&
-                            variables[i].var_name === data[j].var_name &&
-                            variables[i].var_sql === data[j].var_sql &&
-                            JSON.stringify(variables[i].var_accepted_values) === data[j].var_accepted_values
-                        ) {
+                        data[j].var_accepted_values = that._getVarAcceptedValues(data[j]);
+                        if (changeName && that._compareVariable(variables[i], data[j])) {
                             variables[i].var_uid = data[j].var_uid;
                             variables[i].prj_uid = data[j].prj_uid;
                             variables[i].create = false;
@@ -819,6 +817,7 @@
                             if (variables[i].var_name === data[j].var_name) {
                                 variables[i].var_name = variables[i].var_name + "_1";
                                 j = -1;
+                                changeName = false;
                             }
                         }
                     }
@@ -872,6 +871,41 @@
                 }
             }
         });
+    };
+    /**
+     * Gets the AcceptedValues values of a variable
+     * @param variable
+     * @returns {*|Array}
+     * @private
+     */
+    Form.prototype._getVarAcceptedValues = function (variable) {
+        var acceptedValues = variable.var_accepted_values;
+
+        try {
+            //In previous versions it was a string (acceptedValues)
+            if (typeof acceptedValues === 'string') {
+                acceptedValues = JSON.parse(acceptedValues);
+            }
+        } catch (e) {
+            throw new Error('Accepted Values is an empty string '.translate() + e.message);
+        }
+        return acceptedValues;
+    };
+    /**
+     * Compare the variable if it exists
+     * @param importedVariable
+     * @param currentVariable
+     * @returns {boolean}
+     * @private
+     */
+    Form.prototype._compareVariable = function (importedVariable, currentVariable) {
+        //Four properties of the variable are compared (name, fieldType, sql and acceptedValues)
+        return (
+            importedVariable.var_name === currentVariable.var_name &&
+            importedVariable.var_field_type === currentVariable.var_field_type &&
+            importedVariable.var_sql === currentVariable.var_sql &&
+            JSON.stringify(importedVariable.var_accepted_values) === JSON.stringify(currentVariable.var_accepted_values)
+        );
     };
     Form.prototype.setVariable = function (variable) {
         var that = this, b;

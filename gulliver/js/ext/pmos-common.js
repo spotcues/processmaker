@@ -93,13 +93,12 @@ PMExtJSCommon = function() {
     return {name:name, version:version, screen: screen}
   }
 
-  this.createInfoPanel = function(url, params, columnsSize)
-  {
+  this.createInfoPanel = function (url, params, columnsSize) {
     var labelColumnWidth = 170;
     var valueColumnWidth = 350;
     params = params || {};
 
-    if(typeof columnsSize != 'undefined') {
+    if (typeof columnsSize !== 'undefined') {
       labelColumnWidth = columnsSize[0] || labelColumnWidth;
       valueColumnWidth = columnsSize[1] || valueColumnWidth;
     }
@@ -112,39 +111,44 @@ PMExtJSCommon = function() {
           method : 'POST'
         }),
         baseParams: params,
-        reader : new Ext.data.JsonReader({
-          fields : [{name : 'label'}, {name : 'value'}, {name : 'section'}]
+        reader: new Ext.data.JsonReader({
+          fields: [{name: 'label'}, {name: 'value'}, {name: 'section'}]
         }),
         groupField: 'section'
       }),
-      columns : [
+      columns: [
         {
-            width : labelColumnWidth,
-            dataIndex : "label",
-            renderer: function(v){return "<b><font color=\"#465070\">"+v+"</font></b>"},
+            width: labelColumnWidth,
+            dataIndex: "label",
+            renderer: function (v) {
+                return "<b><font class='selectText' color=\"#465070\">" + v + "</font></b>";
+            },
             align: "right"
         },
         {
-            width : valueColumnWidth,
-            dataIndex : "value"
+            width: valueColumnWidth,
+            dataIndex: "value",
+            renderer: function (v) {
+                return "<b class='selectText'>" + v + "</b>";
+            }
         },
         {
             hidden: true,
             dataIndex : "section"
         }
       ],
-      autoHeight : true,
+      autoHeight: true,
       columnLines: true,
-      trackMouseOver:false,
-      disableSelection:true,
+      trackMouseOver: false,
+      disableSelection: true,
       view: new Ext.grid.GroupingView({
-        forceFit:true,
-        headersDisabled : true,
+        forceFit: true,
+        headersDisabled: true,
         groupTextTpl: '{group}'
       }),
       loadMask: true
     });
-  }
+  };
 
   this.cookie = {
     create: function(name, value, days) {

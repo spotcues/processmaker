@@ -23,12 +23,12 @@
  *
  */
 
-if (defined('PATH_DB') && defined('SYS_SYS')) {
+if (defined('PATH_DB') && !empty(config("system.workspace"))) {
 
-    if (!file_exists(PATH_DB . SYS_SYS . '/db.php'))
-        throw new Exception("Could not find db.php in current workspace " . SYS_SYS);
+    if (!file_exists(PATH_DB . config("system.workspace") . '/db.php'))
+        throw new Exception("Could not find db.php in current workspace " . config("system.workspace"));
 
-    require_once(PATH_DB . SYS_SYS . '/db.php');
+    require_once(PATH_DB . config("system.workspace") . '/db.php');
     //to do: enable for other databases
     $dbType = DB_ADAPTER;
     $dsn = DB_ADAPTER . '://' . DB_USER . ':' . urlencode(DB_PASS) . '@' . DB_HOST . '/' . DB_NAME;

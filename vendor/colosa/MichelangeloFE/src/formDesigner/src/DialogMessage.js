@@ -7,7 +7,8 @@
         DialogMessage.prototype.init.call(this, appendTo);
     };
     DialogMessage.prototype.init = function (appendTo) {
-        var that = this;
+        var that = this,
+            title;
         this.accept = $("<a href='#' class='fd-button fd-button-success'>" + "Ok".translate() + "</a>");
         this.accept.on("click", function () {
             that.onAccept();
@@ -17,7 +18,8 @@
         this.buttons = $("<div class='fd-button-panel'><div></div></div>");
         this.buttons.find("div:nth-child(1)").append(this.accept);
 
-        this.dialog = $("<div title='" + "Errors".translate() + "'></div>");
+        title = that.type === "success"? "Information" : "Errors";
+        this.dialog = $("<div title='" + title.translate() + "'></div>");
         this.dialog.dialog({
             appendTo: appendTo ? appendTo : document.body,
             modal: true,

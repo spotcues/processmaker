@@ -438,7 +438,7 @@ Ext.onReady(function(){
     pressed: false,
     enableToggle:true,
     text: '&nbsp;&nbsp;'+_('ID_CASES_NOTES'),
-    iconCls: 'ICON_CASES_NOTES',
+    iconCls: 'button_menu_ext ICON_CASES_NOTES',
     tooltip: {
       title: _('ID_CASES_NOTES'),
       text:_('ID_SHOW_CASES_NOTES')

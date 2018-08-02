@@ -1,26 +1,7 @@
 <?php
-/**
- * cases_Resume.php
- *
- * ProcessMaker Open Source Edition
- * Copyright (C) 2004 - 2008 Colosa Inc.23
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- *
- * For more information, contact Colosa Inc, 2566 Le Jeune Rd.,
- * Coral Gables, FL, 33134, USA, or email info@colosa.com.
- */
+
+use ProcessMaker\BusinessModel\Task as BusinessModelTask;
+
 /* Permissions */
 switch ($RBAC->userCanAccess( 'PM_CASES' )) {
     case - 2:
@@ -34,9 +15,6 @@ switch ($RBAC->userCanAccess( 'PM_CASES' )) {
         die();
         break;
 }
-
-/* Includes */
-G::LoadClass( 'case' );
 
 /* GET , POST & $_SESSION Vars */
 
@@ -158,12 +136,19 @@ if ($Fields['APP_STATUS'] != 'COMPLETED') {
     $FieldsPar = $Fields;
     foreach ($parallel as $row) {
         $FieldsPar['TAS_UID'] = $row['TAS_UID'];
-        $aTask = $objTask->load( $row['TAS_UID'] );
-        $FieldsPar['TAS_TITLE'] = $aTask['TAS_TITLE'];
+        $task = $objTask->load($row['TAS_UID']);
+        $FieldsPar['TAS_TITLE'] = $task['TAS_TITLE'];
         $FieldsPar['USR_UID'] = $row['USR_UID'];
         if (isset($row['USR_UID']) && !empty($row['USR_UID'])) {
-            $aUser = $objUser->loadDetails ($row['USR_UID']);
-            $FieldsPar['CURRENT_USER'] = $aUser['USR_FULLNAME'];
+            $user = $objUser->loadDetails($row['USR_UID']);
+            $FieldsPar['CURRENT_USER'] = $user['USR_FULLNAME'];
+        } else {
+            $dummyTaskTypes = BusinessModelTask::getDummyTypes();
+            if (!in_array($task["TAS_TYPE"], $dummyTaskTypes)) {
+                $FieldsPar['CURRENT_USER'] = G::LoadTranslation('ID_TITLE_UNASSIGNED');
+            } else {
+                $FieldsPar['CURRENT_USER'] = '';
+            }
         }
         $FieldsPar['DEL_DELEGATE_DATE'] = $row['DEL_DELEGATE_DATE'];
         $FieldsPar['DEL_INIT_DATE']     = $row['DEL_INIT_DATE'];

@@ -1,5 +1,8 @@
 <?php
 global $RBAC;
+
+use ProcessMaker\Core\System;
+
 $RBAC->requirePermissions( 'PM_USERS' );
 
 //calculating the max upload file size;
@@ -30,7 +33,7 @@ $languageManagement = 0;
 
 /*----------------------------------********---------------------------------*/
 
-$arraySystemConfiguration = System::getSystemConfiguration('', '', SYS_SYS);
+$arraySystemConfiguration = System::getSystemConfiguration('', '', config("system.workspace"));
 
 $oHeadPublisher = & headPublisher::getSingleton();
 $oHeadPublisher->addExtJsScript( 'users/users', true ); //adding a javascript file .js

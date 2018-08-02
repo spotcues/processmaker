@@ -389,7 +389,7 @@ Ext.onReady(function(){
             id: 'deatachAction',
             disabled: true,
             text: _('ID_OPEN_IN_A_NEW_WINDOW'),
-            iconCls: 'ss_sprite ss_application_form',
+            iconCls: 'button_menu_ext ss_sprite ss_application_form',
             handler: function(){
               if( Ext.getCmp('debugPanelTabs').getActiveTab().id === 'debugVariables' ){
                 var i,

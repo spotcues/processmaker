@@ -338,7 +338,7 @@
             width: '900px',
             height: "300px",
             name: "formScriptTask",
-            title: "".translate(),
+            title: '',
             items: [
                 {
                     id: "panelDetailsCustom",
@@ -414,6 +414,7 @@
             if (codeMirrorControl != undefined) {
                 codeMirrorControl.setSize(650, 255); //CodeMirror Size
                 $("#code").find(".CodeMirror-wrap").css({'border': '1px solid #c0c0c0'});
+                codeMirrorControl.refresh();
             }
             requiredMessage = $(document.getElementById("requiredMessage"));
             scriptTaskPropertiesWindow.body.appendChild(requiredMessage[0]);

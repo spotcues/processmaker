@@ -1,6 +1,8 @@
 <?php
 namespace ProcessMaker\BusinessModel;
 
+use G;
+
 class EmailEvent
 {
     /*private $arrayFieldDefinition = array(
@@ -277,7 +279,7 @@ class EmailEvent
         try {
             //Verify data
             if (!$this->existsEvent($prj_uid, $evn_uid)) {
-                throw new \Exception(\G::LoadTranslation("ID_EMAIL_EVENT_DEFINITION_DOES_NOT_EXIST"));
+                throw new \Exception(G::LoadTranslation("ID_EMAIL_EVENT_DEFINITION_DOES_NOT_EXIST"));
             }
             $arrayData = $this->existsEvent($prj_uid, $evn_uid);
             $this->delete($prj_uid, $arrayData[0]);
@@ -387,7 +389,7 @@ class EmailEvent
     public function verifyIfEmailEventExists($emailEventUid)
     {
         if (!$this->exists($emailEventUid)) {
-            throw new \Exception(\G::LoadTranslation("ID_EMAIL_EVENT_DEFINITION_DOES_NOT_EXIST", array("Email Event Uid", $emailEventUid)));
+            throw new \Exception(G::LoadTranslation("ID_EMAIL_EVENT_DEFINITION_DOES_NOT_EXIST", array("Email Event Uid", $emailEventUid)));
         }
     }
 
@@ -430,7 +432,7 @@ class EmailEvent
     public function sendEmail($appUID, $prj_uid, $eventUid, $arrayApplicationData)
     {
         if (!$this->existsEvent($prj_uid, $eventUid)) {
-            throw new \Exception(\G::LoadTranslation("ID_EMAIL_EVENT_DEFINITION_DOES_NOT_EXIST"));
+            throw new \Exception(G::LoadTranslation("ID_EMAIL_EVENT_DEFINITION_DOES_NOT_EXIST"));
         }
         $arrayData = $this->existsEvent($prj_uid, $eventUid);
         if (sizeof($arrayData)) {
@@ -471,11 +473,11 @@ class EmailEvent
             }
             if (!empty($emailTo)) {
                 $subject = $arrayData[5];
-                $subject = \G::replaceDataField($arrayData[5], $arrayApplicationData['APP_DATA']);
-                \PMFSendMessage($appUID, $configEmailData['MESS_ACCOUNT'], $emailTo, '', '', $subject,
+                $subject = G::replaceDataField($arrayData[5], $arrayApplicationData['APP_DATA']);
+                PMFSendMessage($appUID, G::buildFrom($configEmailData), $emailTo, '', '', $subject,
                     $contentFile['prf_filename'], array(), array(), true, 0, $configEmailData);
             } else {
-                \Bootstrap::registerMonolog('EmailEventMailError', 200, \G::LoadTranslation('ID_EMAIL_EVENT_CONFIGURATION_EMAIL', array($eventUid, $prj_uid)), ['eventUid' => $eventUid, 'prj_uid' => $prj_uid], SYS_SYS, 'processmaker.log');
+                \Bootstrap::registerMonolog('EmailEventMailError', 200, G::LoadTranslation('ID_EMAIL_EVENT_CONFIGURATION_EMAIL', array($eventUid, $prj_uid)), ['eventUid' => $eventUid, 'prj_uid' => $prj_uid], config("system.workspace"), 'processmaker.log');
             }
         }
     }

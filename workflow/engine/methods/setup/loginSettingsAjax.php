@@ -19,8 +19,8 @@ switch ($request) {
         print (G::json_encode( $result )) ;
         break;
     case 'saveSettings':
-        $memcache = & PMmemcached::getSingleton( defined( 'SYS_SYS' ) ? SYS_SYS : '' );
-        G::LoadClass( 'configuration' );
+        $memcache = & PMmemcached::getSingleton( !empty(config("system.workspace")) ? config("system.workspace") : '' );
+
         $conf = new Configurations();
         $conf->loadConfig( $obj, 'ENVIRONMENT_SETTINGS', '' );
 

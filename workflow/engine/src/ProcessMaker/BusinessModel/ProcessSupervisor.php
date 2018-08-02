@@ -1,7 +1,14 @@
 <?php
 namespace ProcessMaker\BusinessModel;
 
-use \G;
+use Criteria;
+use DynaformPeer;
+use Exception;
+use G;
+use GroupUserPeer;
+use ProcessUserPeer;
+use ResultSet;
+use StepSupervisorPeer;
 
 class ProcessSupervisor
 {
@@ -1140,7 +1147,7 @@ class ProcessSupervisor
         try {
             $oDynaformSupervidor = \StepSupervisorPeer::retrieveByPK($sPudUID);
             if (!is_null($oDynaformSupervidor)) {
-                $oProcessMap = new \processMap();
+                $oProcessMap = new \ProcessMap();
                 $oProcessMap->removeSupervisorStep( $oDynaformSupervidor->getStepUid(), $sProcessUID, 'DYNAFORM', $oDynaformSupervidor->getStepUidObj(), $oDynaformSupervidor->getStepPosition() );
             } else {
                 throw new \Exception(\G::LoadTranslation("ID_ROW_DOES_NOT_EXIST"));
@@ -1162,7 +1169,7 @@ class ProcessSupervisor
         try {
             $oInputDocumentSupervidor = \StepSupervisorPeer::retrieveByPK($sPuiUID);
             if (!is_null($oInputDocumentSupervidor)) {
-                $oProcessMap = new \processMap();
+                $oProcessMap = new \ProcessMap();
                 $oProcessMap->removeSupervisorStep( $oInputDocumentSupervidor->getStepUid(), $sProcessUID, 'INPUT_DOCUMENT', $oInputDocumentSupervidor->getStepUidObj(), $oInputDocumentSupervidor->getStepPosition() );
             } else {
                 throw new \Exception(\G::LoadTranslation("ID_ROW_DOES_NOT_EXIST"));
@@ -1458,6 +1465,107 @@ class ProcessSupervisor
             //Return
             return false;
         } catch (\Exception $e) {
+            throw $e;
+        }
+    }
+    /**
+     * Check if the user is supervisor for some process
+     *
+     * @param string $userUid Unique id of User
+     *
+     * @return bool Return
+     */
+    public function isUserSupervisor($userUid)
+    {
+        //Check if the user is defined as supervisor
+        $criteria = new \Criteria('workflow');
+        $criteria->add(\ProcessUserPeer::USR_UID, $userUid, \Criteria::EQUAL);
+        $criteria->add(\ProcessUserPeer::PU_TYPE, 'SUPERVISOR', \Criteria::EQUAL);
+        $rsCriteria = \ProcessUserPeer::doSelectRS($criteria);
+        $rsCriteria->setFetchmode(\ResultSet::FETCHMODE_ASSOC);
+
+        if ($rsCriteria->next()) {
+            return true;
+        }
+        //Check if the user is in a group defined as supervisor
+        $criteria = new \Criteria('workflow');
+        $criteria->addSelectColumn(\ProcessUserPeer::USR_UID);
+        $criteria->addJoin(\ProcessUserPeer::USR_UID, \GroupUserPeer::GRP_UID, \Criteria::LEFT_JOIN);
+        $criteria->add(\ProcessUserPeer::PU_TYPE, 'GROUP_SUPERVISOR', \Criteria::EQUAL);
+        $criteria->add(\GroupUserPeer::USR_UID, $userUid, \Criteria::EQUAL);
+        $rsCriteria = \ProcessUserPeer::doSelectRS($criteria);
+        $rsCriteria->setFetchmode(\ResultSet::FETCHMODE_ASSOC);
+
+        if ($rsCriteria->next()) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * This function define if the supervisor can be review and edit
+     * The appStatus can be:TO_DO, DRAFT, COMPLETED, CANCELLED
+     * The thread status can be: PAUSED
+     * @param string $appUid
+     * @param integer $delIndex
+     * @return array
+     */
+    public function reviewCaseStatusForSupervisor($appUid, $delIndex = 0)
+    {
+        $oApp = new \Application();
+        $oApp->Load($appUid);
+        $canEdit = false;
+        switch ($oApp->getAppStatus()) {
+            case 'TO_DO':
+                //Verify if the case is paused because the supervisor can not edit the PAUSED case
+                $oDelay = new \AppDelay();
+                if ($oDelay->isPaused($appUid, $delIndex)) {
+                    $canEdit = false;
+                } else {
+                    $canEdit = true;
+                }
+            break;
+            case 'COMPLETED':
+            case 'CANCELLED':
+            default:
+                $canEdit = false;
+        }
+
+        return $canEdit;
+    }
+
+    /**
+     * Return the objects supervisor
+     *
+     * @param string $proUid
+     * @param array $typeObject, can be DYNAFORM or INPUT_DOCUMENT
+     *
+     * @return array
+     * @throws Exception
+     */
+    public function getObjectSupervisor($proUid, $typeObject = [])
+    {
+        try {
+            $result = [];
+            $criteria = new Criteria('workflow');
+            $criteria->addSelectColumn(StepSupervisorPeer::STEP_UID);
+            $criteria->addSelectColumn(StepSupervisorPeer::PRO_UID);
+            $criteria->addSelectColumn(StepSupervisorPeer::STEP_TYPE_OBJ);
+            $criteria->addSelectColumn(StepSupervisorPeer::STEP_UID_OBJ);
+            $criteria->addSelectColumn(StepSupervisorPeer::STEP_POSITION);
+            $criteria->add(StepSupervisorPeer::PRO_UID, $proUid);
+            if (!empty($typeObject)) {
+                $criteria->add(StepSupervisorPeer::STEP_TYPE_OBJ, $typeObject, Criteria::IN);
+            }
+            $dataset = StepSupervisorPeer::doSelectRS($criteria);
+            $dataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+            $dataset->next();
+            while ($row = $dataset->getRow()) {
+                $result[] = $row['STEP_UID_OBJ'];
+                $dataset->next();
+            }
+            return $result;
+        } catch (Exception $e) {
             throw $e;
         }
     }

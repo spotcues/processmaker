@@ -1,13 +1,5 @@
 <?php
 /**
- * ObjectPermission.php
- *
- * @package workflow.engine.classes.model
- */
-
-//require_once 'classes/model/om/BaseObjectPermission.php';
-
-/**
  * Skeleton subclass for representing a row from the 'OBJECT_PERMISSION' table.
  *
  *
@@ -18,19 +10,31 @@
  *
  * @package workflow.engine.classes.model
  */
+
+use ProcessMaker\BusinessModel\Cases\InputDocument;
+
 class ObjectPermission extends BaseObjectPermission
 {
-    public function load ($UID)
+    /**
+     * Get the fields related to the user uid
+     *
+     * @param string $usrUid
+     *
+     * @return array
+     * @throws Exception
+    */
+    public function load($usrUid)
     {
         try {
-            $oRow = ObjectPermissionPeer::retrieveByPK( $UID );
-            if (! is_null( $oRow )) {
-                $aFields = $oRow->toArray( BasePeer::TYPE_FIELDNAME );
-                $this->fromArray( $aFields, BasePeer::TYPE_FIELDNAME );
-                $this->setNew( false );
-                return $aFields;
+            $row = ObjectPermissionPeer::retrieveByPK($usrUid);
+            if (!is_null($row)) {
+                $fields = $row->toArray(BasePeer::TYPE_FIELDNAME);
+                $this->fromArray($fields, BasePeer::TYPE_FIELDNAME);
+                $this->setNew(false);
+
+                return $fields;
             } else {
-                throw (new Exception( "The row '" . $UsrUid . "' in table USER doesn't exist!" ));
+                throw (new Exception("The row '" . $usrUid . "' in table USER doesn't exist!"));
             }
         } catch (Exception $oError) {
             throw ($oError);
@@ -157,10 +161,11 @@ class ObjectPermission extends BaseObjectPermission
      * @param string $proUid the uid of the process
      * @param string $tasUid the uid of the task
      * @param string $action for the object permissions VIEW, BLOCK, RESEND
+     * @param array $caseData for review the case status DRAFT, TODO, COMPLETED, PAUSED
      *
      * @return array
      */
-    public function verifyObjectPermissionPerUser ($usrUid, $proUid, $tasUid = '', $action = '')
+    public function verifyObjectPermissionPerUser ($usrUid, $proUid, $tasUid = '', $action = '', $caseData = array())
     {
         $userPermissions = array();
         $oCriteria = new Criteria('workflow');
@@ -188,7 +193,7 @@ class ObjectPermission extends BaseObjectPermission
             $row = $rs->getRow();
 
             if ($row["OP_CASE_STATUS"] == "ALL" || $row["OP_CASE_STATUS"] == "" || $row["OP_CASE_STATUS"] == "0" ||
-                $row["OP_CASE_STATUS"] == $aCase["APP_STATUS"]
+                $row["OP_CASE_STATUS"] == $caseData["APP_STATUS"]
             ) {
                 array_push($userPermissions, $row);
             }
@@ -203,12 +208,12 @@ class ObjectPermission extends BaseObjectPermission
      * @param string $proUid the uid of the process
      * @param string $tasUid the uid of the task
      * @param string $action for the object permissions VIEW, BLOCK, RESEND
+     * @param array $caseData for review the case status DRAFT, TODO, COMPLETED, PAUSED
      *
      * @return array
      */
-    public function verifyObjectPermissionPerGroup ($usrUid, $proUid, $tasUid = '', $action = '')
+    public function verifyObjectPermissionPerGroup ($usrUid, $proUid, $tasUid = '', $action = '', $caseData = array())
     {
-        G::loadClass('groups');
         $gr = new Groups();
         $records = $gr->getActiveGroupsForAnUser($usrUid);
         $groupPermissions = array();
@@ -232,7 +237,7 @@ class ObjectPermission extends BaseObjectPermission
                 $row = $rs->getRow();
 
                 if ($row["OP_CASE_STATUS"] == "ALL" || $row["OP_CASE_STATUS"] == "" || $row["OP_CASE_STATUS"] == "0" ||
-                    $row["OP_CASE_STATUS"] == $aCase["APP_STATUS"]
+                    $row["OP_CASE_STATUS"] == $caseData["APP_STATUS"]
                 ) {
                     array_push($groupPermissions, $row);
                 }
@@ -322,6 +327,7 @@ class ObjectPermission extends BaseObjectPermission
     public function objectPermissionByDynaform ($appUid, $opTaskSource = 0, $opObjUid = '', $statusCase = '')
     {
         $oCriteria = new Criteria('workflow');
+        $oCriteria->addSelectColumn("*");
         $oCriteria->addJoin(ApplicationPeer::PRO_UID, StepPeer::PRO_UID);
         $oCriteria->addJoin(StepPeer::STEP_UID_OBJ, DynaformPeer::DYN_UID);
         $oCriteria->add(ApplicationPeer::APP_UID, $appUid);
@@ -334,7 +340,6 @@ class ObjectPermission extends BaseObjectPermission
         if ($opObjUid != '' && $opObjUid != '0') {
             $oCriteria->add(DynaformPeer::DYN_UID, $opObjUid);
         }
-
         $oCriteria->addAscendingOrderByColumn(StepPeer::STEP_POSITION);
         $oCriteria->setDistinct();
 
@@ -366,48 +371,92 @@ class ObjectPermission extends BaseObjectPermission
      */
     public function objectPermissionByOutputInput ($appUid, $proUid, $opTaskSource, $obType = 'OUTPUT', $opObjUid = '', $statusCase = '')
     {
-        $oCriteria = new Criteria('workflow');
-        $oCriteria->addSelectColumn(AppDocumentPeer::APP_DOC_UID);
-        $oCriteria->addSelectColumn(AppDocumentPeer::APP_DOC_TYPE);
+        $criteria = new Criteria('workflow');
+        $criteria->addSelectColumn(AppDocumentPeer::APP_DOC_UID);
+        $criteria->addSelectColumn(AppDocumentPeer::APP_DOC_TYPE);
         $arrayCondition = array();
         $arrayCondition[] = array(AppDelegationPeer::APP_UID, AppDocumentPeer::APP_UID, Criteria::EQUAL);
         $arrayCondition[] = array(AppDelegationPeer::DEL_INDEX, AppDocumentPeer::DEL_INDEX, Criteria::EQUAL);
-        $oCriteria->addJoinMC($arrayCondition, Criteria::LEFT_JOIN);
-        $oCriteria->add(AppDelegationPeer::APP_UID, $appUid);
-        $oCriteria->add(AppDelegationPeer::PRO_UID, $proUid);
+        $criteria->addJoinMC($arrayCondition, Criteria::LEFT_JOIN);
+        $criteria->add(AppDelegationPeer::APP_UID, $appUid);
+        $criteria->add(AppDelegationPeer::PRO_UID, $proUid);
 
         if ($statusCase != 'COMPLETED' && $opTaskSource != '' && (int)$opTaskSource != 0) {
-            $oCriteria->add(AppDelegationPeer::TAS_UID, $opTaskSource);
+            $criteria->add(AppDelegationPeer::TAS_UID, $opTaskSource);
         }
         if ($opObjUid != '' && $opObjUid != '0') {
-            $oCriteria->add(AppDocumentPeer::DOC_UID, $opObjUid);
+            $criteria->add(AppDocumentPeer::DOC_UID, $opObjUid);
         }
+
+        $supervisorDocuments = [];
         switch ($obType) {
             case 'INPUT':
-                $oCriteria->add(
-                    $oCriteria->getNewCriterion(AppDocumentPeer::APP_DOC_TYPE, 'INPUT')->
-                    addOr($oCriteria->getNewCriterion(AppDocumentPeer::APP_DOC_TYPE, 'ATTACHED'))
-                );
+                $criteria->add(AppDocumentPeer::APP_DOC_TYPE, 'INPUT');
+                //We will to get the supervisor's documents with index = 100000
+                $inputDocument = new InputDocument();
+                $supervisorDocuments = $inputDocument->getSupervisorDocuments($appUid);
+                break;
+            case 'ATTACHED':
+                $criteria->add(AppDocumentPeer::APP_DOC_TYPE, 'ATTACHED');
                 break;
             case 'OUTPUT':
-                $oCriteria->add(AppDocumentPeer::APP_DOC_TYPE, 'OUTPUT');
+                $criteria->add(AppDocumentPeer::APP_DOC_TYPE, 'OUTPUT');
                 break;
         }
 
-        $oDataset = AppDelegationPeer::doSelectRS($oCriteria);
-        $oDataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+        $dataset = AppDelegationPeer::doSelectRS($criteria);
+        $dataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
 
-        $result = array();
-        while ($oDataset->next()) {
-            $aRow = $oDataset->getRow();
-            if ($aRow['APP_DOC_TYPE'] == "ATTACHED") {
-                $aRow['APP_DOC_TYPE'] = "INPUT";
-            }
-            if (!in_array($aRow['APP_DOC_UID'], $result)) {
-                array_push($result, $aRow['APP_DOC_UID']);
+        $result = [];
+        while ($dataset->next()) {
+            $row = $dataset->getRow();
+            if (!in_array($row['APP_DOC_UID'], $result)) {
+                array_push($result, $row['APP_DOC_UID']);
             }
         }
+
+        //We will to add the supervisor's documents in the result
+        foreach ($supervisorDocuments as $key => $value) {
+            if (!in_array($value['APP_DOC_UID'], $result)) {
+                array_push($result, $value['APP_DOC_UID']);
+            }
+        }
+
         return $result;
+    }
+
+    /**
+     * Verify if the user has a objectPermission for some process
+     *
+     * @param string $usrUid the uid of the user
+     * @param int $typeRelation
+     *
+     * @return array
+     */
+    public function objectPermissionPerUser($usrUid, $typeRelation = 1)
+    {
+        $criteria = new Criteria("workflow");
+        $criteria->addSelectColumn(ObjectPermissionPeer::USR_UID);
+        $criteria->addSelectColumn(ObjectPermissionPeer::PRO_UID);
+        $criteria->add(ObjectPermissionPeer::OP_USER_RELATION, $typeRelation, Criteria::EQUAL);
+        $criteria->add(ObjectPermissionPeer::USR_UID, $usrUid, Criteria::EQUAL);
+        $doSelectRS = ObjectPermissionPeer::doSelectRS($criteria);
+        $doSelectRS->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+        $doSelectRS->next();
+        $objectPermision = $doSelectRS->getRow();
+        $data = array();
+        if (isset($objectPermision["USR_UID"])) {
+            $criteria = new Criteria("workflow");
+            $criteria->addSelectColumn(ProcessPeer::PRO_TITLE);
+            $criteria->add(ProcessPeer::PRO_UID, $objectPermision["PRO_UID"], Criteria::EQUAL);
+            $doSelectRS = ProcessPeer::doSelectRS($criteria);
+            $doSelectRS->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+            $doSelectRS->next();
+            $content = $doSelectRS->getRow();
+            $data['PRO_TITLE'] = $content["PRO_TITLE"];
+            $data['PRO_UID'] = $objectPermision["PRO_UID"];
+        }
+        return $data;
     }
 }
 

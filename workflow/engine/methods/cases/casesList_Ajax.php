@@ -6,29 +6,6 @@ if (!isset($_SESSION['USER_LOGGED'])) {
     print G::json_encode($response);
     die();
 }
-/**
- * casesList_Ajax.php
- *
- * ProcessMaker Open Source Edition
- * Copyright (C) 2004 - 2008 Colosa Inc.
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- *
- * For more information, contact Colosa Inc, 2566 Le Jeune Rd.,
- * Coral Gables, FL, 33134, USA, or email info@colosa.com.
- */
-G::LoadClass( 'case' );
 
 $actionAjax = isset($_REQUEST['actionAjax']) ? $_REQUEST['actionAjax'] : null;
 
@@ -40,15 +17,15 @@ function filterUserListArray($users = array(), $filter = '')
             $filteredUsers[] = $user;
         }
     }
+
     return $filteredUsers;
 }
 
 //Load the suggest list of users
 if ($actionAjax == "userValues") {
-    $action = isset( $_REQUEST['action'] ) ? $_REQUEST['action'] : null;
-    $query = isset( $_REQUEST['query'] ) ? $_REQUEST['query'] : null;
+    $action = isset($_REQUEST['action']) ? $_REQUEST['action'] : null;
+    $query = isset($_REQUEST['query']) ? $_REQUEST['query'] : null;
 
-    G::LoadClass("configuration");
     $conf = new Configurations();
     $confEnvSetting = $conf->getFormats();
     $users = array();
@@ -66,12 +43,13 @@ if ($actionAjax == "userValues") {
             $cUsers->addSelectColumn(UsersPeer::USR_ID);
             break;
     }
+    $cUsers->add(UsersPeer::USR_UID, [RBAC::GUEST_USER_UID], Criteria::NOT_IN);
     $cUsers->add(UsersPeer::USR_STATUS, 'CLOSED', Criteria::NOT_EQUAL);
     if (!is_null($query)) {
         $filters = $cUsers->getNewCriterion(UsersPeer::USR_FIRSTNAME, '%' . $query . '%', Criteria::LIKE)->addOr(
             $cUsers->getNewCriterion(UsersPeer::USR_LASTNAME, '%' . $query . '%', Criteria::LIKE)->addOr(
-            $cUsers->getNewCriterion(UsersPeer::USR_USERNAME, '%' . $query . '%', Criteria::LIKE)));
-            $cUsers->addOr($filters);
+                $cUsers->getNewCriterion(UsersPeer::USR_USERNAME, '%' . $query . '%', Criteria::LIKE)));
+        $cUsers->addOr($filters);
     }
     $cUsers->setLimit(20);
     $cUsers->addAscendingOrderByColumn(UsersPeer::TABLE_NAME . "." . $conf->userNameFormatGetFirstFieldByUsersTable());
@@ -80,7 +58,8 @@ if ($actionAjax == "userValues") {
 
     while ($oDataset->next()) {
         $row = $oDataset->getRow();
-        $usrFullName = $conf->usersNameFormatBySetParameters($confEnvSetting["format"], $row["USR_USERNAME"], $row["USR_FIRSTNAME"], $row["USR_LASTNAME"]);
+        $usrFullName = $conf->usersNameFormatBySetParameters($confEnvSetting["format"], $row["USR_USERNAME"],
+            $row["USR_FIRSTNAME"], $row["USR_LASTNAME"]);
         if ($action === 'search') {
             //Only for the advanced search we used the USR_ID column
             $users[] = array("USR_UID" => $row["USR_ID"], "USR_FULLNAME" => $usrFullName);
@@ -88,6 +67,7 @@ if ($actionAjax == "userValues") {
             $users[] = array("USR_UID" => $row["USR_UID"], "USR_FULLNAME" => $usrFullName);
         }
     }
+
     return print G::json_encode($users);
 }
 
@@ -127,18 +107,18 @@ if ($actionAjax == "processListExtJs") {
         $cProcess->addAnd($filters);
     }
 
-    if ($action==='to_revise') {
-        $oAppCache = new AppCacheView();
-        $aProcesses = $oAppCache->getProUidSupervisor($_SESSION['USER_LOGGED']);
-        $cProcess->add(ProcessPeer::PRO_UID, $aProcesses, Criteria::IN);
+    if ($action === 'to_revise') {
+        $processUser = new ProcessUser();
+        $listProcess = $processUser->getProUidSupervisor($_SESSION['USER_LOGGED']);
+        $cProcess->add(ProcessPeer::PRO_UID, $listProcess, Criteria::IN);
     }
 
-    if ($action==='to_reassign') {
+    if ($action === 'to_reassign') {
         if ($RBAC->userCanAccess('PM_REASSIGNCASE') == 1) {
         } elseif ($RBAC->userCanAccess('PM_REASSIGNCASE_SUPERVISOR') == 1) {
-            $oAppCache = new AppCacheView();
-            $aProcesses = $oAppCache->getProUidSupervisor($_SESSION['USER_LOGGED']);
-            $cProcess->add(ProcessPeer::PRO_UID, $aProcesses, Criteria::IN);
+            $processUser = new ProcessUser();
+            $listProcess = $processUser->getProUidSupervisor($_SESSION['USER_LOGGED']);
+            $cProcess->add(ProcessPeer::PRO_UID, $listProcess, Criteria::IN);
         }
     }
 
@@ -154,6 +134,7 @@ if ($actionAjax == "processListExtJs") {
         }
         $processes[] = $aRow;
     }
+
     return print G::json_encode($processes);
 }
 
@@ -162,7 +143,7 @@ if ($actionAjax == "verifySession") {
         $response = new stdclass();
         $response->message = G::LoadTranslation('ID_LOGIN_AGAIN');
         $response->lostSession = true;
-        print G::json_encode( $response );
+        print G::json_encode($response);
         die();
     } else {
         $response = new stdclass();
@@ -175,32 +156,33 @@ if ($actionAjax == "verifySession") {
         } elseif ($RBAC->userCanAccess('PM_REASSIGNCASE_SUPERVISOR') == 1) {
             $response->reassigncase = true;
             $response->message = G::LoadTranslation('ID_NOT_ABLE_REASSIGN');
-            $oAppCache = new AppCacheView();
-            $aProcesses = $oAppCache->getProUidSupervisor($_SESSION['USER_LOGGED']);
-            $response->processeslist = G::json_encode( $aProcesses );
+            $processUser = new ProcessUser();
+            $listProcess = $processUser->getProUidSupervisor($_SESSION['USER_LOGGED']);
+            $response->processeslist = G::json_encode($listProcess);
         }
 
-        print G::json_encode( $response );
+        print G::json_encode($response);
         die();
     }
 }
 
 if ($actionAjax == "getUsersToReassign") {
-    $taskUid  = $_POST['taskUid'];
-    $search   = $_POST['search'];
+    $taskUid = $_POST['taskUid'];
+    $search = $_POST['search'];
     $pageSize = $_POST['pageSize'];
 
-    $sortField = (isset($_POST['sort']))?  $_POST['sort'] : '';
-    $sortDir   = (isset($_POST['dir']))?   $_POST['dir'] : '';
-    $start     = (isset($_POST['start']))? $_POST['start'] : 0;
-    $limit     = (isset($_POST['limit']))? $_POST['limit'] : $pageSize;
+    $sortField = (isset($_POST['sort'])) ? $_POST['sort'] : '';
+    $sortDir = (isset($_POST['dir'])) ? $_POST['dir'] : '';
+    $start = (isset($_POST['start'])) ? $_POST['start'] : 0;
+    $limit = (isset($_POST['limit'])) ? $_POST['limit'] : $pageSize;
 
     $response = [];
 
     try {
         $case = new \ProcessMaker\BusinessModel\Cases();
 
-        $result = $case->getUsersToReassign($_SESSION['USER_LOGGED'], $taskUid, ['filter' => $search], $sortField, $sortDir, $start, $limit);
+        $result = $case->getUsersToReassign($_SESSION['USER_LOGGED'], $taskUid, ['filter' => $search], $sortField,
+            $sortDir, $start, $limit);
 
         $response['status'] = 'OK';
         $response['success'] = true;
@@ -233,9 +215,9 @@ if ($actionAjax == 'reassignCase') {
         //Current users of OPEN DEL_INDEX thread
         $aCurUser = $oAppDel->getCurrentUsers($APP_UID, $DEL_INDEX);
         $flagReassign = true;
-        if(!empty($aCurUser)){
+        if (!empty($aCurUser)) {
             foreach ($aCurUser as $key => $value) {
-                if($value === $TO_USR_UID){
+                if ($value === $TO_USR_UID) {
                     $flagReassign = false;
                 }
             }
@@ -245,7 +227,7 @@ if ($actionAjax == 'reassignCase') {
         }
 
         //If the currentUser is diferent to nextUser, create the thread
-        if($flagReassign){
+        if ($flagReassign) {
             $cases->reassignCase($_SESSION['APPLICATION'], $_SESSION['INDEX'], $_SESSION['USER_LOGGED'], $TO_USR_UID);
         }
 
@@ -259,11 +241,12 @@ if ($actionAjax == 'reassignCase') {
 
         // Save the note reassign reason
         if (isset($_POST['NOTE_REASON']) && $_POST['NOTE_REASON'] !== '') {
-            require_once ("classes/model/AppNotes.php");
+            require_once("classes/model/AppNotes.php");
             $appNotes = new AppNotes();
             $noteContent = addslashes($_POST['NOTE_REASON']);
-            $notifyReassign = $_POST['NOTIFY_REASSIGN'] === 'true' ? true: false;
-            $res = $appNotes->postNewNote($_SESSION['APPLICATION'], $_SESSION['USER_LOGGED'], $noteContent, $notifyReassign);
+            $notifyReassign = $_POST['NOTIFY_REASSIGN'] === 'true' ? true : false;
+            $res = $appNotes->postNewNote($_SESSION['APPLICATION'], $_SESSION['USER_LOGGED'], $noteContent,
+                $notifyReassign);
         }
     } catch (Exception $e) {
         $result->status = 1;
@@ -295,15 +278,16 @@ if ($actionAjax == 'showHistoryMessage') {
         leimnud.browser = {};
         leimnud.browser.isIphone = "";
         leimnud.iphone = {};
-        leimnud.iphone.make = function(){
+        leimnud.iphone.make = function() {
         };
+
         function ajax_function(ajax_server, funcion, parameters, method) {
         }
+
         //!
     </script>
     <?php
 
-    G::LoadClass( 'case' );
     $oCase = new Cases();
 
     $_POST["APP_UID"] = $_REQUEST["APP_UID"];
@@ -312,7 +296,8 @@ if ($actionAjax == 'showHistoryMessage') {
     $G_PUBLISH = new Publisher();
     $oCase = new Cases();
 
-    $G_PUBLISH->AddContent('xmlform', 'xmlform', 'cases/cases_MessagesView', '', $oCase->getHistoryMessagesTrackerView($_POST['APP_UID'], $_POST['APP_MSG_UID']));
+    $G_PUBLISH->AddContent('xmlform', 'xmlform', 'cases/cases_MessagesView', '',
+        $oCase->getHistoryMessagesTrackerView($_POST['APP_UID'], $_POST['APP_MSG_UID']));
 
     ?>
 
@@ -322,7 +307,7 @@ if ($actionAjax == 'showHistoryMessage') {
         <?php
         global $G_FORM;
         ?>
-        function loadForm_<?php echo $G_FORM->id;?>(parametro1){
+        function loadForm_<?php echo $G_FORM->id;?>(parametro1) {
         }
     </script>
     <?php
@@ -344,6 +329,7 @@ if ($actionAjax == 'showDynaformListHistory') {
         html {
             color: black !important;
         }
+
         body {
             color: black !important;
         }
@@ -353,6 +339,7 @@ if ($actionAjax == 'showDynaformListHistory') {
             raw = raw || false;
             hexcase = hexcase || false;
             chrsz = chrsz || 8;
+
             function safe_add(x, y) {
                 var lsw = (x & 0xFFFF) + (y & 0xFFFF);
                 var msw = (x >> 16) + (y >> 16) + (lsw >> 16);
@@ -507,6 +494,7 @@ if ($actionAjax == 'showDynaformListHistory') {
         leimnud.iphone = {};
         leimnud.iphone.make = function () {
         };
+
         function ajax_function(ajax_server, funcion, parameters, method) {
         }
 
@@ -536,6 +524,7 @@ if ($actionAjax == 'showDynaformListHistory') {
         showDynaformHistoryGlobal.tablename = '';
         showDynaformHistoryGlobal.dynDate = '';
         showDynaformHistoryGlobal.dynTitle = '';
+
         function showDynaformHistory(dynUID, tablename, dynDate, dynTitle) {
             showDynaformHistoryGlobal.dynUID = dynUID;
             showDynaformHistoryGlobal.tablename = tablename;
@@ -593,8 +582,10 @@ if ($actionAjax == 'dynaformChangeLogViewHistory') {
         leimnud.iphone = {};
         leimnud.iphone.make = function () {
         };
+
         function ajax_function(ajax_server, funcion, parameters, method) {
         }
+
         //!
     </script>
     <?php
@@ -649,8 +640,10 @@ if ($actionAjax == 'historyDynaformGridPreview') {
         leimnud.iphone = {};
         leimnud.iphone.make = function () {
         };
+
         function ajax_function(ajax_server, funcion, parameters, method) {
         }
+
         //!
     </script>
     <?php
@@ -668,7 +661,7 @@ if ($actionAjax == 'historyDynaformGridPreview') {
     $Fields['APP_DATA']['__DYNAFORM_OPTIONS']['NEXT_ACTION'] = 'return false;';
     $_SESSION['DYN_UID_PRINT'] = $_POST['DYN_UID'];
     $G_PUBLISH->AddContent('dynaform', 'xmlform', $_SESSION['PROCESS'] . '/' . $_POST['DYN_UID'], '',
-    $Fields['APP_DATA'],
+        $Fields['APP_DATA'],
         '', '', 'view');
 
     ?>

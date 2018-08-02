@@ -4,9 +4,6 @@
  * @package    workflow.engine.classes.model
  */
 
-//require_once 'classes/model/om/BaseProcessUser.php';
-
-
 /**
  * Skeleton subclass for representing a row from the 'PROCESS_USER' table.
  *
@@ -125,6 +122,56 @@ class ProcessUser extends BaseProcessUser
             }
         } catch (Exception $oError) {
             throw ($oError);
+        }
+    }
+
+    /**
+     * Get the list of process where the user is supervisor
+     * finding cases PRO_UID where $userUid is supervising
+     *
+     * @param string $userUid
+     *
+     * @return array
+     * @throws Exception
+     */
+    public function getProUidSupervisor($userUid)
+    {
+        try {
+
+            $processes = [];
+
+            //Get the process when the user is supervisor
+            $criteria = new Criteria('workflow');
+            $criteria->add(ProcessUserPeer::PU_TYPE, 'SUPERVISOR');
+            $criteria->add(ProcessUserPeer::USR_UID, $userUid);
+            $dataset = ProcessUserPeer::doSelectRS($criteria);
+            $dataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+            $dataset->next();
+
+            while ($row = $dataset->getRow()) {
+                $processes[] = $row['PRO_UID'];
+                $dataset->next();
+            }
+
+            //Get the process when the user is assigned into the group supervisor
+            $criteria = new Criteria('workflow');
+            $criteria->add(ProcessUserPeer::PU_TYPE, 'GROUP_SUPERVISOR');
+            $criteria->addSelectColumn(ProcessUserPeer::PRO_UID);
+            $criteria->addJoin(ProcessUserPeer::USR_UID, GroupUserPeer::GRP_UID, Criteria::LEFT_JOIN);
+            $criteria->add(GroupUserPeer::USR_UID, $userUid);
+            $dataset = ProcessUserPeer::doSelectRS($criteria);
+            $dataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+            $dataset->next();
+
+            while ($row = $dataset->getRow()) {
+                $processes[] = $row['PRO_UID'];
+                $dataset->next();
+            }
+
+            return $processes;
+
+        } catch (Exception $e) {
+            throw $e;
         }
     }
 }

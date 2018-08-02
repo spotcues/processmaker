@@ -59,7 +59,6 @@ class AppProxy extends HttpProxyController
             throw new Exception(G::LoadTranslation("ID_RESOLVE_APPLICATION_ID"));
         }
 
-        G::LoadClass( 'case' );
         $case = new Cases();
 
         if (!isset($_SESSION['PROCESS']) && !isset($httpData->pro)) {
@@ -74,14 +73,11 @@ class AppProxy extends HttpProxyController
             $proUid = $httpData->pro;
         }
 
-        if(!isset($httpData->tas) || empty($httpData->tas))
-        {
-            $tasUid = $_SESSION['TASK'];
+        if (!isset($httpData->tas) || empty($httpData->tas)) {
+            $tasUid = isset($_SESSION['TASK']) ? $_SESSION['TASK'] : "";
         } else {
             $tasUid = $httpData->tas;
         }
-        //$proUid = (!isset($httpData->pro)) ? $_SESSION['PROCESS'] : $httpData->pro;
-        //$tasUid = (!isset($httpData->tas)) ? ((isset($_SESSION['TASK'])) ? $_SESSION['TASK'] : '') : $httpData->tas;
         $usrUid = $_SESSION['USER_LOGGED'];
 
         $respView  = $case->getAllObjectsFrom($proUid, $appUid, $tasUid, $usrUid, "VIEW",  $delIndex);
@@ -92,13 +88,12 @@ class AppProxy extends HttpProxyController
             );
         }
 
-        //require_once ("classes/model/AppNotes.php");
-
-        $usrUid = isset( $_SESSION['USER_LOGGED'] ) ? $_SESSION['USER_LOGGED'] : "";
+        $usrUid = isset($_SESSION['USER_LOGGED']) ? $_SESSION['USER_LOGGED'] : "";
         $appNotes = new AppNotes();
-        $response = $appNotes->getNotesList( $appUid, '', $httpData->start, $httpData->limit );
+        $response = $appNotes->getNotesList($appUid, '', $httpData->start, $httpData->limit);
+        $response = AppNotes::applyHtmlentitiesInNotes($response);
 
-        require_once ("classes/model/Application.php");
+        require_once("classes/model/Application.php");
         $oApplication = new Application();
         $aApplication = $oApplication->Load($appUid);
         $response['array']['appTitle'] = $aApplication['APP_TITLE'];
@@ -114,9 +109,6 @@ class AppProxy extends HttpProxyController
      */
     function postNote ($httpData)
     {
-        //require_once ("classes/model/AppNotes.php");
-
-        //extract(getExtJSParams());
         if (isset( $httpData->appUid ) && trim( $httpData->appUid ) != "") {
             $appUid = $httpData->appUid;
         } else {
@@ -185,7 +177,6 @@ class AppProxy extends HttpProxyController
                 break;
         }
 
-        G::LoadClass( 'case' );
         $case = new Cases();
         
         if ($httpData->action == 'sent') { // Get the last valid delegation for participated list
@@ -236,7 +227,6 @@ class AppProxy extends HttpProxyController
         $formCaseTitle = new Form( 'cases/cases_Resume_Current_Task_Title', PATH_XMLFORM, SYS_LANG ); 
         $formCurrentTaskProperties = new Form( 'cases/cases_Resume_Current_Task', PATH_XMLFORM, SYS_LANG ); 
 
-        G::LoadClass( 'case' );
         $case = new Cases();
 
         foreach ($formCaseProperties->fields as $fieldName => $field) {

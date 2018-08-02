@@ -15,8 +15,10 @@ require_once 'classes/model/om/BaseListMyInbox.php';
  * @package    classes.model
  */
 // @codingStandardsIgnoreStart
-class ListMyInbox extends BaseListMyInbox
+class ListMyInbox extends BaseListMyInbox implements ListInterface
 {
+    use ListBaseTrait;
+
     // @codingStandardsIgnoreEnd
     /**
      * Create List My Inbox Table
@@ -248,7 +250,7 @@ class ListMyInbox extends BaseListMyInbox
         }
     }
 
-    public function loadList($usr_uid, $filters = array(), $callbackRecord = null)
+    public function loadList($usr_uid, $filters = array(), callable $callbackRecord = null)
     {
         $criteria = new Criteria();
 

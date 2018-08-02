@@ -798,18 +798,23 @@ Ext.onReady(function(){
     loadTableRowsFromArray(TABLE.FIELDS);
   }
 
-  if (dataNumRows > 0) {
-    var tpl = new Ext.Template(
-        '<div id="fb" style="border: 1px solid #FF0000; background-color:#FFAAAA; display:none; padding:15px; color:#000000; font-size:12px;">'+
-        '<b>Warning: </b> ' + dataNumRows + ' ' + _('ID_PMTABLE_DATA_EXISTS_WARNINIG') + ' <a href="#" id="hideWarning" onclick="return false;">[ '+_('ID_HIDE')+' ]</a></div>'
+  var newEl,
+    tpl = new Ext.Template(
+      '<div id="fb" style="border: 1px solid #FF0000; background-color:#FFAAAA; display:none; padding:15px;' +
+      'color:#000000; font-size:12px;"><b>Warning: </b> ' + dataNumRows + ' ' + _('ID_PMTABLE_DATA_EXISTS_WARNINIG') +
+      ' <a href="#" id="hideWarning" onclick="return false;">[ '+_('ID_HIDE')+' ]</a></div>'
     );
-    var newEl = tpl.insertFirst(document.getElementById('assignedGrid'));
-
-    Ext.fly('hideWarning').on('click', function() {
-      Ext.fly(newEl).slideOut('t',{remove:true});
+    Ext.getCmp("chkKeepData").on('check', function () {
+      if (dataNumRows > 0 && Ext.getCmp("chkKeepData").checked === false) {
+        newEl = tpl.insertFirst(document.getElementById('assignedGrid'));
+        Ext.fly('hideWarning').on('click', function() {
+          Ext.fly(newEl).slideOut('t', {useDisplay:true});
+        });
+        Ext.fly(newEl).slideIn();
+      } else if (Ext.getCmp("chkKeepData").checked === true) {
+        Ext.fly(newEl).slideOut('t', {useDisplay:true});
+      }
     });
-    Ext.fly(newEl).slideIn();
-  }
 
 });
 

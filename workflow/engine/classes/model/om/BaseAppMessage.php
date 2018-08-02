@@ -136,6 +136,18 @@ abstract class BaseAppMessage extends BaseObject implements Persistent
     protected $app_msg_error;
 
     /**
+     * The value for the tas_id field.
+     * @var        int
+     */
+    protected $tas_id = 0;
+
+    /**
+     * The value for the app_number field.
+     * @var        int
+     */
+    protected $app_number = 0;
+
+    /**
      * Flag to prevent endless save loop, if this object is referenced
      * by another object which falls in this transaction.
      * @var        boolean
@@ -387,6 +399,28 @@ abstract class BaseAppMessage extends BaseObject implements Persistent
     {
 
         return $this->app_msg_error;
+    }
+
+    /**
+     * Get the [tas_id] column value.
+     * 
+     * @return     int
+     */
+    public function getTasId()
+    {
+
+        return $this->tas_id;
+    }
+
+    /**
+     * Get the [app_number] column value.
+     * 
+     * @return     int
+     */
+    public function getAppNumber()
+    {
+
+        return $this->app_number;
     }
 
     /**
@@ -800,6 +834,50 @@ abstract class BaseAppMessage extends BaseObject implements Persistent
     } // setAppMsgError()
 
     /**
+     * Set the value of [tas_id] column.
+     * 
+     * @param      int $v new value
+     * @return     void
+     */
+    public function setTasId($v)
+    {
+
+        // Since the native PHP type for this column is integer,
+        // we will cast the input value to an int (if it is not).
+        if ($v !== null && !is_int($v) && is_numeric($v)) {
+            $v = (int) $v;
+        }
+
+        if ($this->tas_id !== $v || $v === 0) {
+            $this->tas_id = $v;
+            $this->modifiedColumns[] = AppMessagePeer::TAS_ID;
+        }
+
+    } // setTasId()
+
+    /**
+     * Set the value of [app_number] column.
+     * 
+     * @param      int $v new value
+     * @return     void
+     */
+    public function setAppNumber($v)
+    {
+
+        // Since the native PHP type for this column is integer,
+        // we will cast the input value to an int (if it is not).
+        if ($v !== null && !is_int($v) && is_numeric($v)) {
+            $v = (int) $v;
+        }
+
+        if ($this->app_number !== $v || $v === 0) {
+            $this->app_number = $v;
+            $this->modifiedColumns[] = AppMessagePeer::APP_NUMBER;
+        }
+
+    } // setAppNumber()
+
+    /**
      * Hydrates (populates) the object variables with values from the database resultset.
      *
      * An offset (1-based "start column") is specified so that objects can be hydrated
@@ -852,12 +930,16 @@ abstract class BaseAppMessage extends BaseObject implements Persistent
 
             $this->app_msg_error = $rs->getString($startcol + 17);
 
+            $this->tas_id = $rs->getInt($startcol + 18);
+
+            $this->app_number = $rs->getInt($startcol + 19);
+
             $this->resetModified();
 
             $this->setNew(false);
 
             // FIXME - using NUM_COLUMNS may be clearer.
-            return $startcol + 18; // 18 = AppMessagePeer::NUM_COLUMNS - AppMessagePeer::NUM_LAZY_LOAD_COLUMNS).
+            return $startcol + 20; // 20 = AppMessagePeer::NUM_COLUMNS - AppMessagePeer::NUM_LAZY_LOAD_COLUMNS).
 
         } catch (Exception $e) {
             throw new PropelException("Error populating AppMessage object", $e);
@@ -1115,6 +1197,12 @@ abstract class BaseAppMessage extends BaseObject implements Persistent
             case 17:
                 return $this->getAppMsgError();
                 break;
+            case 18:
+                return $this->getTasId();
+                break;
+            case 19:
+                return $this->getAppNumber();
+                break;
             default:
                 return null;
                 break;
@@ -1153,6 +1241,8 @@ abstract class BaseAppMessage extends BaseObject implements Persistent
             $keys[15] => $this->getAppMsgSendDate(),
             $keys[16] => $this->getAppMsgShowMessage(),
             $keys[17] => $this->getAppMsgError(),
+            $keys[18] => $this->getTasId(),
+            $keys[19] => $this->getAppNumber(),
         );
         return $result;
     }
@@ -1237,6 +1327,12 @@ abstract class BaseAppMessage extends BaseObject implements Persistent
                 break;
             case 17:
                 $this->setAppMsgError($value);
+                break;
+            case 18:
+                $this->setTasId($value);
+                break;
+            case 19:
+                $this->setAppNumber($value);
                 break;
         } // switch()
     }
@@ -1333,6 +1429,14 @@ abstract class BaseAppMessage extends BaseObject implements Persistent
             $this->setAppMsgError($arr[$keys[17]]);
         }
 
+        if (array_key_exists($keys[18], $arr)) {
+            $this->setTasId($arr[$keys[18]]);
+        }
+
+        if (array_key_exists($keys[19], $arr)) {
+            $this->setAppNumber($arr[$keys[19]]);
+        }
+
     }
 
     /**
@@ -1414,6 +1518,14 @@ abstract class BaseAppMessage extends BaseObject implements Persistent
 
         if ($this->isColumnModified(AppMessagePeer::APP_MSG_ERROR)) {
             $criteria->add(AppMessagePeer::APP_MSG_ERROR, $this->app_msg_error);
+        }
+
+        if ($this->isColumnModified(AppMessagePeer::TAS_ID)) {
+            $criteria->add(AppMessagePeer::TAS_ID, $this->tas_id);
+        }
+
+        if ($this->isColumnModified(AppMessagePeer::APP_NUMBER)) {
+            $criteria->add(AppMessagePeer::APP_NUMBER, $this->app_number);
         }
 
 
@@ -1503,6 +1615,10 @@ abstract class BaseAppMessage extends BaseObject implements Persistent
         $copyObj->setAppMsgShowMessage($this->app_msg_show_message);
 
         $copyObj->setAppMsgError($this->app_msg_error);
+
+        $copyObj->setTasId($this->tas_id);
+
+        $copyObj->setAppNumber($this->app_number);
 
 
         $copyObj->setNew(true);

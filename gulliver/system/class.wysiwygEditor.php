@@ -26,7 +26,7 @@
  */
 
 /**
- * XmlForm_Field_HTML class definition
+ * XmlFormFieldWYSIWYGEditor class definition
  * It is useful to see dynaforms how are built
  *
  * @package gulliver.system
@@ -36,7 +36,7 @@
  *
  */
 
-class XmlForm_Field_WYSIWYG_EDITOR extends XmlForm_Field
+class XmlFormFieldWYSIWYGEditor extends XmlFormField
 {
     public $width = '100%';
     public $height = '300';
@@ -75,8 +75,8 @@ class XmlForm_Field_WYSIWYG_EDITOR extends XmlForm_Field
     public function attachEvents ($element)
     {
         $editorDefinition  = 'tinyMCE.baseURL = "/js/tinymce/jscripts/tiny_mce"; ';
-        $editorDefinition .= 'var domainURL   = "/sys'.SYS_SYS.'/'.SYS_LANG.'/'.SYS_SKIN.'/"';
-        $serverConf =& serverConf::getSingleton();
+        $editorDefinition .= 'var domainURL   = "/sys'.config("system.workspace").'/'.SYS_LANG.'/'.SYS_SKIN.'/"';
+        $serverConf =& ServerConf::getSingleton();
 
         switch ($this->editorType){
             case 'EMAIL_TEMPLATE':

@@ -2,6 +2,10 @@
 namespace ProcessMaker\BusinessModel;
 
 use \G;
+use Criteria;
+use ProcessFilesPeer;
+use ProcessPeer;
+use TaskPeer;
 
 class FilesManager
 {
@@ -152,7 +156,8 @@ class FilesManager
     {
         try {
             $aData['prf_path'] = rtrim($aData['prf_path'], '/') . '/';
-            if (!$aData['prf_filename']) {
+            $path = pathinfo($aData['prf_filename']);
+            if (!$aData['prf_filename'] || $path['dirname'] != '.') {
                 throw new \Exception(\G::LoadTranslation("ID_INVALID_VALUE_FOR", array('prf_filename')));
             }
             $extention = strstr($aData['prf_filename'], '.');
@@ -396,26 +401,27 @@ class FilesManager
      *
      * @param string $path
      * @param string $fileName the name of template
+     * @throws Exception
      *
-     * return array
+     * @return array
      */
     public function getFileManagerUid($path, $fileName = '')
     {
         try {
             if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-                    $path = str_replace("/", DIRECTORY_SEPARATOR.DIRECTORY_SEPARATOR, $path);
+                $path = str_replace("/", DIRECTORY_SEPARATOR . DIRECTORY_SEPARATOR, $path);
             }
-            $path = explode(DIRECTORY_SEPARATOR,$path);
-            $baseName = $path[count($path)-2]."\\\\".$path[count($path)-1];
-            $baseName2 = $path[count($path)-2]."/".$path[count($path)-1];
-            $criteria = new \Criteria("workflow");
-            $criteria->addSelectColumn(\ProcessFilesPeer::PRF_UID);
-            $criteria->addSelectColumn(\ProcessPeer::PRO_DERIVATION_SCREEN_TPL);
-            $criteria->addSelectColumn(\TaskPeer::TAS_DERIVATION_SCREEN_TPL);
-            $criteria->addJoin(\ProcessFilesPeer::PRO_UID, \ProcessPeer::PRO_UID);
-            $criteria->addJoin(\ProcessPeer::PRO_UID, \TaskPeer::PRO_UID);
-            $criteria->add( $criteria->getNewCriterion( \ProcessFilesPeer::PRF_PATH, '%' . $baseName . '%', \Criteria::LIKE )->addOr( $criteria->getNewCriterion( \ProcessFilesPeer::PRF_PATH, '%' . $baseName2 . '%', \Criteria::LIKE )));
-            $rsCriteria = \ProcessFilesPeer::doSelectRS($criteria);
+            $path = explode(DIRECTORY_SEPARATOR, $path);
+            $baseName = $path[count($path) - 2] . "\\\\" . $path[count($path) - 1];
+            $baseName2 = $path[count($path) - 2] . "/" . $path[count($path) - 1];
+            $criteria = new Criteria("workflow");
+            $criteria->addSelectColumn(ProcessFilesPeer::PRF_UID);
+            $criteria->addSelectColumn(ProcessPeer::PRO_DERIVATION_SCREEN_TPL);
+            $criteria->addSelectColumn(TaskPeer::TAS_DERIVATION_SCREEN_TPL);
+            $criteria->addJoin(ProcessFilesPeer::PRO_UID, ProcessPeer::PRO_UID);
+            $criteria->addJoin(ProcessPeer::PRO_UID, TaskPeer::PRO_UID, Criteria::LEFT_JOIN);
+            $criteria->add($criteria->getNewCriterion(ProcessFilesPeer::PRF_PATH, '%' . $baseName . '%', Criteria::LIKE)->addOr($criteria->getNewCriterion(ProcessFilesPeer::PRF_PATH, '%' . $baseName2 . '%', Criteria::LIKE)));
+            $rsCriteria = ProcessFilesPeer::doSelectRS($criteria);
             $rsCriteria->setFetchmode(\ResultSet::FETCHMODE_ASSOC);
             $row = array();
             while ($rsCriteria->next()) {
@@ -429,7 +435,7 @@ class FilesManager
                 }
             }
             return $row;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             throw $e;
         }
     }
@@ -607,7 +613,7 @@ class FilesManager
                 $sMainDirectory = 'public';
             }
             if (file_exists($path)) {
-                $oProcessMap = new \processMap(new \DBConnection());
+                $oProcessMap = new \ProcessMap(new \DBConnection());
                 $oProcessMap->downloadFile($sProcessUID,$sMainDirectory,$sSubDirectory,$sFile);
                 die();
             } else {

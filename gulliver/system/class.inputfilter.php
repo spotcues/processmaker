@@ -352,6 +352,7 @@ class InputFilter
       * @param String $source
       * @param Resource $connection - An open MySQL connection
       * @return String $source
+      * @todo We need to review this method, because the sended string is unescaped
       */
     public function escapeString($string, &$connection)
     {
@@ -363,6 +364,19 @@ class InputFilter
             mysql_real_escape_string($string);
         }
         return $string;
+    }
+
+    /*
+     * Escapes a string using a Propel connection
+     *
+     * @param string $string The string to escapes
+     * @param object $connection The connection object
+     *
+     * @return string
+     */
+    public function escapeUsingConnection($string, $connection)
+    {
+        return mysql_real_escape_string($string, $connection->getResource());
     }
     
     /** 
@@ -418,7 +432,6 @@ class InputFilter
       */
     function xssFilterHard($input, $type = "")
     { 
-        require_once (PATH_THIRDPARTY . 'HTMLPurifier/HTMLPurifier.auto.php'); 
         $config = HTMLPurifier_Config::createDefault();
         $purifier = new HTMLPurifier($config);
         if(is_array($input)) {

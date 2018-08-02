@@ -150,6 +150,7 @@ PMTiny.prototype.setParameterTiny = function () {
         skin_variant: this.skinVariant,
         relative_urls: false,
         remove_script_host: false,
+        convert_urls: this.convert_urls,
         oninit: function () {
             tinyMCE.activeEditor.processID = PMDesigner.project.id;
             tinyMCE.activeEditor.domainURL = domainURL;

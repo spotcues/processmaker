@@ -1,7 +1,7 @@
 <?php
 
 require_once 'classes/model/om/BaseListPaused.php';
-
+use ProcessMaker\BusinessModel\Cases as BmCases;
 
 /**
  * Skeleton subclass for representing a row from the 'LIST_PAUSED' table.
@@ -14,16 +14,17 @@ require_once 'classes/model/om/BaseListPaused.php';
  *
  * @package    classes.model
  */
-// @codingStandardsIgnoreStart
-class ListPaused extends BaseListPaused
+
+class ListPaused extends BaseListPaused implements ListInterface
 {
-    // @codingStandardsIgnoreEnd
+    use ListBaseTrait;
+
     /**
      * Create List Paused Table
      *
      * @param type $data
      * @return type
-     *
+     * @throws Exception
      */
     public function create($data)
     {
@@ -152,7 +153,7 @@ class ListPaused extends BaseListPaused
      *
      * @param type $data
      * @return type
-     * @throws type
+     * @throws Exception
      */
     public function update($data)
     {
@@ -186,9 +187,12 @@ class ListPaused extends BaseListPaused
     /**
      * Remove List Paused
      *
-     * @param type $seqName
+     * @param string $app_uid
+     * @param integer $del_index
+     * @param array $data_inbox
+     *
      * @return type
-     * @throws type
+     * @throws Exception
      *
      */
     public function remove($app_uid, $del_index, $data_inbox)
@@ -212,13 +216,21 @@ class ListPaused extends BaseListPaused
         }
     }
 
-    public function loadFilters(&$criteria, $filters)
+    /**
+     * This function add restriction in the query related to the filters
+     * @param Criteria $criteria, must be contain only select of columns
+     * @param array $filters
+     * @param array $additionalColumns information about the new columns related to custom cases list
+     * @throws PropelException
+     */
+    public function loadFilters(&$criteria, $filters, $additionalColumns = array())
     {
-        $filter = isset($filters['filter']) ? $filters['filter'] : "";
-        $search = isset($filters['search']) ? $filters['search'] : "";
-        $process = isset($filters['process']) ? $filters['process'] : "";
-        $category = isset($filters['category']) ? $filters['category'] : "";
-        $filterStatus   = isset($filters['filterStatus']) ? $filters['filterStatus'] : "";
+        $filter = isset($filters['filter']) ? $filters['filter'] : '';
+        $search = isset($filters['search']) ? $filters['search'] : '';
+        $caseLink = isset($filters['caseLink']) ? $filters['caseLink'] : '';
+        $process = isset($filters['process']) ? $filters['process'] : '';
+        $category = isset($filters['category']) ? $filters['category'] : '';
+        $filterStatus = isset($filters['filterStatus']) ? $filters['filterStatus'] : '';
 
         //Filter Read Unread All
         switch ($filter) {
@@ -230,25 +242,30 @@ class ListPaused extends BaseListPaused
                 break;
         }
 
+        //Filter Search
         if ($search != '') {
-            $criteria->add(
-                $criteria->getNewCriterion(ListPausedPeer::APP_TITLE, '%' . $search . '%', Criteria::LIKE)
-                ->addOr(
-                    $criteria->getNewCriterion(ListPausedPeer::APP_TAS_TITLE, '%' . $search . '%', Criteria::LIKE)
-                    ->addOr(
-                        $criteria->getNewCriterion(ListPausedPeer::APP_UID, $search, Criteria::EQUAL)
-                        ->addOr(
-                            $criteria->getNewCriterion(ListPausedPeer::APP_NUMBER, $search, Criteria::EQUAL)
-                        )
-                    )
-                )
-            );
+            //Check if we need to search to the APP_UID
+            if (!empty($caseLink)) {
+                $criteria->add(ListPausedPeer::APP_UID, $search, Criteria::EQUAL);
+            } else {
+                //If we have additional tables configured in the custom cases list, prepare the variables for search
+                $casesList = new BmCases();
+                $casesList->getSearchCriteriaListCases(
+                    $criteria,
+                    __CLASS__ . 'Peer',
+                    $search,
+                    $this->getAdditionalClassName(),
+                    $additionalColumns
+                );
+            }
         }
 
+        //Filter Process Id
         if ($process != '') {
             $criteria->add(ListPausedPeer::PRO_UID, $process, Criteria::EQUAL);
         }
 
+        //Filter Category
         if ($category != '') {
             $criteria->addSelectColumn(ProcessPeer::PRO_CATEGORY);
             $aConditions   = array();
@@ -258,11 +275,21 @@ class ListPaused extends BaseListPaused
         }
     }
 
-    public function loadList($usr_uid, $filters = array(), $callbackRecord = null)
+    /**
+     * This function get the information in the corresponding cases list
+     * @param string $usr_uid, must be show cases related to this user
+     * @param array $filters for apply in the result
+     * @param callable $callbackRecord
+     * @return array $data
+     * @throws PropelException
+     */
+    public function loadList($usr_uid, $filters = array(), callable $callbackRecord = null)
     {
         $resp = array();
         $pmTable = new PmTable();
         $criteria = $pmTable->addPMFieldsToList('paused');
+        $this->setAdditionalClassName($pmTable->tableClassName);
+        $additionalColumns = $criteria->getSelectColumns();
 
         $criteria->addSelectColumn(ListPausedPeer::APP_UID);
         $criteria->addSelectColumn(ListPausedPeer::USR_UID);
@@ -287,18 +314,39 @@ class ListPaused extends BaseListPaused
         $criteria->addSelectColumn(ListPausedPeer::DEL_DUE_DATE);
         $criteria->addSelectColumn(ListPausedPeer::DEL_PRIORITY);
         $criteria->add(ListPausedPeer::USR_UID, $usr_uid, Criteria::EQUAL);
-        self::loadFilters($criteria, $filters);
+        self::loadFilters($criteria, $filters, $additionalColumns);
 
-        $sort  = (!empty($filters['sort'])) ? ListPausedPeer::TABLE_NAME.'.'.$filters['sort'] : "APP_PAUSED_DATE";
+        //We will be defined the sort
+        $casesList = new BmCases();
+        $sort = $casesList->getSortColumn(
+            __CLASS__ . 'Peer',
+            BasePeer::TYPE_FIELDNAME,
+            empty($filters['sort']) ? "APP_PAUSED_DATE" : $filters['sort'],
+            "APP_PAUSED_DATE",
+            $this->getAdditionalClassName(),
+            $additionalColumns,
+            $this->getUserDisplayFormat()
+        );
+
         $dir   = isset($filters['dir']) ? $filters['dir'] : "ASC";
         $start = isset($filters['start']) ? $filters['start'] : "0";
         $limit = isset($filters['limit']) ? $filters['limit'] : "25";
         $paged = isset($filters['paged']) ? $filters['paged'] : 1;
 
-        if ($dir == "DESC") {
-            $criteria->addDescendingOrderByColumn($sort);
+        if (is_array($sort) && count($sort) > 0) {
+            foreach ($sort as $key) {
+                if ($dir == 'DESC') {
+                    $criteria->addDescendingOrderByColumn($key);
+                } else {
+                    $criteria->addAscendingOrderByColumn($key);
+                }
+            }
         } else {
-            $criteria->addAscendingOrderByColumn($sort);
+            if ($dir == 'DESC') {
+                $criteria->addDescendingOrderByColumn($sort);
+            } else {
+                $criteria->addAscendingOrderByColumn($sort);
+            }
         }
 
         if ($paged == 1) {
@@ -326,16 +374,7 @@ class ListPaused extends BaseListPaused
      */
     public function getCountList($usrUid, $filters = array())
     {
-        $criteria = new Criteria();
-        $criteria->addSelectColumn('COUNT(*) AS TOTAL');
-        $criteria->add(ListPausedPeer::USR_UID, $usrUid, Criteria::EQUAL);
-        if (count($filters)) {
-            self::loadFilters($criteria, $filters);
-        }
-        $dataset = ListPausedPeer::doSelectRS($criteria);
-        $dataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
-        $dataset->next();
-        $aRow = $dataset->getRow();
-        return (int)$aRow['TOTAL'];
+        return $this->getCountListFromPeer
+                (ListPausedPeer::class, $usrUid, $filters);
     }
 } // ListPaused

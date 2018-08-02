@@ -1,5 +1,5 @@
 .crown-container {
-  z-index: 121;
+  z-index: auto;
   display: table;
   padding-left: 4px;
 }

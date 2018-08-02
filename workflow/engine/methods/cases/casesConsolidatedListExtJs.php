@@ -1,15 +1,13 @@
 <?php
 
+use ProcessMaker\Core\System;
+
 $action = (isset($_REQUEST["action"])) ? $_REQUEST["action"] : "consolidated";
 $arrayTabItem = array();
 
 $oCriteria = new Criteria("workflow");
 $oCriteria->add(CaseConsolidatedCorePeer::CON_STATUS, 'ACTIVE');
 $activeNumRows = CaseConsolidatedCorePeer::doCount($oCriteria);
-
-G::LoadClass("BasePeer");
-G::LoadClass("configuration");
-G::loadClass("pmFunctions");
 
 $headPublisher = &headPublisher::getSingleton();
 $usrUid = $_SESSION["USER_LOGGED"];
@@ -73,7 +71,7 @@ while ($rsSql->next()) {
 }
 
 if (count($arrayTabItem) > 0) {
-    $urlProxy = System::getHttpServerHostnameRequestsFrontEnd() . '/api/1.0/' . SYS_SYS . '/consolidated/';
+    $urlProxy = System::getHttpServerHostnameRequestsFrontEnd() . '/api/1.0/' . config("system.workspace") . '/consolidated/';
     $clientId = 'x-pm-local-client';
     $client = getClientCredentials($clientId);
     $authCode = getAuthorizationCode($client);

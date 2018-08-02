@@ -15,8 +15,10 @@ require_once 'classes/model/om/BaseListParticipatedHistory.php';
  * @package    classes.model
  */
 // @codingStandardsIgnoreStart
-class ListParticipatedHistory extends BaseListParticipatedHistory
+class ListParticipatedHistory extends BaseListParticipatedHistory implements ListInterface
 {
+    use ListBaseTrait;
+
     // @codingStandardsIgnoreEnd
     /**
      * Create List Participated History Table
@@ -203,7 +205,7 @@ class ListParticipatedHistory extends BaseListParticipatedHistory
         }
     }
 
-    public function loadList($usr_uid, $filters = array(), $callbackRecord = null)
+    public function loadList($usr_uid, $filters = array(), callable $callbackRecord = null)
     {
         $criteria = new Criteria();
 

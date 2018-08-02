@@ -1,6 +1,7 @@
 <?php
 
 //require_once 'classes/model/om/BaseAppNotes.php';
+use ProcessMaker\Core\System;
 
 /**
  * Skeleton subclass for representing a row from the 'APP_NOTES' table.
@@ -82,7 +83,7 @@ class AppNotes extends BaseAppNotes
         $oDataset->next();
 
         while ($aRow = $oDataset->getRow()) {
-            $aRow['NOTE_CONTENT'] = htmlentities(stripslashes($aRow['NOTE_CONTENT']), ENT_QUOTES, 'UTF-8');
+            $aRow['NOTE_CONTENT'] = stripslashes($aRow['NOTE_CONTENT']);
             $response['notes'][] = $aRow;
             $oDataset->next();
         }
@@ -130,7 +131,6 @@ class AppNotes extends BaseAppNotes
         if ($notify) {
             if ($noteRecipients == "") {
                 $noteRecipientsA = array ();
-                G::LoadClass( 'case' );
                 $oCase = new Cases();
                 $p = $oCase->getUsersParticipatedInCase( $appUid );
                 foreach ($p['array'] as $key => $userParticipated) {
@@ -148,9 +148,7 @@ class AppNotes extends BaseAppNotes
     public function sendNoteNotification ($appUid, $usrUid, $noteContent, $noteRecipients, $sFrom = "")
     {
         try {
-            if (!class_exists('System')) {
-                G::LoadClass('system');
-            }
+
             $aConfiguration = System::getEmailConfiguration();
 
             $msgError = "";
@@ -163,19 +161,19 @@ class AppNotes extends BaseAppNotes
             $aUser = $oUser->load( $usrUid );
             $authorName = ((($aUser['USR_FIRSTNAME'] != '') || ($aUser['USR_LASTNAME'] != '')) ? $aUser['USR_FIRSTNAME'] . ' ' . $aUser['USR_LASTNAME'] . ' ' : '') . '<' . $aUser['USR_EMAIL'] . '>';
 
-            G::LoadClass( 'case' );
             $oCase = new Cases();
             $aFields = $oCase->loadCase( $appUid );
             $configNoteNotification['subject'] = G::LoadTranslation( 'ID_MESSAGE_SUBJECT_NOTE_NOTIFICATION' ) . " @#APP_TITLE ";
-            $configNoteNotification['body'] = G::LoadTranslation( 'ID_CASE' ) . ": @#APP_TITLE<br />" . G::LoadTranslation( 'ID_AUTHOR' ) . ": $authorName<br /><br />$noteContent";
+            //Define the body for the notification
+            $body = G::LoadTranslation('ID_CASE_TITLE') . ": @#APP_TITLE<br />";
+            $body .= G::LoadTranslation('ID_CASE_NUMBER') . ": @#APP_NUMBER<br />";
+            $body .= G::LoadTranslation('ID_AUTHOR') . ": $authorName<br /><br />$noteContent";
+            $configNoteNotification['body'] = $body;
 
             $sFrom = G::buildFrom($aConfiguration, $sFrom);
-
             $sSubject = G::replaceDataField( $configNoteNotification['subject'], $aFields );
-
             $sBody = nl2br( G::replaceDataField( $configNoteNotification['body'], $aFields ) );
 
-            G::LoadClass( 'spool' );
             $oUser = new Users();
             $recipientsArray = explode( ",", $noteRecipients );
 
@@ -184,7 +182,7 @@ class AppNotes extends BaseAppNotes
                 $aUser = $oUser->load( $recipientUid );
 
                 $sTo = ((($aUser['USR_FIRSTNAME'] != '') || ($aUser['USR_LASTNAME'] != '')) ? $aUser['USR_FIRSTNAME'] . ' ' . $aUser['USR_LASTNAME'] . ' ' : '') . '<' . $aUser['USR_EMAIL'] . '>';
-                $oSpool = new spoolRun();
+                $oSpool = new SpoolRun();
 
                 $oSpool->setConfig($aConfiguration);
                 $oSpool->create(
@@ -222,7 +220,6 @@ class AppNotes extends BaseAppNotes
         $response = $this->postNewNote($applicationUid, $userUid, $note, false);
 
         if ($sendMail == 1) {
-            G::LoadClass("case");
 
             $case = new Cases();
 
@@ -243,5 +240,21 @@ class AppNotes extends BaseAppNotes
 
         return $response;
     }
+
+    /**
+     * Add htmlEntities to notes in node_content
+     * @param $notes
+     * @return array
+     */
+    public static function applyHtmlentitiesInNotes($notes)
+    {
+        if (isset($notes) && isset($notes["array"])) {
+            foreach ($notes["array"]["notes"] as &$note) {
+                $note["NOTE_CONTENT"] = htmlentities($note["NOTE_CONTENT"], ENT_QUOTES, 'UTF-8');
+            }
+        }
+        return $notes;
+    }
+
 }
 

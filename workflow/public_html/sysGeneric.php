@@ -22,6 +22,9 @@
  * Coral Gables, FL, 33134, USA, or email info@colosa.com.
  */
 
+use Illuminate\Foundation\Http\Kernel;
+use ProcessMaker\Plugins\PluginRegistry;
+
 /**
  * bootstrap - ProcessMaker Bootstrap
  * this file is used initialize main variables, redirect and dispatch all requests
@@ -34,10 +37,15 @@ function transactionLog($transactionName){
         //Application base name
         newrelic_set_appname ($baseName);
 
+        //Initialize Laravel app if is not booted
+        if (!app()->isBooted()) {
+            app()->make(Kernel::class)->bootstrap();
+            restore_error_handler();
+        }
 
         //Custom parameters
-        if(defined("SYS_SYS")){
-            newrelic_add_custom_parameter ("workspace", SYS_SYS);
+        if(!empty(config("system.workspace"))){
+            newrelic_add_custom_parameter ("workspace", config("system.workspace"));
         }
         if(defined("SYS_LANG")){
             newrelic_add_custom_parameter ("lang", SYS_LANG);
@@ -62,8 +70,8 @@ function transactionLog($transactionName){
         }
 
         //Show correct transaction name
-        if(defined("SYS_SYS")){
-            newrelic_set_appname ("PM-".SYS_SYS.";$baseName");
+        if(!empty(config("system.workspace"))){
+            newrelic_set_appname ("PM-".config("system.workspace").";$baseName");
         }
         if(defined("PATH_CORE")){
             $transactionName=str_replace(PATH_CORE,"",$transactionName);
@@ -187,7 +195,7 @@ define( 'PATH_GULLIVER_HOME', PATH_TRUNK . 'gulliver' . PATH_SEP );
 define( 'PATH_GULLIVER', PATH_GULLIVER_HOME . 'system' . PATH_SEP ); //gulliver system classes
 define( 'PATH_GULLIVER_BIN', PATH_GULLIVER_HOME . 'bin' . PATH_SEP ); //gulliver bin classes
 define( 'PATH_TEMPLATE', PATH_GULLIVER_HOME . 'templates' . PATH_SEP );
-define( 'PATH_THIRDPARTY', PATH_GULLIVER_HOME . 'thirdparty' . PATH_SEP );
+define( 'PATH_THIRDPARTY', PATH_TRUNK . 'thirdparty' . PATH_SEP );
 define( 'PATH_RBAC', PATH_RBAC_HOME . 'engine' . PATH_SEP . 'classes' . PATH_SEP ); //to enable rbac version 2
 define( 'PATH_RBAC_CORE', PATH_RBAC_HOME . 'engine' . PATH_SEP );
 
@@ -218,7 +226,6 @@ define( 'PATH_RBAC_MSSQL_DATA', PATH_RBAC_CORE . 'data' . PATH_SEP . 'mssql' . P
 define( 'PATH_CONTROLLERS', PATH_CORE . 'controllers' . PATH_SEP );
 
 // include Gulliver Class
-require_once (PATH_GULLIVER . "class.bootstrap.php");
 
 if (file_exists( FILE_PATHS_INSTALLED )) {
 
@@ -281,11 +288,7 @@ define( 'PML_WSDL_URL', PML_SERVER . '/syspmLibrary/en/green/services/wsdl' );
 define( 'PML_UPLOAD_URL', PML_SERVER . '/syspmLibrary/en/green/services/uploadProcess' );
 define( 'PML_DOWNLOAD_URL', PML_SERVER . '/syspmLibrary/en/green/services/download' );
 
-//Call Gulliver Classes
-Bootstrap::LoadThirdParty("smarty/libs", "Smarty.class");
-
-//Loading the autoloader libraries feature
-Bootstrap::registerSystemClasses();
+G::defineConstants();
 
 $config = Bootstrap::getSystemConfiguration();
 
@@ -508,27 +511,30 @@ define( 'SYS_URI', '/sys' . SYS_TEMP . '/' . SYS_LANG . '/' . SYS_SKIN . '/' );
 // defining the serverConf singleton
 if (defined( 'PATH_DATA' ) && file_exists( PATH_DATA )) {
     //Instance Server Configuration Singleton
-    Bootstrap::LoadClass( 'serverConfiguration' );
-    $oServerConf = & serverConf::getSingleton();
+    $oServerConf = & ServerConf::getSingleton();
 }
-$pathFile = PATH_THIRDPARTY . '/pear/PEAR.php';
-require_once $pathFile;
 
-//Bootstrap::LoadSystem( 'pmException' );
+
 
 // Create headPublisher singleton
-//Bootstrap::LoadSystem( 'headPublisher' );
+
 $oHeadPublisher = & headPublisher::getSingleton();
 
 // Installer, redirect to install if we don't have a valid shared data folder
 if (! defined( 'PATH_DATA' ) || ! file_exists( PATH_DATA )) {
     // new installer, extjs based
     define( 'PATH_DATA', PATH_C );
+    
+    //important to start laravel classes
+    app()->useStoragePath(realpath(PATH_DATA));
+    app()->make(Kernel::class)->bootstrap();
+    restore_error_handler();
+
     //NewRelic Snippet - By JHL
-    transactionLog(PATH_CONTROLLERS.'installer.php');
-    $pathFile = PATH_CONTROLLERS . 'installer.php';
+    transactionLog(PATH_CONTROLLERS . 'InstallerModule.php');
+    $pathFile = PATH_CONTROLLERS . 'InstallerModule.php';
     require_once ($pathFile);
-    $controller = 'Installer';
+    $controller = InstallerModule::class;
 
     // if the method name is empty set default to index method
     if (strpos( SYS_TARGET, '/' ) !== false) {
@@ -540,8 +546,7 @@ if (! defined( 'PATH_DATA' ) || ! file_exists( PATH_DATA )) {
     $controllerAction = ($controllerAction != '' && $controllerAction != 'login') ? $controllerAction : 'index';
 
     // create the installer controller and call its method
-    if (is_callable( Array ('Installer',$controllerAction
-    ) )) {
+    if (is_callable([InstallerModule::class, $controllerAction])) {
         $installer = new $controller();
         $installer->setHttpRequestData( $_REQUEST );
         //NewRelic Snippet - By JHL
@@ -555,6 +560,19 @@ if (! defined( 'PATH_DATA' ) || ! file_exists( PATH_DATA )) {
     }
     die();
 }
+
+app()->useStoragePath(realpath(PATH_DATA));
+app()->make(Kernel::class)->bootstrap();
+restore_error_handler();
+//Overwrite with the Processmaker env.ini configuration used in production environments
+//@todo: move env.ini configuration to .env
+ini_set( 'display_errors', $config['display_errors']);
+ini_set( 'error_reporting', $config['error_reporting']);
+ini_set( 'short_open_tag', 'On' );
+ini_set( 'default_charset', "UTF-8" );
+ini_set( 'memory_limit', $config['memory_limit'] );
+ini_set( 'soap.wsdl_cache_enabled', $config['wsdl_cache'] );
+ini_set('date.timezone', $config['time_zone']); //Set Time Zone
 
 // Load Language Translation
 Bootstrap::LoadTranslationObject( defined( 'SYS_LANG' ) ? SYS_LANG : "en" );
@@ -576,9 +594,10 @@ if (defined( 'SYS_TEMP' ) && SYS_TEMP != '') {
     if (file_exists( $pathFile )) {
         require_once ($pathFile);
         define( 'SYS_SYS', SYS_TEMP );
+        config(["system.workspace" => SYS_TEMP]);
 
         // defining constant for workspace shared directory
-        define( 'PATH_WORKSPACE', PATH_DB . SYS_SYS . PATH_SEP );
+        define( 'PATH_WORKSPACE', PATH_DB . config("system.workspace") . PATH_SEP );
         // including workspace shared classes -> particularlly for pmTables
         set_include_path( get_include_path() . PATH_SEPARATOR . PATH_WORKSPACE );
     } else {
@@ -629,7 +648,7 @@ if (defined( 'SYS_TEMP' ) && SYS_TEMP != '') {
 }
 
 // PM Paths DATA
-define( 'PATH_DATA_SITE', PATH_DATA . 'sites/' . SYS_SYS . '/' );
+define( 'PATH_DATA_SITE', PATH_DATA . 'sites/' . config("system.workspace") . '/' );
 define( 'PATH_DOCUMENT', PATH_DATA_SITE . 'files/' );
 define( 'PATH_DATA_MAILTEMPLATES', PATH_DATA_SITE . 'mailTemplates/' );
 define( 'PATH_DATA_PUBLIC', PATH_DATA_SITE . 'public/' );
@@ -643,27 +662,12 @@ define( 'SERVER_PORT', $_SERVER['SERVER_PORT'] );
 
 
 // create memcached singleton
-Bootstrap::LoadClass( 'memcached' );
-$memcache = & PMmemcached::getSingleton( SYS_SYS );
+$memcache = & PMmemcached::getSingleton( config("system.workspace") );
 
 // load Plugins base class
-Bootstrap::LoadClass( 'plugin' );
 
-//here we are loading all plugins registered
-//the singleton has a list of enabled plugins
-$sSerializedFile = PATH_DATA_SITE . 'plugin.singleton';
-
-if (file_exists( $sSerializedFile )) {
-    $oPluginRegistry = PMPluginRegistry::loadSingleton($sSerializedFile);
-    $attributes = $oPluginRegistry->getAttributes();
-    Bootstrap::LoadTranslationPlugins( defined( 'SYS_LANG' ) ? SYS_LANG : "en" , $attributes);
-} else{
-    $oPluginRegistry = PMPluginRegistry::getSingleton();
-}
 // setup propel definitions and logging
 //changed to autoloader
-//require_once ("propel/Propel.php");
-//require_once ("creole/Creole.php");
 
 if (defined( 'DEBUG_SQL_LOG' ) && DEBUG_SQL_LOG) {
     define( 'PM_PID', mt_rand( 1, 999999 ) );
@@ -677,7 +681,7 @@ if (defined( 'DEBUG_SQL_LOG' ) && DEBUG_SQL_LOG) {
 
     // unified log file for all databases
     $logFile = PATH_DATA . 'log' . PATH_SEP . 'propel.log';
-    $logger = Log::singleton( 'file', $logFile, 'wf ' . SYS_SYS, null, PEAR_LOG_INFO );
+    $logger = Log::singleton( 'file', $logFile, 'wf ' . config("system.workspace"), null, PEAR_LOG_INFO );
     Propel::setLogger( $logger );
     // log file for workflow database
     $con = Propel::getConnection( 'workflow' );
@@ -699,6 +703,14 @@ if (defined( 'DEBUG_SQL_LOG' ) && DEBUG_SQL_LOG) {
 } else {
     Propel::init( PATH_CORE . "config/databases.php" );
 }
+
+//here we are loading all plugins registered
+//the singleton has a list of enabled plugins
+$oPluginRegistry = PluginRegistry::loadSingleton();
+$attributes = $oPluginRegistry->getAttributes();
+Bootstrap::LoadTranslationPlugins(defined('SYS_LANG') ? SYS_LANG : "en", $attributes);
+// Initialization functions plugins
+$oPluginRegistry->init();
 
 //Set Time Zone
 /*----------------------------------********---------------------------------*/
@@ -727,6 +739,9 @@ if (! is_file( PATH_LANGUAGECONT . 'translation.en' )) {
 
     $pmTranslation = new Translation();
     $fields = $pmTranslation->generateFileTranslation("en");
+
+    // Load Language Translation
+    Bootstrap::LoadTranslationObject("en");
 }
 
 // TODO: Verify if the language set into url is defined in translations env.
@@ -737,6 +752,9 @@ if (SYS_LANG != 'en' && ! is_file( PATH_LANGUAGECONT . 'translation.' . SYS_LANG
 
     $pmTranslation = new Translation();
     $fields = $pmTranslation->generateFileTranslation(SYS_LANG);
+
+    // Load Language Translation
+    Bootstrap::LoadTranslationObject(SYS_LANG);
 }
 
 // Setup plugins
@@ -797,8 +815,6 @@ if (substr( SYS_COLLECTION, 0, 8 ) === 'gulliver') {
             die();
         }
 
-        Bootstrap::initVendors();
-        Bootstrap::LoadSystem('monologProvider');
         $isWebEntry = \ProcessMaker\BusinessModel\WebEntry::isWebEntry(SYS_COLLECTION, $phpFile);
         if (\Bootstrap::getDisablePhpUploadExecution() === 1 && !$isWebEntry) {
             $message = \G::LoadTranslation('THE_PHP_FILES_EXECUTION_WAS_DISABLED');
@@ -806,6 +822,8 @@ if (substr( SYS_COLLECTION, 0, 8 ) === 'gulliver') {
             echo $message;
             die();
         } else {
+            //Backward compatibility: Preload PmDynaform for old generated webentry files.
+            class_exists('PmDynaform');
             \Bootstrap::registerMonologPhpUploadExecution('phpExecution', 200, 'Php Execution', $phpFile);
         }
 
@@ -816,7 +834,7 @@ if (substr( SYS_COLLECTION, 0, 8 ) === 'gulliver') {
 
     //erik: verify if it is a Controller Class or httpProxyController Class
     if (is_file( PATH_CONTROLLERS . SYS_COLLECTION . '.php' )) {
-        Bootstrap::LoadSystem( 'controller' );
+
         $pathFile = PATH_CONTROLLERS . SYS_COLLECTION . '.php';
         require_once $pathFile;
         $controllerClass = SYS_COLLECTION;
@@ -875,24 +893,21 @@ if (substr( SYS_COLLECTION, 0, 8 ) === 'gulliver') {
 }
 
 //redirect to login, if user changed the workspace in the URL
-if (! $avoidChangedWorkspaceValidation && isset( $_SESSION['WORKSPACE'] ) && $_SESSION['WORKSPACE'] != SYS_SYS) {
-    $_SESSION['WORKSPACE'] = SYS_SYS;
+if (! $avoidChangedWorkspaceValidation && isset( $_SESSION['WORKSPACE'] ) && $_SESSION['WORKSPACE'] != config("system.workspace")) {
+    $_SESSION['WORKSPACE'] = config("system.workspace");
     Bootstrap::SendTemporalMessage( 'ID_USER_HAVENT_RIGHTS_SYSTEM', "error" );
     // verify if the current skin is a 'ux' variant
     $urlPart = substr( SYS_SKIN, 0, 2 ) == 'ux' && SYS_SKIN != 'uxs' ? '/main/login' : '/login/login';
 
-    header( 'Location: /sys' . SYS_SYS . '/' . SYS_LANG . '/' . SYS_SKIN . $urlPart );
+    header( 'Location: /sys' . config("system.workspace") . '/' . SYS_LANG . '/' . SYS_SKIN . $urlPart );
     die();
 }
 
 // enable rbac
-Bootstrap::LoadSystem( 'rbac' );
+
 $RBAC = &RBAC::getSingleton( PATH_DATA, session_id() );
 $RBAC->sSystem = 'PROCESSMAKER';
 
-//Enable Monolog
-Bootstrap::initVendors();
-Bootstrap::LoadSystem( 'monologProvider' );
 // define and send Headers for all pages
 if (! defined( 'EXECUTE_BY_CRON' )) {
     header( "Expires: " . gmdate( "D, d M Y H:i:s", mktime( 0, 0, 0, date( 'm' ), date( 'd' ) - 1, date( 'Y' ) ) ) . " GMT" );
@@ -956,23 +971,25 @@ if (! defined( 'EXECUTE_BY_CRON' )) {
         $noLoginFiles[] = 'licenseUpdate';
         $noLoginFiles[] = 'casesStreamingFile';
         $noLoginFiles[] = 'opencase';
+        $noLoginFiles[] = 'defaultAjaxDynaform';
 
         $noLoginFolders[] = 'services';
         $noLoginFolders[] = 'tracker';
-        $noLoginFolders[] = 'installer';
+        $noLoginFolders[] = 'InstallerModule';
 
         // This sentence is used when you lost the Session
         if (! in_array( SYS_TARGET, $noLoginFiles ) && ! in_array( SYS_COLLECTION, $noLoginFolders ) && $bWE != true && $collectionPlugin != 'services') {
             $bRedirect = true;
             if (isset( $_GET['sid'] )) {
-                Bootstrap::LoadClass( 'sessions' );
                 $oSessions = new Sessions();
                 if ($aSession = $oSessions->verifySession( $_GET['sid'] )) {
                     require_once 'classes/model/Users.php';
                     $oUser = new Users();
                     $aUser = $oUser->load( $aSession['USR_UID'] );
-                    $_SESSION['USER_LOGGED'] = $aUser['USR_UID'];
-                    $_SESSION['USR_USERNAME'] = $aUser['USR_USERNAME'];
+                    initUserSession(
+                        $aUser['USR_UID'],
+                        $aUser['USR_USERNAME']
+                    );
                     $bRedirect = false;
                     if ((preg_match("/msie/i", $_SERVER ['HTTP_USER_AGENT']) != 1 ||
                         $config['ie_cookie_lifetime'] == 1) &&
@@ -991,23 +1008,27 @@ if (! defined( 'EXECUTE_BY_CRON' )) {
                 }
             }
 
-            if ($bRedirect && !isset($_GET["tracker_designer"])) {
-                if (substr( SYS_SKIN, 0, 2 ) == 'ux' && SYS_SKIN != 'uxs') { // verify if the current skin is a 'ux' variant
+            if (isset($_GET['tracker_designer']) && intval($_GET['tracker_designer']) !== 1) {
+                unset($_GET['tracker_designer']);
+            }
+
+            if ($bRedirect && (!isset($_GET['tracker_designer']) || (!isset($_SESSION['CASE']) && !isset($_SESSION['PIN'])))) {
+                if (substr(SYS_SKIN, 0, 2) === 'ux' && SYS_SKIN !== 'uxs') { // verify if the current skin is a 'ux' variant
                     $loginUrl = 'main/login';
-                } else if (strpos( $_SERVER['REQUEST_URI'], '/home' ) !== false) { //verify is it is using the uxs skin for simplified interface
+                } else if (strpos($_SERVER['REQUEST_URI'], '/home') !== false) { //verify is it is using the uxs skin for simplified interface
                     $loginUrl = 'home/login';
                 } else {
                     $loginUrl = 'login/login'; // just set up the classic login
                 }
 
-                if (empty( $_POST )) {
-                    header( 'location: ' . SYS_URI . $loginUrl . '?u=' . urlencode( $_SERVER['REQUEST_URI'] ) );
+                if (empty($_POST)) {
+                    header('location: ' . SYS_URI . $loginUrl . '?u=' . urlencode($_SERVER['REQUEST_URI']));
 
                 } else {
                     if ($isControllerCall) {
-                        header( "HTTP/1.0 302 session lost in controller" );
+                        header("HTTP/1.0 302 session lost in controller");
                     } else {
-                        header( 'location: ' . SYS_URI . $loginUrl );
+                        header('location: ' . SYS_URI . $loginUrl);
                     }
                 }
                 die();
@@ -1016,11 +1037,11 @@ if (! defined( 'EXECUTE_BY_CRON' )) {
     }
     $_SESSION['phpLastFileFound'] = $_SERVER['REQUEST_URI'];
 
-    /**
-     * New feature for Gulliver framework to support Controllers & HttpProxyController classes handling
-     *
-     * @author <erik@colosa.com
-     */
+    /*----------------------------------********---------------------------------*/
+
+    // Initialization functions plugins
+    $oPluginRegistry->init();
+
     if ($isControllerCall) { //Instance the Controller object and call the request method
         $controller = new $controllerClass();
         $controller->setHttpRequestData($_REQUEST);//NewRelic Snippet - By JHL

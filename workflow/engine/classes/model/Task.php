@@ -718,7 +718,6 @@ class Task extends BaseTask
     public function setTasCalendar($taskUid, $calendarUid)
     {
         //Save Calendar ID for this process
-        G::LoadClass("calendar");
         $calendarObj = new Calendar();
         $calendarObj->assignCalendarTo($taskUid, $calendarUid, 'TASK');
     }
@@ -805,6 +804,33 @@ class Task extends BaseTask
                     throw (new Exception(G::LoadTranslation('ID_CURRENT_ASSING_TYPE_WITH_CASES')));        
                 }
             }
+        }
+    }
+
+    /**
+     * This function get the columns by Id indexing
+     *
+     * @param string $tasUid
+     *
+     * @return array
+     * @throws Exception
+     */
+    public function getColumnIds($tasUid)
+    {
+        try {
+            $columnsId = [];
+            $row = TaskPeer::retrieveByPK($tasUid);
+            if (!is_null($row)) {
+                $fields = $row->toArray(BasePeer::TYPE_FIELDNAME);
+                $this->fromArray($fields, BasePeer::TYPE_FIELDNAME);
+                $columnsId['TAS_ID'] = $fields['TAS_ID'];
+                $columnsId['PRO_ID'] = $fields['PRO_ID'];
+                return $columnsId;
+            } else {
+                throw (new Exception("The row '" . $tasUid . "' in table TASK doesn't exist!"));
+            }
+        } catch (Exception $e) {
+            throw $e;
         }
     }
 }

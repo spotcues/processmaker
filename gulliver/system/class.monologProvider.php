@@ -31,7 +31,7 @@ class MonologProvider
     public $numOfKeepFiles = 60;
     public $levelDebug = 100;
     public $bubble = true;
-    public $filePermission = 0775;
+    public $filePermission = 0666;
 
     public function __construct ($channel, $fileLog)
     {
@@ -106,11 +106,13 @@ class MonologProvider
                 break;
             case 400://ERROR
                 $this->registerLogger->addError($message, $context);
+                break;
             case 500://CRITICAL
                 $this->registerLogger->addCritical($message, $context);
                 break;
             case 550://ALERT
                 $this->registerLogger->addAlert($message, $context);
+                break;
             case 600://EMERGENCY
                 $this->registerLogger->addEmergency($message, $context);
                 break;

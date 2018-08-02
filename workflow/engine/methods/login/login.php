@@ -22,13 +22,30 @@
  * Coral Gables, FL, 33134, USA, or email info@colosa.com.
  *
  */
+
+use ProcessMaker\Core\System;
+use ProcessMaker\Plugins\PluginRegistry;
+
 /*----------------------------------********---------------------------------*/
 $aFields = array();
 
-if (!isset($_GET['u'])) {
-    $aFields['URL'] = '';
-} else {
-    $aFields['URL'] = htmlspecialchars(addslashes(stripslashes(strip_tags(trim(urldecode($_GET['u']))))));
+//Validated redirect url
+$aFields['URL'] = '';
+if (!empty($_GET['u'])) {
+    //clean url with protocols
+    $flagUrl = true;
+    //Most used protocols
+    $protocols = ['https://', 'http://', 'ftp://', 'sftp://','smb://', 'file:', 'mailto:'];
+    foreach ($protocols as $protocol) {
+        if (strpos($_GET['u'], $protocol) !== false) {
+            $_GET['u'] = '';
+            $flagUrl = false;
+            break;
+        }
+    }
+    if ($flagUrl) {
+        $aFields['URL'] = htmlspecialchars(addslashes(stripslashes(strip_tags(trim(urldecode($_GET['u']))))));
+    }
 }
 
 if (!isset($_SESSION['G_MESSAGE'])) {
@@ -101,7 +118,7 @@ if (isset ($_SESSION['USER_LOGGED'])) {
     }
 } else {
     // Execute SSO trigger
-    $pluginRegistry =& PMPluginRegistry::getSingleton();
+    $pluginRegistry = PluginRegistry::loadSingleton();
     if (defined('PM_SINGLE_SIGN_ON')) {
         /*----------------------------------********---------------------------------*/
         if ($pluginRegistry->existsTrigger(PM_SINGLE_SIGN_ON)) {
@@ -121,17 +138,15 @@ if (isset ($_SESSION['USER_LOGGED'])) {
 }
 //end log
 
-/*----------------------------------********---------------------------------*/
-
 //start new session
 @session_destroy();
 session_start();
 session_regenerate_id();
 
 if (PHP_VERSION < 5.2) {
-    setcookie("workspaceSkin", SYS_SKIN, time() + (24 * 60 * 60), "/sys" . SYS_SYS, "; HttpOnly");
+    setcookie("workspaceSkin", SYS_SKIN, time() + (24 * 60 * 60), "/sys" . config("system.workspace"), "; HttpOnly");
 } else {
-    setcookie("workspaceSkin", SYS_SKIN, time() + (24 * 60 * 60), "/sys" . SYS_SYS, null, false, true);
+    setcookie("workspaceSkin", SYS_SKIN, time() + (24 * 60 * 60), "/sys" . config("system.workspace"), null, false, true);
 }
 
 if (strlen($msg) > 0) {
@@ -174,9 +189,6 @@ foreach ($translationsTable as $locale) {
 global $_DBArray;
 $_DBArray ['langOptions'] = $availableLangArray;
 
-G::LoadClass('configuration');
-//BootStrap::LoadClass('configuration');
-
 $oConf = new Configurations();
 $oConf->loadConfig($obj, 'ENVIRONMENT_SETTINGS', '');
 
@@ -199,10 +211,8 @@ if ($version >= 3) {
     $G_PUBLISH->AddContent('xmlform', 'xmlform', 'login/login', '', $aFields, SYS_URI . 'login/authentication.php');
 }
 
-G::LoadClass('serverConfiguration');
-//Bootstrap::LoadClass('serverConfiguration');
 //get the serverconf singleton, and check if we can send the heartbeat
-$oServerConf = & serverConf::getSingleton();
+$oServerConf = & ServerConf::getSingleton();
 $partnerFlag = (defined('PARTNER_FLAG')) ? PARTNER_FLAG : false;
 if (!$partnerFlag) {
     $sflag = $oServerConf->getHeartbeatProperty('HB_OPTION', 'HEART_BEAT_CONF');
@@ -250,7 +260,7 @@ $flagForgotPassword = isset($oConf->aConfig['login_enableForgotPassword'])
 
 setcookie('PM-Warning', trim(G::LoadTranslation('ID_BLOCKER_MSG'), '*'), time() + (24 * 60 * 60), SYS_URI);
 
-$configS = System::getSystemConfiguration('', '', SYS_SYS);
+$configS = System::getSystemConfiguration('', '', config("system.workspace"));
 $activeSession = isset($configS['session_block']) ? !(int)$configS['session_block'] : true;
 if ($activeSession) {
     setcookie("PM-TabPrimary", 101010010, time() + (24 * 60 * 60), '/');

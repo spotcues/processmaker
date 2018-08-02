@@ -312,8 +312,11 @@ class Content extends BaseContent
     *
     * @param  array  $langs
     */
-    public function regenerateContent ($langs, $workSpace = SYS_SYS)
+    public function regenerateContent ($langs, $workSpace = null)
     {
+        if ($workSpace === null) {
+            $workSpace = config("system.workspace");
+        }
         //Search the language
         $key = array_search( 'en', $langs );
         if ($key === false) {
@@ -361,8 +364,7 @@ class Content extends BaseContent
                 FROM CONTENT
                 ORDER BY CON_ID, CON_CATEGORY, CON_PARENT, CON_LANG";
 
-        G::LoadClass( "wsTools" );
-        $workSpace = new workspaceTools( $workSpace );
+        $workSpace = new WorkspaceTools( $workSpace );
         $workSpace->getDBInfo();
 
         $link = @mysql_pconnect( $workSpace->dbHost, $workSpace->dbUser, $workSpace->dbPass) or die( "Could not connect" );

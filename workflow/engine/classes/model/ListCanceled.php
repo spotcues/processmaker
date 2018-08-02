@@ -15,8 +15,10 @@ require_once 'classes/model/om/BaseListCanceled.php';
  * @package    classes.model
  */
 // @codingStandardsIgnoreStart
-class ListCanceled extends BaseListCanceled
+class ListCanceled extends BaseListCanceled implements ListInterface
 {
+    use ListBaseTrait;
+
     // @codingStandardsIgnoreEnd
     /**
      * Create List Canceled Table
@@ -99,6 +101,9 @@ class ListCanceled extends BaseListCanceled
 
         $oListInbox = new ListInbox();
         $oListInbox->removeAll($data['APP_UID']);
+        //We need to remove the cancelled case from unassigned list if the record exists
+        $unassigned = new ListUnassigned();
+        $unassigned->remove($data['APP_UID'], $data['DEL_INDEX']);
 
         //Update - WHERE
         $criteriaWhere = new Criteria("workflow");
@@ -280,7 +285,7 @@ class ListCanceled extends BaseListCanceled
         }
     }
 
-    public function loadList($usr_uid, $filters = array(), $callbackRecord = null)
+    public function loadList($usr_uid, $filters = array(), callable $callbackRecord = null)
     {
         $resp = array();
         $criteria = new Criteria();
@@ -343,16 +348,7 @@ class ListCanceled extends BaseListCanceled
      */
     public function getCountList($usrUid, $filters = array())
     {
-        $criteria = new Criteria();
-        $criteria->addSelectColumn('COUNT(*) AS TOTAL');
-        $criteria->add(ListCanceledPeer::USR_UID, $usrUid, Criteria::EQUAL);
-        if (count($filters)) {
-            self::loadFilters($criteria, $filters);
-        }
-        $dataset = ListCanceledPeer::doSelectRS($criteria);
-        $dataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
-        $dataset->next();
-        $aRow = $dataset->getRow();
-        return (int)$aRow['TOTAL'];
+        return $this->getCountListFromPeer
+                (ListCanceledPeer::class, $usrUid, $filters);
     }
 } // ListCanceled

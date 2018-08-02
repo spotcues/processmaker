@@ -17,7 +17,14 @@
         this.body.append(this.table);
     };
     ListProperties.prototype.addItem = function (propertiesGot, property, properties) {
-        var that = this, input, i, width = "width:100%;border:1px solid gray;box-sizing:border-box;", id = FormDesigner.generateUniqueId();
+        var input,
+            i,
+            minDate = '',
+            maxDate = '',
+            defaultDate = '',
+            dialogMessage = '',
+            width = "width:100%;border:1px solid gray;box-sizing:border-box;",
+            id = FormDesigner.generateUniqueId();
         switch (propertiesGot[property].type) {
             case "label":
                 //improvement changes in value
@@ -180,13 +187,25 @@
                 cellValue[0].style.paddingRight = n + "px";
             }
             if (propertiesGot[property].type === "datepicker") {
-                var button = $("<img src='" + $.imgUrl + "fd-calendar.png' style='cursor:pointer;position:absolute;top:0;right:" + n + "px;' title='" + "datepicker".translate() + "'>");
+                button = $("<img src='" + $.imgUrl + "fd-calendar.png' style='cursor:pointer;position:absolute;top:0;right:" + n + "px;' title='" + "datepicker".translate() + "'>");
                 button.on("click", function (e) {
                     e.stopPropagation();
                     if ($(e.target).data("disabled") === true)
                         return;
                     if ($(e.target).data("disabledTodayOption") === true)
                         return;
+                    switch (property) {
+                        case "defaultDate":
+                            minDate = $(cellValue.parent().parent()[0].rows["minDate"]).find("input").val();
+                            maxDate = $(cellValue.parent().parent()[0].rows["maxDate"]).find("input").val();
+                            break;
+                        case "minDate":
+                            maxDate = $(cellValue.parent().parent()[0].rows["maxDate"]).find("input").val();
+                            break;
+                        case "maxDate":
+                            minDate = $(cellValue.parent().parent()[0].rows["minDate"]).find("input").val();
+                            break;
+                    }
                     var dp = cellValue.find("input[type='text']").datepicker({
                         showOtherMonths: true,
                         selectOtherMonths: true,
@@ -195,6 +214,8 @@
                         changeMonth: true,
                         changeYear: true,
                         yearRange: "-100:+100",
+                        minDate: minDate,
+                        maxDate: maxDate,
                         onSelect: function (dateText, inst) {
                             properties.set(property, dateText, cellValue.find("input[type='text']")[0]);
                         },
@@ -206,6 +227,25 @@
                     dp.datepicker("show");
                     cellValue.find(".ui-datepicker-trigger").hide();
                 });
+                if (property === "defaultDate") {
+                    minDate = $(cellValue.parent().parent()[0].rows["minDate"]).find("input").val();
+                    maxDate = $(cellValue.parent().parent()[0].rows["maxDate"]).find("input").val();
+                    defaultDate = $(cellValue.parent().parent()[0].rows["defaultDate"]).find("input").val();
+                    if (minDate > defaultDate && minDate !== "") {
+                        dialogMessage = new FormDesigner.main.DialogMessage(null, "success", "Default date is out of range.".translate());
+                        dialogMessage.onClose = function () {
+                            properties.set(property, minDate);
+                            properties[property].node.value = minDate;
+                        };
+                    }
+                    if (maxDate < defaultDate && maxDate !== "") {
+                        dialogMessage = new FormDesigner.main.DialogMessage(null, "success", "Default date is out of range.".translate());
+                        dialogMessage.onClose = function () {
+                            properties.set(property, maxDate);
+                            properties[property].node.value = maxDate;
+                        };
+                    }
+                }
                 cellValue.append(button);
                 n = n + 16;
                 cellValue[0].style.paddingRight = n + "px";
@@ -229,6 +269,16 @@
         scope.find("span,img").each(function (i, e) {
             $(e).data("disabled", disabled);
         });
+        if (!propertiesGot[property].disabled && property === "requiredFieldErrorMessage"){
+            scope.find("textarea").prop("disabled", !propertiesGot["required"].value);
+        }
+        if (!propertiesGot[property].disabled && propertiesGot.type.value === 'multipleFile' &&
+            (property === 'extensions' || property === 'size' || property === 'sizeUnity')) {
+            propertiesGot[property].node.disabled = propertiesGot['inputDocument'].value;
+        }
+        if (property === 'enableVersioning') {
+            propertiesGot[property].node.textContent = (propertiesGot[property].value) ? 'Yes' : 'No';
+        }
         if (cellValue && propertiesGot[property].disabledTodayOption !== undefined) {
             cellValue.find("input[type='text']").prop("disabled", propertiesGot[property].disabledTodayOption);
             scope.find("span,img").each(function (i, e) {

@@ -78,6 +78,7 @@ PMCommandDelete.prototype.saveAndDestroy = function (shape, root, fillArray) {
         parent,
         children = null,
         connection,
+        length,
         canvas = shape.canvas;
 
     if (shape.hasOwnProperty("children")) {
@@ -88,7 +89,8 @@ PMCommandDelete.prototype.saveAndDestroy = function (shape, root, fillArray) {
     if (shape.destroy) {
         shape.destroy();
     }
-    for (i = 0; i < children.getSize(); i += 1) {
+    length = children.getSize();
+    for (i = 0; i < length; i += 1) {
         child = children.get(i);
         this.saveAndDestroy(child, false, fillArray);
     }
@@ -115,6 +117,9 @@ PMCommandDelete.prototype.saveAndDestroy = function (shape, root, fillArray) {
         // remove from the currentSelection and from either the customShapes
         // arrayList or the regularShapes arrayList
         // remove the html only from the root
+        if (shape.corona) {
+            shape.corona.hide();
+        }
         shape.html = $(shape.html).detach()[0];
         if (shape.getType() === 'PMLane') {
             this.beforeRelPositions[shape.getID()] = shape.getRelPosition();
@@ -139,11 +144,9 @@ PMCommandDelete.prototype.execute = function () {
         i,
         canvas = this.receiver,
         currentConnection,
-        stringified,
         fillArray = false,
         mainShape = null,
         data,
-        self = this,
         url = '/project/' + PMDesigner.project.id + '/activity/validate-active-cases';
     if (this.relatedElements.length === 0) {
         fillArray = true;
@@ -185,7 +188,6 @@ PMCommandDelete.prototype.execute = function () {
         mainShape = shape;
     }
     // remove the elements in the canvas current selection
-    stringified = [];
     if (shape && shape.getType() === 'PMPool') {
         for (i = 0; i < shape.bpmnLanes.getSize(); i += 1) {
             this.tempLanes.insert(shape.bpmnLanes.get(i));
@@ -217,6 +219,7 @@ PMCommandDelete.prototype.execute = function () {
 
         currentConnection.saveAndDestroy();
         currentConnection = null;
+        mainShape = currentConnection;
     }
     canvas.triggerRemoveEvent(mainShape, this.relatedElements);
     return this;
@@ -231,17 +234,19 @@ PMCommandDelete.prototype.undo = function () {
     // undo recreates the shapes
     var i,
         shape,
-        mainShape = this.currentSelection.getFirst(),
+        mainShape = this.currentSelection.getFirst() || this.currentConnection,
         size,
         haveLanes = false,
         shapeBefore,
         j,
-        element;
+        element,
+        length;
     this.currentSelection.sort(function (lane1, lane2) {
         return lane1.relPosition > lane2.relPosition;
     });
 
-    for (i = 0; i < this.currentSelection.getSize(); i += 1) {
+    length = this.currentSelection.getSize();
+    for (i = 0; i < length; i += 1) {
         shape = this.currentSelection.get(i);
         shapeBefore = null;
         // add to the canvas array of regularShapes and customShapes

@@ -8,7 +8,7 @@
         this.onDrawControl = new Function();
         this.parent = parent;
         this.properties = null;
-        this.variable = null;
+        this.variable = parent.variable;
         this.disabled = false;
         Grid.prototype.init.call(this);
     };
@@ -238,6 +238,7 @@
     };
     Grid.prototype.setVariable = function (variable) {
         var that = this, b;
+        that.variable = variable;
         that.properties.set("var_uid", variable.var_uid);
         b = that.properties.set("variable", variable.var_name);
         if (b.node)
