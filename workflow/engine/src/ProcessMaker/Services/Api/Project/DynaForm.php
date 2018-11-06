@@ -220,33 +220,4 @@ class DynaForm extends Api
         }
     }
 
-    /**
-     * Get Dynaform's history.
-     * 
-     * @url POST /:prj_uid/dynaform/:dyn_uid/history
-     *
-     * @param string $dyn_uid {@min 32}{@max 32}
-     * @param string $prj_uid {@min 32}{@max 32}
-     * @param array  $request_data
-     * 
-     * @return array
-     * @throws RestException 
-     * 
-     * @access protected
-     * @class AccessControl {@permission PM_FACTORY}
-     */
-    public function doGetDynaFormHistory($dyn_uid, $prj_uid, $request_data)
-    {
-        try {
-            $dynaForm = new \ProcessMaker\BusinessModel\DynaForm();
-            $dynaForm->setFormatFieldNameInUppercase(false);
-
-            $response = $dynaForm->getDynaFormHistory($prj_uid, $dyn_uid, $request_data);
-
-            return $response;
-        } catch (\Exception $e) {
-            throw (new RestException(Api::STAT_APP_EXCEPTION, $e->getMessage()));
-        }
-    }
-
 }

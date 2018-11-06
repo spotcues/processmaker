@@ -24,41 +24,41 @@ class UsersProperties extends BaseUsersProperties
     public $usrID = '';
     public $lang = 'en';
 
-    public function __construct ()
+    public function __construct()
     {
-        $this->lang = defined( 'SYS_LANG' ) ? SYS_LANG : 'en';
+        $this->lang = defined('SYS_LANG') ? SYS_LANG : 'en';
     }
 
-    public function UserPropertyExists ($sUserUID)
+    public function UserPropertyExists($sUserUID)
     {
-        $oUserProperty = UsersPropertiesPeer::retrieveByPk( $sUserUID );
-        if (! is_null( $oUserProperty ) && is_object( $oUserProperty ) && get_class( $oUserProperty ) == 'UsersProperties') {
-            $this->fields = $oUserProperty->toArray( BasePeer::TYPE_FIELDNAME );
-            $this->fromArray( $this->fields, BasePeer::TYPE_FIELDNAME );
+        $oUserProperty = UsersPropertiesPeer::retrieveByPk($sUserUID);
+        if (! is_null($oUserProperty) && is_object($oUserProperty) && get_class($oUserProperty) == 'UsersProperties') {
+            $this->fields = $oUserProperty->toArray(BasePeer::TYPE_FIELDNAME);
+            $this->fromArray($this->fields, BasePeer::TYPE_FIELDNAME);
             return true;
         } else {
             return false;
         }
     }
 
-    public function load ($sUserUID)
+    public function load($sUserUID)
     {
-        $oUserProperty = UsersPropertiesPeer::retrieveByPK( $sUserUID );
-        if (! is_null( $oUserProperty )) {
-            $aFields = $oUserProperty->toArray( BasePeer::TYPE_FIELDNAME );
-            $this->fromArray( $aFields, BasePeer::TYPE_FIELDNAME );
+        $oUserProperty = UsersPropertiesPeer::retrieveByPK($sUserUID);
+        if (! is_null($oUserProperty)) {
+            $aFields = $oUserProperty->toArray(BasePeer::TYPE_FIELDNAME);
+            $this->fromArray($aFields, BasePeer::TYPE_FIELDNAME);
             return $aFields;
         } else {
-            throw new Exception( "User with $sUserUID does not exist!" );
+            throw new Exception("User with $sUserUID does not exist!");
         }
     }
 
-    public function create ($aData)
+    public function create($aData)
     {
-        $oConnection = Propel::getConnection( UsersPropertiesPeer::DATABASE_NAME );
+        $oConnection = Propel::getConnection(UsersPropertiesPeer::DATABASE_NAME);
         try {
             $oUserProperty = new UsersProperties();
-            $oUserProperty->fromArray( $aData, BasePeer::TYPE_FIELDNAME );
+            $oUserProperty->fromArray($aData, BasePeer::TYPE_FIELDNAME);
             if ($oUserProperty->validate()) {
                 $oConnection->begin();
                 $iResult = $oUserProperty->save();
@@ -70,7 +70,7 @@ class UsersProperties extends BaseUsersProperties
                 foreach ($aValidationFailures as $oValidationFailure) {
                     $sMessage .= $oValidationFailure->getMessage() . '<br />';
                 }
-                throw (new Exception( 'The registry cannot be created!<br />' . $sMessage ));
+                throw (new Exception('The registry cannot be created!<br />' . $sMessage));
             }
         } catch (Exception $oError) {
             $oConnection->rollback();
@@ -78,13 +78,13 @@ class UsersProperties extends BaseUsersProperties
         }
     }
 
-    public function update ($aData)
+    public function update($aData)
     {
-        $oConnection = Propel::getConnection( UsersPropertiesPeer::DATABASE_NAME );
+        $oConnection = Propel::getConnection(UsersPropertiesPeer::DATABASE_NAME);
         try {
-            $oUserProperty = UsersPropertiesPeer::retrieveByPK( $aData['USR_UID'] );
-            if (! is_null( $oUserProperty )) {
-                $oUserProperty->fromArray( $aData, BasePeer::TYPE_FIELDNAME );
+            $oUserProperty = UsersPropertiesPeer::retrieveByPK($aData['USR_UID']);
+            if (! is_null($oUserProperty)) {
+                $oUserProperty->fromArray($aData, BasePeer::TYPE_FIELDNAME);
                 if ($oUserProperty->validate()) {
                     $oConnection->begin();
                     $iResult = $oUserProperty->save();
@@ -96,10 +96,10 @@ class UsersProperties extends BaseUsersProperties
                     foreach ($aValidationFailures as $oValidationFailure) {
                         $sMessage .= $oValidationFailure->getMessage() . '<br />';
                     }
-                    throw (new Exception( 'The registry cannot be updated!<br />' . $sMessage ));
+                    throw (new Exception('The registry cannot be updated!<br />' . $sMessage));
                 }
             } else {
-                throw (new Exception( 'This row doesn\'t exist!' ));
+                throw (new Exception('This row doesn\'t exist!'));
             }
         } catch (Exception $oError) {
             $oConnection->rollback();
@@ -107,17 +107,17 @@ class UsersProperties extends BaseUsersProperties
         }
     }
 
-    public function loadOrCreateIfNotExists ($sUserUID, $aUserProperty = array())
+    public function loadOrCreateIfNotExists($sUserUID, $aUserProperty = array())
     {
-        if (! $this->UserPropertyExists( $sUserUID )) {
+        if (! $this->UserPropertyExists($sUserUID)) {
             $aUserProperty['USR_UID'] = $sUserUID;
-            if (! isset( $aUserProperty['USR_LAST_UPDATE_DATE'] )) {
-                $aUserProperty['USR_LAST_UPDATE_DATE'] = date( 'Y-m-d H:i:s' );
+            if (! isset($aUserProperty['USR_LAST_UPDATE_DATE'])) {
+                $aUserProperty['USR_LAST_UPDATE_DATE'] = date('Y-m-d H:i:s');
             }
-            if (! isset( $aUserProperty['USR_LOGGED_NEXT_TIME'] )) {
+            if (! isset($aUserProperty['USR_LOGGED_NEXT_TIME'])) {
                 $aUserProperty['USR_LOGGED_NEXT_TIME'] = 0;
             }
-            $this->create( $aUserProperty );
+            $this->create($aUserProperty);
         } else {
             $aUserProperty = $this->fields;
         }
@@ -125,32 +125,32 @@ class UsersProperties extends BaseUsersProperties
         return $aUserProperty;
     }
 
-    public function validatePassword ($sPassword, $sLastUpdate, $iChangePasswordNextTime, $nowLogin = false)
+    public function validatePassword($sPassword, $sLastUpdate, $iChangePasswordNextTime, $nowLogin = false)
     {
-        if (! defined( 'PPP_MINIMUM_LENGTH' )) {
-            define( 'PPP_MINIMUM_LENGTH', 5 );
+        if (! defined('PPP_MINIMUM_LENGTH')) {
+            define('PPP_MINIMUM_LENGTH', 5);
         }
-        if (! defined( 'PPP_MAXIMUM_LENGTH' )) {
-            define( 'PPP_MAXIMUM_LENGTH', 20 );
+        if (! defined('PPP_MAXIMUM_LENGTH')) {
+            define('PPP_MAXIMUM_LENGTH', 20);
         }
-        if (! defined( 'PPP_NUMERICAL_CHARACTER_REQUIRED' )) {
-            define( 'PPP_NUMERICAL_CHARACTER_REQUIRED', 0 );
+        if (! defined('PPP_NUMERICAL_CHARACTER_REQUIRED')) {
+            define('PPP_NUMERICAL_CHARACTER_REQUIRED', 0);
         }
-        if (! defined( 'PPP_UPPERCASE_CHARACTER_REQUIRED' )) {
-            define( 'PPP_UPPERCASE_CHARACTER_REQUIRED', 0 );
+        if (! defined('PPP_UPPERCASE_CHARACTER_REQUIRED')) {
+            define('PPP_UPPERCASE_CHARACTER_REQUIRED', 0);
         }
-        if (! defined( 'PPP_SPECIAL_CHARACTER_REQUIRED' )) {
-            define( 'PPP_SPECIAL_CHARACTER_REQUIRED', 0 );
+        if (! defined('PPP_SPECIAL_CHARACTER_REQUIRED')) {
+            define('PPP_SPECIAL_CHARACTER_REQUIRED', 0);
         }
-        if (! defined( 'PPP_EXPIRATION_IN' )) {
-            define( 'PPP_EXPIRATION_IN', 0 );
+        if (! defined('PPP_EXPIRATION_IN')) {
+            define('PPP_EXPIRATION_IN', 0);
         }
-        if (function_exists( 'mb_strlen' )) {
-            $iLength = mb_strlen( $sPassword );
+        if (function_exists('mb_strlen')) {
+            $iLength = mb_strlen($sPassword);
         } else {
-            $iLength = strlen( $sPassword );
+            $iLength = strlen($sPassword);
         }
-        $aErrors = array ();
+        $aErrors = array();
         if ($iLength < PPP_MINIMUM_LENGTH || $nowLogin) {
             $aErrors[] = 'ID_PPP_MINIMUM_LENGTH';
         }
@@ -158,17 +158,17 @@ class UsersProperties extends BaseUsersProperties
             $aErrors[] = 'ID_PPP_MAXIMUM_LENGTH';
         }
         if (PPP_NUMERICAL_CHARACTER_REQUIRED == 1) {
-            if (preg_match_all( '/[0-9]/', $sPassword, $aMatch, PREG_PATTERN_ORDER | PREG_OFFSET_CAPTURE ) == 0 || $nowLogin) {
+            if (preg_match_all('/[0-9]/', $sPassword, $aMatch, PREG_PATTERN_ORDER | PREG_OFFSET_CAPTURE) == 0 || $nowLogin) {
                 $aErrors[] = 'ID_PPP_NUMERICAL_CHARACTER_REQUIRED';
             }
         }
         if (PPP_UPPERCASE_CHARACTER_REQUIRED == 1) {
-            if (preg_match_all( '/[A-Z]/', $sPassword, $aMatch, PREG_PATTERN_ORDER | PREG_OFFSET_CAPTURE ) == 0 || $nowLogin) {
+            if (preg_match_all('/[A-Z]/', $sPassword, $aMatch, PREG_PATTERN_ORDER | PREG_OFFSET_CAPTURE) == 0 || $nowLogin) {
                 $aErrors[] = 'ID_PPP_UPPERCASE_CHARACTER_REQUIRED';
             }
         }
         if (PPP_SPECIAL_CHARACTER_REQUIRED == 1) {
-            if (preg_match_all( '/[��\\!|"@�#$~%�&�\/()=\'?��*+\-_.:,;]/', $sPassword, $aMatch, PREG_PATTERN_ORDER | PREG_OFFSET_CAPTURE ) == 0 || $nowLogin) {
+            if (preg_match_all('/[��\\!|"@�#$~%�&�\/()=\'?��*+\-_.:,;]/', $sPassword, $aMatch, PREG_PATTERN_ORDER | PREG_OFFSET_CAPTURE) == 0 || $nowLogin) {
                 $aErrors[] = 'ID_PPP_SPECIAL_CHARACTER_REQUIRED';
             }
         }
@@ -176,11 +176,11 @@ class UsersProperties extends BaseUsersProperties
             $oCalendar = new Calendar();
 
             if ($oCalendar->pmCalendarUid == '') {
-            	$oCalendar->pmCalendarUid = '00000000000000000000000000000001';
-            	$oCalendar->getCalendarData();
+                $oCalendar->pmCalendarUid = '00000000000000000000000000000001';
+                $oCalendar->getCalendarData();
             }
 
-            $fDays = $oCalendar->calculateDuration( date( 'Y-m-d H:i:s' ), $sLastUpdate );
+            $fDays = $oCalendar->calculateDuration(date('Y-m-d H:i:s'), $sLastUpdate);
             if ($fDays > (PPP_EXPIRATION_IN * 24) || $nowLogin) {
                 $aErrors[] = 'ID_PPP_EXPIRATION_IN';
             }
@@ -195,24 +195,24 @@ class UsersProperties extends BaseUsersProperties
      * get user location
      * defined by precedence plugin->ux->default
      */
-    public function redirectTo ($usrID, $lang = '')
+    public function redirectTo($usrID, $lang = '')
     {
         $this->usrID = $usrID;
-        $this->lang = empty( $lang ) ? $this->lang : $lang;
+        $this->lang = empty($lang) ? $this->lang : $lang;
 
         $url = $this->_getPluginLocation();
 
-        if (empty( $url )) {
+        if (empty($url)) {
             $url = $this->_getUXLocation();
         }
 
         $urlUx = $this->_getUXSkinVariant();
-        if (empty( $url ) && ! empty( $urlUx )) {
+        if (empty($url) && ! empty($urlUx)) {
             $_SESSION['_defaultUserLocation'] = $url;
             $url = $urlUx;
         }
 
-        if (empty( $url )) {
+        if (empty($url)) {
             $url = $this->_getDefaultLocation();
         }
 
@@ -224,19 +224,19 @@ class UsersProperties extends BaseUsersProperties
      * defined by precedence plugin->default
      * note that is getting location without User Inbox Simplified varification
      */
-    public function getUserLocation ($usrID, $lang = 'en')
+    public function getUserLocation($usrID, $lang = 'en')
     {
         $this->usrID = $usrID;
-        $this->lang = empty( $lang ) ? $this->lang : $lang;
+        $this->lang = empty($lang) ? $this->lang : $lang;
 
         $url = $this->_getPluginLocation();
 
-        if (empty( $url )) {
+        if (empty($url)) {
             $url = $this->_getDefaultLocation();
         }
 
         $urlUx = $this->_getUXSkinVariant();
-        if (! empty( $urlUx )) {
+        if (! empty($urlUx)) {
             $_SESSION['_defaultUserLocation'] = $url;
             $url = $urlUx;
         }
@@ -248,13 +248,13 @@ class UsersProperties extends BaseUsersProperties
      * to verify if the user is using some "ux..." skin variant
      * if that is the case, the redirection will change to 'main' controller
      */
-    public function _getUXSkinVariant ()
+    public function _getUXSkinVariant()
     {
         $url = '';
 
-        if (substr( SYS_SKIN, 0, 2 ) == 'ux' && SYS_SKIN != 'uxs') {
+        if (substr(SYS_SKIN, 0, 2) == 'ux' && SYS_SKIN != 'uxs') {
             if (isset($_COOKIE['workspaceSkin'])) {
-                if (substr( $_COOKIE['workspaceSkin'], 0, 2 ) != 'ux') {
+                if (substr($_COOKIE['workspaceSkin'], 0, 2) != 'ux') {
                     $url = $this->_getDefaultLocation();
                     return $url;
                 } else {
@@ -265,8 +265,8 @@ class UsersProperties extends BaseUsersProperties
             }
             global $RBAC;
             $oConf = new Configurations();
-            $oConf->loadConfig( $x, 'USER_PREFERENCES', '', '', $_SESSION['USER_LOGGED'], '' );
-            if (sizeof( $oConf->aConfig ) > 0) {
+            $oConf->loadConfig($x, 'USER_PREFERENCES', '', '', $_SESSION['USER_LOGGED'], '');
+            if (sizeof($oConf->aConfig) > 0) {
                 if ($oConf->aConfig['DEFAULT_MENU'] == 'PM_USERS') {
                     $oConf->aConfig['DEFAULT_MENU'] = 'PM_SETUP';
                 }
@@ -275,27 +275,27 @@ class UsersProperties extends BaseUsersProperties
 
                 switch ($oConf->aConfig['DEFAULT_MENU']) {
                     case 'PM_SETUP':
-                        if ($RBAC->userCanAccess( 'PM_SETUP' ) == 1) {
+                        if ($RBAC->userCanAccess('PM_SETUP') == 1) {
                             $getUrl = 'admin';
                         }
                         break;
                     case 'PM_FACTORY':
-                        if ($RBAC->userCanAccess( 'PM_FACTORY' ) == 1) {
+                        if ($RBAC->userCanAccess('PM_FACTORY') == 1) {
                             $getUrl = 'designer';
                         }
                         break;
                     case 'PM_CASES':
-                        if ($RBAC->userCanAccess( 'PM_CASES' ) == 1) {
+                        if ($RBAC->userCanAccess('PM_CASES') == 1) {
                             $getUrl = 'home';
                         }
                         break;
                     case 'PM_USERS':
-                        if ($RBAC->userCanAccess( 'PM_USERS' ) == 1) {
+                        if ($RBAC->userCanAccess('PM_USERS') == 1) {
                             $getUrl = 'admin';
                         }
                         break;
                     case 'PM_DASHBOARD':
-                        if ($RBAC->userCanAccess( 'PM_DASHBOARD' ) == 1) {
+                        if ($RBAC->userCanAccess('PM_DASHBOARD') == 1) {
                             $getUrl = 'dashboard';
                         }
                         break;
@@ -311,14 +311,14 @@ class UsersProperties extends BaseUsersProperties
      * get the plugins, and check if there is redirectLogins
      * if yes, then redirect goes according his Role
      */
-    public function _getPluginLocation ()
+    public function _getPluginLocation()
     {
         global $RBAC;
         $url = '';
 
-        if (class_exists( 'redirectDetail' )) {
+        if (class_exists('redirectDetail')) {
             //to do: complete the validation
-            if (isset( $RBAC->aUserInfo['PROCESSMAKER']['ROLE']['ROL_CODE'] )) {
+            if (isset($RBAC->aUserInfo['PROCESSMAKER']['ROLE']['ROL_CODE'])) {
                 $userRole = $RBAC->aUserInfo['PROCESSMAKER']['ROLE']['ROL_CODE'];
             }
 
@@ -347,10 +347,10 @@ class UsersProperties extends BaseUsersProperties
      *
      * @author Erik Amaru Ortiz <erik@colosa.com>
      */
-    public function _getUXLocation ()
+    public function _getUXLocation()
     {
         require_once 'classes/model/Users.php';
-        $u = UsersPeer::retrieveByPK( $this->usrID );
+        $u = UsersPeer::retrieveByPK($this->usrID);
         $url = '';
 
         $uxType = $u->getUsrUx();
@@ -360,7 +360,7 @@ class UsersProperties extends BaseUsersProperties
         if ($uxType == '' || $uxType == 'NORMAL') {
             require_once 'classes/model/GroupUser.php';
             $gu = new GroupUser();
-            $ugList = $gu->getAllUserGroups( $this->usrID );
+            $ugList = $gu->getAllUserGroups($this->usrID);
 
             foreach ($ugList as $row) {
                 if ($row['GRP_UX'] != 'NORMAL' && $row['GRP_UX'] != '') {
@@ -387,11 +387,11 @@ class UsersProperties extends BaseUsersProperties
      * get user preferences for default redirect
      * verifying if it has any preferences on configurations table
      */
-    public function _getDefaultLocation ()
+    public function _getDefaultLocation()
     {
         global $RBAC;
         $oConf = new Configurations();
-        $oConf->loadConfig( $x, 'USER_PREFERENCES', '', '', $_SESSION['USER_LOGGED'], '' );
+        $oConf->loadConfig($x, 'USER_PREFERENCES', '', '', $_SESSION['USER_LOGGED'], '');
 
         if (isset($_COOKIE['workspaceSkin'])) {
             $baseUrl = '/sys' . config("system.workspace") . '/' . $this->lang . '/' . $_COOKIE['workspaceSkin'] . '/';
@@ -400,7 +400,7 @@ class UsersProperties extends BaseUsersProperties
         }
         $url = '';
 
-        if (sizeof( $oConf->aConfig ) > 0) {
+        if (sizeof($oConf->aConfig) > 0) {
             // this user has a configuration record
             // backward compatibility, because now, we don't have user and dashboard menu.
             if ($oConf->aConfig['DEFAULT_MENU'] == 'PM_USERS') {
@@ -409,27 +409,27 @@ class UsersProperties extends BaseUsersProperties
 
             switch ($oConf->aConfig['DEFAULT_MENU']) {
                 case 'PM_SETUP':
-                    if ($RBAC->userCanAccess( 'PM_SETUP' ) == 1 || $RBAC->userCanAccess('PM_USERS') == 1) {
+                    if ($RBAC->userCanAccess('PM_SETUP') == 1 || $RBAC->userCanAccess('PM_USERS') == 1) {
                         $url = 'setup/main';
                     }
                     break;
                 case 'PM_FACTORY':
-                    if ($RBAC->userCanAccess( 'PM_FACTORY' ) == 1) {
+                    if ($RBAC->userCanAccess('PM_FACTORY') == 1) {
                         $url = 'processes/main';
                     }
                     break;
                 case 'PM_CASES':
-                    if ($RBAC->userCanAccess( 'PM_CASES' ) == 1) {
+                    if ($RBAC->userCanAccess('PM_CASES') == 1) {
                         $url = 'cases/main';
                     }
                     break;
                 case 'PM_USERS':
-                    if ($RBAC->userCanAccess( 'PM_USERS' ) == 1) {
+                    if ($RBAC->userCanAccess('PM_USERS') == 1) {
                         $url = 'setup/main';
                     }
                     break;
                 case 'PM_DASHBOARD':
-                    if ($RBAC->userCanAccess( 'PM_DASHBOARD' ) == 1) {
+                    if ($RBAC->userCanAccess('PM_DASHBOARD') == 1) {
                         $url = 'dashboard/main';
                     }
                     break;
@@ -437,16 +437,16 @@ class UsersProperties extends BaseUsersProperties
             }
         }
 
-        if (empty( $url )) {
-            if ($RBAC->userCanAccess( 'PM_FACTORY' ) == 1) {
+        if (empty($url)) {
+            if ($RBAC->userCanAccess('PM_FACTORY') == 1) {
                 $url = 'processes/main';
-            } elseif ($RBAC->userCanAccess( 'PM_SETUP' ) == 1) {
+            } elseif ($RBAC->userCanAccess('PM_SETUP') == 1) {
                 $url = 'setup/main';
-            } elseif ($RBAC->userCanAccess( 'PM_CASES' ) == 1) {
+            } elseif ($RBAC->userCanAccess('PM_CASES') == 1) {
                 $url = 'cases/main';
-            } elseif ($RBAC->userCanAccess( 'PM_USERS' ) == 1) {
+            } elseif ($RBAC->userCanAccess('PM_USERS') == 1) {
                 $url = 'setup/main';
-            } elseif ($RBAC->userCanAccess( 'PM_DASHBOARD' ) == 1) {
+            } elseif ($RBAC->userCanAccess('PM_DASHBOARD') == 1) {
                 $url = 'dashboard/dashboard';
             } else {
                 $url = 'users/myInfo';
@@ -456,4 +456,3 @@ class UsersProperties extends BaseUsersProperties
         return $baseUrl . $url;
     }
 }
-

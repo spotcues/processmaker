@@ -1704,7 +1704,9 @@ class AppSolr
             $UnSerializedCaseData = unserialize($documentData ['APP_DATA']);
 
             if ($UnSerializedCaseData === false) {
-                $UnSerializedCaseData = preg_replace('!s:(\d+):"(.*?)";!e', "'s:'.strlen('$2').':\"$2\";'", $documentData ['APP_DATA']); // utf8_encode
+                $UnSerializedCaseData = preg_replace_callback('!s:(\d+):"(.*?)";!', function ($m) {
+                    return 's:' . strlen($m[2]) . ':"' . $m[2] . '";';
+                }, $documentData ['APP_DATA']); // utf8_encode
                 $UnSerializedCaseData = unserialize($UnSerializedCaseData);
             }
 
@@ -2064,20 +2066,8 @@ class AppSolr
         ));
         foreach ($indexes as $index) {
             $unassignedUsersGroups = array();
-            // use cache
-            //$oMemcache = PMmemcached::getSingleton ($this->_solrInstance);
-            //$unassignedUsersGroups = $oMemcache->get ("SOLR_UNASSIGNED_USERS_GROUPS_" . $allAppDbData [$index] ['PRO_UID'] . "_" . $allAppDbData [$index] ['TAS_UID']);
-            //if (! $unassignedUsersGroups) {
-
             $unassignedUsersGroups = $this->getTaskUnassignedUsersGroupsData($allAppDbData [$index] ['PRO_UID'], $allAppDbData [$index] ['TAS_UID']);
 
-            // if the task has unassigned users or groups add del_index of delegation
-            //foreach ($unassignedUsersGroups as $i => $newRow) {
-            //  $unassignedUsersGroups [$i] ['DEL_INDEX'] = $allAppDbData [$index] ['DEL_INDEX'];
-            //}
-            // store in cache
-            //$oMemcache->set ("SOLR_UNASSIGNED_USERS_GROUPS_" . $allAppDbData [$index] ['PRO_UID'] . "_" . $allAppDbData [$index] ['TAS_UID'], $unassignedUsersGroups);
-            //}
             // copy list of unassigned users and groups
             foreach ($unassignedUsersGroups as $unassignedUserGroup) {
                 //unassigned users
@@ -2105,9 +2095,6 @@ class AppSolr
         $dynaformFieldTypes = array();
 
         // get cache instance
-        //$oMemcache = PMmemcached::getSingleton ($this->_solrInstance);
-        //$dynaformFieldTypes = $oMemcache->get ("SOLR_DYNAFORM_FIELD_TYPES_" . $documentInformation ['PRO_UID']);
-        //if (! $dynaformFieldTypes) {
         $dynaformFileNames = $this->getProcessDynaformFileNames($documentInformation ['PRO_UID']);
         $dynaformFields = array();
         foreach ($dynaformFileNames as $dynaformFileName) {

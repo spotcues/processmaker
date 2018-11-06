@@ -34,6 +34,12 @@ abstract class BaseListCanceled extends BaseObject implements Persistent
     protected $app_uid = '';
 
     /**
+     * The value for the del_index field.
+     * @var        int
+     */
+    protected $del_index = 0;
+
+    /**
      * The value for the usr_uid field.
      * @var        string
      */
@@ -80,12 +86,6 @@ abstract class BaseListCanceled extends BaseObject implements Persistent
      * @var        int
      */
     protected $app_canceled_date;
-
-    /**
-     * The value for the del_index field.
-     * @var        int
-     */
-    protected $del_index = 0;
 
     /**
      * The value for the del_previous_usr_uid field.
@@ -176,6 +176,17 @@ abstract class BaseListCanceled extends BaseObject implements Persistent
     {
 
         return $this->app_uid;
+    }
+
+    /**
+     * Get the [del_index] column value.
+     * 
+     * @return     int
+     */
+    public function getDelIndex()
+    {
+
+        return $this->del_index;
     }
 
     /**
@@ -285,17 +296,6 @@ abstract class BaseListCanceled extends BaseObject implements Persistent
         } else {
             return date($format, $ts);
         }
-    }
-
-    /**
-     * Get the [del_index] column value.
-     * 
-     * @return     int
-     */
-    public function getDelIndex()
-    {
-
-        return $this->del_index;
     }
 
     /**
@@ -505,6 +505,28 @@ abstract class BaseListCanceled extends BaseObject implements Persistent
     } // setAppUid()
 
     /**
+     * Set the value of [del_index] column.
+     * 
+     * @param      int $v new value
+     * @return     void
+     */
+    public function setDelIndex($v)
+    {
+
+        // Since the native PHP type for this column is integer,
+        // we will cast the input value to an int (if it is not).
+        if ($v !== null && !is_int($v) && is_numeric($v)) {
+            $v = (int) $v;
+        }
+
+        if ($this->del_index !== $v || $v === 0) {
+            $this->del_index = $v;
+            $this->modifiedColumns[] = ListCanceledPeer::DEL_INDEX;
+        }
+
+    } // setDelIndex()
+
+    /**
      * Set the value of [usr_uid] column.
      * 
      * @param      string $v new value
@@ -686,28 +708,6 @@ abstract class BaseListCanceled extends BaseObject implements Persistent
         }
 
     } // setAppCanceledDate()
-
-    /**
-     * Set the value of [del_index] column.
-     * 
-     * @param      int $v new value
-     * @return     void
-     */
-    public function setDelIndex($v)
-    {
-
-        // Since the native PHP type for this column is integer,
-        // we will cast the input value to an int (if it is not).
-        if ($v !== null && !is_int($v) && is_numeric($v)) {
-            $v = (int) $v;
-        }
-
-        if ($this->del_index !== $v || $v === 0) {
-            $this->del_index = $v;
-            $this->modifiedColumns[] = ListCanceledPeer::DEL_INDEX;
-        }
-
-    } // setDelIndex()
 
     /**
      * Set the value of [del_previous_usr_uid] column.
@@ -991,23 +991,23 @@ abstract class BaseListCanceled extends BaseObject implements Persistent
 
             $this->app_uid = $rs->getString($startcol + 0);
 
-            $this->usr_uid = $rs->getString($startcol + 1);
+            $this->del_index = $rs->getInt($startcol + 1);
 
-            $this->tas_uid = $rs->getString($startcol + 2);
+            $this->usr_uid = $rs->getString($startcol + 2);
 
-            $this->pro_uid = $rs->getString($startcol + 3);
+            $this->tas_uid = $rs->getString($startcol + 3);
 
-            $this->app_number = $rs->getInt($startcol + 4);
+            $this->pro_uid = $rs->getString($startcol + 4);
 
-            $this->app_title = $rs->getString($startcol + 5);
+            $this->app_number = $rs->getInt($startcol + 5);
 
-            $this->app_pro_title = $rs->getString($startcol + 6);
+            $this->app_title = $rs->getString($startcol + 6);
 
-            $this->app_tas_title = $rs->getString($startcol + 7);
+            $this->app_pro_title = $rs->getString($startcol + 7);
 
-            $this->app_canceled_date = $rs->getTimestamp($startcol + 8, null);
+            $this->app_tas_title = $rs->getString($startcol + 8);
 
-            $this->del_index = $rs->getInt($startcol + 9);
+            $this->app_canceled_date = $rs->getTimestamp($startcol + 9, null);
 
             $this->del_previous_usr_uid = $rs->getString($startcol + 10);
 
@@ -1244,31 +1244,31 @@ abstract class BaseListCanceled extends BaseObject implements Persistent
                 return $this->getAppUid();
                 break;
             case 1:
-                return $this->getUsrUid();
+                return $this->getDelIndex();
                 break;
             case 2:
-                return $this->getTasUid();
+                return $this->getUsrUid();
                 break;
             case 3:
-                return $this->getProUid();
+                return $this->getTasUid();
                 break;
             case 4:
-                return $this->getAppNumber();
+                return $this->getProUid();
                 break;
             case 5:
-                return $this->getAppTitle();
+                return $this->getAppNumber();
                 break;
             case 6:
-                return $this->getAppProTitle();
+                return $this->getAppTitle();
                 break;
             case 7:
-                return $this->getAppTasTitle();
+                return $this->getAppProTitle();
                 break;
             case 8:
-                return $this->getAppCanceledDate();
+                return $this->getAppTasTitle();
                 break;
             case 9:
-                return $this->getDelIndex();
+                return $this->getAppCanceledDate();
                 break;
             case 10:
                 return $this->getDelPreviousUsrUid();
@@ -1324,15 +1324,15 @@ abstract class BaseListCanceled extends BaseObject implements Persistent
         $keys = ListCanceledPeer::getFieldNames($keyType);
         $result = array(
             $keys[0] => $this->getAppUid(),
-            $keys[1] => $this->getUsrUid(),
-            $keys[2] => $this->getTasUid(),
-            $keys[3] => $this->getProUid(),
-            $keys[4] => $this->getAppNumber(),
-            $keys[5] => $this->getAppTitle(),
-            $keys[6] => $this->getAppProTitle(),
-            $keys[7] => $this->getAppTasTitle(),
-            $keys[8] => $this->getAppCanceledDate(),
-            $keys[9] => $this->getDelIndex(),
+            $keys[1] => $this->getDelIndex(),
+            $keys[2] => $this->getUsrUid(),
+            $keys[3] => $this->getTasUid(),
+            $keys[4] => $this->getProUid(),
+            $keys[5] => $this->getAppNumber(),
+            $keys[6] => $this->getAppTitle(),
+            $keys[7] => $this->getAppProTitle(),
+            $keys[8] => $this->getAppTasTitle(),
+            $keys[9] => $this->getAppCanceledDate(),
             $keys[10] => $this->getDelPreviousUsrUid(),
             $keys[11] => $this->getDelCurrentUsrUsername(),
             $keys[12] => $this->getDelCurrentUsrFirstname(),
@@ -1379,31 +1379,31 @@ abstract class BaseListCanceled extends BaseObject implements Persistent
                 $this->setAppUid($value);
                 break;
             case 1:
-                $this->setUsrUid($value);
+                $this->setDelIndex($value);
                 break;
             case 2:
-                $this->setTasUid($value);
+                $this->setUsrUid($value);
                 break;
             case 3:
-                $this->setProUid($value);
+                $this->setTasUid($value);
                 break;
             case 4:
-                $this->setAppNumber($value);
+                $this->setProUid($value);
                 break;
             case 5:
-                $this->setAppTitle($value);
+                $this->setAppNumber($value);
                 break;
             case 6:
-                $this->setAppProTitle($value);
+                $this->setAppTitle($value);
                 break;
             case 7:
-                $this->setAppTasTitle($value);
+                $this->setAppProTitle($value);
                 break;
             case 8:
-                $this->setAppCanceledDate($value);
+                $this->setAppTasTitle($value);
                 break;
             case 9:
-                $this->setDelIndex($value);
+                $this->setAppCanceledDate($value);
                 break;
             case 10:
                 $this->setDelPreviousUsrUid($value);
@@ -1466,39 +1466,39 @@ abstract class BaseListCanceled extends BaseObject implements Persistent
         }
 
         if (array_key_exists($keys[1], $arr)) {
-            $this->setUsrUid($arr[$keys[1]]);
+            $this->setDelIndex($arr[$keys[1]]);
         }
 
         if (array_key_exists($keys[2], $arr)) {
-            $this->setTasUid($arr[$keys[2]]);
+            $this->setUsrUid($arr[$keys[2]]);
         }
 
         if (array_key_exists($keys[3], $arr)) {
-            $this->setProUid($arr[$keys[3]]);
+            $this->setTasUid($arr[$keys[3]]);
         }
 
         if (array_key_exists($keys[4], $arr)) {
-            $this->setAppNumber($arr[$keys[4]]);
+            $this->setProUid($arr[$keys[4]]);
         }
 
         if (array_key_exists($keys[5], $arr)) {
-            $this->setAppTitle($arr[$keys[5]]);
+            $this->setAppNumber($arr[$keys[5]]);
         }
 
         if (array_key_exists($keys[6], $arr)) {
-            $this->setAppProTitle($arr[$keys[6]]);
+            $this->setAppTitle($arr[$keys[6]]);
         }
 
         if (array_key_exists($keys[7], $arr)) {
-            $this->setAppTasTitle($arr[$keys[7]]);
+            $this->setAppProTitle($arr[$keys[7]]);
         }
 
         if (array_key_exists($keys[8], $arr)) {
-            $this->setAppCanceledDate($arr[$keys[8]]);
+            $this->setAppTasTitle($arr[$keys[8]]);
         }
 
         if (array_key_exists($keys[9], $arr)) {
-            $this->setDelIndex($arr[$keys[9]]);
+            $this->setAppCanceledDate($arr[$keys[9]]);
         }
 
         if (array_key_exists($keys[10], $arr)) {
@@ -1560,6 +1560,10 @@ abstract class BaseListCanceled extends BaseObject implements Persistent
             $criteria->add(ListCanceledPeer::APP_UID, $this->app_uid);
         }
 
+        if ($this->isColumnModified(ListCanceledPeer::DEL_INDEX)) {
+            $criteria->add(ListCanceledPeer::DEL_INDEX, $this->del_index);
+        }
+
         if ($this->isColumnModified(ListCanceledPeer::USR_UID)) {
             $criteria->add(ListCanceledPeer::USR_UID, $this->usr_uid);
         }
@@ -1590,10 +1594,6 @@ abstract class BaseListCanceled extends BaseObject implements Persistent
 
         if ($this->isColumnModified(ListCanceledPeer::APP_CANCELED_DATE)) {
             $criteria->add(ListCanceledPeer::APP_CANCELED_DATE, $this->app_canceled_date);
-        }
-
-        if ($this->isColumnModified(ListCanceledPeer::DEL_INDEX)) {
-            $criteria->add(ListCanceledPeer::DEL_INDEX, $this->del_index);
         }
 
         if ($this->isColumnModified(ListCanceledPeer::DEL_PREVIOUS_USR_UID)) {
@@ -1657,28 +1657,40 @@ abstract class BaseListCanceled extends BaseObject implements Persistent
         $criteria = new Criteria(ListCanceledPeer::DATABASE_NAME);
 
         $criteria->add(ListCanceledPeer::APP_UID, $this->app_uid);
+        $criteria->add(ListCanceledPeer::DEL_INDEX, $this->del_index);
 
         return $criteria;
     }
 
     /**
-     * Returns the primary key for this object (row).
-     * @return     string
+     * Returns the composite primary key for this object.
+     * The array elements will be in same order as specified in XML.
+     * @return     array
      */
     public function getPrimaryKey()
     {
-        return $this->getAppUid();
+        $pks = array();
+
+        $pks[0] = $this->getAppUid();
+
+        $pks[1] = $this->getDelIndex();
+
+        return $pks;
     }
 
     /**
-     * Generic method to set the primary key (app_uid column).
+     * Set the [composite] primary key.
      *
-     * @param      string $key Primary key.
+     * @param      array $keys The elements of the composite key (order must match the order in XML file).
      * @return     void
      */
-    public function setPrimaryKey($key)
+    public function setPrimaryKey($keys)
     {
-        $this->setAppUid($key);
+
+        $this->setAppUid($keys[0]);
+
+        $this->setDelIndex($keys[1]);
+
     }
 
     /**
@@ -1710,8 +1722,6 @@ abstract class BaseListCanceled extends BaseObject implements Persistent
 
         $copyObj->setAppCanceledDate($this->app_canceled_date);
 
-        $copyObj->setDelIndex($this->del_index);
-
         $copyObj->setDelPreviousUsrUid($this->del_previous_usr_uid);
 
         $copyObj->setDelCurrentUsrUsername($this->del_current_usr_username);
@@ -1738,6 +1748,8 @@ abstract class BaseListCanceled extends BaseObject implements Persistent
         $copyObj->setNew(true);
 
         $copyObj->setAppUid(''); // this is a pkey column, so set to default value
+
+        $copyObj->setDelIndex('0'); // this is a pkey column, so set to default value
 
     }
 

@@ -1,12 +1,18 @@
 <?php
 
 namespace ProcessMaker\Core;
+
 use Configurations;
 use DomDocument;
 use Exception;
+use Faker;
 use G;
 use GzipFile;
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\DB;
 use InputFilter;
+use InstallerModule;
+use Net;
 use schema;
 use WorkspaceTools;
 
@@ -54,7 +60,13 @@ class System
         'load_headers_ie' => 0,
         'redirect_to_mobile' => 0,
         'disable_php_upload_execution' => 0,
-        'disable_download_documents_session_validation' => 0
+        'disable_download_documents_session_validation' => 0,
+        'logs_max_files' => 60,
+        'logs_location' => '',
+        'logging_level' => 'INFO',
+        'smtp_timeout' => 20,
+        'google_map_api_key' => '',
+        'google_map_signature' => ''
     );
 
     /**
@@ -66,7 +78,7 @@ class System
      */
     public static function getPlugins()
     {
-        $plugins = array();
+        $plugins = [];
 
         foreach (glob(PATH_PLUGINS . "*") as $filename) {
             $info = pathinfo($filename);
@@ -90,7 +102,7 @@ class System
     public static function listWorkspaces()
     {
         $oDirectory = dir(PATH_DB);
-        $aWorkspaces = array();
+        $aWorkspaces = [];
         foreach (glob(PATH_DB . "*") as $filename) {
             if (is_dir($filename) && file_exists($filename . "/db.php")) {
                 $aWorkspaces[] = new WorkspaceTools(basename($filename));
@@ -150,7 +162,7 @@ class System
      */
     public static function getSysInfo()
     {
-        $ipe = isset($_SERVER['SSH_CONNECTION']) ? explode(" ", $_SERVER['SSH_CONNECTION']) : array();
+        $ipe = isset($_SERVER['SSH_CONNECTION']) ? explode(" ", $_SERVER['SSH_CONNECTION']) : [];
 
         if (getenv('HTTP_CLIENT_IP')) {
             $ip = getenv('HTTP_CLIENT_IP');
@@ -194,7 +206,7 @@ class System
         */
         $distro = trim($distro, "\"") . " (" . PHP_OS . ")";
 
-        $Fields = array();
+        $Fields = [];
         $Fields['SYSTEM'] = $distro;
         $Fields['PHP'] = phpversion();
         $Fields['PM_VERSION'] = self::getVersion();
@@ -397,9 +409,9 @@ class System
         fwrite($fp, "");
         fclose($fp);
 
-        $aEnvironmentsUpdated = array();
-        $aEnvironmentsDiff = array();
-        $aErrors = array();
+        $aEnvironmentsUpdated = [];
+        $aEnvironmentsDiff = [];
+        $aErrors = [];
 
         //now will verify each folder and file has permissions to write and add files.
         if ($this->sUpgradeFileList != '') {
@@ -557,13 +569,13 @@ class System
         $oDirectory = dir(PATH_DB);
 
         //count db.php files ( workspaces )
-        $aWorkspaces = array();
+        $aWorkspaces = [];
         while (($sObject = $oDirectory->read())) {
             if (is_dir(PATH_DB . $sObject) && substr($sObject, 0, 1) != '.' && file_exists(PATH_DB . $sObject . PATH_SEP . 'db.php')) {
                 $aWorkspaces[] = $sObject;
             }
         }
-        $aUpgradeData = array();
+        $aUpgradeData = [];
         $aUpgradeData['workspaces'] = $aWorkspaces;
         $aUpgradeData['wsQuantity'] = count($aWorkspaces);
         $aUpgradeData['sPoFile'] = $sPoFile;
@@ -732,19 +744,28 @@ class System
     public static function getSchema($sSchemaFile)
     {
         /* This is the MySQL mapping that Propel uses (from MysqlPlatform.php) */
-        $mysqlTypes = array('NUMERIC' => "DECIMAL", 'LONGVARCHAR' => "MEDIUMTEXT", 'TIMESTAMP' => "DATETIME", 'BU_TIMESTAMP' => "DATETIME", 'BINARY' => "BLOB", 'VARBINARY' => "MEDIUMBLOB", 'LONGVARBINARY' => "LONGBLOB", 'BLOB' => "LONGBLOB", 'CLOB' => "LONGTEXT",
+        $mysqlTypes = [
+            'NUMERIC' => 'DECIMAL',
+            'LONGVARCHAR' => 'MEDIUMTEXT',
+            'TIMESTAMP' => 'DATETIME',
+            'BU_TIMESTAMP' => 'DATETIME',
+            'BINARY' => 'BLOB',
+            'VARBINARY' => 'MEDIUMBLOB',
+            'LONGVARBINARY' => 'LONGBLOB',
+            'BLOB' => 'LONGBLOB',
+            'CLOB' => 'LONGTEXT',
             /* This is not from Propel, but is required to get INT right */
-            'INTEGER' => "INT"
-        );
+            'INTEGER' => 'INT'
+        ];
 
-        $aSchema = array();
+        $aSchema = [];
         $oXml = new DomDocument();
         $oXml->load($sSchemaFile);
         $aTables = $oXml->getElementsByTagName('table');
         foreach ($aTables as $oTable) {
-            $aPrimaryKeys = array();
+            $aPrimaryKeys = [];
             $sTableName = $oTable->getAttribute('name');
-            $aSchema[$sTableName] = array();
+            $aSchema[$sTableName] = [];
             $aColumns = $oTable->getElementsByTagName('column');
             foreach ($aColumns as $oColumn) {
                 $sColumName = $oColumn->getAttribute('name');
@@ -801,7 +822,7 @@ class System
             }
             $aIndexes = $oTable->getElementsByTagName('index');
             foreach ($aIndexes as $oIndex) {
-                $aIndex = array();
+                $aIndex = [];
                 $aIndexesColumns = $oIndex->getElementsByTagName('index-column');
                 foreach ($aIndexesColumns as $oIndexColumn) {
                     $aIndex[] = $oIndexColumn->getAttribute('name');
@@ -820,7 +841,7 @@ class System
      */
     public static function verifyRbacSchema($aOldSchema)
     {
-        $aChanges = array();
+        $aChanges = [];
 
         foreach ($aOldSchema as $sTableName => $aColumns) {
             if (substr($sTableName, 0, 4) != 'RBAC') {
@@ -936,13 +957,13 @@ class System
                     foreach ($aNewSchema[$sTableName]['INDEXES'] as $indexName => $indexFields) {
                         if (!isset($aOldSchema[$sTableName]['INDEXES'][$indexName])) {
                             if (!isset($aChanges['tablesWithNewIndex'][$sTableName])) {
-                                $aChanges['tablesWithNewIndex'][$sTableName] = array();
+                                $aChanges['tablesWithNewIndex'][$sTableName] = [];
                             }
                             $aChanges['tablesWithNewIndex'][$sTableName][$indexName] = $indexFields;
                         } else {
                             if ($aOldSchema[$sTableName]['INDEXES'][$indexName] != $indexFields) {
                                 if (!isset($aChanges['tablesToAlterIndex'][$sTableName])) {
-                                    $aChanges['tablesToAlterIndex'][$sTableName] = array();
+                                    $aChanges['tablesToAlterIndex'][$sTableName] = [];
                                 }
                                 $aChanges['tablesToAlterIndex'][$sTableName][$indexName] = $indexFields;
                             }
@@ -1007,11 +1028,11 @@ class System
         }
 
         //Get Skin Config files
-        $skinListArray = array();
+        $skinListArray = [];
         $customSkins = glob(PATH_CUSTOM_SKINS . "*/config.xml");
 
         if (!is_array($customSkins)) {
-            $customSkins = array();
+            $customSkins = [];
         }
 
         // getting al base skins
@@ -1045,7 +1066,7 @@ class System
 
             if (isset($xmlConfigurationObj->result['skinConfiguration'])) {
                 $skinInformationArray = $skinFilesArray = $xmlConfigurationObj->result['skinConfiguration']['__CONTENT__']['information']['__CONTENT__'];
-                $res = array();
+                $res = [];
                 $res['SKIN_FOLDER_ID'] = strtolower($folderId);
 
                 foreach ($skinInformationArray as $keyInfo => $infoValue) {
@@ -1115,18 +1136,26 @@ class System
         }
 
         if (empty($wsIniFile)) {
+
             if (defined('PATH_DB')) {
                 // if we're on a valid workspace env.
                 if (empty($wsName)) {
-                    $uriParts = explode('/', getenv("REQUEST_URI"));
-
-                    if (isset($uriParts[1])) {
-                        if (substr($uriParts[1], 0, 3) == 'sys') {
-                            $wsName = substr($uriParts[1], 3);
+                    try {
+                        if (function_exists('config')) {
+                            $wsName = config("system.workspace");
+                        }
+                    } catch (Exception $exception) {
+                        $wsName = '';
+                    }
+                    if (empty($wsName)) {
+                        $uriParts = explode('/', getenv("REQUEST_URI"));
+                        if (isset($uriParts[1])) {
+                            if (substr($uriParts[1], 0, 3) === 'sys') {
+                                $wsName = substr($uriParts[1], 3);
+                            }
                         }
                     }
                 }
-
                 $wsIniFile = PATH_DB . $wsName . PATH_SEP . 'env.ini';
             }
         }
@@ -1157,8 +1186,7 @@ class System
         self::$debug = $config['debug'];
 
         if ($config['proxy_pass'] != '') {
-            $G = new G();
-            $config['proxy_pass'] = $G->decrypt($config['proxy_pass'], 'proxy_pass');
+            $config['proxy_pass'] = G::decrypt($config['proxy_pass'], 'proxy_pass');
         }
 
         return $config;
@@ -1172,7 +1200,7 @@ class System
      */
     public static function getQueryBlackList($globalIniFile = '')
     {
-        $config = array();
+        $config = [];
         if (empty($globalIniFile)) {
             $blackListIniFile = PATH_CONFIG . 'execute-query-blacklist.ini';
             $sysTablesIniFile = PATH_CONFIG . 'system-tables.ini';
@@ -1195,7 +1223,7 @@ class System
      * @return string $result
      * @throws Exception
      */
-    public function updateIndexFile($conf)
+    public static function updateIndexFile($conf)
     {
         if (!file_exists(PATH_HTML . 'index.html')) {
             throw new Exception('The public index file "' . PATH_HTML . 'index.html" does not exist!');
@@ -1320,6 +1348,180 @@ class System
         }
 
         return $serverVersion;
+    }
+
+    /**
+     * Generate user name for test
+     *
+     * @param int $length
+     * @return string
+     */
+    public static function generateUserName($length = 10)
+    {
+        $userName = 'PM_';
+        for ($i = 0; $i < $length - 3; $i++) {
+            $userName .= ($i % 3) === 0 ? '?' : '#';
+        }
+        $faker = Faker\Factory::create();
+        return $faker->bothify($userName);
+    }
+
+    /**
+     * Check permission the user in db
+     *
+     * @param string $adapter
+     * @param string $serverName
+     * @param int $port
+     * @param string $userName
+     * @param string $pass
+     * @param string $dbName
+     *
+     * @return array
+     */
+    public static function checkPermissionsDbUser($adapter = 'mysql', $serverName, $port = 3306, $userName, $pass, $dbName = '')
+    {
+        if (empty($port)) {
+            //setting defaults ports
+            switch ($adapter) {
+                case 'mysql':
+                    $port = 3306;
+                    break;
+                case 'pgsql':
+                    $port = 5432;
+                    break;
+                case 'mssql':
+                    $port = 1433;
+                    break;
+                case 'oracle':
+                    $port = 1521;
+                    break;
+            }
+        }
+
+        $filter = new InputFilter();
+        $serverName = $filter->validateInput($serverName);
+        $userName = $filter->validateInput($userName);
+
+        $serverNet = new Net($serverName);
+        if ($serverNet->getErrno() !== 0) {
+            return [false, $serverNet->error];
+        }
+        $serverNet->scannPort($port);
+        if ($serverNet->getErrno() !== 0) {
+            return [false, $serverNet->error];
+        }
+        $serverNet->loginDbServer($userName, $pass);
+        $serverNet->setDataBase('', $port);
+        if ($serverNet->getErrno() !== 0) {
+            return [false, $serverNet->error];
+        }
+
+        $response = $serverNet->tryConnectServer($adapter);
+        if (!empty($response) && $response->status !== 'SUCCESS' && $serverNet->getErrno() !== 0) {
+            return [false, $serverNet->error];
+        }
+
+        $message = '';
+        $success = false;
+
+        $userName = $filter->validateInput($userName, 'nosql');
+        try {
+            $connection = 'SYSTEM';
+            InstallerModule::setNewConnection($connection, $serverName, $userName, $pass, $dbName, $port);
+
+            //Test Create Database
+            $dbNameTest = 'PROCESSMAKERTESTDC';
+            $result = DB::connection($connection)->statement("CREATE DATABASE $dbNameTest");
+            if ($result) {
+                //Test set permissions user
+                $usrTest = self::generateUserName(strlen($userName));
+                $passTest = '!Sample123_';
+                $result = DB::connection($connection)->statement("GRANT ALL PRIVILEGES ON `$dbNameTest`.* TO $usrTest@'%%' IDENTIFIED BY '$passTest' WITH GRANT OPTION");
+
+                if ($result) {
+                    //Test Create user
+                    $userTestCreate = self::generateUserName(strlen($userName));
+                    $result = DB::connection($connection)->statement("CREATE USER '$userTestCreate'@'%%' IDENTIFIED BY '$passTest'");
+
+                    if ($result) {
+                        $success = true;
+                        $message = G::LoadTranslation('ID_SUCCESSFUL_CONNECTION');
+                    }
+
+                    DB::connection($connection)->statement("DROP USER '$userTestCreate'@'%%'");
+                    DB::connection($connection)->statement("DROP USER '$usrTest'@'%%'");
+                }
+                DB::connection($connection)->statement("DROP DATABASE $dbNameTest");
+            }
+        } catch (Exception $exception) {
+            $success = false;
+            $message = $exception->getMessage();
+        }
+
+        return [$success, !empty($message) ? $message : $serverNet->error];
+    }
+
+    /**
+     * Regenerate credentials paths installed
+     *
+     * @param string $host
+     * @param string $user
+     * @param string $pass
+     * @return bool
+     */
+    public static function regenerateCredentiaslPathInstalled($host, $user, $pass)
+    {
+        $hashOld = G::encryptOld(filemtime(PATH_GULLIVER . "/class.g.php"));
+        $hash = G::encrypt($host . $hashOld . $user . $hashOld . $pass . $hashOld . (1), $hashOld);
+        $insertStatements = "define ( 'HASH_INSTALLATION','{$hash}' );  \ndefine ( 'SYSTEM_HASH', '{$hashOld}' ); \n";
+        $content = '';
+        $filename = PATH_HOME . 'engine' . PATH_SEP . 'config' . PATH_SEP . 'paths_installed.php';
+        $lines = file($filename);
+
+        $count = 1;
+        foreach ($lines as $line_num => $line) {
+            $pos = strpos($line, 'define');
+            if ($pos !== false && $count < 3) {
+                $content .= $line;
+                $count++;
+            }
+        }
+        $content = "<?php \n" . $content . "\n" . $insertStatements . "\n";
+        return file_put_contents($filename, $content) !== false;
+    }
+    
+    /**
+     * Set Connection Configuration using "config" helper from "Laravel" with 
+     * the constants defined in file "db.php"
+     */
+    public static function setConnectionConfig(
+            $dbAdapter, 
+            $dbHost, 
+            $dbName, 
+            $dbUser, 
+            $dbPass, 
+            $dbRbacHost, 
+            $dbRbacName, 
+            $dbRbacUser, 
+            $dbRbacPass, 
+            $dbReportHost, 
+            $dbReportName, 
+            $dbReportUser, 
+            $dbReportPass)
+    {
+        config(['connections.driver' => $dbAdapter]);
+        config(['connections.workflow.host' => $dbHost]);
+        config(['connections.workflow.database' => $dbName]);
+        config(['connections.workflow.username' => $dbUser]);
+        config(['connections.workflow.password' => $dbPass]);
+        config(['connections.rbac.host' => $dbRbacHost]);
+        config(['connections.rbac.database' => $dbRbacName]);
+        config(['connections.rbac.username' => $dbRbacUser]);
+        config(['connections.rbac.password' => $dbRbacPass]);
+        config(['connections.report.host' => $dbReportHost]);
+        config(['connections.report.database' => $dbReportName]);
+        config(['connections.report.username' => $dbReportUser]);
+        config(['connections.report.password' => $dbReportPass]);
     }
 }
 // end System class

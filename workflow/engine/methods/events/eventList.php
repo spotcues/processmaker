@@ -56,7 +56,7 @@ $processes = getProcessArray($userUid);
 
 $G_PUBLISH = new Publisher();
 
-$oHeadPublisher = &headPublisher::getSingleton();
+$oHeadPublisher = headPublisher::getSingleton();
 $oHeadPublisher->addExtJsScript('events/eventList', false); //adding a javascript file .js
 $oHeadPublisher->addContent('events/eventList'); //adding a html file  .html.
 //sending the columns to display in grid
@@ -92,5 +92,4 @@ function getProcessArray($userUid)
     return $processes;
 }
 
-G::RenderPage( 'publish', 'extJs' );
-
+G::RenderPage('publish', 'extJs');

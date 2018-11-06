@@ -21,22 +21,14 @@ switch ($req) {
     case 'MessageList':
         $start = (isset($_REQUEST['start'])) ? $_REQUEST['start'] : '0';
         $limit = (isset($_REQUEST['limit'])) ? $_REQUEST['limit'] : '25';
-        $proUid = (isset($_REQUEST['process'])) ? $_REQUEST['process'] : '';
+        $proId = (isset($_REQUEST['process'])) ? $_REQUEST['process'] : '';
         $eventype = (isset($_REQUEST['type'])) ? $_REQUEST['type'] : '';
-        $emailStatus = (isset($_REQUEST['status'])) ? $_REQUEST['status'] : '';
+        $msgStatusId = (isset($_REQUEST['status'])) ? $_REQUEST['status'] : '';
         $sort = isset($_REQUEST['sort']) ? $_REQUEST['sort'] : '';
         $dir = isset($_REQUEST['dir']) ? $_REQUEST['dir'] : 'ASC';
         $dateFrom = isset($_POST["dateFrom"]) ? substr($_POST["dateFrom"], 0, 10) : "";
         $dateTo = isset($_POST["dateTo"]) ? substr($_POST["dateTo"], 0, 10) : "";
         $filterBy = (isset($_REQUEST['filterBy'])) ? $_REQUEST['filterBy'] : 'ALL';
-
-        //Review the External Registration
-        $arrayType = [];
-        $pluginRegistry = PluginRegistry::loadSingleton();
-        $flagEr = $pluginRegistry->isEnable('externalRegistration') ? 1 : 0;
-        if ($flagEr == 0) {
-            $arrayType[] = 'EXTERNAL_REGISTRATION';
-        }
 
         $criteria = new Criteria();
         $criteria->addSelectColumn(AppMessagePeer::APP_MSG_UID);
@@ -58,31 +50,33 @@ switch ($req) {
         $criteria->addSelectColumn(ProcessPeer::PRO_TITLE);
         $criteria->addSelectColumn(TaskPeer::TAS_TITLE);
         $criteria->addJoin(AppMessagePeer::APP_UID, ApplicationPeer::APP_UID, Criteria::LEFT_JOIN);
-        $criteria->addJoin(ApplicationPeer::PRO_UID, ProcessPeer::PRO_UID, Criteria::LEFT_JOIN);
         $criteria->addJoin(AppMessagePeer::TAS_ID, TaskPeer::TAS_ID, Criteria::LEFT_JOIN);
+        $criteria->addJoin(AppMessagePeer::PRO_ID, ProcessPeer::PRO_ID, Criteria::LEFT_JOIN);
 
-        //Status can be: All, Participated, Pending
-        if (!empty($emailStatus)) {
-            $criteria->add(AppMessagePeer::APP_MSG_STATUS, $emailStatus);
+        //Status can be: All, Participated, Pending, Failed
+        if (!empty($msgStatusId)) {
+            $criteria->add(AppMessagePeer::APP_MSG_STATUS_ID, $msgStatusId);
         }
         //Process uid
-        if (!empty($proUid)) {
-            $criteria->add(ApplicationPeer::PRO_UID, $proUid);
+        if (!empty($proId)) {
+            $criteria->add(AppMessagePeer::PRO_ID, $proId);
         }
         //Filter by can be: All, Cases, Test
         switch ($filterBy) {
-            case 'CASES':
-                $criteria->add(AppMessagePeer::APP_MSG_TYPE, ['TEST', 'EXTERNAL_REGISTRATION'], Criteria::NOT_IN);
+            case 'CASES': //TRIGGER and DERIVATION
+                $criteria->add(AppMessagePeer::APP_MSG_TYPE_ID, [AppMessage::TYPE_TRIGGER, AppMessage::TYPE_DERIVATION], Criteria::IN);
                 break;
             case 'TEST':
-                $criteria->add(AppMessagePeer::APP_MSG_TYPE, 'TEST', Criteria::EQUAL);
+                $criteria->add(AppMessagePeer::APP_MSG_TYPE_ID, AppMessage::TYPE_TEST, Criteria::EQUAL);
                 break;
             case 'EXTERNAL-REGISTRATION':
-                $criteria->add(AppMessagePeer::APP_MSG_TYPE, 'EXTERNAL_REGISTRATION', Criteria::EQUAL);
+                $criteria->add(AppMessagePeer::APP_MSG_TYPE_ID, AppMessage::TYPE_EXTERNAL_REGISTRATION, Criteria::EQUAL);
                 break;
             default:
-                if (!empty($arrayType)) {
-                    $criteria->add(AppMessagePeer::APP_MSG_TYPE, $arrayType, Criteria::NOT_IN);
+                //Review the External Registration
+                $pluginRegistry = PluginRegistry::loadSingleton();
+                if (!$pluginRegistry->isEnable('externalRegistration')) {
+                    $criteria->add(AppMessagePeer::APP_MSG_TYPE_ID, AppMessage::TYPE_EXTERNAL_REGISTRATION, Criteria::NOT_EQUAL);
                 }
                 break;
         }
@@ -158,9 +152,9 @@ switch ($req) {
         die(G::json_encode($response));
         break;
     case 'updateStatusMessage':
-        if (isset($_REQUEST['APP_MSG_UID']) && isset($_REQUEST['APP_MSG_STATUS'])) {
+        if (isset($_REQUEST['APP_MSG_UID']) && isset($_REQUEST['APP_MSG_STATUS_ID'])) {
             $message = new AppMessage();
-            $result = $message->updateStatus($_REQUEST['APP_MSG_UID'], $_REQUEST['APP_MSG_STATUS']);
+            $result = $message->updateStatus($_REQUEST['APP_MSG_UID'], $_REQUEST['APP_MSG_STATUS_ID']);
         }
         break;
 }

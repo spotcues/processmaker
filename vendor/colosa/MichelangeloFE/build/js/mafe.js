@@ -19459,12 +19459,13 @@ PMProject = function (options) {
     this.isClose = false;
     this.userSettings = null;
     this.definitions = null;
+    this.loadingProcess = false;
     this.dirtyElements = [
         {
             laneset: {},
             lanes: {},
             activities: {},
-            events: {},
+            events: {}, 
             gateways: {},
             flows: {},
             artifacts: {},
@@ -19495,6 +19496,7 @@ PMProject.prototype.init = function (options) {
         description: "",
         remoteProxy: null,
         localProxy: null,
+        readOnly: false,
         keys: {
             access_token: null,
             expires_in: null,
@@ -19522,7 +19524,8 @@ PMProject.prototype.init = function (options) {
     this.setKeysClient(defaults.keys)
         .setID(defaults.id)
         .setTokens(defaults.keys)
-        .setListeners(defaults.listeners);
+        .setListeners(defaults.listeners)   
+        .setReadOnly(defaults.readOnly);
     this.remoteProxy = new PMUI.proxy.RestProxy();
 };
 
@@ -19543,6 +19546,14 @@ PMProject.prototype.setXMLSupported = function (value) {
         this.XMLSupported = value;
     return this;
 };
+/**
+ * Sets the readOnly Mode
+ * @param {PMProject} value
+ */
+PMProject.prototype.setReadOnly = function(value) {
+  if (typeof value === "boolean") this.readOnly = value;
+  return this;
+};
 
 PMProject.prototype.setProjectName = function (name) {
     if (typeof name === "string") {
@@ -19556,6 +19567,17 @@ PMProject.prototype.setProjectName = function (name) {
 
     }
     return this;
+};
+/**
+ * Sets loading process
+ * @param settings
+ * @returns {PMProject}
+ */
+PMProject.prototype.setLoadingProcess = function(loading) {
+    if (typeof loading === "boolean") {
+        this.loadingProcess = loading;
+    }
+  return this;
 };
 /**
  * Sets the user settings to the local property
@@ -19624,7 +19646,7 @@ PMProject.prototype.buildCanvas = function (selectors, options) {
             selectors: selectors
         },
         container: "pmcanvas",
-        readOnly: prj_readonly === 'true' ? true : false,
+        readOnly: this.readOnly,
         hasClickEvent: true,
         copyAndPasteReferences: {
             PMEvent: PMEvent,
@@ -19699,7 +19721,7 @@ PMProject.prototype.loadProject = function (project) {
         canvas,
         sidebarCanvas = [];
     if (project) {
-        this.loadingProcess = true;
+        this.setLoadingProcess(true);
         this.setProjectId(project.prj_uid);
         this.setProjectName(project.prj_name);
         this.setDescription(project.prj_description);
@@ -19750,8 +19772,7 @@ PMProject.prototype.loadProject = function (project) {
                         canvas.setDefaultStartEvent();
                         PMDesigner.helper.startIntro();
                     }
-                    that.setDirty(false);
-                    that.loadingProcess = false;
+                    that.setLoadingProcess(false);
                     that.loaded = true;
                     that.setSaveButtonDisabled();
                     PMDesigner.modeReadOnly();
@@ -19770,7 +19791,6 @@ PMProject.prototype.loadProject = function (project) {
  */
 
 PMProject.prototype.importDiagram = function (data) {
-    this.isSave = true;
     PMDesigner.moddle.fromXML(data, function (err, definitions) {
         if (err) {
             PMDesigner.msgFlash('Import Error: '.translate() + err.message, document.body, 'error', 5000, 5);
@@ -19806,7 +19826,8 @@ PMProject.prototype.isDirty = function () {
 PMProject.prototype.save = function (options) {
     var keys = this.getKeysClient(),
         that = this;
-    if (this.isDirty()) {
+    if (!this.readOnly && this.isDirty()) {
+        that.isSave = true;
         $.ajax({
             url: that.remoteProxy.url,
             type: "PUT",
@@ -19818,7 +19839,6 @@ PMProject.prototype.save = function (options) {
             },
             success: function (data, textStatus, xhr) {
                 that.listeners.success(that, textStatus, data);
-
                 that.isSave = false;
             },
             error: function (xhr, textStatus, errorThrown) {
@@ -19847,7 +19867,6 @@ PMProject.prototype.save = function (options) {
                         },
                         error: function (xhr, textStatus, errorThrown) {
                             that.listeners.failure(that, textStatus, xhr);
-
                             that.isSave = false;
                         }
                     });
@@ -19861,29 +19880,12 @@ PMProject.prototype.save = function (options) {
     }
     return this;
 };
-PMProject.prototype.verifyAndSave = function () {
-    var i,
-        max,
-        canvas,
-        isDragging;
-    this.isSave = true;
-    this.isSave = true;
-    for (i = 0, max = this.diagrams.getSize(); i < max; i += 1) {
-        canvas = this.diagrams.get(i);
-        if (canvas.isDragging) {
-            isDragging = canvas.isDragging;
-            break;
-        }
-    }
-    if (!isDragging) {
-        this.save(true);
-    }
-    return this;
-};
+
 PMProject.prototype.saveClose = function (options) {
     var keys = this.getKeysClient(),
         that = this;
-    if (this.isDirty()) {
+    if (!this.readOnly && this.isDirty()) {
+        that.isSave = true;
         $.ajax({
             url: that.remoteProxy.url,
             type: 'PUT',
@@ -20071,11 +20073,11 @@ PMProject.prototype.addElement = function (element) {
             shape.createBpmn(shape.getBpmnElementType());
         }
     }
-    this.dirty = true;
-    //Call to Create callBack
-    this.listeners.create(this, element);
     if (!this.loadingProcess) {
+        this.setDirty(true);
         PMDesigner.connectValidator.bpmnValidator();
+        //Call to Create callBack
+        this.listeners.create(this, element);
     }
 };
 
@@ -20113,12 +20115,12 @@ PMProject.prototype.updateElement = function (updateElement) {
             }
         }
     }
-    this.dirty = true;
-    //Call to Update callBack
-    this.listeners.update(this, updateElement);
     //run the process validator only when the project has been loaded
     if(!this.loadingProcess){
+        this.setDirty(true);
         PMDesigner.connectValidator.bpmnValidator();
+        //Call to Update callBack
+        this.listeners.update(this, updateElement);
     }
 };
 
@@ -20170,10 +20172,10 @@ PMProject.prototype.removeElement = function (updateElement) {
         dirtyEmptyCounter = dirtyEmptyCounter && (this.dirtyElements[0].artifacts === emptyObject);
         dirtyEmptyCounter = dirtyEmptyCounter && (this.dirtyElements[0].flows === emptyObject);
         if (dirtyEmptyCounter) {
-            this.dirty = false;
+            this.setDirty(false);
         }
     }
-    this.dirty = true;
+    this.setDirty(true);
     //Call to Remove callBack
     this.listeners.remove(this, updateElement);
     PMDesigner.connectValidator.bpmnValidator();
@@ -20912,7 +20914,9 @@ PMCanvas.prototype.onSelectElementHandler = function (element) {
 };
 
 PMCanvas.prototype.defineEvents = function () {
-    return PMUI.draw.Canvas.prototype.defineEvents.call(this);
+    if (!this.readOnly) {
+        return PMUI.draw.Canvas.prototype.defineEvents.call(this);
+    }
 };
 PMCanvas.prototype.getContextMenu = function () {
     return {};
@@ -21184,23 +21188,24 @@ PMCanvas.prototype.triggerPortChangeEvent = function (port) {
  * @chainable
  */
 PMCanvas.prototype.attachListeners = function () {
+    var $canvas,
+        $canvasContainer;
     if (this.attachedListeners === false) {
-        var $canvas = $(this.html).click(this.onClick(this)),
-            $canvasContainer = $canvas.parent();
-        $canvas.dblclick(this.onDblClick(this));
-        $canvas.mousedown(this.onMouseDown(this));
-        $canvasContainer.scroll(this.onScroll(this, $canvasContainer));
+        $canvas = $(this.html);
         if (!this.readOnly) {
+            $canvas.click(this.onClick(this)),
+            $canvasContainer = $canvas.parent();
+            $canvas.dblclick(this.onDblClick(this));
+            $canvas.mousedown(this.onMouseDown(this));
+            $canvasContainer.scroll(this.onScroll(this, $canvasContainer));
             $canvas.mousemove(this.onMouseMove(this));
             $canvas.mouseup(this.onMouseUp(this));
-            //$canvas.mouseup(this.onMouseLeave(this));
+            $canvas.on("rightclick", this.onRightClick(this));
         }
-
         $canvas.on("createelement", this.onCreateElement(this));
         $canvas.on("removeelement", this.onRemoveElement(this));
         $canvas.on("changeelement", this.onChangeElement(this));
         $canvas.on("selectelement", this.onSelectElement(this));
-        $canvas.on("rightclick", this.onRightClick(this));
         $canvas.on("contextmenu", function (e) {
             e.preventDefault();
         });
@@ -23399,6 +23404,9 @@ PMEvent.prototype.beforeContextMenu = function () {
         menuItem,
         hasMarker = false;
     this.canvas.hideAllCoronas();
+    if (this.canvas.readOnly) {
+      return;
+    }
     switch (this.getEventType()) {
         case 'END':
             items = this.menu.items.find('id', 'result').childMenu.items;
@@ -24664,6 +24672,9 @@ PMActivity.prototype.beforeContextMenu = function () {
         menuItem,
         hasMarker = false;
     this.canvas.hideAllCoronas();
+    if (this.canvas.readOnly) {
+        return;
+    }
     if (this.getActivityType() === 'TASK') {
         items = this.menu.items.find('id', 'taskType').childMenu.items;
         for (i = 0; i < items.getSize(); i += 1) {
@@ -25151,6 +25162,9 @@ PMGateway.prototype.beforeContextMenu = function () {
     var i, port, connection, shape, defaultflowItems = [], items, item, name,
         target, menuItem, hasMarker;
     this.canvas.hideAllCoronas();
+    if (this.canvas.readOnly) {
+        return;
+    }
     items = this.menu.items.find('id', 'gatewaytype').childMenu.items;
     for (i = 0; i < items.getSize(); i += 1) {
         menuItem = items.get(i);
@@ -30405,6 +30419,9 @@ PMData.prototype.beforeContextMenu = function () {
         menuItem,
         hasMarker = false;
     this.canvas.hideAllCoronas();
+    if (this.canvas.readOnly) {
+      return;
+    }
     if (this.getDataType() === 'DATAOBJECT' || this.getDataType() === 'DATAOUTPUT' || this.getDataType() === 'DATAINPUT') {
         items = this.menu.items.find('id', 'dataType').childMenu.items;
         for (i = 0; i < items.getSize(); i += 1) {
@@ -38524,10 +38541,7 @@ FormDesigner.leftPad = function (string, length, fill) {
         var listControls = new FormDesigner.main.ListControls();
         var listMobileControls = new FormDesigner.main.ListMobileControls();
         var listProperties = new FormDesigner.main.ListProperties();
-        var listHistory = new FormDesigner.main.ListHistory(this.dynaform);
         this.form1 = new FormDesigner.main.Form();
-        //this.form2 = new FormDesigner.main.Form();
-        //
         this.title = $("<div style='float:left;font-family:Montserrat,sans-serif;font-size:20px;color:white;margin:5px;white-space:nowrap;'>Titulo</div>");
         this.areaButtons = new FormDesigner.main.AreaButtons();
         this.areaToolBox = new FormDesigner.main.AreaToolBox();
@@ -38535,38 +38549,14 @@ FormDesigner.leftPad = function (string, length, fill) {
         if (window.distribution === "1")
             this.areaToolBox.addItem("Mobile controls".translate(), listMobileControls);
         this.areaToolBox.addItem("Properties".translate(), listProperties);
-        this.areaToolBox.addItem("History of use".translate(), listHistory);
         this.areaTabs = new FormDesigner.main.TabsForm();
         this.areaTabs.addItem("Master", this.form1);
-        //this.areaTabs.addItem("Subform", form2);
         this.north.append(this.title);
         this.north.append(this.areaButtons.body);
         this.west.append(this.areaToolBox.body);
         this.center.append(this.areaTabs.body);
         //events
         var confirmRecovery = false;
-        listHistory.onSelect = function (dynaform, history) {
-            if (dynaform === null) {
-                new FormDesigner.main.DialogMessage(null, "alert", "This content is empty.".translate());
-                return;
-            }
-            var a = new FormDesigner.main.DialogConfirm(null, "warning", "Do you want to import? All your changes will be lost if you import it.".translate());
-            a.onAccept = function () {
-                listProperties.clear();
-                $.recovered.data = [];
-                that.form1.recovery = history.current === false ? true : false;
-                that.form1.setData({
-                    dyn_content: JSON.stringify(dynaform),
-                    dyn_description: dynaform.items[0].description,
-                    dyn_title: dynaform.items[0].name,
-                    dyn_type: "xmlform",
-                    dyn_uid: dynaform.items[0].id,
-                    dyn_version: 2,
-                    history_date: history.history_date
-                });
-                that.form1.recovery = false;
-            };
-        };
         this.areaButtons.save[0].onclick = function () {
             //save lost dynaforms
             if ($.recovered.data.length > 0) {
@@ -38620,8 +38610,6 @@ FormDesigner.leftPad = function (string, length, fill) {
                             dyn_version: 2
                         };
                         that.form1.setData(dynaform);
-                        listHistory.setDynaform(dynaform);
-                        listHistory.reload();
                     },
                     error: function (responses) {
                     }
@@ -38662,8 +38650,6 @@ FormDesigner.leftPad = function (string, length, fill) {
                 typeRequest: 'update',
                 data: that.dynaform,
                 functionSuccess: function (xhr, response) {
-                    listHistory.setDynaform(that.dynaform);
-                    listHistory.reload();
                     that.form1.setDirty();
                     that.onSave();
                 },
@@ -39163,6 +39149,7 @@ FormDesigner.leftPad = function (string, length, fill) {
     };
     FormDesigner.extendNamespace('FormDesigner.main.Designer', Designer);
 }());
+
 (function () {
     var DialogDynaforms = function (appendTo, uidParentDynaform) {
         this.onClose = new Function();
@@ -43317,128 +43304,6 @@ FormDesigner.leftPad = function (string, length, fill) {
     FormDesigner.extendNamespace('FormDesigner.main.DialogMessage', DialogMessage);
 }());
 (function () {
-    var ListHistory = function (dynaform) {
-        this.dynaform = dynaform;
-        this.onSelect = new Function();
-        ListHistory.prototype.init.call(this);
-    };
-    ListHistory.prototype.init = function () {
-        var that = this;
-        that.filter = "";
-        that.start = 0;
-        that.limit = 10;
-        this.count = 0;
-        this.input = $("<input type='text' style='vertical-align:top;'/>");
-        this.input.on("change", function () {
-            that.filter = this.value;
-        });
-        this.input.on("keyup", function (e) {
-            if (e.keyCode === 13) {
-                that.start = 0;
-                that.load(that.filter, that.start, that.limit);
-            }
-        });
-        this.button = $("<img src='" + $.imgUrl + "fd-magnifier.png' style='margin-left:5px;cursor:pointer;'/>");
-        this.button.on("click", function () {
-            that.start = 0;
-            that.load(that.filter, that.start, that.limit);
-        });
-        this.back = $("<img src='" + $.imgUrl + "fd-arrow-left.png' style='margin-left:5px;cursor:pointer;'/>");
-        this.back.on("click", function () {
-            if (that.start <= 0) {
-                return;
-            }
-            that.start = that.start - that.limit;
-            that.load(that.filter, that.start, that.limit);
-        });
-        this.next = $("<img src='" + $.imgUrl + "fd-arrow-right.png' style='margin-left:5px;cursor:pointer;'/>");
-        this.next.on("click", function () {
-            if (that.count < that.limit) {
-                return;
-            }
-            that.start = that.start + that.limit;
-            that.load(that.filter, that.start, that.limit);
-        });
-
-        this.tool = $("<div style='padding:5px;'></div>");
-        this.tool.append(this.input);
-        this.tool.append(this.button);
-        this.tool.append(this.back);
-        this.tool.append(this.next);
-
-        this.list = $("<div></div>");
-
-        this.body = $("<div></div>");
-        this.body.append(this.tool);
-        this.body.append(this.list);
-    };
-    ListHistory.prototype.load = function (string, start, limit) {
-        var that = this, d = new Date(), date;
-        date = d.getFullYear() + "-" + $.rPadDT((d.getMonth() + 1)) + "-" + $.rPadDT(d.getDate()) + " " + $.rPadDT(d.getHours()) + ":" + $.rPadDT(d.getMinutes()) + ":" + $.rPadDT(d.getSeconds());
-        that.clear();
-        that.list.append(that.addItem({
-            history_date: date + " " + "Current form.".translate(),
-            dyn_content_history: that.dynaform.dyn_content,
-            current: true
-        }));
-        that.list.append(that.addItem({
-            history_date: (this.dynaform.dyn_update_date !== "" ? this.dynaform.dyn_update_date : date),
-            dyn_content_history: that.dynaform.dyn_content,
-            current: false
-        }));
-        $.ajax({
-            async: true,
-            url: HTTP_SERVER_HOSTNAME + "/api/1.0/" + WORKSPACE + "/project/" + PMDesigner.project.id + "/dynaform/" + that.dynaform.dyn_uid + "/history",
-            method: "POST",
-            contentType: "application/json",
-            data: JSON.stringify({
-                filter: string,
-                start: start,
-                limit: limit
-            }),
-            beforeSend: function (xhr) {
-                xhr.setRequestHeader("Authorization", "Bearer " + PMDesigner.project.keys.access_token);
-            },
-            success: function (data) {
-                that.count = data.length;
-                for (var i = 0; i < data.length; i++) {
-                    data[i].current = false;
-                    that.list.append(that.addItem(data[i]));
-                }
-            }
-        });
-    };
-    ListHistory.prototype.addItem = function (history) {
-        var that = this;
-        var json = null;
-        var msg = "";
-        try {
-            json = JSON.parse(history.dyn_content_history);
-        } catch (e) {
-            msg = "Empty.".translate();
-        }
-        var item = $("<div style='' class='fd-list'>" +
-            "<div style='display:inline-block;'>" + history.history_date + " " + msg + "</div>" +
-            "</div>");
-        item.on("click", function () {
-            that.onSelect(json, history);
-        });
-        return item;
-    };
-    ListHistory.prototype.clear = function () {
-        this.count = 0;
-        this.list.find(">div").remove();
-    };
-    ListHistory.prototype.setDynaform = function (dynaform) {
-        this.dynaform = dynaform;
-    };
-    ListHistory.prototype.reload = function () {
-        var that = this;
-        that.load(that.filter, that.start, that.limit);
-    };
-    FormDesigner.extendNamespace('FormDesigner.main.ListHistory', ListHistory);
-}());
-(function () {
     var DialogConfirm = function (appendTo, type, message) {
         this.type = type;
         this.message = message;
@@ -44087,6 +43952,11 @@ var Corona = function (options) {
      * @type {PMUI.util.ArrayList}
      */
     this.itemsCrown = new PMUI.util.ArrayList();
+    /**
+     * Event OnMouseOut
+     * @type {null}
+     */
+    this.eventOnMouseOut = null;
     this.init(options);
 };
 /**
@@ -44409,6 +44279,7 @@ Corona.prototype.isDirtyParentType = function () {
     }
     return isDirty;
 };
+
 /**
  * Item Crown Class
  * @param options
@@ -44459,6 +44330,21 @@ var ItemCrown = function (options) {
      * @type {null}
      */
     this.eventOnMouseDown = null;
+    /**
+     * Event OnMouseUp
+     * @type {null}
+     */
+    this.eventOnMouseUp = null;
+    /**
+     * Event OnMouseMove
+     * @type {null}
+     */
+    this.eventOnMouseMove = null;
+    /**
+     * Event OnMouseOut
+     * @type {null}
+     */
+    this.eventOnMouseOut = null;
     this.init(options);
 };
 /**
@@ -44484,6 +44370,9 @@ ItemCrown.prototype.init = function (options) {
         this.setClassName(options.className);
         this.setEventOnClick(options.eventOnClick);
         this.setEventOnMouseDown(options.eventOnMouseDown);
+        this.setEventOnMouseUp(options.eventOnMouseUp);
+        this.setEventOnMouseMove(options.eventOnMouseMove);
+        this.setEventOnMouseOut(options.eventOnMouseOut);
     }
     return this;
 };
@@ -44632,6 +44521,39 @@ ItemCrown.prototype.setEventOnMouseDown = function (func) {
     return this;
 };
 /**
+ * Set Function EventOnMouseUp
+ * @param func
+ * @returns {ItemCrown}
+ */
+ItemCrown.prototype.setEventOnMouseUp = function (func) {
+    if (func && typeof func === "function") {
+        this.eventOnMouseUp = func;
+    }
+    return this;
+};
+/**
+ * Set Function EventOnMouseMove
+ * @param func
+ * @returns {ItemCrown}
+ */
+ItemCrown.prototype.setEventOnMouseMove = function (func) {
+    if (func && typeof func === "function") {
+        this.eventOnMouseMove = func;
+    }
+    return this;
+};
+/**
+ * Set Function EventOnMouseOut
+ * @param func
+ * @returns {ItemCrown}
+ */
+ItemCrown.prototype.setEventOnMouseOut = function (func) {
+    if (func && typeof func === "function") {
+        this.eventOnMouseOut = func;
+    }
+    return this;
+};
+/**
  * Create HTML Item Crown
  * @returns {*}
  */
@@ -44660,6 +44582,8 @@ ItemCrown.prototype.attachListeners = function () {
         jQuery(htmlItemCrown).click(this.onClick());
         jQuery(htmlItemCrown).mousedown(this.onMouseDown());
         jQuery(htmlItemCrown).mouseup(this.onMouseUp());
+        jQuery(htmlItemCrown).mousemove(this.onMouseMove());
+        jQuery(htmlItemCrown).mouseout(this.onMouseOut());
     }
     this.html = htmlItemCrown;
     return this;
@@ -44697,9 +44621,41 @@ ItemCrown.prototype.onMouseDown = function () {
  * @returns {Function}
  */
 ItemCrown.prototype.onMouseUp = function () {
+    var that = this;
     return function (e) {
         e.stopPropagation();
         e.preventDefault();
+        if (that.eventOnMouseUp) {
+            that.eventOnMouseUp(that);
+        }
+    };
+};
+/**
+ * OnMouseMove Event
+ * @returns {Function}
+ */
+ItemCrown.prototype.onMouseMove = function () {
+    var that = this;
+    return function (e) {
+        e.stopPropagation();
+        e.preventDefault();
+        if (that.eventOnMouseMove) {
+            that.eventOnMouseMove(that);
+        }
+    };
+};
+/**
+ * OnMouseOut Event
+ * @returns {Function}
+ */
+ItemCrown.prototype.onMouseOut = function () {
+    var that = this;
+    return function (e) {
+        e.stopPropagation();
+        e.preventDefault();
+        if (that.eventOnMouseOut) {
+            that.eventOnMouseOut(that);
+        }
     };
 };
 

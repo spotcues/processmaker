@@ -23,7 +23,7 @@ class XmlFormFieldTextareaPm extends XmlFormField
      * @param eter string owner
      * @return string
      */
-    public function render($value = null, $owner)
+    public function render($value = null, $owner = null)
     {
         if ($this->showVars == 1) {
             $this->process = G::replaceDataField($this->process, $owner->values);
@@ -53,8 +53,11 @@ class XmlFormFieldTextareaPm extends XmlFormField
      * @param eter string owner
      * @return string
      */
-    public function renderGrid($owner, $values = null)
+    public function renderGrid($owner = null, $values = null, $onlyValue = false, $therow = -1)
     {
+        if ($values === null) {
+            $values = [];
+        }
         $result = array();
         $r = 1;
         foreach ($values as $v) {

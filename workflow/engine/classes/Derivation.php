@@ -1043,7 +1043,8 @@ class Derivation
                                 $taskNextDel,
                                 $iNewDelIndex,
                                 $nextDel["TAS_UID"],
-                                $appFields
+                                $appFields,
+                                $taskNextDel->getTasId()
                             );
                         }
 
@@ -1107,7 +1108,9 @@ class Derivation
             //Close case
             $appFields["APP_STATUS"] = "COMPLETED";
             $appFields["APP_FINISH_DATE"] = "now";
-            $this->verifyIsCaseChild($currentDelegation["APP_UID"], $currentDelegation["DEL_INDEX"]);
+            if (SubApplication::isCaseSubProcess($currentDelegation["APP_UID"])) {
+                $this->verifyIsCaseChild($currentDelegation["APP_UID"], $currentDelegation["DEL_INDEX"]);
+            }
             $flagUpdateCase = true;
 
         }
@@ -1461,51 +1464,18 @@ class Derivation
     function verifyIsCaseChild($applicationUid, $delIndex = 0)
     {
         //Obtain the related row in the table SUB_APPLICATION
-        $criteria = new Criteria('workflow');
-        $criteria->add(SubApplicationPeer::APP_UID, $applicationUid);
-        $dataSet = SubApplicationPeer::doSelectRS($criteria);
-        $dataSet->setFetchmode(ResultSet::FETCHMODE_ASSOC);
-
-        if ($dataSet->next()) {
-            $subApplication = $dataSet->getRow();
+        $subApplication = SubApplication::getSubProcessInfo($applicationUid);
+        if (!empty($subApplication)) {
             //Obtain the related row in the table SUB_PROCESS
             $case = new Cases();
             $parentCase = $case->loadCase($subApplication['APP_PARENT'], $subApplication['DEL_INDEX_PARENT']);
-            $criteria = new Criteria('workflow');
-            $criteria->add(SubProcessPeer::PRO_PARENT, $parentCase['PRO_UID']);
-            $criteria->add(SubProcessPeer::TAS_PARENT, $parentCase['TAS_UID']);
-            $dataSet = SubProcessPeer::doSelectRS($criteria);
-            $dataSet->setFetchmode(ResultSet::FETCHMODE_ASSOC);
-            $dataSet->next();
-            $subApplicationParent = $dataSet->getRow();
-            if ($subApplicationParent['SP_SYNCHRONOUS'] == 1 || $subApplication['SA_STATUS'] == 'ACTIVE') {
+
+            $subProcessParent = SubProcess::getSubProcessConfiguration($parentCase['PRO_UID'], $parentCase['TAS_UID']);
+            if ($subProcessParent['SP_SYNCHRONOUS'] == 1 || $subApplication['SA_STATUS'] == 'ACTIVE') {
                 $appFields = $case->loadCase($applicationUid, $delIndex);
                 //Copy case variables to parent case
-                $fields = unserialize($subApplicationParent['SP_VARIABLES_IN']);
-                $newFields = [];
-                foreach ($fields as $originField => $targetField) {
-                    $originField = str_replace('@', '', $originField);
-                    $originField = str_replace('#', '', $originField);
-                    $originField = str_replace('%', '', $originField);
-                    $originField = str_replace('?', '', $originField);
-                    $originField = str_replace('$', '', $originField);
-                    $originField = str_replace('=', '', $originField);
-                    $targetField = str_replace('@', '', $targetField);
-                    $targetField = str_replace('#', '', $targetField);
-                    $targetField = str_replace('%', '', $targetField);
-                    $targetField = str_replace('?', '', $targetField);
-                    $targetField = str_replace('$', '', $targetField);
-                    $targetField = str_replace('=', '', $targetField);
-                    $newFields[$targetField] = isset($appFields['APP_DATA'][$originField]) ? $appFields['APP_DATA'][$originField] : '';
-
-                    if (array_key_exists($originField . '_label', $appFields['APP_DATA'])) {
-                        $newFields[$targetField . '_label'] = $appFields['APP_DATA'][$originField . '_label'];
-                    } else {
-                        if (array_key_exists($targetField . '_label', $parentCase['APP_DATA'])) {
-                            $newFields[$targetField . '_label'] = '';
-                        }
-                    }
-                }
+                $fields = unserialize($subProcessParent['SP_VARIABLES_IN']);
+                $newFields = $this->getSubProcessVariables($fields, $appFields['APP_DATA'], $parentCase['APP_DATA']);
                 $parentCase['APP_DATA'] = array_merge($parentCase['APP_DATA'], $newFields);
                 $case->updateCase($subApplication['APP_PARENT'], $parentCase);
 
@@ -1619,7 +1589,45 @@ class Derivation
         }
     }
 
-    /*  getDerivatedCases
+    /**
+     * Will be get sub process variables
+     * Get variables-in and variables-out
+     *
+     * @param array $fields
+     * @param array $childCaseData
+     * @param array $parentCaseData
+     *
+     * @return array
+    */
+    public function getSubProcessVariables($fields, $childCaseData, $parentCaseData)
+    {
+        $newFields = [];
+        foreach ($fields as $originField => $targetField) {
+            $originField = str_replace('@', '', $originField);
+            $originField = str_replace('#', '', $originField);
+            $originField = str_replace('%', '', $originField);
+            $originField = str_replace('?', '', $originField);
+            $originField = str_replace('$', '', $originField);
+            $originField = str_replace('=', '', $originField);
+            $targetField = str_replace('@', '', $targetField);
+            $targetField = str_replace('#', '', $targetField);
+            $targetField = str_replace('%', '', $targetField);
+            $targetField = str_replace('?', '', $targetField);
+            $targetField = str_replace('$', '', $targetField);
+            $targetField = str_replace('=', '', $targetField);
+            $newFields[$targetField] = isset($childCaseData[$originField]) ? $childCaseData[$originField] : '';
+
+            if (array_key_exists($originField . '_label', $childCaseData)) {
+                $newFields[$targetField . '_label'] = $childCaseData[$originField . '_label'];
+            } elseif (array_key_exists($targetField . '_label', $parentCaseData)) {
+                $newFields[$targetField . '_label'] = '';
+            }
+        }
+
+        return $newFields;
+    }
+
+    /**  getDerivatedCases
      *  get all derivated cases and subcases from any task,
      *  this function is useful to know who users have been assigned and what task they do.
      *
@@ -1709,22 +1717,33 @@ class Derivation
         return $aGrp;
     }
 
-    function checkReplacedByUser ($user)
+    /**
+     * Review the replaced by configuration
+     *
+     * @param string $user
+     *
+     * @return string
+     * @throws Exception
+    */
+    function checkReplacedByUser($user)
     {
-        if (is_string( $user )) {
-            $userInstance = UsersPeer::retrieveByPK( $user );
+        if (is_string($user)) {
+            $userInstance = UsersPeer::retrieveByPK($user);
         } else {
             $userInstance = $user;
         }
-        if (! is_object( $userInstance )) {
-            throw new Exception( "The user with the UID '$user' doesn't exist." );
+        if (!is_object($userInstance)) {
+            if (!is_string($user)) {
+                $user = gettype($user);
+            }
+            throw new Exception("The user with the UID '" . $user . "' doesn't exist.");
         }
         if ($userInstance->getUsrStatus() == 'ACTIVE') {
             return $userInstance->getUsrUid();
         } else {
-            $userReplace = trim( $userInstance->getUsrReplacedBy() );
+            $userReplace = trim($userInstance->getUsrReplacedBy());
             if ($userReplace != '') {
-                return $this->checkReplacedByUser( UsersPeer::retrieveByPK( $userReplace ) );
+                return $this->checkReplacedByUser(UsersPeer::retrieveByPK($userReplace));
             } else {
                 return '';
             }
@@ -1771,6 +1790,10 @@ class Derivation
                 //Load the TAS_ID
                 if (isset($nextDel['TAS_ID'])) {
                     $appFields['APP_DATA']['TAS_ID'] = $nextDel['TAS_ID'];
+                }
+                //Load the PRO_ID
+                if (isset($nextDel['PRO_ID'])) {
+                    $appFields['APP_DATA']['PRO_ID'] = $nextDel['PRO_ID'];
                 }
                 $this->case->sendMessage($dataEmail, $appFields['APP_DATA'], $taskData);
             }
@@ -2035,13 +2058,16 @@ class Derivation
 
     /**
      * When we route a case we will to create a record in the table APP_ASSIGN_SELF_SERVICE_VALUE if the task is SELF_SERVICE
+     *
      * @param object $taskNextDel
      * @param integer $iNewDelIndex
      * @param string $nextTasUid
      * @param array $appFields
+     * @param integer $nextTasId
+     *
      * @return void
      */
-    public function createRecordAppSelfServiceValue($taskNextDel, $iNewDelIndex, $nextTasUid, $appFields)
+    public function createRecordAppSelfServiceValue($taskNextDel, $iNewDelIndex, $nextTasUid, $appFields, $nextTasId = 0)
     {
         if ($taskNextDel->getTasAssignType() == "SELF_SERVICE" && trim($taskNextDel->getTasGroupVariable()) != "") {
             $nextTaskGroupVariable = trim($taskNextDel->getTasGroupVariable(), " @#");
@@ -2055,11 +2081,13 @@ class Derivation
                     $appAssignSelfServiceValue->create(
                         $appFields["APP_UID"],
                         $iNewDelIndex,
-                        array(
+                        [
                             "PRO_UID" => $appFields["PRO_UID"],
                             "TAS_UID" => $nextTasUid,
-                            "GRP_UID" => ""
-                        ),
+                            "GRP_UID" => "",
+                            "APP_NUMBER" => !empty($appFields["APP_NUMBER"]) ? $appFields["APP_NUMBER"] : 0,
+                            "TAS_ID" => $nextTasId
+                        ],
                         $dataVariable
                     );
                 }

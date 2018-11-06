@@ -7,6 +7,7 @@ use AppDelegation;
 use AppDelegationPeer;
 use Criteria;
 use Exception;
+use ListUnassigned;
 use Luracast\Restler\RestException;
 use ProcessMaker\BusinessModel\Cases as BmCases;
 use ProcessMaker\BusinessModel\User as BmUser;
@@ -118,15 +119,14 @@ class Cases extends Api
 
                     return $user->userCanReassign($usrUid, $arrayApplicationData['PRO_UID']);
                     break;
-                case "doGetCaseInfo" :
+                case 'doGetCaseInfo':
                     $appUid = $this->parameters[$arrayArgs['app_uid']];
                     $usrUid = $this->getUserId();
-                    //Check if the user is supervisor process
+
                     $case = new BmCases();
-                    $user = new BmUser();
                     $arrayApplicationData = $case->getApplicationRecordByPk($appUid, [], false);
                     if (!empty($arrayApplicationData)) {
-                        $criteria = new Criteria("workflow");
+                        $criteria = new Criteria('workflow');
                         $criteria->addSelectColumn(AppDelegationPeer::APP_UID);
                         $criteria->add(AppDelegationPeer::APP_UID, $appUid);
                         $criteria->add(AppDelegationPeer::USR_UID, $usrUid);
@@ -134,11 +134,26 @@ class Cases extends Api
                         $rsCriteria = AppDelegationPeer::doSelectRS($criteria);
                         if ($rsCriteria->next()) {
                             return true;
-                        } else {
-                            $supervisor = new BmProcessSupervisor();
-                            $flagps = $supervisor->isUserProcessSupervisor($arrayApplicationData['PRO_UID'], $usrUid);
-                            return $flagps;
                         }
+
+                        //verify unassigned
+                        $list = new ListUnassigned();
+                        $data = $list->loadList($usrUid, ['search' => $appUid, 'caseLink' => true, 'limit' => 1]);
+
+                        if ($data) {
+                            return true;
+                        }
+
+                        //Check if the user is a process supervisor or has summary form view permission
+                        $userCanAccess = $case->userAuthorization(
+                            $usrUid,
+                            $arrayApplicationData['PRO_UID'],
+                            $appUid,
+                            [],
+                            ['SUMMARY_FORM' => 'VIEW']
+                        );
+
+                        return $userCanAccess['supervisor'] || $userCanAccess['objectPermissions']['SUMMARY_FORM'];
                     }
                     break;
                 case 'doDownloadInputDocument':

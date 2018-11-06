@@ -95,18 +95,18 @@ class Groups
             if (is_object($groupUser) && get_class($groupUser) == 'GroupUser') {
                 return true;
             } else {
+                $group = GroupwfPeer::retrieveByPK($grpUid);
+
                 $groupUser = new GroupUser();
                 $groupUser->setGrpUid($grpUid);
                 $groupUser->setUsrUid($usrUid);
+                $groupUser->setGrpId($group->getGrpId());
                 $groupUser->Save();
-
-                $groupWf = new Groupwf();
-                $grpName = $groupWf->loadByGroupUid($grpUid);
 
                 $users = new Users();
                 $usrName = $users->load($usrUid);
                 
-                G::auditLog("AssignUserToGroup", "Assign user ". $usrName['USR_USERNAME'] ." (".$usrUid.") to group ".$grpName['CON_VALUE']." (".$grpUid.") ");
+                G::auditLog("AssignUserToGroup", "Assign user " . $usrName['USR_USERNAME'] . " (" . $usrUid . ") to group " . $group->getGrpTitle() . " (" . $grpUid . ") ");
 
                 return true;
             }

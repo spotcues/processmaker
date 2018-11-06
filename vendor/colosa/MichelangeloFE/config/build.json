@@ -19,7 +19,7 @@
             "src/pm_shape.js",
             "src/pm_flow.js",
             "src/connectiondrop.js",
-            "src/pm_custom_shape_drag.js",  
+            "src/pm_custom_shape_drag.js",
             "src/toolbarpanel.js",
             "src/pm_project.js",
             "src/snapper.js",
@@ -129,7 +129,6 @@
             "src/formDesigner/src/DialogChangedVariables.js",
             "src/formDesigner/src/DialogCreateVariable.js",
             "src/formDesigner/src/DialogMessage.js",
-            "src/formDesigner/src/ListHistory.js",
             "src/formDesigner/src/DialogConfirm.js",
             "src/formDesigner/src/DialogInputDocument.js",
             // VALIDATOR FILES
@@ -163,12 +162,10 @@
             "compass/css/dynaform.css",
             "compass/css/trigger.css",
             "compass/css/activityProperties.css",
-            "compass/css/assignmentUser.css",               
-            "compass/css/stepOfTask.css", 
-            //"compass/css/propertiesTable.css",   
-            //"compass/css/PMListItem.css",
+            "compass/css/assignmentUser.css",
+            "compass/css/stepOfTask.css",
             "compass/css/formDesigner_1.css",
-            //FormDesigner
+            // FormDesigner
             "src/formDesigner/css/designer.css"
         ]
     }

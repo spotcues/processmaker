@@ -1,5 +1,6 @@
 <?php
 
+use Cases as ClassesCases;
 use ProcessMaker\Util\DateTime;
 
 $actionAjax = isset($_REQUEST['actionAjax']) ? $_REQUEST['actionAjax'] : null;
@@ -7,7 +8,10 @@ $actionAjax = isset($_REQUEST['actionAjax']) ? $_REQUEST['actionAjax'] : null;
 switch ($actionAjax) {
     case 'historyGridList_JXP':
         global $G_PUBLISH;
-        $criteria = Cases::getTransferHistoryCriteria($_SESSION['APPLICATION']);
+        $appUid = $_SESSION['APPLICATION'];
+        $case = new ClassesCases();
+        $fields = $case->loadCase($appUid);
+        $criteria = Cases::getTransferHistoryCriteria($fields['APP_NUMBER']);
 
         $dataSet = GulliverBasePeer::doSelectRs($criteria);
         $totalCount = $dataSet->getRecordCount();

@@ -1732,7 +1732,7 @@ th {
 }
 
 .modal-grid.rtl .pmdynaform-field.row{
-  margin-bottom: 10px;  
+  margin-bottom: 10px;
 }
 
 .pmdynaform-file-containerimage {
@@ -1746,5 +1746,80 @@ th {
 
 .pm-multiplefile-grid-label {
     float: right;
+}
+@media print {
+    .col-sm-1, .col-sm-2, .col-sm-3, .col-sm-4, .col-sm-5, .col-sm-6, .col-sm-7, .col-sm-8, .col-sm-9, .col-sm-10, .col-sm-11, .col-sm-12 {
+        float: right;
+        text-align: right;
+    }
+    .control-label {
+        text-align: left !important;
+    }
+    table.visible-sm {
+        display: table;
+    }
+    tr.visible-sm {
+        display: table-row !important;
+    }
+    th.visible-sm,
+    td.visible-sm {
+        display: table-cell !important;
+    }
+
+    .pmdynaform-control-text,
+    .pmdynaform-control-suggest,
+    .pmdynaform-control-textarea,
+    .pmdynaform-control-dropdown,
+    .pmdynaform-checkbox-items,
+    .pmdynaform-control-checkbox-list,
+    .pmdynaform-control-radio-list,
+    .pmdynaform-file-container,
+    .pmdynaform-link,
+    .pmdynaform-multiplefile-control,
+    .pmdynaform-multiplefile-box,
+    .pm-multiplefile-grid,
+    .multiplefile-icon,
+    .multiplefile-buttons,
+    .datetime-container,
+    .pmdynaform-message-error{
+        display: none !important;
+    }
+
+    .pmdynaform-field-submit,
+    .pmdynaform-field-button,
+    .pm-multiplefile-grid-icon,
+    .pmdynaform-grid-newitem,
+    .pmdynaform-grid-pagination,
+    #dyn_backward,
+    #dyn_forward,
+    button.glyphicon.glyphicon-trash {
+        visibility: hidden;
+    }
+
+    a[href]:after {
+        content: none !important;
+    }
+
+    .content-print,
+    .pmdynaform-label-title,
+    .pmdynaform-label-subtitle,
+    .pmdynaform-control-label,
+    .label-text,
+    .label-textarea,
+    .label-dropdown,
+    .label-checkgroup,
+    .label-suggest {
+        display: block !important;
+        margin-top: 6px;
+        padding-left: 4px;
+        vertical-align: top;
+        word-wrap: break-word;
+        word-break: break-all;
+        text-align: right;
+    }
+
+    .content-print li {
+        list-style-type: none;
+    }
 }
 

@@ -19,7 +19,10 @@
             oldValues,
             emailEventId = "",
             prf_uid = "",
-            ddSize = 21;
+            ddSize = 21,
+            auxFromMail = {},
+            defaultServerlabel = "Mail (PHP)".translate(),
+            triggerSelectedData;
         /*options to display in drop down*/
 
         /*window*/
@@ -39,7 +42,8 @@
             text: "Save".translate(),
             handler: function (event) {
                 PMDesigner.hideAllTinyEditorControls();
-                var dataForm = formEmailEvent.getData();
+                var dataForm = formEmailEvent.getData(),
+                    selectedAccount = formEmailEvent.getField('emailAcounts').getValue();
                 if (formEmailEvent.isValid()) {
                     if (dataForm.emailEventId == "") { /*insert*/
                         (new PMRestClient({
@@ -60,7 +64,7 @@
                                         typeRequest: 'post',
                                         data: {
                                             evn_uid: activityId,
-                                            email_event_from: $(formEmailEvent.getField('emailAcounts').html).find("select option:selected").text(),
+                                            email_event_from: auxFromMail[selectedAccount] || '',
                                             email_event_to: dataForm.ToEmail,
                                             email_event_subject: dataForm.subjectEmail,
                                             email_server_uid: dataForm.emailAcounts,
@@ -101,7 +105,7 @@
                                         typeRequest: 'update',
                                         data: {
                                             evn_uid: activityId,
-                                            email_event_from: $(formEmailEvent.getField('emailAcounts').html).find("select option:selected").text(),
+                                            email_event_from: auxFromMail[selectedAccount] || '',
                                             email_event_to: dataForm.ToEmail,
                                             email_event_subject: dataForm.subjectEmail,
                                             email_server_uid: dataForm.emailAcounts,
@@ -194,12 +198,14 @@
             label: "From".translate(),
             options: null,
             controlsWidth: 400,
-            required: true,
+            required: false,
             labelWidth: "15%",
             onChange: function (newValue, prevValue) {
-                var uidTri = newValue, i;
+                var uidTri = newValue,
+                    oldValue,
+                    i;
                 for (i = 0; i < triggerSelectedData.length; i += 1) {
-                    if (triggerSelectedData[i].tri_uid == uidTri) {
+                    if (triggerSelectedData[i].tri_uid === uidTri) {
                         formScriptTask.getItems()[1].controls[0].cm.setValue(triggerSelectedData[i].tri_webbot);
                         oldValue = triggerSelectedData[i].tri_webbot;
                     }
@@ -224,22 +230,25 @@
                 endpoint: 'email-event/accounts/emailServer',
                 typeRequest: 'get',
                 functionSuccess: function (xhr, response) {
-                    var i, arrayOptions;
+                    var i,
+                        arrayOptions;
                     triggerSelectedData = response;
                     arrayOptions = [];
                     arrayOptions[0] = {
-                        label: "- Select an email account -".translate(),
+                        label: "Default email account".translate(),
                         value: "",
-                        disabled: true,
+                        disabled: false,
                         selected: true
                     };
-                    for (i = 0; i <= triggerSelectedData.length - 1; i += 1) {
-                        arrayOptions.push(
-                            {
-                                value: triggerSelectedData[i].uid,
-                                label: triggerSelectedData[i].email
-                            }
-                        );
+                    for (i = 0; i < triggerSelectedData.length ; i += 1) {
+                        arrayOptions.push({
+                            value: triggerSelectedData[i].uid,
+                            label: response[i].mess_engine === "MAIL" ?
+                                triggerSelectedData[i].mess_from_name && triggerSelectedData[i].mess_from_name !== "" ?
+                                triggerSelectedData[i].mess_from_name : defaultServerlabel : triggerSelectedData[i].mess_from_name && triggerSelectedData[i].mess_from_name !== "" ?
+                                triggerSelectedData[i].mess_from_name + ' <' + triggerSelectedData[i].mess_account + '>' : ' <' + triggerSelectedData[i].mess_account + '>'
+                        });
+                        auxFromMail[triggerSelectedData[i].uid] = triggerSelectedData[i].email;
                     }
                     emailAcounts.setOptions(arrayOptions);
                     emailAcounts.setValue(arrayOptions[0].value);
@@ -381,19 +390,14 @@
                 typeRequest: 'get',
                 functionSuccess: function (xhr, response) {
                     var valFrom;
-                    if (typeof response == "object") {
+                    if (typeof response === "object") {
                         emailEventId = response.email_event_uid;
-                        if (emailEventId != "" && typeof emailEventId != "undefined") {
+                        if (emailEventId !== "" && typeof emailEventId !== "undefined") {
                             formEmailEvent.getField('emailEventId').setValue(response.email_event_uid);
-
-                            valFrom = $(formEmailEvent.getField('emailAcounts').html).find("select option").filter(function () {
-                                return this.text == response.email_event_from;
-                            }).val();
-
-                            if (valFrom != "" && typeof valFrom != "undefined") {
-                                formEmailEvent.getField('emailAcounts').setValue(valFrom);
+                            // Set as selected the email server by uid
+                            if (response.email_server_uid !== "" && typeof response.email_server_uid !== "undefined") {
+                                formEmailEvent.getField('emailAcounts').setValue(response.email_server_uid);
                             }
-
                             formEmailEvent.getField('subjectEmail').setValue(response.email_event_subject);
                             formEmailEvent.getField('ToEmail').setValue(response.email_event_to);
 

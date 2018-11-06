@@ -113,6 +113,46 @@ class AbeConfiguration extends BaseAbeConfiguration
             throw $error;
         }
     }
+
+    /**
+     * Get configuration from ABE related to the task
+     *
+     * @param string $proUid
+     * @param string $tasUid
+     *
+     * @return array
+    */
+    public function getTaskConfiguration ($proUid, $tasUid)
+    {
+        $criteria = new Criteria();
+        $criteria->addSelectColumn(AbeConfigurationPeer::ABE_UID);
+        $criteria->addSelectColumn(AbeConfigurationPeer::PRO_UID);
+        $criteria->addSelectColumn(AbeConfigurationPeer::ABE_TYPE);
+        $criteria->addSelectColumn(AbeConfigurationPeer::TAS_UID);
+        $criteria->addSelectColumn(TaskPeer::TAS_ID);
+        $criteria->addSelectColumn(ProcessPeer::PRO_ID);
+        $criteria->addSelectColumn(AbeConfigurationPeer::ABE_TEMPLATE);
+        $criteria->addSelectColumn(AbeConfigurationPeer::ABE_DYN_TYPE);
+        $criteria->addSelectColumn(AbeConfigurationPeer::DYN_UID);
+        $criteria->addSelectColumn(AbeConfigurationPeer::ABE_EMAIL_FIELD);
+        $criteria->addSelectColumn(AbeConfigurationPeer::ABE_ACTION_FIELD);
+        $criteria->addSelectColumn(AbeConfigurationPeer::ABE_SUBJECT_FIELD);
+        $criteria->addSelectColumn(AbeConfigurationPeer::ABE_MAILSERVER_OR_MAILCURRENT);
+        $criteria->addSelectColumn(AbeConfigurationPeer::ABE_CUSTOM_GRID);
+        $criteria->addSelectColumn(DynaformPeer::DYN_CONTENT);
+        $criteria->addJoin( AbeConfigurationPeer::DYN_UID, DynaformPeer::DYN_UID, Criteria::LEFT_JOIN );
+        $criteria->addJoin(AbeConfigurationPeer::TAS_UID, TaskPeer::TAS_UID, Criteria::LEFT_JOIN);
+        $criteria->addJoin(AbeConfigurationPeer::PRO_UID, ProcessPeer::PRO_UID, Criteria::LEFT_JOIN);
+        $criteria->add(AbeConfigurationPeer::PRO_UID, $proUid);
+        $criteria->add(AbeConfigurationPeer::TAS_UID, $tasUid);
+        $criteria->setLimit(1);
+        $result = AbeConfigurationPeer::doSelectRS($criteria);
+        $result->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+        $result->next();
+        $configuration = $result->getRow();
+
+        return $configuration;
+    }
 }
 
 // AbeConfiguration

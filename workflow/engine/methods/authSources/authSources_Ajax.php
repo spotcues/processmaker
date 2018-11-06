@@ -166,7 +166,8 @@ try {
                     if (is_file( PATH_RBAC . 'plugins' . PATH_SEP . $sObject )) {
                         $sType = trim(str_replace(array("class.", ".php"), "", $sObject));
 
-                        if ($sType != "ldapAdvanced") {
+                        // Filter Authentication Sources added by plugins, because these will be configured from another place
+                        if ($sType != "ldapAdvanced" && $sType != "Gauth") {
                             $arr[] = array("sType" => $sType, "sLabel" => $sType);
                         }
                     }

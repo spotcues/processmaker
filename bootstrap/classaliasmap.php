@@ -30,6 +30,7 @@ return array(
     'dynaformEditor' => DynaformEditor::class,
     'dynaformEditorAjax' => DynaformEditorAjax::class,
     'DynaFormField' => DynaFormField::class,
+    'dynaformHandler' => DynaformHandler::class,
     'enterpriseClass' => EnterpriseClass::class,
     'EnterpriseUtils' => EnterpriseUtils::class,
     'featuresDetail' => FeaturesDetail::class,

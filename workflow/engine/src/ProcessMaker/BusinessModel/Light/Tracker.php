@@ -2,7 +2,12 @@
 
 namespace ProcessMaker\BusinessModel\Light;
 
+use AppDelegationPeer;
+use Cases as ClassesCases;
+use G;
 use PmDynaform;
+use Process as ClassesProcess;
+use ResultSet;
 
 class Tracker
 {
@@ -73,37 +78,46 @@ class Tracker
     }
 
 
+    /**
+     * This function get the case history related to the case
+     *
+     * @param string $idProcess
+     * @param string $appUid
+     *
+     * @return array
+     */
     public function history($idProcess, $appUid)
     {
-        $oCase = new \Cases();
-        $aFields = $oCase->loadCase( $appUid );
+        $case = new ClassesCases();
+        $fields = $case->loadCase($appUid);
 
-        $oProcess = new \Process();
-        $aProcessFieds = $oProcess->load( $idProcess );
+        $process = new ClassesProcess();
+        $processFields = $process->load($idProcess);
         $noShowTitle = 0;
-        if (isset( $aProcessFieds['PRO_SHOW_MESSAGE'] )) {
-            $noShowTitle = $aProcessFieds['PRO_SHOW_MESSAGE'];
+        if (isset($processFields['PRO_SHOW_MESSAGE'])) {
+            $noShowTitle = $processFields['PRO_SHOW_MESSAGE'];
         }
 
-        if (isset( $aFields['TITLE'] )) {
-            $aFields['APP_TITLE'] = $aFields['TITLE'];
+        if (isset($fields['TITLE'])) {
+            $fields['APP_TITLE'] = $fields['TITLE'];
         }
-        if ($aFields['APP_PROC_CODE'] != '') {
-            $aFields['APP_NUMBER'] = $aFields['APP_PROC_CODE'];
+        if ($fields['APP_PROC_CODE'] != '') {
+            $fields['APP_NUMBER'] = $fields['APP_PROC_CODE'];
         }
-        $aFields['CASE'] = \G::LoadTranslation( 'ID_CASE' );
-        $aFields['TITLE'] = \G::LoadTranslation( 'ID_TITLE' );
+        $fields['CASE'] = G::LoadTranslation('ID_CASE');
+        $fields['TITLE'] = G::LoadTranslation('ID_TITLE');
 
-        $c = \Cases::getTransferHistoryCriteria( $appUid );
-        $dataset = \AppDelegationPeer::doSelectRS( $c );
-        $dataset->setFetchmode( \ResultSet::FETCHMODE_ASSOC );
+        $c = ClassesCases::getTransferHistoryCriteria($fields['APP_NUMBER']);
+        $dataset = AppDelegationPeer::doSelectRS($c);
+        $dataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
         $dataset->next();
-        $history = array();
+        $history = [];
         while ($row = $dataset->getRow()) {
             $history[] = $row;
             $dataset->next();
         }
         $response = $this->parserHistory($history);
+
         return $response;
     }
 

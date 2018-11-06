@@ -5,7 +5,7 @@ use ProcessMaker\Plugins\PluginRegistry;
 
 function runBgProcessmaker($task, $log)
 {
-    require_once (PATH_CORE . "bin/tasks/cliAddons.php");
+    require_once(PATH_CORE . "bin/tasks/cliAddons.php");
 
     $task = str_replace("\"", null, $task);
     $data = explode(" ", $task);
@@ -23,7 +23,7 @@ try {
     }
 
     if (isset($_REQUEST['addon']) && isset($_REQUEST['store'])) {
-        require_once (PATH_CORE . 'classes/model/AddonsManagerPeer.php');
+        require_once(PATH_CORE . 'classes/model/AddonsManagerPeer.php');
 
         $addon   = AddonsManagerPeer::retrieveByPK($_REQUEST['addon'], $_REQUEST['store']);
         $addonId = $_REQUEST['addon'];
@@ -53,12 +53,12 @@ try {
                     $dir = PATH_DATA_SITE;
                     G::uploadFile($aInfoLoadFile["tmp_name"], $dir, $aInfoLoadFile["name"]);
                     //reading the file that was uploaded
-                    $oPmLicenseManager = &PmLicenseManager::getSingleton();
+                    $oPmLicenseManager = PmLicenseManager::getSingleton();
                     $response = $oPmLicenseManager->installLicense($dir . $aInfoLoadFile["name"]);
 
                     ///////
                     //This command also find the following file "AddonsStore.php"
-                    $licenseManager = &PmLicenseManager::getSingleton();
+                    $licenseManager = PmLicenseManager::getSingleton();
 
                     preg_match("/^license_(.*).dat$/", $licenseManager->file, $matches);
                     $realId = urlencode($matches[1]);
@@ -214,7 +214,7 @@ try {
                 }
 
                 ///////
-                $licenseManager = &PmLicenseManager::getSingleton();
+                $licenseManager = PmLicenseManager::getSingleton();
                 $server = $licenseManager->server;
                 $workspace = (isset($licenseManager->workspace)) ? $licenseManager->workspace : 'pmLicenseSrv';
                 $url = "http://$server/sys".$workspace."/en/green/services/rest";
@@ -234,7 +234,7 @@ try {
                 $data = $data . "--$boundary\n";
 
                 ///////
-                //$licenseManager = &pmLicenseManager::getSingleton();
+                //$licenseManager = PmLicenseManager::getSingleton();
                 $activeLicense = $licenseManager->getActiveLicense();
 
                 $data = $data . "Content-Disposition: form-data; name=\"licenseFile\"; filename=\"" . $licenseManager->file . "\"\n";
@@ -311,8 +311,7 @@ try {
     } else {
         $result["addons"] = array();
     }
-    G::outRes( G::json_encode($result) );
-
+    G::outRes(G::json_encode($result));
 } catch (Exception $e) {
     $token = strtotime("now");
     PMException::registerErrorLog($e, $token);

@@ -217,5 +217,99 @@ class GroupUser extends BaseGroupUser
         }
         return false;
     }
+
+    /**
+     * Load All users by groupUid
+     *
+     * @param $groupUid
+     * @param string $type
+     * @param string $filter
+     * @param string $sortField
+     * @param string $sortDir
+     * @param int $start
+     * @param int $limit
+     * @return array
+     * @throws Exception
+     */
+    public function getUsersbyGroup($groupUid, $type = 'USERS', $filter = '', $sortField = 'USR_USERNAME', $sortDir = 'ASC', $start = 0, $limit = null)
+    {
+        try {
+            $validSorting = ['USR_UID', 'USR_USERNAME', 'USR_FIRSTNAME', 'USR_LASTNAME', 'USR_EMAIL', 'USR_STATUS'];
+            $response = [
+                'start' => !empty($start) ? $start : 0,
+                'limit' => !empty($limit) ? $limit : 0,
+                'filter' => !empty($filter) ? $filter : '',
+                'data' => []
+            ];
+
+
+            $criteria = new Criteria('workflow');
+            $criteria->add(UsersPeer::USR_STATUS, 'CLOSED', Criteria::NOT_EQUAL);
+            if ($type === 'AVAILABLE-USERS') {
+                $subQuery = 'SELECT ' . GroupUserPeer::USR_UID .
+                    ' FROM ' . GroupUserPeer::TABLE_NAME .
+                    ' WHERE ' . GroupUserPeer::GRP_UID . ' = "' . $groupUid . '" ' .
+                    'UNION SELECT "' . RBAC::GUEST_USER_UID . '"';
+
+                $criteria->add(UsersPeer::USR_UID, UsersPeer::USR_UID . " NOT IN ($subQuery)", Criteria::CUSTOM);
+            } else {
+                //USERS - SUPERVISOR
+                $criteria->addJoin(GroupUserPeer::USR_UID, UsersPeer::USR_UID, Criteria::LEFT_JOIN);
+                $criteria->add(GroupUserPeer::GRP_UID, $groupUid, Criteria::EQUAL);
+            }
+
+            if (!empty($filter)) {
+                $criteria->add($criteria->getNewCriterion(UsersPeer::USR_USERNAME, '%' . $filter . '%', Criteria::LIKE)->
+                addOr($criteria->getNewCriterion(UsersPeer::USR_FIRSTNAME, '%' . $filter . '%', Criteria::LIKE)->
+                addOr($criteria->getNewCriterion(UsersPeer::USR_LASTNAME, '%' . $filter . '%', Criteria::LIKE))));
+            }
+            $response['total'] = UsersPeer::doCount($criteria);
+
+            $criteria->addSelectColumn(UsersPeer::USR_UID);
+            $criteria->addSelectColumn(UsersPeer::USR_USERNAME);
+            $criteria->addSelectColumn(UsersPeer::USR_FIRSTNAME);
+            $criteria->addSelectColumn(UsersPeer::USR_LASTNAME);
+            $criteria->addSelectColumn(UsersPeer::USR_EMAIL);
+            $criteria->addSelectColumn(UsersPeer::USR_STATUS);
+
+            $sort = UsersPeer::USR_USERNAME;
+            if (!empty($sortField) && in_array($sortField, $validSorting, true)) {
+                $sort = UsersPeer::TABLE_NAME . '.' . $sortField;
+            }
+
+            if (!empty($sortDir) && strtoupper($sortDir) === 'DESC') {
+                $criteria->addDescendingOrderByColumn($sort);
+            } else {
+                $criteria->addAscendingOrderByColumn($sort);
+            }
+
+            if (!empty($start)) {
+                $criteria->setOffset((int)$start);
+            }
+
+            if (!empty($limit)) {
+                $criteria->setLimit((int)$limit);
+            }
+
+            $dataSet = UsersPeer::doSelectRS($criteria);
+            $dataSet->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+            $userRbac = new RbacUsers();
+            while ($dataSet->next()) {
+                $row = $dataSet->getRow();
+                if ($type === 'SUPERVISOR') {
+                    if ($userRbac->verifyPermission($row['USR_UID'], 'PM_SUPERVISOR')) {
+                        $response['data'][] = $row;
+                    }
+                } else {
+                    $response['data'][] = $row;
+                }
+            }
+
+            return $response;
+
+        } catch (Exception $error) {
+            throw $error;
+        }
+    }
 }
 

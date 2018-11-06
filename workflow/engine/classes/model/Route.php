@@ -264,7 +264,7 @@ class Route extends BaseRoute
                 $c->add(RoutePeer::ROU_NEXT_TASK, $aData['ROU_NEXT_TASK'], Criteria::EQUAL);
             }
 
-            $query =$c->toString();
+            $query = $c->toString();
             $rs = RoutePeer::doSelectRS($c);
             $rs->setFetchmode(\ResultSet::FETCHMODE_ASSOC);
             $routes = array();

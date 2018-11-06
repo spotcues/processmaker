@@ -63,10 +63,9 @@ $configPage = $c->getConfiguration('groupList', 'pageSize', '', $_SESSION['USER_
 $configEnv = $c->getConfiguration('ENVIRONMENT_SETTINGS', '');
 $Config['pageSize'] = isset($configPage['pageSize']) ? $configPage['pageSize'] : 20;
 
-$oHeadPublisher = &headPublisher::getSingleton();
+$oHeadPublisher = headPublisher::getSingleton();
 $oHeadPublisher->addExtJsScript('groups/groupsList', false); //adding a javascript file .js
 $oHeadPublisher->addContent('groups/groupsList'); //adding a html file  .html.
 $oHeadPublisher->assign('CONFIG', $Config);
 
 G::RenderPage('publish', 'extJs');
-

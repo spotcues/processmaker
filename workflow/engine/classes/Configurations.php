@@ -18,7 +18,7 @@ class Configurations // extends Configuration
      *
      * @return void
      */
-    public function Configurations()
+    public function __construct()
     {
         $this->Configuration = new Configuration();
     }

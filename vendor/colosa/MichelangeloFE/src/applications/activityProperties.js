@@ -46,7 +46,8 @@ PMDesigner.taskProperties = function (activity) {
         arrayTrue = '["TRUE"]',
         arrayFalse = '["FALSE"]',
         stringTrue = "TRUE",
-        stringFalse = "FALSE";
+        stringFalse = "FALSE",
+        defaultServerlabel = "Mail (PHP)".translate();
 
     configurationForms = [
         {
@@ -851,11 +852,13 @@ PMDesigner.taskProperties = function (activity) {
             for (i = 0; i < response.length; i += 1) {
                 field.addOption({
                     value: response[i].mess_uid,
-                    label: response[i].mess_account
+                    label: response[i].mess_engine === "MAIL" ?
+                        response[i].mess_from_name && response[i].mess_from_name !== "" ?
+                        response[i].mess_from_name : defaultServerlabel : response[i].mess_from_name && response[i].mess_from_name !== "" ?
+                        response[i].mess_from_name + ' <' + response[i].mess_account + '>' : ' <' + response[i].mess_account + '>'
                 });
             }
         }
-
     };
 
     function loadABETemplateField(templates) {
@@ -886,12 +889,18 @@ PMDesigner.taskProperties = function (activity) {
                 if (accountField !== null) {
                     accountField.addOption({
                         value: response[i].mess_uid,
-                        label: response[i].mess_account
+                        label: response[i].mess_engine === "MAIL" ?
+                            response[i].mess_from_name && response[i].mess_from_name !== "" ?
+                            response[i].mess_from_name : defaultServerlabel : response[i].mess_from_name && response[i].mess_from_name !== "" ?
+                            response[i].mess_from_name + ' <' + response[i].mess_account + '>' : ' <' + response[i].mess_account + '>'
                     });
                 }
                 abeEmailAcount.options.push({
                     value: response[i].mess_uid,
-                    label: response[i].mess_account
+                    label: response[i].mess_engine === "MAIL" ?
+                        response[i].mess_from_name && response[i].mess_from_name !== "" ?
+                        response[i].mess_from_name : defaultServerlabel : response[i].mess_from_name && response[i].mess_from_name !== "" ?
+                        response[i].mess_from_name + ' <' + response[i].mess_account + '>' : ' <' + response[i].mess_account + '>'
                 });
             }
         }

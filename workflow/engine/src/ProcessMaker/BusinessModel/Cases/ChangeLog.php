@@ -102,11 +102,19 @@ class ChangeLog
             }
             if ($index < $start) {
                 $index += $this->updateData(
-                    $data, $row, $this->hasPermission($row['DYN_UID']), false);
+                    $data,
+                    $row,
+                    $this->hasPermission($row['DYN_UID']),
+                    false
+                );
                 continue;
             }
-            $a = $this->updateData($data, $row,
-                                   $this->hasPermission($row['DYN_UID']), true);
+            $a = $this->updateData(
+                $data,
+                $row,
+                                   $this->hasPermission($row['DYN_UID']),
+                true
+            );
             $limit-= $a;
             $index+= $a;
         }
@@ -154,12 +162,12 @@ class ChangeLog
                     $node = new StdClass();
                     $node->field = $key;
                     $previousValue = !isset($this->values[$key]) ? null : $this->values[$key];
-                    if(!is_array($previousValue)){
+                    if (!is_array($previousValue)) {
                         $node->previousValue = (string) $previousValue;
                     } else {
                         $node->previousValue = "<br />".nl2br(print_r($previousValue, true));
                     }
-                    if(!is_array($value)){
+                    if (!is_array($value)) {
                         $node->currentValue = (string) $value;
                     } else {
                         $node->currentValue = "<br />".nl2br(print_r($value, true));
@@ -250,11 +258,11 @@ class ChangeLog
      */
     private function hasPermission($uid)
     {
-        if(array_search($uid, $this->reservedSteps)!==false) {
+        if (array_search($uid, $this->reservedSteps)!==false) {
             return false;
         }
         foreach ($this->permissions as $type => $ids) {
-            if (array_search($uid, $ids) !== false) {
+            if (is_array($ids) && array_search($uid, $ids) !== false) {
                 return true;
             }
         }

@@ -130,9 +130,9 @@ class enterprisePlugin extends PMPlugin
     {
         $this->setConfiguration();
 
-        require_once (PATH_CORE . 'classes/model/AddonsStore.php');
+        require_once(PATH_CORE . 'classes/model/AddonsStore.php');
         AddonsStore::checkLicenseStore();
-        $licenseManager = &PmLicenseManager::getSingleton();
+        $licenseManager = PmLicenseManager::getSingleton();
         AddonsStore::updateAll(false);
     }
 
@@ -175,7 +175,7 @@ class enterprisePlugin extends PMPlugin
         //define("PATH_PLUGINS", PATH_CORE . "plugins" . PATH_SEP);
 
         if (file_exists(PATH_CORE . "plugins" . PATH_SEP . $pluginName . ".php")) {
-            require_once (PATH_CORE . "plugins" . PATH_SEP . $pluginName . ".php");
+            require_once(PATH_CORE . "plugins" . PATH_SEP . $pluginName . ".php");
 
             $pluginRegistry = PluginRegistry::loadSingleton();
 
@@ -278,7 +278,7 @@ class enterprisePlugin extends PMPlugin
                     $strTable = str_replace("_", " ", strtolower($table));
                     $strTable = str_replace(" ", null, ucwords($strTable));
 
-                    require_once (PATH_PLUGINS . "enterprise" . PATH_SEP . "classes" . PATH_SEP . "model" . PATH_SEP . "$strTable.php");
+                    require_once(PATH_PLUGINS . "enterprise" . PATH_SEP . "classes" . PATH_SEP . "model" . PATH_SEP . "$strTable.php");
 
                     while ($rsSelectTablebak->next()) {
                         $row = $rsSelectTablebak->getRow();
@@ -336,4 +336,3 @@ $oPluginRegistry->registerPlugin('enterprise', __FILE__); //<- enterprise string
 //  PATH_PM_LICENSE_MANAGER.PATH_SEPARATOR.
 //  get_include_path()
 //);
-

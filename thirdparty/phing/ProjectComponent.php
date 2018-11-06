@@ -44,7 +44,7 @@ abstract class ProjectComponent {
      *  @param    object    The reference to the current project
      *  @access   public
      */
-    function setProject($project) {
+    function setProject(Project $project) {
         $this->project = $project;
     }
 

@@ -200,7 +200,6 @@ class PMPluginRegistry
                 if (array_key_exists($detail->sNamespace, $this->_restServiceEnabled)
                     && $this->_restServiceEnabled[$detail->sNamespace] == true
                 ) {
-
                     $oPlugin->registerRestService();
                 }
 
@@ -372,7 +371,6 @@ class PMPluginRegistry
      */
     public function installPluginArchive($filename, $pluginName)
     {
-
         $tar = new Archive_Tar($filename);
         $files = $tar->listContent();
         $plugins = array();
@@ -398,40 +396,6 @@ class PMPluginRegistry
 
         //$pluginName = $plugins[0];
         $pluginFile = "$pluginName.php";
-
-        /*
-        $oldPluginStatus = $this->getStatusPlugin($pluginFile);
-
-        if ($pluginStatus != 0) {
-          $oldDetails = $this->getPluginDetails($pluginFile);
-          $oldVersion = $oldDetails->iVersion;
-        } else {
-          $oldDetails = NULL;
-          $oldVersion = NULL;
-        }
-        */
-
-        //$pluginIni = $tar->extractInString("$pluginName.ini");
-        //$pluginConfig = parse_ini_string($pluginIni);
-        /*
-        if (!empty($oClass->aDependences)) {
-          foreach ($oClass->aDependences as $aDependence) {
-            if (file_exists(PATH_PLUGINS . $aDependence['sClassName'] . '.php')) {
-              require_once PATH_PLUGINS . $aDependence['sClassName'] . '.php';
-              if (!$oPluginRegistry->getPluginDetails($aDependence['sClassName'] . '.php')) {
-                throw new Exception('This plugin needs "' . $aDependence['sClassName'] . '" plugin');
-              }
-            }
-            else {
-              throw new Exception('This plugin needs "' . $aDependence['sClassName'] . '" plugin');
-            }
-          }
-        }
-        unset($oClass);
-        if ($fVersionOld > $fVersionNew) {
-          throw new Exception('A recent version of this plugin was already installed.');
-        }
-        */
 
         $res = $tar->extract(PATH_PLUGINS);
         if (!file_exists(PATH_PLUGINS . $pluginFile)) {
@@ -509,8 +473,7 @@ class PMPluginRegistry
             $wsPathDataSite = PATH_DATA . "sites" . PATH_SEP . $ws->name . PATH_SEP;
 
             if (file_exists($wsPathDataSite . "plugin.singleton")) {
-
-                $pluginRegistry = &PMPluginRegistry::getSingleton();
+                $pluginRegistry = PMPluginRegistry::getSingleton();
                 $pluginRegistry->unSerializeInstance(file_get_contents($wsPathDataSite . "plugin.singleton"));
 
                 ///////
@@ -551,7 +514,6 @@ class PMPluginRegistry
             G::RenderPage('publish');
             die();
         }
-
     }
 
     /**
@@ -633,7 +595,6 @@ class PMPluginRegistry
      */
     public function registerJavascript($sNamespace, $sCoreJsFile, $pluginJsFile)
     {
-
         foreach ($this->_aJavascripts as $i => $js) {
             if ($sCoreJsFile == $js->sCoreJsFile && $sNamespace == $js->sNamespace) {
                 if (is_string($pluginJsFile)) {
@@ -652,7 +613,7 @@ class PMPluginRegistry
         $js = new StdClass();
         $js->sNamespace = $sNamespace;
         $js->sCoreJsFile = $sCoreJsFile;
-        $js->pluginJsFile = Array();
+        $js->pluginJsFile = array();
 
         if (is_string($pluginJsFile)) {
             $js->pluginJsFile[] = $pluginJsFile;
@@ -930,7 +891,6 @@ class PMPluginRegistry
      */
     public function executeTriggers($triggerId, $oData)
     {
-
         foreach ($this->_aTriggers as $row => $detail) {
             if ($triggerId == $detail->sTriggerId) {
                 //review all folders registered for this namespace
@@ -979,7 +939,6 @@ class PMPluginRegistry
                         $found = true;
                     }
                 }
-
             }
         }
         return $found;
@@ -1051,8 +1010,8 @@ class PMPluginRegistry
             require_once($sFilename);
         }
         $sClassName = $aDetails[0];
-        $oPlugin =& new $sClassName($sFilename);
-        $this->_aPlugins[$sNamespace] =& $oPlugin;
+        $oPlugin = new $sClassName($sFilename);
+        $this->_aPlugins[$sNamespace] = $oPlugin;
         return $oPlugin;
         */
         return $oPlugin;
@@ -1102,9 +1061,9 @@ class PMPluginRegistry
     {
         try {
             $iPlugins = 0;
+            $oServerConf = ServerConf::getSingleton();
+            $oServerConf->addPlugin(config("system.workspace"), $this->_aPluginDetails);
 
-            $oServerConf = & ServerConf::getSingleton();
-            $oServerConf->addPlugin( config("system.workspace"), $this->_aPluginDetails );
             foreach ($this->_aPluginDetails as $namespace => $detail) {
                 if (isset($detail->enabled) && $detail->enabled) {
                     if (!empty($detail->sFilename) && file_exists($detail->sFilename)) {
@@ -1210,7 +1169,7 @@ class PMPluginRegistry
             //Found a License
             if (class_exists('pmLicenseManager')) {
                 $sSerializedFile = PATH_DATA_SITE . 'lmn.singleton';
-                $pmLicenseManagerO = &PmLicenseManager::getSingleton();
+                $pmLicenseManagerO = PmLicenseManager::getSingleton();
                 if (file_exists($sSerializedFile)) {
                     $pmLicenseManagerO->unSerializeInstance(file_get_contents($sSerializedFile));
                 }
@@ -1504,7 +1463,7 @@ class PMPluginRegistry
      * @param string $sNamespace
      * @param bool $enable
      */
-    function enableRestService($sNamespace, $enable)
+    public function enableRestService($sNamespace, $enable)
     {
         $this->_restServiceEnabled[$sNamespace] = $enable;
     }
@@ -1541,7 +1500,7 @@ class PMPluginRegistry
             //Update plugin attributes
             require_once(PATH_PLUGINS . $pluginFileName);
 
-            $pmPluginRegistry = &PMPluginRegistry::getSingleton();
+            $pmPluginRegistry = PMPluginRegistry::getSingleton();
 
             $pluginDetails = $pmPluginRegistry->getPluginDetails($pluginFileName);
 

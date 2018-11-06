@@ -27,7 +27,7 @@ class EnterpriseClass extends PMPlugin
         if (count(glob(PATH_DATA_SITE . 'license/*.dat')) == 0) {
             return;
         }
-        require_once ("classes/model/Users.php");
+        require_once("classes/model/Users.php");
         $user = $data;
         $criteria = new Criteria("workflow");
 
@@ -45,25 +45,8 @@ class EnterpriseClass extends PMPlugin
         $sw = 0;
 
         if (UsersPeer::doCount($criteria) > 0) {
-            //if ($rsSQLUSR->getRecordCount() > 0) {
             $sw = 1;
         }
-
-        /*
-        $cnn = Propel::getConnection("workflow");
-        $stmt = $cnn->createStatement();
-
-        $sql = "SELECT USR.USR_UID
-                FROM   USERS AS USR
-                WHERE  USR.USR_USERNAME = '" . $user->lName . "' AND USR.USR_ROLE = 'PROCESSMAKER_ADMIN'";
-        $rsSQLUSR = $stmt->executeQuery($sql, ResultSet::FETCHMODE_ASSOC);
-
-        $sw = 0;
-
-        if ($rsSQLUSR->getRecordCount() > 0) {
-            $sw = 1;
-        }
-        */
 
         if ($sw == 1) {
             //Upgrade available
@@ -78,7 +61,8 @@ class EnterpriseClass extends PMPlugin
 
                 foreach ($addon as $index => $value) {
                     if ($addon[$index]["id"] == "processmaker") {
-                        if (version_compare($pmVersion . "", (EnterpriseUtils::pmVersion($addon[$index]["version"])) . "", "<")) {
+                        if (version_compare($pmVersion . "",
+                            (EnterpriseUtils::pmVersion($addon[$index]["version"])) . "", "<")) {
                             $swUpgrade = 1;
                             break;
                         }
@@ -99,23 +83,23 @@ class EnterpriseClass extends PMPlugin
 
     public function enterpriseLimitCreateUser()
     {
-        $oServerConf = &ServerConf::getSingleton();
-        $infoLicense =$oServerConf->getProperty('LICENSE_INFO');
+        $oServerConf = ServerConf::getSingleton();
+        $infoLicense = $oServerConf->getProperty('LICENSE_INFO');
         if (isset($infoLicense[config("system.workspace")]['LIMIT_USERS'])) {
             $criteria = new Criteria('workflow');
             $criteria->add(UsersPeer::USR_STATUS, 'CLOSED', Criteria::NOT_EQUAL);
             $count = UsersPeer::doCount($criteria);
-            if ($count >= $infoLicense[config("system.workspace")]['LIMIT_USERS'] ) {
+            if ($count >= $infoLicense[config("system.workspace")]['LIMIT_USERS']) {
                 throw new Exception("You can\'t add more users to the System, this reach the limit of allowed users by license that it has installed now");
             }
         }
     }
 
-    public function setHashPassword ($object)
+    public function setHashPassword($object)
     {
         $type = array('md5', 'sha256');
         if (!in_array($object->hash, $type)) {
-            throw new Exception( 'Type: ' . $object->hash. ' No valid.');
+            throw new Exception('Type: ' . $object->hash . ' No valid.');
             return false;
         }
 
@@ -138,7 +122,7 @@ class EnterpriseClass extends PMPlugin
         $criteria->add(RbacUsersPeer::USR_STATUS, 0, Criteria::NOT_EQUAL);
         $dataset = RbacUsersPeer::doSelectRS($criteria);
         $dataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
-        
+
         while ($dataset->next()) {
             $row = $dataset->getRow();
             $property = $userProperty->loadOrCreateIfNotExists($row['USR_UID'], array());

@@ -704,6 +704,9 @@ PMEvent.prototype.beforeContextMenu = function () {
         menuItem,
         hasMarker = false;
     this.canvas.hideAllCoronas();
+    if (this.canvas.readOnly) {
+      return;
+    }
     switch (this.getEventType()) {
         case 'END':
             items = this.menu.items.find('id', 'result').childMenu.items;

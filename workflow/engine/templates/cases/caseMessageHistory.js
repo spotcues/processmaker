@@ -109,6 +109,7 @@
                     var idMessage = rowSelected.data.ID_MESSAGE;
                     var subjectMessage = rowSelected.data.APP_MSG_SUBJECT;
                     var dateMessage = rowSelected.data.APP_MSG_DATE;
+                    var appNumber = rowSelected.data.APP_NUMBER;
 
                     var tabName = 'sendMailMessage_'+idMessage;
                     var tabTitle = 'Resend('+subjectMessage+' '+dateMessage+')';
@@ -124,7 +125,7 @@
                     messageHistoryGridListMask = new Ext.LoadMask(Ext.getBody(), {msg:_('ID_LOADING')});
                     messageHistoryGridListMask.show();
 
-                    var url = "caseMessageHistory_Ajax.php?actionAjax=sendMailMessage_JXP&APP_UID="+APP_UID+"&APP_MSG_UID="+APP_MSG_UID;
+                    var url = "caseMessageHistory_Ajax.php?actionAjax=sendMailMessage_JXP&APP_UID=" + APP_UID + "&APP_MSG_UID=" + APP_MSG_UID + "&APP_NUMBER=" + appNumber;
                     ajaxPostRequest(url,'caseMessageHistory_RSP');
 
                 }
@@ -344,7 +345,8 @@ function caseMessageHistory_RSP (response, id) {
                   {name: 'APP_MSG_TO'},
                   {name: 'APP_MSG_STATUS'},
                   {name: 'APP_MSG_BODY'},
-                  {name: 'MSGS_HISTORY'}
+                  {name: 'MSGS_HISTORY'},
+                  {name: 'APP_NUMBER'}
 
               ]
           })
@@ -423,6 +425,7 @@ function caseMessageHistory_RSP (response, id) {
             {header: _("ID_STATUS"), dataIndex: 'APP_MSG_STATUS', width: 50},
             {header: _("ID_APP_MSG_BODY"), dataIndex: 'APP_MSG_BODY', width: 50,hidden:true},
             {id:'MSGS_HISTORY', dataIndex: 'MSGS_HISTORY', hidden:true, hideable:false},
+            {id:'APP_NUMBER', dataIndex: 'APP_NUMBER', hidden:true, hideable:false},
             {
                 xtype: 'actioncolumn',
                 width: 60,

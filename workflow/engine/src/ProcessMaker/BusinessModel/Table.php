@@ -253,7 +253,7 @@ class Table
 
         // validations
         if ($createRep) {
-            if (is_array( $oAdditionalTables->loadByName( $tableName ) )) {
+            if ($oAdditionalTables->loadByName($tableName)) {
                 throw new \Exception(G::loadTranslation('ID_PMTABLE_ALREADY_EXISTS', array($tableName)));
             }
         }

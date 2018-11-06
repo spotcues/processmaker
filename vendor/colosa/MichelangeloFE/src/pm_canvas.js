@@ -280,7 +280,9 @@ PMCanvas.prototype.onSelectElementHandler = function (element) {
 };
 
 PMCanvas.prototype.defineEvents = function () {
-    return PMUI.draw.Canvas.prototype.defineEvents.call(this);
+    if (!this.readOnly) {
+        return PMUI.draw.Canvas.prototype.defineEvents.call(this);
+    }
 };
 PMCanvas.prototype.getContextMenu = function () {
     return {};
@@ -552,23 +554,24 @@ PMCanvas.prototype.triggerPortChangeEvent = function (port) {
  * @chainable
  */
 PMCanvas.prototype.attachListeners = function () {
+    var $canvas,
+        $canvasContainer;
     if (this.attachedListeners === false) {
-        var $canvas = $(this.html).click(this.onClick(this)),
-            $canvasContainer = $canvas.parent();
-        $canvas.dblclick(this.onDblClick(this));
-        $canvas.mousedown(this.onMouseDown(this));
-        $canvasContainer.scroll(this.onScroll(this, $canvasContainer));
+        $canvas = $(this.html);
         if (!this.readOnly) {
+            $canvas.click(this.onClick(this)),
+            $canvasContainer = $canvas.parent();
+            $canvas.dblclick(this.onDblClick(this));
+            $canvas.mousedown(this.onMouseDown(this));
+            $canvasContainer.scroll(this.onScroll(this, $canvasContainer));
             $canvas.mousemove(this.onMouseMove(this));
             $canvas.mouseup(this.onMouseUp(this));
-            //$canvas.mouseup(this.onMouseLeave(this));
+            $canvas.on("rightclick", this.onRightClick(this));
         }
-
         $canvas.on("createelement", this.onCreateElement(this));
         $canvas.on("removeelement", this.onRemoveElement(this));
         $canvas.on("changeelement", this.onChangeElement(this));
         $canvas.on("selectelement", this.onSelectElement(this));
-        $canvas.on("rightclick", this.onRightClick(this));
         $canvas.on("contextmenu", function (e) {
             e.preventDefault();
         });

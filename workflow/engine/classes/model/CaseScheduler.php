@@ -336,8 +336,13 @@ class CaseScheduler extends BaseCaseScheduler
             
             $testConnection = true;
             try {
-                @$client = new SoapClient("http://" . $url);
+                $client = new SoapClient("http://" . $url);
             } catch (SoapFault $fault) {
+                /* Laravel register a exception handler that catch the exception throwed by the class SoapClient,
+                 * by this reason now the "Error Control Operator @" doesn't works when a exception is throwed,
+                 * so, we need to clear the last error catched.
+                 */
+                error_clear_last();
                 $testConnection = false;
             }
  

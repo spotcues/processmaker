@@ -402,7 +402,7 @@
         CodeMirror.commands.autocomplete = function (cm) {
             CodeMirror.showHint(cm, CodeMirror.phpHint);
         };
-
+        
         getListTrigger(triggerEngine);
         getScriptTask();
         /*end form*/
@@ -438,7 +438,7 @@
         scriptTaskPropertiesWindow.open();
         scriptTaskPropertiesWindow.showFooter();
         domSettings();
-
+        
         $(".showHideScript").on("click", function () {
             if (formScriptTask.getItems()[0].items.get(1).isVisible()) {
                 formScriptTask.getItems()[0].items.get(1).setVisible(false);

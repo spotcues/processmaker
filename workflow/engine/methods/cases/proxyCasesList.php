@@ -8,17 +8,11 @@ if (!isset($_SESSION['USER_LOGGED'])) {
     die();
 }
 
+
 $filter = new InputFilter();
 $_GET = $filter->xssFilterHard($_GET);
 $_REQUEST = $filter->xssFilterHard($_REQUEST);
 $_SESSION['USER_LOGGED'] = $filter->xssFilterHard($_SESSION['USER_LOGGED']);
-
-//Get the action
-$action = isset($_GET["action"]) ? $_GET["action"] : (isset($_REQUEST["action"]) ? $_REQUEST["action"] : "todo");
-
-//Review if the user has the permission over the action
-global $RBAC;
-$RBAC->allows(basename(__FILE__), $action);
 
 //Getting the extJs parameters
 $callback = isset($_REQUEST["callback"]) ? $_REQUEST["callback"] : "stcCallback1001";
@@ -26,8 +20,8 @@ $callback = isset($_REQUEST["callback"]) ? $_REQUEST["callback"] : "stcCallback1
 $dir = isset($_REQUEST["dir"]) ? $_REQUEST["dir"] : "DESC";
 //This default value was defined in casesList.js
 $sort = isset($_REQUEST["sort"]) ? $_REQUEST["sort"] : "APP_NUMBER";
-$start = isset($_REQUEST["start"]) ? $_REQUEST["start"] : "0";
-$limit = isset($_REQUEST["limit"]) ? $_REQUEST["limit"] : "25";
+$start = !empty($_REQUEST["start"]) ? $_REQUEST["start"] : 0;
+$limit = !empty($_REQUEST["limit"]) ? $_REQUEST["limit"] : 25;
 $filter = isset($_REQUEST["filter"]) ? $_REQUEST["filter"] : "";
 $process = isset($_REQUEST["process"]) ? $_REQUEST["process"] : "";
 $category = isset($_REQUEST["category"]) ? $_REQUEST["category"] : "";
@@ -35,6 +29,7 @@ $status = isset($_REQUEST["status"]) ? strtoupper($_REQUEST["status"]) : "";
 $filterStatus = isset($_REQUEST["filterStatus"]) ? strtoupper($_REQUEST["filterStatus"]) : "";
 $user = isset($_REQUEST["user"]) ? $_REQUEST["user"] : "";
 $search = isset($_REQUEST["search"]) ? $_REQUEST["search"] : "";
+$action = isset($_GET["action"]) ? $_GET["action"] : (isset($_REQUEST["action"]) ? $_REQUEST["action"] : "todo");
 $type = isset($_GET["type"]) ? $_GET["type"] : (isset($_REQUEST["type"]) ? $_REQUEST["type"] : "extjs");
 $dateFrom = isset($_REQUEST["dateFrom"]) ? substr($_REQUEST["dateFrom"], 0, 10) : "";
 $dateTo = isset($_REQUEST["dateTo"]) ? substr($_REQUEST["dateTo"], 0, 10) : "";
@@ -53,7 +48,7 @@ if ($sort == 'APP_STATUS_LABEL') {
 
 try {
     $userUid = (isset($_SESSION["USER_LOGGED"]) && $_SESSION["USER_LOGGED"] != "") ? $_SESSION["USER_LOGGED"] : null;
-    $result = "";
+    $result = [];
 
     switch ($action) {
         case "search":
@@ -116,4 +111,3 @@ try {
     $msg = array("error" => $e->getMessage());
     echo G::json_encode($msg);
 }
-

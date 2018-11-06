@@ -1,10 +1,13 @@
 <?php
 namespace ProcessMaker\BusinessModel;
-use G;
-use Exception;
+
+use AppMessage;
 use Bootstrap;
-use SpoolRun;
+use Exception;
+use G;
 use ProcessMaker\Core\System;
+use SpoolRun;
+use TemplatePower;
 
 class EmailServer
 {
@@ -158,7 +161,7 @@ class EmailServer
     {
         try {
 
-            $aConfiguration = array(
+            $configuration = array(
                 "MESS_ENGINE"    => $arrayData["MESS_ENGINE"],
                 "MESS_SERVER"    => $arrayData["MESS_SERVER"],
                 "MESS_PORT"      => (int)($arrayData["MESS_PORT"]),
@@ -170,9 +173,6 @@ class EmailServer
                 "SMTPSecure"     => (isset($arrayData["SMTPSecure"]))? $arrayData["SMTPSecure"] : "none"
             );
 
-            $sFrom = G::buildFrom($aConfiguration);
-
-            $sSubject = G::LoadTranslation("ID_MESS_TEST_SUBJECT");
             $msg = G::LoadTranslation("ID_MESS_TEST_BODY");
 
             switch ($arrayData["MESS_ENGINE"]) {
@@ -187,52 +187,47 @@ class EmailServer
                     break;
             }
 
-            $sBodyPre = new \TemplatePower(PATH_TPL . "admin" . PATH_SEP . "email.tpl");
+            $bodyPre = new TemplatePower(PATH_TPL . "admin" . PATH_SEP . "email.tpl");
 
-            $sBodyPre->prepare();
-            $sBodyPre->assign("server", $_SERVER["SERVER_NAME"]);
-            $sBodyPre->assign("date", date("H:i:s"));
-            $sBodyPre->assign("ver", System::getVersion());
-            $sBodyPre->assign("engine", $engine);
-            $sBodyPre->assign("msg", $msg);
-            $sBody = $sBodyPre->getOutputContent();
+            $bodyPre->prepare();
+            $bodyPre->assign("server", $_SERVER["SERVER_NAME"]);
+            $bodyPre->assign("date", date("H:i:s"));
+            $bodyPre->assign("ver", System::getVersion());
+            $bodyPre->assign("engine", $engine);
+            $bodyPre->assign("msg", $msg);
+            $body = $bodyPre->getOutputContent();
 
-            $oSpool = new SpoolRun();
-
-            $oSpool->setConfig($aConfiguration);
-
-            $oSpool->create(
-                array(
-                    "msg_uid"          => "",
-                    "app_uid"          => "",
-                    "del_index"        => 0,
-                    "app_msg_type"     => "TEST",
-                    "app_msg_subject"  => $sSubject,
-                    "app_msg_from"     => $sFrom,
-                    "app_msg_to"       => $arrayData["TO"],
-                    "app_msg_body"     => $sBody,
-                    "app_msg_cc"       => "",
-                    "app_msg_bcc"      => "",
-                    "app_msg_attach"   => "",
-                    "app_msg_template" => "",
-                    "app_msg_status"   => "pending",
-                    "app_msg_attach"   => ""
-                )
+            $spool = new SpoolRun();
+            $spool->setConfig($configuration);
+            $messageArray = AppMessage::buildMessageRow(
+                '',
+                '',
+                0,
+                'TEST',
+                G::LoadTranslation("ID_MESS_TEST_SUBJECT"),
+                G::buildFrom($configuration),
+                $arrayData["TO"],
+                $body,
+                '',
+                '',
+                '',
+                '',
+                'pending'
             );
-
-            $oSpool->sendMail();
+            $spool->create($messageArray);
+            $spool->sendMail();
 
             //Return
-            $arrayTestMailResult = array();
+            $arrayTestMailResult = [];
 
-            if ($oSpool->status == "sent") {
+            if ($spool->status == "sent") {
                 $arrayTestMailResult["status"]  = true;
                 $arrayTestMailResult["success"] = true;
                 $arrayTestMailResult["msg"]     = G::LoadTranslation("ID_MAIL_TEST_SUCCESS");
             } else {
                 $arrayTestMailResult["status"]  = false;
                 $arrayTestMailResult["success"] = false;
-                $arrayTestMailResult["msg"]     = $oSpool->error;
+                $arrayTestMailResult["msg"]     = $spool->error;
             }
 
             return $arrayTestMailResult;
@@ -1379,5 +1374,6 @@ class EmailServer
             throw $e;
         }
     }
+
 }
 

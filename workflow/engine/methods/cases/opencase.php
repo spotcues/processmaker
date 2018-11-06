@@ -47,7 +47,7 @@ if ($isBrowserMobile) {
         $_SESSION['__CD__'] = '../';
         $_SESSION['__OPEN_APPLICATION_UID__'] = $applicationUid;
         $G_PUBLISH->AddContent('view', 'cases/cases_Load');
-        $headPublisher = &headPublisher::getSingleton();
+        $headPublisher = headPublisher::getSingleton();
         $headPublisher->addScriptFile('/jscore/src/PM.js');
         $headPublisher->addScriptFile('/jscore/src/Sessions.js');
     } else {

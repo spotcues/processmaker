@@ -2,7 +2,7 @@
 
 class AdditionalTablesConsolidated extends AdditionalTables
 {
-    public function createPropelClasses($sTableName, $sClassName, $aFields, $sAddTabUid)
+    public function createPropelClasses($sTableName, $sClassName, $aFields, $sAddTabUid, $connection = 'workflow')
     {
         try {
             $aTypes = array('VARCHAR' => 'string',

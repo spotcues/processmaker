@@ -27,9 +27,9 @@ $APP_UID = $_SESSION['APPLICATION'];
 
 $c = new Criteria('workflow');
 $c->clearSelectColumns();
-$c->addSelectColumn( AppThreadPeer::APP_THREAD_PARENT );
-$c->add(AppThreadPeer::APP_UID, $APP_UID );
-$c->add(AppThreadPeer::APP_THREAD_STATUS , 'OPEN' );
+$c->addSelectColumn(AppThreadPeer::APP_THREAD_PARENT);
+$c->add(AppThreadPeer::APP_UID, $APP_UID);
+$c->add(AppThreadPeer::APP_THREAD_STATUS, 'OPEN');
 $cant = AppThreadPeer::doCount($c);
 
 $oTree = new PmTree();
@@ -38,7 +38,7 @@ $oTree->name = 'Actions';
 $oTree->showSign = false;
 
 $oCase = new Cases();
-$aFields = $oCase->loadCase( $_SESSION['APPLICATION'], $_SESSION['INDEX'] );
+$aFields = $oCase->loadCase($_SESSION['APPLICATION'], $_SESSION['INDEX']);
 
 $oCriteria = new Criteria('workflow');
 $oCriteria->add(AppDelayPeer::APP_UID, $_SESSION['APPLICATION']);
@@ -50,45 +50,42 @@ $oDataset = AppDelayPeer::doSelectRS($oCriteria);
 $oDataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
 $oDataset->next();
 $aRow = $oDataset->getRow();
-GLOBAL $RBAC;
-switch($aFields['APP_STATUS'])
-{
-	case 'DRAFT':
-			if(!$aRow) {
-				$oNode = &$oTree->addChild('1', '<a id="spause" class="linkInBlue" href="#" onclick="pauseCase();return false;">' . G::LoadTranslation('ID_PAUSED_CASE') . '</a></span><a id="scpause" class="linkInBlue" href="#" onclick="cancelPauseCase();return false;" style="display:none">' . G::LoadTranslation('ID_CANCEL') . ' ' . strtolower(G::LoadTranslation('ID_PAUSED_CASE')) . '</a><div id="pausediv" style="display:none"></div>', array('nodeType' => 'parentBlue'));
-			}
-			else {
-				$oNode = &$oTree->addChild('1', '<a class="linkInBlue" href="#" onclick="unpauseCase();return false;">' . G::LoadTranslation('ID_UNPAUSE') . '</a>', array('nodeType' => 'parentBlue'));
-			}
-			$oNode = &$oTree->addChild('2', '<a class="linkInBlue" href="#" onclick="deleteCase(\''.$APP_UID.'\');return false;">' . G::LoadTranslation('ID_DELETE') . '</a>', array('nodeType' => 'parentBlue'));
-			if($RBAC->userCanAccess('PM_REASSIGNCASE')==1) {
-			  $oNode = &$oTree->addChild('3', '<a class="linkInBlue" href="#" onclick="view_reassignCase(\''.$APP_UID.'\');return false;">' . G::LoadTranslation('ID_REASSIGN') . '</a>', array('nodeType' => 'parentBlue'));
-			}
-	break;
-	case 'TO_DO':
-			if(!$aRow) {
-				$oNode = &$oTree->addChild('1', '<a id="spause" class="linkInBlue" href="#" onclick="pauseCase();return false;">' . G::LoadTranslation('ID_PAUSED_CASE') . '</a></span><a id="scpause" class="linkInBlue" href="#" onclick="cancelPauseCase();return false;" style="display:none">' . G::LoadTranslation('ID_CANCEL') . ' ' . strtolower(G::LoadTranslation('ID_PAUSED_CASE')) . '</a><div id="pausediv" style="display:none"></div>', array('nodeType' => 'parentBlue'));
-				if ($cant == 1) {
-					$oNode = & $oTree->addChild('2', '<a class="linkInBlue" href="#" onclick="cancelCase();return false;">' . G::LoadTranslation('ID_CANCEL') . '</a>', array('nodeType'=>'parentBlue'));
-			    }
-			}
-			else {
-				$oNode = &$oTree->addChild('1', '<a class="linkInBlue" href="#" onclick="unpauseCase();return false;">' . G::LoadTranslation('ID_UNPAUSE') . '</a>', array('nodeType' => 'parentBlue'));
-			}
-			if($RBAC->userCanAccess('PM_REASSIGNCASE')==1) {
-			    $oNode = &$oTree->addChild('3', '<a class="linkInBlue" href="#" onclick="view_reassignCase(\''.$APP_UID.'\');return false;">' . G::LoadTranslation('ID_REASSIGN') . '</a>', array('nodeType' => 'parentBlue'));
-			}
-	break;
+global $RBAC;
+switch ($aFields['APP_STATUS']) {
+    case 'DRAFT':
+        if (!$aRow) {
+            $oNode = $oTree->addChild('1', '<a id="spause" class="linkInBlue" href="#" onclick="pauseCase();return false;">' . G::LoadTranslation('ID_PAUSED_CASE') . '</a></span><a id="scpause" class="linkInBlue" href="#" onclick="cancelPauseCase();return false;" style="display:none">' . G::LoadTranslation('ID_CANCEL') . ' ' . strtolower(G::LoadTranslation('ID_PAUSED_CASE')) . '</a><div id="pausediv" style="display:none"></div>', array('nodeType' => 'parentBlue'));
+        } else {
+            $oNode = $oTree->addChild('1', '<a class="linkInBlue" href="#" onclick="unpauseCase();return false;">' . G::LoadTranslation('ID_UNPAUSE') . '</a>', array('nodeType' => 'parentBlue'));
+        }
+        $oNode = $oTree->addChild('2', '<a class="linkInBlue" href="#" onclick="deleteCase(\'' . $APP_UID . '\');return false;">' . G::LoadTranslation('ID_DELETE') . '</a>', array('nodeType' => 'parentBlue'));
+        if ($RBAC->userCanAccess('PM_REASSIGNCASE') == 1) {
+            $oNode = $oTree->addChild('3', '<a class="linkInBlue" href="#" onclick="view_reassignCase(\'' . $APP_UID . '\');return false;">' . G::LoadTranslation('ID_REASSIGN') . '</a>', array('nodeType' => 'parentBlue'));
+        }
+        break;
+    case 'TO_DO':
+        if (!$aRow) {
+            $oNode = $oTree->addChild('1', '<a id="spause" class="linkInBlue" href="#" onclick="pauseCase();return false;">' . G::LoadTranslation('ID_PAUSED_CASE') . '</a></span><a id="scpause" class="linkInBlue" href="#" onclick="cancelPauseCase();return false;" style="display:none">' . G::LoadTranslation('ID_CANCEL') . ' ' . strtolower(G::LoadTranslation('ID_PAUSED_CASE')) . '</a><div id="pausediv" style="display:none"></div>', array('nodeType' => 'parentBlue'));
+            if ($cant == 1) {
+                $oNode = $oTree->addChild('2', '<a class="linkInBlue" href="#" onclick="cancelCase();return false;">' . G::LoadTranslation('ID_CANCEL') . '</a>', array('nodeType' => 'parentBlue'));
+            }
+        } else {
+            $oNode = $oTree->addChild('1', '<a class="linkInBlue" href="#" onclick="unpauseCase();return false;">' . G::LoadTranslation('ID_UNPAUSE') . '</a>', array('nodeType' => 'parentBlue'));
+        }
+        if ($RBAC->userCanAccess('PM_REASSIGNCASE') == 1) {
+            $oNode = $oTree->addChild('3', '<a class="linkInBlue" href="#" onclick="view_reassignCase(\'' . $APP_UID . '\');return false;">' . G::LoadTranslation('ID_REASSIGN') . '</a>', array('nodeType' => 'parentBlue'));
+        }
+        break;
 
-	case 'CANCELLED':
-		$oNode = &$oTree->addChild('1', '<a class="linkInBlue" href="#" onclick="reactivateCase();return false;">' . G::LoadTranslation('ID_REACTIVATE') . '</a>', array('nodeType' => 'parentBlue'));
-	break;
+    case 'CANCELLED':
+        $oNode = $oTree->addChild('1', '<a class="linkInBlue" href="#" onclick="reactivateCase();return false;">' . G::LoadTranslation('ID_REACTIVATE') . '</a>', array('nodeType' => 'parentBlue'));
+        break;
 }
 
 $oTask = new Task();
 $aTask = $oTask->load($_SESSION['TASK']);
 if ($aTask['TAS_TYPE'] == 'ADHOC') {
-	$oNode = &$oTree->addChild('4', '<a class="linkInBlue" href="#" onclick="adhocAssignmentUsers();return false;">' . G::LoadTranslation('ID_ADHOC_ASSIGNMENT') . '</a>', array('nodeType' => 'parentBlue'));
+    $oNode = $oTree->addChild('4', '<a class="linkInBlue" href="#" onclick="adhocAssignmentUsers();return false;">' . G::LoadTranslation('ID_ADHOC_ASSIGNMENT') . '</a>', array('nodeType' => 'parentBlue'));
 }
 
 $oNode->plus = '';
@@ -96,4 +93,3 @@ $oNode->minus = '';
 $oNode->point = '';
 
 echo $oTree->render();
-?>

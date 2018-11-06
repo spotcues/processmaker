@@ -18,10 +18,13 @@ class DynaFormField extends DBTable
     /**
      * Function SetTo
      *
-     * @param string $objConnection
+     * @param object $objConnection connection string
+     * @param string $strTable Table name defaultValue=''
+     * @param array $arrKeys table keys defaultValue=UID
+     *
      * @return void
      */
-    public function SetTo($objConnection)
+    public function SetTo($objConnection, $strTable = "", $arrKeys = array('UID'))
     {
         DBTable::SetTo($objConnection, 'dynaForm', array('XMLNODE_NAME'
         ));
@@ -33,7 +36,7 @@ class DynaFormField extends DBTable
      * @param string $sUID
      * @return void
      */
-    public function Load($sUID)
+    public function Load($sUID = null)
     {
         parent::Load($sUID);
         if (is_array($this->Fields)) {
@@ -51,7 +54,7 @@ class DynaFormField extends DBTable
      * @param string $uid
      * @return void
      */
-    public function Delete($uid)
+    public function Delete($uid=null)
     {
         $this->Fields['XMLNODE_NAME'] = $uid;
         parent::Delete();
@@ -65,7 +68,7 @@ class DynaFormField extends DBTable
      * @param array $options
      * @return void
      */
-    public function Save($Fields, $labels = array(), $options = array())
+    public function Save($Fields=null, $labels = array(), $options = array())
     {
 
         if ($Fields['TYPE'] === 'javascript') {

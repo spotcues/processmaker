@@ -1,5 +1,6 @@
 <?php
 
+use ProcessMaker\BusinessModel\EmailEvent;
 use ProcessMaker\Core\System;
 
 class Processes
@@ -1015,6 +1016,7 @@ class Processes
             $newGuid = $this->getUnusedDynaformGUID();
             $map[$val['DYN_UID']] = $newGuid;
             $oData->dynaforms[$key]['DYN_UID'] = $newGuid;
+            unset($oData->dynaforms[$key]['DYN_ID']);
         }
 
         $oData->uid["DYNAFORM"] = $map;
@@ -1980,6 +1982,7 @@ class Processes
             $map[$val['INP_DOC_UID']] = $newGuid;
             $oData->inputFiles[$oData->inputs[$key]['INP_DOC_UID']] = $newGuid;
             $oData->inputs[$key]['INP_DOC_UID'] = $newGuid;
+            unset($oData->inputs[$key]['INP_DOC_ID']);
         }
 
         $oData->uid["INPUT_DOCUMENT"] = $map;
@@ -2112,6 +2115,7 @@ class Processes
             $newGuid = $this->getUnusedOutputGUID();
             $map[$val['OUT_DOC_UID']] = $newGuid;
             $oData->outputs[$key]['OUT_DOC_UID'] = $newGuid;
+            unset($oData->outputs[$key]['OUT_DOC_ID']);
         }
 
         $oData->uid["OUTPUT_DOCUMENT"] = $map;
@@ -3080,32 +3084,37 @@ class Processes
     /**
      * Get Groupwf Rows for a Process form an array
      *
-     * @param array $aGroups
-     * @return array $aGroupwf
+     * @param array $groups
+     *
+     * @return array $groupList
+     * @throws Exception
      */
-    public function getGroupwfRows($aGroups)
+    public function getGroupwfRows($groups)
     {
         try {
-            $aInGroups = array();
-            foreach ($aGroups as $key => $val) {
-                $aInGroups[] = $val['USR_UID'];
+            $inGroups = [];
+            foreach ($groups as $key => $val) {
+                $inGroups[] = $val['USR_UID'];
             }
 
-            $aGroupwf = array();
-            $oCriteria = new Criteria('workflow');
-            $oCriteria->add(GroupwfPeer::GRP_UID, $aInGroups, Criteria::IN);
-            $oDataset = GroupwfPeer::doSelectRS($oCriteria);
-            $oDataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
-            $oDataset->next();
-            while ($aRow = $oDataset->getRow()) {
-                $oGroupwf = new Groupwf();
-                $aGroupwf[] = $oGroupwf->Load($aRow['GRP_UID']);
-                $oDataset->next();
+            $groupList = [];
+            $criteria = new Criteria('workflow');
+            $criteria->add(GroupwfPeer::GRP_UID, $inGroups, Criteria::IN);
+            $dataset = GroupwfPeer::doSelectRS($criteria);
+            $dataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+            $dataset->next();
+            while ($row = $dataset->getRow()) {
+                $groupWf = new Groupwf();
+                $infoGroup = $groupWf->Load($row['GRP_UID']);
+                unset($infoGroup['GRP_ID']);
+                $groupList[] = $infoGroup;
+
+                $dataset->next();
             }
 
-            return $aGroupwf;
-        } catch (Exception $oError) {
-            throw ($oError);
+            return $groupList;
+        } catch (Exception $error) {
+            throw ($error);
         }
     }
 
@@ -3780,19 +3789,26 @@ class Processes
     }
 
     /**
-     * Get Task User Rows from an array of data
+     * Get Task User rows from an array of data
      *
-     * @param array $aTaskUser
-     * @return array $aStepTrigger
+     * @param array $group
+     *
+     * @return void
      */
-    public function createGroupRow($aGroupwf)
+    public function createGroupRow($group)
     {
-        foreach ($aGroupwf as $key => $row) {
-            $oGroupwf = new Groupwf();
-            if ($oGroupwf->GroupwfExists($row['GRP_UID'])) {
-                $oGroupwf->remove($row['GRP_UID']);
+        foreach ($group as $key => $row) {
+            $groupInfo = [];
+            $groupWf = new Groupwf();
+            if ($groupWf->GroupwfExists($row['GRP_UID'])) {
+                $groupInfo = $groupWf->Load($row['GRP_UID']);
+                $groupWf->remove($row['GRP_UID']);
             }
-            $res = $oGroupwf->create($row);
+            //We will to keep the GRP_ID
+            if (!empty($groupInfo['GRP_ID'])) {
+                $row['GRP_ID'] = $groupInfo['GRP_ID'];
+            }
+            $res = $groupWf->create($row);
         }
     }
 
@@ -4168,23 +4184,19 @@ class Processes
      * @param string $processUid Unique id of Process
      * @param array $arrayData Data
      *
-     * return void
+     * @return void
+     * @throws Exception
      */
     public function createEmailEvent($processUid, array $arrayData)
     {
         try {
-            $emailEvent = new \ProcessMaker\BusinessModel\EmailEvent();
-
-            $emailServer = new \ProcessMaker\BusinessModel\EmailServer();
-            $arrayEmailServerDefault = $emailServer->getEmailServerDefault();
-
+            $emailEvent = new EmailEvent();
             foreach ($arrayData as $value) {
-                unset($value['EMAIL_EVENT_FROM']);
-                unset($value['EMAIL_SERVER_UID']);
-
-                if (!empty($arrayEmailServerDefault)) {
-                    $value['EMAIL_EVENT_FROM'] = $arrayEmailServerDefault['MESS_ACCOUNT'];
-                    $value['EMAIL_SERVER_UID'] = $arrayEmailServerDefault['MESS_UID'];
+                if (isset($value['__EMAIL_SERVER_UID_PRESERVED__']) && $value['__EMAIL_SERVER_UID_PRESERVED__'] === true) {
+                    unset($value['__EMAIL_SERVER_UID_PRESERVED__']);
+                } elseif(!EmailServer::exists($value['EMAIL_SERVER_UID'])) {
+                    unset($value['EMAIL_EVENT_FROM']);
+                    unset($value['EMAIL_SERVER_UID']);
                 }
 
                 $emailEventData = $emailEvent->save($processUid, $value);

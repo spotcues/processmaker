@@ -21,7 +21,6 @@ class Designer extends Controller
 
     public function __construct()
     {
-
     }
 
     /**

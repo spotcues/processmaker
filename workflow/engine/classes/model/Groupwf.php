@@ -72,47 +72,54 @@ class Groupwf extends BaseGroupwf
     /**
      * Creates the Group
      *
-     * @param array $aData $oData is not necessary
+     * @param array $data is not necessary
+     *
      * @return void
+     *
+     * @throws Exception
      */
-    public function create ($aData)
+    public function create($data)
     {
         //$oData is not necessary
-        $con = Propel::getConnection( GroupwfPeer::DATABASE_NAME );
+        $con = Propel::getConnection(GroupwfPeer::DATABASE_NAME);
         try {
-            if (isset( $aData['GRP_UID'] )) {
-                $this->setGrpUid( $aData['GRP_UID'] );
+            if (!empty($data['GRP_UID'])) {
+                $this->setGrpUid($data['GRP_UID']);
             } else {
-                $this->setGrpUid( G::generateUniqueID() );
+                $this->setGrpUid(G::generateUniqueID());
+            }
+            if(!empty($data['GRP_ID'])){
+                $this->setGrpId($data['GRP_ID']);
             }
 
-            if (isset( $aData['GRP_TITLE'] )) {
-                $this->setGrpTitle( $aData['GRP_TITLE'] );
+            if (!empty($data['GRP_TITLE'])) {
+                $this->setGrpTitle($data['GRP_TITLE']);
             } else {
-                $this->setGrpTitle( 'Default Group Title' );
+                $this->setGrpTitle('Default Group Title');
             }
 
-            if (isset( $aData['GRP_STATUS'] )) {
-                $this->setGrpStatus( $aData['GRP_STATUS'] );
+            if (!empty($aData['GRP_STATUS'])) {
+                $this->setGrpStatus($data['GRP_STATUS']);
             } else {
-                $this->setGrpStatus( 'ACTIVE' );
+                $this->setGrpStatus('ACTIVE');
             }
 
-            if (isset( $aData['GRP_LDAP_DN'] )) {
-                $this->setGrpLdapDn( $aData['GRP_LDAP_DN'] );
+            if (!empty($aData['GRP_LDAP_DN'])) {
+                $this->setGrpLdapDn($data['GRP_LDAP_DN']);
             } else {
-                $this->setGrpLdapDn( '' );
+                $this->setGrpLdapDn('');
             }
 
             if ($this->validate()) {
                 $con->begin();
-                if (isset( $aData['GRP_TITLE'] )) {
-                    $this->setGrpTitleContent( $aData['GRP_TITLE'] );
+                if (!empty($data['GRP_TITLE'])) {
+                    $this->setGrpTitleContent($data['GRP_TITLE']);
                 } else {
-                    $this->setGrpTitleContent( 'Default Group Title' );
+                    $this->setGrpTitleContent('Default Group Title');
                 }
                 $res = $this->save();
                 $con->commit();
+
                 return $this->getGrpUid();
             } else {
                 $msg = '';
@@ -120,7 +127,7 @@ class Groupwf extends BaseGroupwf
                     $msg .= $objValidationFailure->getMessage() . "<br/>";
                 }
 
-                throw (new PropelException( 'The row cannot be created!', new PropelException( $msg ) ));
+                throw (new PropelException('The row cannot be created!', new PropelException($msg)));
             }
 
         } catch (Exception $e) {

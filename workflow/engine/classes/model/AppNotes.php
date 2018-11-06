@@ -145,73 +145,83 @@ class AppNotes extends BaseAppNotes
         return $response;
     }
 
-    public function sendNoteNotification ($appUid, $usrUid, $noteContent, $noteRecipients, $sFrom = "")
+    /**
+     * Case note notification
+     *
+     * @param string $appUid
+     * @param string $usrUid
+     * @param string $noteContent
+     * @param string $noteRecipients
+     * @param string $from
+     * @param integer $delIndex
+     *
+     * @throws Exception
+    */
+    public function sendNoteNotification ($appUid, $usrUid, $noteContent, $noteRecipients, $from = '', $delIndex = 0)
     {
         try {
 
-            $aConfiguration = System::getEmailConfiguration();
+            $configuration = System::getEmailConfiguration();
 
             $msgError = "";
-            if (! isset( $aConfiguration['MESS_ENABLED'] ) || $aConfiguration['MESS_ENABLED'] != '1') {
+            if (! isset( $configuration['MESS_ENABLED'] ) || $configuration['MESS_ENABLED'] != '1') {
                 $msgError = "The default configuration wasn't defined";
-                $aConfiguration['MESS_ENGINE'] = '';
+                $configuration['MESS_ENGINE'] = '';
             }
 
-            $oUser = new Users();
-            $aUser = $oUser->load( $usrUid );
-            $authorName = ((($aUser['USR_FIRSTNAME'] != '') || ($aUser['USR_LASTNAME'] != '')) ? $aUser['USR_FIRSTNAME'] . ' ' . $aUser['USR_LASTNAME'] . ' ' : '') . '<' . $aUser['USR_EMAIL'] . '>';
+            $users = new Users();
+            $userInfo = $users->load($usrUid);
+            $authorName = ((($userInfo['USR_FIRSTNAME'] != '') || ($userInfo['USR_LASTNAME'] != '')) ? $userInfo['USR_FIRSTNAME'] . ' ' . $userInfo['USR_LASTNAME'] . ' ' : '') . '<' . $userInfo['USR_EMAIL'] . '>';
 
-            $oCase = new Cases();
-            $aFields = $oCase->loadCase( $appUid );
-            $configNoteNotification['subject'] = G::LoadTranslation( 'ID_MESSAGE_SUBJECT_NOTE_NOTIFICATION' ) . " @#APP_TITLE ";
+            $cases = new Cases();
+            $fieldCase = $cases->loadCase($appUid, $delIndex);
+            $configNoteNotification['subject'] = G::LoadTranslation('ID_MESSAGE_SUBJECT_NOTE_NOTIFICATION') . " @#APP_TITLE ";
             //Define the body for the notification
-            $body = G::LoadTranslation('ID_CASE_TITLE') . ": @#APP_TITLE<br />";
-            $body .= G::LoadTranslation('ID_CASE_NUMBER') . ": @#APP_NUMBER<br />";
-            $body .= G::LoadTranslation('ID_AUTHOR') . ": $authorName<br /><br />$noteContent";
-            $configNoteNotification['body'] = $body;
+            $configNoteNotification['body'] = $this->getBodyCaseNote($authorName, $noteContent);
+            $body = nl2br(G::replaceDataField($configNoteNotification['body'], $fieldCase));
 
-            $sFrom = G::buildFrom($aConfiguration, $sFrom);
-            $sSubject = G::replaceDataField( $configNoteNotification['subject'], $aFields );
-            $sBody = nl2br( G::replaceDataField( $configNoteNotification['body'], $aFields ) );
-
-            $oUser = new Users();
-            $recipientsArray = explode( ",", $noteRecipients );
+            $users = new Users();
+            $recipientsArray = explode(",", $noteRecipients);
 
             foreach ($recipientsArray as $recipientUid) {
+                $userInfo = $users->load($recipientUid);
+                $to = ((($userInfo['USR_FIRSTNAME'] != '') || ($userInfo['USR_LASTNAME'] != '')) ? $userInfo['USR_FIRSTNAME'] . ' ' . $userInfo['USR_LASTNAME'] . ' ' : '') . '<' . $userInfo['USR_EMAIL'] . '>';
 
-                $aUser = $oUser->load( $recipientUid );
+                $spool = new SpoolRun();
+                $spool->setConfig($configuration);
+                $messageArray = AppMessage::buildMessageRow(
+                    '',
+                    $appUid,
+                    $delIndex,
+                    'DERIVATION',
+                    G::replaceDataField($configNoteNotification['subject'], $fieldCase),
+                    G::buildFrom($configuration, $from),
+                    $to,
+                    $body,
+                    '',
+                    '',
+                    '',
+                    '',
+                    'pending',
+                    '',
+                    $msgError,
+                    true,
+                    (isset($fieldCase['APP_NUMBER'])) ? $fieldCase['APP_NUMBER'] : 0,
+                    (isset($fieldCase['PRO_ID'])) ? $fieldCase['PRO_ID'] : 0,
+                    (isset($fieldCase['TAS_ID'])) ? $fieldCase['TAS_ID'] : 0
+                );
+                $spool->create($messageArray);
 
-                $sTo = ((($aUser['USR_FIRSTNAME'] != '') || ($aUser['USR_LASTNAME'] != '')) ? $aUser['USR_FIRSTNAME'] . ' ' . $aUser['USR_LASTNAME'] . ' ' : '') . '<' . $aUser['USR_EMAIL'] . '>';
-                $oSpool = new SpoolRun();
-
-                $oSpool->setConfig($aConfiguration);
-                $oSpool->create(
-                    array ('msg_uid' => '',
-                           'app_uid' => $appUid,
-                           'del_index' => 0,
-                           'app_msg_type' => 'DERIVATION',
-                           'app_msg_subject' => $sSubject,
-                           'app_msg_from' => $sFrom,
-                           'app_msg_to' => $sTo,
-                           'app_msg_body' => $sBody,
-                           'app_msg_cc' => '',
-                           'app_msg_bcc' => '',
-                           'app_msg_attach' => '',
-                           'app_msg_template' => '',
-                           'app_msg_status' => 'pending',
-                           'app_msg_error' => $msgError
-                           )
-                    );
                 if ($msgError == '') {
-                    if (($aConfiguration['MESS_BACKGROUND'] == '') || ($aConfiguration['MESS_TRY_SEND_INMEDIATLY'] == '1')) {
-                        $oSpool->sendMail();
+                    if (($configuration['MESS_BACKGROUND'] == '') || ($configuration['MESS_TRY_SEND_INMEDIATLY'] == '1')) {
+                        $spool->sendMail();
                     }
                 }
 
             }
             //Send derivation notification - End
-        } catch (Exception $oException) {
-            throw $oException;
+        } catch (Exception $exception) {
+            throw $exception;
         }
     }
 
@@ -254,6 +264,23 @@ class AppNotes extends BaseAppNotes
             }
         }
         return $notes;
+    }
+
+    /**
+     * Define the body for the case note notification
+     *
+     * @param string $authorName
+     * @param string $noteContent
+     *
+     * @return string
+    */
+    private function getBodyCaseNote($authorName = '', $noteContent = '')
+    {
+        $body = G::LoadTranslation('ID_CASE_TITLE') . ': @#APP_TITLE<br />';
+        $body .= G::LoadTranslation('ID_CASE_NUMBER') . ': @#APP_NUMBER<br />';
+        $body .= G::LoadTranslation('ID_AUTHOR') . ': ' . $authorName . '<br /><br />' . $noteContent;
+
+        return $body;
     }
 
 }

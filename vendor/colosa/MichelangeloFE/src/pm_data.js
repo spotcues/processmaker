@@ -293,6 +293,9 @@ PMData.prototype.beforeContextMenu = function () {
         menuItem,
         hasMarker = false;
     this.canvas.hideAllCoronas();
+    if (this.canvas.readOnly) {
+      return;
+    }
     if (this.getDataType() === 'DATAOBJECT' || this.getDataType() === 'DATAOUTPUT' || this.getDataType() === 'DATAINPUT') {
         items = this.menu.items.find('id', 'dataType').childMenu.items;
         for (i = 0; i < items.getSize(); i += 1) {

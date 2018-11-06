@@ -38,7 +38,7 @@ while ($aRow = $oDataset->getRow()) {
             </tr>
         </table>";
 
-    $ch = &$tree->addChild('', $html, array('nodeType' => 'child'));
+    $ch = $tree->addChild('', $html, array('nodeType' => 'child'));
     $ch->point = '<img src="/images/users.png" />';
 
     $oDataset->next();

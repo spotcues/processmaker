@@ -26,21 +26,21 @@ use ProcessMaker\Plugins\PluginRegistry;
 
 /** @var RBAC $RBAC */
 global $RBAC;
-$RBAC->requirePermissions( 'PM_SETUP' );
+$RBAC->requirePermissions('PM_SETUP');
 
-$headPublisher = & headPublisher::getSingleton();
-$headPublisher->addExtJsScript( 'setup/pluginsMain', false );
-$headPublisher->assign( "PROCESSMAKER_URL", "/sys" . config("system.workspace") . "/" . SYS_LANG . "/" . SYS_SKIN );
-$headPublisher->assign( "SYS_SKIN", SYS_SKIN );
+$headPublisher = headPublisher::getSingleton();
+$headPublisher->addExtJsScript('setup/pluginsMain', false);
+$headPublisher->assign("PROCESSMAKER_URL", "/sys" . config("system.workspace") . "/" . SYS_LANG . "/" . SYS_SKIN);
+$headPublisher->assign("SYS_SKIN", SYS_SKIN);
 
 $oPluginRegistry = PluginRegistry::loadSingleton();
 if ($oPluginRegistry->getStatusPlugin('pmWorkspaceManagement') && $oPluginRegistry->getStatusPlugin('pmWorkspaceManagement') == "enabled") {
-    $headPublisher = $oPluginRegistry->executeMethod('pmWorkspaceManagement', 'disableButtonsPluginMain', $headPublisher);
+    $headPublisher = $oPluginRegistry->executeMethod('pmWorkspaceManagement', 'disableButtonsPluginMain',
+        $headPublisher);
 }
 
-if (isset( $_SESSION['__PLUGIN_ERROR__'] )) {
-    $headPublisher->assign( '__PLUGIN_ERROR__', $_SESSION['__PLUGIN_ERROR__'] );
-    unset( $_SESSION['__PLUGIN_ERROR__'] );
+if (isset($_SESSION['__PLUGIN_ERROR__'])) {
+    $headPublisher->assign('__PLUGIN_ERROR__', $_SESSION['__PLUGIN_ERROR__']);
+    unset($_SESSION['__PLUGIN_ERROR__']);
 }
-G::RenderPage( 'publish', 'extJs' );
-
+G::RenderPage('publish', 'extJs');

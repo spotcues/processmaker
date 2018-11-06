@@ -6,6 +6,7 @@ use Illuminate\View\ViewServiceProvider;
 
 return [
     'name' => env('APP_NAME', 'ProcessMaker'),
+    'url' => env('APP_URL', 'http://localhost'),
     'env' => env('APP_ENV', 'production'),
     'debug' => env('APP_DEBUG', false),
     'log' => env('APP_LOG', 'single'),
@@ -16,6 +17,11 @@ return [
         FilesystemServiceProvider::class,
         CacheServiceProvider::class,
         ViewServiceProvider::class,
+        Illuminate\Database\DatabaseServiceProvider::class,
+        Illuminate\Foundation\Providers\ConsoleSupportServiceProvider::class,
+        Illuminate\Queue\QueueServiceProvider::class,
+        Illuminate\Translation\TranslationServiceProvider::class,
+
     ],
 
     'aliases' => [

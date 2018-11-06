@@ -887,15 +887,17 @@ PMDesigner.ProcessFilesManager = function (processFileManagerOptionPath, optionC
             value = 'blob',
             url = HTTP_SERVER_HOSTNAME + '/api/1.0/' + WORKSPACE + '/project/' + PMDesigner.project.id + '/file-manager/' + rowselectedFile.getData().prf_uid + '/download';
 
-        if (win.XMLHttpRequest)
+        if (win.XMLHttpRequest) {
             xhr = new XMLHttpRequest();
-        else if (win.ActiveXObject)
+        } else if (win.ActiveXObject) {
             xhr = new ActiveXObject('Microsoft.XMLHTTP');
+        }
         win.URL = win.URL || win.webkitURL;
 
         xhr.open('GET', url, true);
         xhr.responseType = value;
         xhr.setRequestHeader('Authorization', 'Bearer ' + PMDesigner.project.keys.access_token);
+        xhr.setRequestHeader ('Cache-Control', 'no-cache');
         xhr.onload = function () {
             if (this.status === 200) {
                 if (processFileManagerOptionPath == "templates") {

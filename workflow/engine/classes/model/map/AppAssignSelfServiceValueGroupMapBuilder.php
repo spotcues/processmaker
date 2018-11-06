@@ -69,6 +69,10 @@ class AppAssignSelfServiceValueGroupMapBuilder
 
         $tMap->addColumn('GRP_UID', 'GrpUid', 'string', CreoleTypes::VARCHAR, true, 32);
 
+        $tMap->addColumn('ASSIGNEE_ID', 'AssigneeId', 'int', CreoleTypes::INTEGER, false, null);
+
+        $tMap->addColumn('ASSIGNEE_TYPE', 'AssigneeType', 'int', CreoleTypes::INTEGER, true, null);
+
     } // doBuild()
 
 } // AppAssignSelfServiceValueGroupMapBuilder

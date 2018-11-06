@@ -29,13 +29,13 @@
 *
 */
 
-if (! isset( $_SESSION['PROCESS'] )) {
-    G::header( 'location: login' );
+if (! isset($_SESSION['PROCESS'])) {
+    G::header('location: login');
 }
 
 global $_DBArray;
-if (! isset( $_DBArray )) {
-    $_DBArray = array ();
+if (! isset($_DBArray)) {
+    $_DBArray = array();
 }
 
 $G_MAIN_MENU = 'caseTracker';
@@ -46,7 +46,7 @@ switch ($_GET['CTO_TYPE_OBJ']) {
     case 'DYNAFORM':
 
         $oCase = new Cases();
-        $Fields = $oCase->loadCase( $_SESSION['APPLICATION'] );
+        $Fields = $oCase->loadCase($_SESSION['APPLICATION']);
         $Fields['APP_DATA']['__DYNAFORM_OPTIONS']['PREVIOUS_STEP_LABEL'] = '';
         $Fields['APP_DATA']['__DYNAFORM_OPTIONS']['NEXT_STEP_LABEL'] = '';
         $Fields['APP_DATA']['__DYNAFORM_OPTIONS']['NEXT_STEP'] = '#';
@@ -59,7 +59,6 @@ switch ($_GET['CTO_TYPE_OBJ']) {
         $arrayDynaFormData = $dynaForm->Load($_GET["CTO_UID_OBJ"]);
 
         if (isset($arrayDynaFormData["DYN_VERSION"]) && $arrayDynaFormData["DYN_VERSION"] == 2) {
-
             $Fields["PRO_UID"] = $_SESSION["PROCESS"];
             $Fields["CURRENT_DYNAFORM"] = $_GET["CTO_UID_OBJ"];
 
@@ -77,27 +76,26 @@ switch ($_GET['CTO_TYPE_OBJ']) {
     case 'INPUT_DOCUMENT':
 
         $oCase = new Cases();
-        $c = $oCase->getAllUploadedDocumentsCriteriaTracker( $_SESSION['PROCESS'], $_SESSION['APPLICATION'], $_GET['CTO_UID_OBJ'] );
+        $c = $oCase->getAllUploadedDocumentsCriteriaTracker($_SESSION['PROCESS'], $_SESSION['APPLICATION'], $_GET['CTO_UID_OBJ']);
 
-        $oHeadPublisher = & headPublisher::getSingleton();
-        $oHeadPublisher->addScriptFile( '/jscore/tracker/tracker.js' );
+        $oHeadPublisher = headPublisher::getSingleton();
+        $oHeadPublisher->addScriptFile('/jscore/tracker/tracker.js');
 
         $G_PUBLISH = new Publisher();
-        $G_PUBLISH->AddContent( 'propeltable', 'paged-table', 'tracker/tracker_Inputdocs', $c );
-        G::RenderPage( 'publish' );
+        $G_PUBLISH->AddContent('propeltable', 'paged-table', 'tracker/tracker_Inputdocs', $c);
+        G::RenderPage('publish');
         break;
 
     case 'OUTPUT_DOCUMENT':
 
         $oCase = new Cases();
-        $c = $oCase->getAllGeneratedDocumentsCriteriaTracker( $_SESSION['PROCESS'], $_SESSION['APPLICATION'], $_GET['CTO_UID_OBJ'] );
+        $c = $oCase->getAllGeneratedDocumentsCriteriaTracker($_SESSION['PROCESS'], $_SESSION['APPLICATION'], $_GET['CTO_UID_OBJ']);
 
-        $oHeadPublisher = & headPublisher::getSingleton();
-        $oHeadPublisher->addScriptFile( '/jscore/tracker/tracker.js' );
+        $oHeadPublisher = headPublisher::getSingleton();
+        $oHeadPublisher->addScriptFile('/jscore/tracker/tracker.js');
 
         $G_PUBLISH = new Publisher();
-        $G_PUBLISH->AddContent( 'propeltable', 'paged-table', 'tracker/tracker_Outputdocs', $c );
-        G::RenderPage( 'publish' );
+        $G_PUBLISH->AddContent('propeltable', 'paged-table', 'tracker/tracker_Outputdocs', $c);
+        G::RenderPage('publish');
         break;
 }
-

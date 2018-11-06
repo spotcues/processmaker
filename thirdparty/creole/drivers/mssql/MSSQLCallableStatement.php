@@ -128,7 +128,7 @@ class MSSQLCallableStatement extends MSSQLPreparedStatement implements CallableS
                 $this->set($i+1, $params[$i]);
             }
         }                
-        
+
         $this->result = mssql_execute($this->stmt);
         if (!$this->result) {
             throw new SQLException('unable to execute callable statement', mssql_get_last_message());
@@ -142,9 +142,9 @@ class MSSQLCallableStatement extends MSSQLPreparedStatement implements CallableS
      */
     function getMoreResults()
     {
-        $this->rsFetchCount++; // we track this because 
+        $this->rsFetchCount++; // we track this because
         $hasMore = mssql_next_result($this->result);
-        if ($this->resultSet) $this->resultSet->close();                    
+        if ($this->resultSet) $this->resultSet->close();
         if ($hasMore) {
             $clazz = $this->resultClass;
             $this->resultSet = new $clazz($this, $this->result);

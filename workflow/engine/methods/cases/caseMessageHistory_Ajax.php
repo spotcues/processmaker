@@ -15,32 +15,30 @@ $actionAjax = isset($_REQUEST['actionAjax']) ? $_REQUEST['actionAjax'] : null;
 
 switch ($actionAjax) {
     case 'messageHistoryGridList_JXP':
-        if (!isset($_REQUEST['start']) || $_REQUEST['start'] == '') {
-            $_REQUEST['start'] = 0;
-        }
-
-        if (!isset($_REQUEST['limit']) || $_REQUEST['limit'] == '') {
-            $_REQUEST['limit'] = 20;
-        }
-
-        $dir = isset($_POST['dir']) ? $_POST['dir'] : 'ASC';
+        $start = isset($_REQUEST['start']) ? $_REQUEST['start'] : 0;
+        $limit = isset($_REQUEST['limit']) ? $_REQUEST['limit'] : 20;
+        $dir = isset($_POST['dir']) ? $_POST['dir'] : 'DESC';
         $sort = isset($_POST['sort']) ? $_POST['sort'] : '';
 
         global $G_PUBLISH;
         $case = new Cases();
-        $case->dir = $dir;
-        $case->sort = $sort;
-
-        $appMessageArray = $case->getHistoryMessagesTrackerExt($_SESSION['APPLICATION'], true, $_REQUEST['start'], $_REQUEST['limit']);
-        $appMessageCountArray = $case->getHistoryMessagesTrackerExt($_SESSION['APPLICATION'], true);
-        $result = new stdClass();
-        $process = [];
-
-
         $proUid = $_SESSION['PROCESS'];
         $appUid = $_SESSION['APPLICATION'];
         $tasUid = $_SESSION['TASK'];
         $usrUid = $_SESSION['USER_LOGGED'];
+        $caseData = $case->loadCase($appUid);
+        $appNumber = $caseData['APP_DATA']['APP_NUMBER'];
+
+        $appMessage = new AppMessage();
+        $appMessageArray = $appMessage->getDataMessage(
+            $appNumber,
+            true,
+            $start,
+            $limit,
+            $sort,
+            $dir
+        );
+        $totalCount = $appMessage->getCountMessage($appNumber);
 
         $respBlock = $case->getAllObjectsFrom($proUid, $appUid, $tasUid, $usrUid, 'BLOCK');
         $respView = $case->getAllObjectsFrom($proUid, $appUid, $tasUid, $usrUid, 'VIEW');
@@ -70,36 +68,30 @@ switch ($actionAjax) {
             }
         }
 
-        $totalCount = 0;
-        foreach ($appMessageArray as $index => $value) {
-            if (($appMessageArray[$index]['APP_MSG_SHOW_MESSAGE'] == 1 && $respMess != 'BLOCK') &&
-                ($appMessageArray[$index]['DEL_INDEX'] == 0 || in_array($appMessageArray[$index]['DEL_INDEX'], $delIndex))) {
+        $messageList = [];
+        foreach ($appMessageArray as $index => &$value) {
+            if (
+                ($appMessageArray[$index]['APP_MSG_SHOW_MESSAGE'] == 1 && $respMess != 'BLOCK')
+                &&
+                (
+                    $appMessageArray[$index]['DEL_INDEX'] == 0
+                    || in_array($appMessageArray[$index]['DEL_INDEX'], $delIndex)
+                )
+            ) {
+                //Define the label with translation
+                $value['APP_MSG_TYPE'] = !empty($arrayToTranslation[$value['APP_MSG_TYPE']]) ? $arrayToTranslation[$value['APP_MSG_TYPE']] : $value['APP_MSG_TYPE'];
+
                 $appMessageArray[$index]['ID_MESSAGE'] = $appMessageArray[$index]['APP_UID'] . '_' . $appMessageArray[$index]['APP_MSG_UID'];
                 if ($respMess == 'BLOCK' || $respMess == '') {
                     $appMessageArray[$index]['APP_MSG_BODY'] = '';
                 }
-                $process[] = array_merge($appMessageArray[$index], ['MSGS_HISTORY' => $respMess]);
-                $totalCount++;
+                $messageList[] = array_merge($appMessageArray[$index], ['MSGS_HISTORY' => $respMess]);
             }
         }
-
-        $process = array_splice($process, $_REQUEST['start'], $_REQUEST['limit']);
 
         $response = new stdclass();
-        $response->data = $process;
+        $response->data = $messageList;
         $response->totalCount = $totalCount;
-
-        if (!empty($process)) {
-            if (!isset($response->data[0])) {
-                $response->data[0] = array('APP_MSG_TYPE' => '');
-            }
-
-            foreach ($response->data as $key => $value) {
-                $response->data[$key]['APP_MSG_TYPE'] = array_key_exists($response->data[$key]['APP_MSG_TYPE'], $arrayToTranslation) ?
-                    $arrayToTranslation[$response->data[$key]['APP_MSG_TYPE']] :
-                    $response->data[$key]['APP_MSG_TYPE'];
-            }
-        }
 
         echo G::json_encode($response);
         break;
@@ -171,6 +163,7 @@ switch ($actionAjax) {
             $spool->create([
                 'msg_uid' => $data['MSG_UID'],
                 'app_uid' => $data['APP_UID'],
+                'app_number' => $data['APP_NUMBER'],
                 'del_index' => $data['DEL_INDEX'],
                 'app_msg_type' => $data['APP_MSG_TYPE'],
                 'app_msg_subject' => $data['APP_MSG_SUBJECT'],

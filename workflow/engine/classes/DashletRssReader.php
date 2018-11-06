@@ -71,7 +71,7 @@ class DashletRssReader implements DashletInterface
         $self->rss = @simplexml_load_string( curl_exec( $pCurl ) );
         if ($self->rss) {
             $index = 0;
-            $render = '';
+            $render = [];
             $self->items = $self->rss->channel->item;
             if (count( $self->rss->channel ) != 0) {
                 $status = 'true';

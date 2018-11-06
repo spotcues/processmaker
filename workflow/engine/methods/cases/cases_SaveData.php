@@ -98,7 +98,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && empty($_POST) && empty($_FILES) && $
 
 try {
     if ($_GET['APP_UID'] !== $_SESSION['APPLICATION']) {
-        throw new Exception( G::LoadTranslation( 'ID_INVALID_APPLICATION_ID_MSG', array ('<a href=\'' . $_SERVER['HTTP_REFERER'] . '\'>{1}</a>',G::LoadTranslation( 'ID_REOPEN' ) ) ) );
+        $urlReferer = empty($_SERVER['HTTP_REFERER']) ? '../cases/casesListExtJsRedirector' : $_SERVER['HTTP_REFERER'];
+        throw new Exception(G::LoadTranslation('ID_INVALID_APPLICATION_ID_MSG', ['<a href=\'' . $urlReferer . '\'>{1}</a>', G::LoadTranslation('ID_REOPEN')]));
     }
 
     $arrayVariableDocumentToDelete = [];

@@ -32,27 +32,26 @@
 
 try {
     //$oJSON = new Services_JSON();
-    $stdObj = Bootstrap::json_decode( stripslashes( $_POST['data'] ) );
-    if (isset( $stdObj->pro_uid ))
+    $stdObj = Bootstrap::json_decode(stripslashes($_POST['data']));
+    if (isset($stdObj->pro_uid)) {
         $sProUid = $stdObj->pro_uid;
-    else
-        throw (new Exception( 'the process uid is not defined!.' ));
+    } else {
+        throw (new Exception('the process uid is not defined!.'));
+    }
 
     $oProcessMap = new ProcessMap();
-    $c = $oProcessMap->listProcessesUser( $sProUid );
+    $c = $oProcessMap->listProcessesUser($sProUid);
 
-    $oHeadPublisher = & headPublisher::getSingleton();
-    $oHeadPublisher->addScriptFile( '/jscore/processmap/core/processUser.js' );
+    $oHeadPublisher = headPublisher::getSingleton();
+    $oHeadPublisher->addScriptFile('/jscore/processmap/core/processUser.js');
 
     $G_PUBLISH = new Publisher();
-    $G_PUBLISH->AddContent( 'propeltable', 'paged-table', 'processes/processes_User', $c, array ('PRO_UID' => $sProUid
-    ) );
-    G::RenderPage( 'publish', 'raw' );
-
+    $G_PUBLISH->AddContent('propeltable', 'paged-table', 'processes/processes_User', $c, array('PRO_UID' => $sProUid
+    ));
+    G::RenderPage('publish', 'raw');
 } catch (Exception $e) {
     $G_PUBLISH = new Publisher();
     $aMessage['MESSAGE'] = $e->getMessage();
-    $G_PUBLISH->AddContent( 'xmlform', 'xmlform', 'login/showMessage', '', $aMessage );
-    G::RenderPage( 'publish', 'raw' );
+    $G_PUBLISH->AddContent('xmlform', 'xmlform', 'login/showMessage', '', $aMessage);
+    G::RenderPage('publish', 'raw');
 }
-?>

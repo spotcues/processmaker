@@ -3,6 +3,7 @@
  * Class SkinEngine
  *
  * This class load and dispatch the main systems layouts
+ *
  * @author Erik Amaru Ortiz <erik@colosa.com>
  * @author Hugo Loza
  */
@@ -118,7 +119,6 @@ class SkinEngine
         if ($skinObject && file_exists($skinObject . PATH_SEP . 'config.xml')
             && file_exists($skinObject . PATH_SEP . 'layout.html')
         ) {
-
             $configurationFile = $skinObject . PATH_SEP . 'config.xml';
             $layoutFile = $skinObject . PATH_SEP . 'layout.html';
 
@@ -204,7 +204,7 @@ class SkinEngine
         G::verifyPath(PATH_SMARTY_CACHE, true);
 
         $smarty = new Smarty();
-        $oHeadPublisher =& headPublisher::getSingleton();
+        $oHeadPublisher = headPublisher::getSingleton();
 
         $smarty->template_dir = $this->layoutFileRaw['dirname'];
         $smarty->compile_dir = PATH_SMARTY_C;
@@ -222,15 +222,14 @@ class SkinEngine
 
     private function _plain()
     {
-        $oHeadPublisher = &headPublisher::getSingleton();
+        $oHeadPublisher = headPublisher::getSingleton();
         echo $oHeadPublisher->renderExtJs();
     }
 
     private function _extjs()
     {
-
-        $oServerConf =& ServerConf::getSingleton();
-        $oHeadPublisher =& headPublisher::getSingleton();
+        $oServerConf = ServerConf::getSingleton();
+        $oHeadPublisher = headPublisher::getSingleton();
 
         if ($oHeadPublisher->extJsInit === true) {
             $header = $oHeadPublisher->getExtJsVariablesScript();
@@ -271,13 +270,19 @@ class SkinEngine
         $meta = null;
         $dirBody = null;
 
-        if (isset($_SERVER["HTTP_USER_AGENT"]) && preg_match("/^.*\(.*Trident.(\d+)\..+\).*$/",
-                $_SERVER["HTTP_USER_AGENT"], $arrayMatch)
+        if (isset($_SERVER["HTTP_USER_AGENT"]) && preg_match(
+                "/^.*\(.*Trident.(\d+)\..+\).*$/",
+                $_SERVER["HTTP_USER_AGENT"],
+                $arrayMatch
+            )
         ) {
 
             //Get the IE version
-            if (preg_match("/^.*\(.*MSIE (\d+)\..+\).*$/", $_SERVER["HTTP_USER_AGENT"],
-                    $arrayMatch) || preg_match("/^.*\(.*rv.(\d+)\..+\).*$/", $_SERVER["HTTP_USER_AGENT"], $arrayMatch)
+            if (preg_match(
+                    "/^.*\(.*MSIE (\d+)\..+\).*$/",
+                    $_SERVER["HTTP_USER_AGENT"],
+                    $arrayMatch
+                ) || preg_match("/^.*\(.*rv.(\d+)\..+\).*$/", $_SERVER["HTTP_USER_AGENT"], $arrayMatch)
             ) {
                 $ie = intval($arrayMatch[1]);
             }
@@ -308,7 +313,7 @@ class SkinEngine
             }
         }
 
-        $serverConf = &ServerConf::getSingleton();
+        $serverConf = ServerConf::getSingleton();
 
         if ($serverConf->isRtl(SYS_LANG)) {
             $dirBody = "dir=\"RTL\"";
@@ -331,7 +336,7 @@ class SkinEngine
         G::verifyPath(PATH_SMARTY_CACHE, true);
 
         $smarty = new Smarty();
-        $oHeadPublisher =& headPublisher::getSingleton();
+        $oHeadPublisher = headPublisher::getSingleton();
 
         $smarty->template_dir = $this->layoutFileBlank['dirname'];
         $smarty->compile_dir = PATH_SMARTY_C;
@@ -367,7 +372,7 @@ class SkinEngine
         G::verifyPath(PATH_SMARTY_CACHE, true);
 
         $smarty = new Smarty();
-        $oHeadPublisher = &headPublisher::getSingleton();
+        $oHeadPublisher = headPublisher::getSingleton();
 
         $smarty->template_dir = $this->layoutFileSubmenu['dirname'];
         $smarty->compile_dir = PATH_SMARTY_C;
@@ -415,8 +420,13 @@ class SkinEngine
             }
 
             $oMenu = new Menu();
-            $menus = $oMenu->generateArrayForTemplate($G_MAIN_MENU, 'SelectedMenu', 'mainMenu', $G_MENU_SELECTED,
-                $G_ID_MENU_SELECTED);
+            $menus = $oMenu->generateArrayForTemplate(
+                $G_MAIN_MENU,
+                'SelectedMenu',
+                'mainMenu',
+                $G_MENU_SELECTED,
+                $G_ID_MENU_SELECTED
+            );
             $smarty->assign('menus', $menus);
 
             if (substr(SYS_SKIN, 0, 2) == 'ux') {
@@ -425,8 +435,13 @@ class SkinEngine
             }
 
             $oSubMenu = new Menu();
-            $subMenus = $oSubMenu->generateArrayForTemplate($G_SUB_MENU, 'selectedSubMenu', 'subMenu',
-                $G_SUB_MENU_SELECTED, $G_ID_SUB_MENU_SELECTED);
+            $subMenus = $oSubMenu->generateArrayForTemplate(
+                $G_SUB_MENU,
+                'selectedSubMenu',
+                'subMenu',
+                $G_SUB_MENU_SELECTED,
+                $G_ID_SUB_MENU_SELECTED
+            );
             $smarty->assign('subMenus', $subMenus);
 
             if (!defined('NO_DISPLAY_USERNAME')) {
@@ -444,9 +459,15 @@ class SkinEngine
 
                 $conf = new Configurations();
                 $conf->getFormats();
-                $name = $conf->userNameFormat(isset($_SESSION['USR_USERNAME']) ? $_SESSION['USR_USERNAME'] : '',
-                    isset($_SESSION['USR_FULLNAME']) ? htmlentities($_SESSION['USR_FULLNAME'], ENT_QUOTES,
-                        'UTF-8') : '', isset($_SESSION['USER_LOGGED']) ? $_SESSION['USER_LOGGED'] : '');
+                $name = $conf->userNameFormat(
+                    isset($_SESSION['USR_USERNAME']) ? $_SESSION['USR_USERNAME'] : '',
+                    isset($_SESSION['USR_FULLNAME']) ? htmlentities(
+                        $_SESSION['USR_FULLNAME'],
+                        ENT_QUOTES,
+                        'UTF-8'
+                    ) : '',
+                    isset($_SESSION['USER_LOGGED']) ? $_SESSION['USER_LOGGED'] : ''
+                );
                 $smarty->assign('user', $name);
             }
 
@@ -482,7 +503,7 @@ class SkinEngine
         G::verifyPath(PATH_SMARTY_CACHE, true);
 
         $smarty = new Smarty();
-        $oHeadPublisher =& headPublisher::getSingleton();
+        $oHeadPublisher = headPublisher::getSingleton();
 
         $smarty->template_dir = PATH_SKINS;
         $smarty->compile_dir = PATH_SMARTY_C;
@@ -530,13 +551,23 @@ class SkinEngine
             global $G_ID_SUB_MENU_SELECTED;
 
             $oMenu = new Menu();
-            $menus = $oMenu->generateArrayForTemplate($G_MAIN_MENU, 'SelectedMenu', 'mainMenu', $G_MENU_SELECTED,
-                $G_ID_MENU_SELECTED);
+            $menus = $oMenu->generateArrayForTemplate(
+                $G_MAIN_MENU,
+                'SelectedMenu',
+                'mainMenu',
+                $G_MENU_SELECTED,
+                $G_ID_MENU_SELECTED
+            );
             $smarty->assign('menus', $menus);
 
             $oSubMenu = new Menu();
-            $subMenus = $oSubMenu->generateArrayForTemplate($G_SUB_MENU, 'selectedSubMenu', 'subMenu',
-                $G_SUB_MENU_SELECTED, $G_ID_SUB_MENU_SELECTED);
+            $subMenus = $oSubMenu->generateArrayForTemplate(
+                $G_SUB_MENU,
+                'selectedSubMenu',
+                'subMenu',
+                $G_SUB_MENU_SELECTED,
+                $G_ID_SUB_MENU_SELECTED
+            );
             $smarty->assign('subMenus', $subMenus);
 
             $smarty->assign('user', isset($_SESSION['USR_USERNAME']) ? $_SESSION['USR_USERNAME'] : '');
@@ -561,9 +592,8 @@ class SkinEngine
 
     private function _mvc()
     {
-
-        $oServerConf =& ServerConf::getSingleton();
-        $oHeadPublisher =& headPublisher::getSingleton();
+        $oServerConf = ServerConf::getSingleton();
+        $oHeadPublisher = headPublisher::getSingleton();
 
         $smarty = new Smarty();
 
@@ -647,7 +677,7 @@ class SkinEngine
         G::verifyPath(PATH_SMARTY_CACHE, true);
 
         $smarty = new Smarty();
-        $oHeadPublisher = &headPublisher::getSingleton();
+        $oHeadPublisher = headPublisher::getSingleton();
 
         $smarty->compile_dir = PATH_SMARTY_C;
         $smarty->cache_dir = PATH_SMARTY_CACHE;
@@ -655,13 +685,13 @@ class SkinEngine
 
         //To setup en extJS Theme for this Skin
 
-        $oServerConf =& ServerConf::getSingleton();
+        $oServerConf = ServerConf::getSingleton();
         $extSkin = $oServerConf->getProperty("extSkin");
 
         if (!$extSkin) {
             $extSkin = [SYS_SKIN => "xtheme-gray"];
             $oServerConf->setProperty("extSkin", $extSkin);
-        } else if (empty($extSkin[SYS_SKIN])) {
+        } elseif (empty($extSkin[SYS_SKIN])) {
             $extSkin[SYS_SKIN] = "xtheme-gray";
             $oServerConf->setProperty("extSkin", $extSkin);
         }
@@ -682,9 +712,15 @@ class SkinEngine
             if (preg_match("/^.*\(.*Trident.(\d+)\..+\).*$/", $_SERVER["HTTP_USER_AGENT"], $arrayMatch)) {
 
                 //Get the IE version
-                if (preg_match("/^.*\(.*MSIE (\d+)\..+\).*$/", $_SERVER["HTTP_USER_AGENT"],
-                        $arrayMatch) || preg_match("/^.*\(.*rv.(\d+)\..+\).*$/", $_SERVER["HTTP_USER_AGENT"],
-                        $arrayMatch)
+                if (preg_match(
+                        "/^.*\(.*MSIE (\d+)\..+\).*$/",
+                        $_SERVER["HTTP_USER_AGENT"],
+                        $arrayMatch
+                    ) || preg_match(
+                        "/^.*\(.*rv.(\d+)\..+\).*$/",
+                        $_SERVER["HTTP_USER_AGENT"],
+                        $arrayMatch
+                    )
                 ) {
                     $ie = intval($arrayMatch[1]);
                 }
@@ -740,13 +776,23 @@ class SkinEngine
             }
 
             $oMenu = new Menu();
-            $menus = $oMenu->generateArrayForTemplate($G_MAIN_MENU, 'SelectedMenu', 'mainMenu', $G_MENU_SELECTED,
-                $G_ID_MENU_SELECTED);
+            $menus = $oMenu->generateArrayForTemplate(
+                $G_MAIN_MENU,
+                'SelectedMenu',
+                'mainMenu',
+                $G_MENU_SELECTED,
+                $G_ID_MENU_SELECTED
+            );
             $smarty->assign('menus', $menus);
 
             $oSubMenu = new Menu();
-            $subMenus = $oSubMenu->generateArrayForTemplate($G_SUB_MENU, 'selectedSubMenu', 'subMenu',
-                $G_SUB_MENU_SELECTED, $G_ID_SUB_MENU_SELECTED);
+            $subMenus = $oSubMenu->generateArrayForTemplate(
+                $G_SUB_MENU,
+                'selectedSubMenu',
+                'subMenu',
+                $G_SUB_MENU_SELECTED,
+                $G_ID_SUB_MENU_SELECTED
+            );
             $smarty->assign('subMenus', $subMenus);
 
             if (!defined('NO_DISPLAY_USERNAME')) {
@@ -757,11 +803,15 @@ class SkinEngine
 
                 $smarty->assign('user_logged', (isset($_SESSION['USER_LOGGED']) ? $_SESSION['USER_LOGGED'] : ''));
                 if (SYS_SKIN == 'neoclassic') {
-                    $smarty->assign('tracker',
-                        (SYS_COLLECTION == 'tracker') ? (($G_PUBLISH->Parts[0]['File'] != 'tracker/loginpm3') ? true : '') : '');
+                    $smarty->assign(
+                        'tracker',
+                        (SYS_COLLECTION == 'tracker') ? (($G_PUBLISH->Parts[0]['File'] != 'tracker/loginpm3') ? true : '') : ''
+                    );
                 } else {
-                    $smarty->assign('tracker',
-                        (SYS_COLLECTION == 'tracker') ? (($G_PUBLISH->Parts[0]['File'] != 'tracker/login') ? true : '') : '');
+                    $smarty->assign(
+                        'tracker',
+                        (SYS_COLLECTION == 'tracker') ? (($G_PUBLISH->Parts[0]['File'] != 'tracker/login') ? true : '') : ''
+                    );
                 }
                 $smarty->assign('timezone_status', (isset($_SESSION['__TIME_ZONE_FAILED__']) && $_SESSION['__TIME_ZONE_FAILED__']) ? 'failed' : 'ok');
                 $smarty->assign('switch_interface', $switch_interface);
@@ -775,14 +825,20 @@ class SkinEngine
 
                 $conf = new Configurations();
                 $conf->getFormats();
-                $name = $conf->userNameFormat(isset($_SESSION['USR_USERNAME']) ? $_SESSION['USR_USERNAME'] : '',
-                    isset($_SESSION['USR_FULLNAME']) ? htmlentities($_SESSION['USR_FULLNAME'], ENT_QUOTES,
-                        'UTF-8') : '', isset($_SESSION['USER_LOGGED']) ? $_SESSION['USER_LOGGED'] : '');
+                $name = $conf->userNameFormat(
+                    isset($_SESSION['USR_USERNAME']) ? $_SESSION['USR_USERNAME'] : '',
+                    isset($_SESSION['USR_FULLNAME']) ? htmlentities(
+                        $_SESSION['USR_FULLNAME'],
+                        ENT_QUOTES,
+                        'UTF-8'
+                    ) : '',
+                    isset($_SESSION['USER_LOGGED']) ? $_SESSION['USER_LOGGED'] : ''
+                );
                 $smarty->assign('user', $name);
             }
 
             if (!empty(config("system.workspace"))) {
-                $pmLicenseManagerO = &PmLicenseManager::getSingleton();
+                $pmLicenseManagerO = PmLicenseManager::getSingleton();
                 $expireIn = $pmLicenseManagerO->getExpireIn();
                 $expireInLabel = $pmLicenseManagerO->getExpireInLabel();
 
@@ -791,8 +847,10 @@ class SkinEngine
                     $RBAC->aUserInfo['PROCESSMAKER']['ROLE']['ROL_CODE'] == 'PROCESSMAKER_ADMIN'
                 ) {
                     if ($expireInLabel != '') {
-                        $smarty->assign('msgVer',
-                            '<label class="textBlack">' . $expireInLabel . '</label>&nbsp;&nbsp;');
+                        $smarty->assign(
+                            'msgVer',
+                            '<label class="textBlack">' . $expireInLabel . '</label>&nbsp;&nbsp;'
+                        );
                     }
                 }
             }
@@ -820,7 +878,8 @@ class SkinEngine
             }
             if (class_exists('ProcessMaker\Plugins\PluginRegistry') && !empty(config("system.workspace"))) {
                 $oPluginRegistry = PluginRegistry::loadSingleton();
-                if (isset($sFotoSelect) && $sFotoSelect != '' && !(strcmp($sWspaceSelect, config("system.workspace")))) {
+                if (isset($sFotoSelect) && $sFotoSelect != '' && !(strcmp($sWspaceSelect,
+                        config("system.workspace")))) {
                     $sCompanyLogo = $oPluginRegistry->getCompanyLogo($sFotoSelect);
                     $sCompanyLogo = "/sys" . config("system.workspace") . "/" . SYS_LANG . "/" . SYS_SKIN . "/setup/showLogoFile.php?id=" . base64_encode($sCompanyLogo);
                 } else {
@@ -837,4 +896,3 @@ class SkinEngine
         }
     }
 }
-

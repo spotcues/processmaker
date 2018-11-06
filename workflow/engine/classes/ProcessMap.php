@@ -1,43 +1,7 @@
 <?php
 
-/**
- * class.processMap.php
- *
- * @package workflow.engine.ProcessMaker
- *
- * ProcessMaker Open Source Edition
- * Copyright (C) 2004 - 2011 Colosa Inc.
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- *
- * For more information, contact Colosa Inc, 2566 Le Jeune Rd.,
- * Coral Gables, FL, 33134, USA, or email info@colosa.com.
- */
-
 use ProcessMaker\Plugins\PluginRegistry;
 
-/**
- *
- * @package workflow.engine.ProcessMaker
- */
-/**
- * processMap - Process Map class
- *
- * @package workflow.engine.ProcessMaker
- * @author Julio Cesar Laura Avendano
- * @copyright 2007 COLOSA
- */
 class ProcessMap
 {
     /*
@@ -433,7 +397,6 @@ class ProcessMap
             $oProcess = new Process();
 
             if (!is_null($oProcess)) {
-
                 $calendar = new Calendar();
                 $files = Processes::getProcessFiles($sProcessUID, 'mail');
 
@@ -820,7 +783,7 @@ class ProcessMap
             }
 
             global $_DBArray;
-            $_DBArray = (isset($_SESSION['_DBArray']) ? $_SESSION['_DBArray'] : '');
+            $_DBArray = isset($_SESSION['_DBArray']) ? $_SESSION['_DBArray'] : [];
             $_DBArray['steps'] = $aSteps;
             $_SESSION['_DBArray'] = $_DBArray;
             $oCriteria = new Criteria('dbarray');
@@ -908,7 +871,6 @@ class ProcessMap
             $oDataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
             $oDataset->next();
             while ($aRow = $oDataset->getRow()) {
-
                 if (($aRow['INP_DOC_TITLE'] == null) || ($aRow['INP_DOC_TITLE'] == "")) {
                     // There is no transaltion for this Document name, try to get/regenerate the label
                     $oInputDocument = new InputDocument;
@@ -946,7 +908,7 @@ class ProcessMap
                 }
             }
             global $_DBArray;
-            $_DBArray = (isset($_SESSION['_DBArray']) ? $_SESSION['_DBArray'] : '');
+            $_DBArray = (isset($_SESSION['_DBArray']) ? $_SESSION['_DBArray'] : []);
             $_DBArray['availableBB'] = $aBB;
             $_SESSION['_DBArray'] = $_DBArray;
             $oCriteria = new Criteria('dbarray');
@@ -1125,7 +1087,7 @@ class ProcessMap
                 $oDataset->next();
             }
             global $_DBArray;
-            $_DBArray = (isset($_SESSION['_DBArray']) ? $_SESSION['_DBArray'] : '');
+            $_DBArray = (isset($_SESSION['_DBArray']) ? $_SESSION['_DBArray'] : []);
             $_DBArray['taskUsers'] = $aUsers;
             $_SESSION['_DBArray'] = $_DBArray;
 
@@ -1189,7 +1151,8 @@ class ProcessMap
             $oCriteria->addSelectColumn(UsersPeer::USR_LASTNAME);
             $oCriteria->add(
                     $oCriteria->getNewCriterion(UsersPeer::USR_STATUS, "ACTIVE", Criteria::EQUAL)->addOr(
-                    $oCriteria->getNewCriterion(UsersPeer::USR_STATUS, "VACATION", Criteria::EQUAL))
+                    $oCriteria->getNewCriterion(UsersPeer::USR_STATUS, "VACATION", Criteria::EQUAL)
+                    )
             );
             $oCriteria->add(UsersPeer::USR_UID, $aUIDS2, Criteria::NOT_IN);
             $oDataset = UsersPeer::doSelectRS($oCriteria);
@@ -1200,7 +1163,7 @@ class ProcessMap
                 $oDataset->next();
             }
             global $_DBArray;
-            $_DBArray = (isset($_SESSION['_DBArray']) ? $_SESSION['_DBArray'] : '');
+            $_DBArray = (isset($_SESSION['_DBArray']) ? $_SESSION['_DBArray'] : []);
             $_DBArray['availableUsers'] = $aUsers;
             $_SESSION['_DBArray'] = $_DBArray;
 
@@ -1396,7 +1359,6 @@ class ProcessMap
              * Task Notifications *
              */
             if ($iForm == 7 || $iForm == 1) {
-
                 $files = Processes::getProcessFiles($aFields['PRO_UID'], 'mail');
 
                 $templates = array();
@@ -1451,7 +1413,7 @@ class ProcessMap
             if ($iForm == 8) {
                 $oCaseConsolidated = CaseConsolidatedCorePeer::retrieveByPK($_SESSION["cDhTajE2T2lxSkhqMzZUTXVacWYyNcKwV3A4eWYybDdyb1p3"]["TAS_UID"]);
                 if ((is_object($oCaseConsolidated)) && get_class($oCaseConsolidated) == "CaseConsolidatedCore") {
-                    require_once ("classes/model/ReportTable.php");
+                    require_once("classes/model/ReportTable.php");
 
                     $aFields["CON_STATUS"]  = $oCaseConsolidated->getConStatus();
                     $aFields["DYN_UID"]     = $oCaseConsolidated->getDynUid();
@@ -1954,7 +1916,7 @@ class ProcessMap
             $oDataset->next();
         }
         global $_DBArray;
-        $_DBArray = (isset($_SESSION['_DBArray']) ? $_SESSION['_DBArray'] : '');
+        $_DBArray = (isset($_SESSION['_DBArray']) ? $_SESSION['_DBArray'] : []);
         $_DBArray['outputDocArray'] = $outputDocArray;
         $_SESSION['_DBArray'] = $_DBArray;
 
@@ -2003,7 +1965,7 @@ class ProcessMap
         $oDataset = InputDocumentPeer::doSelectRS($oCriteria, Propel::getDbConnection('workflow_ro'));
         $oDataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
         $oDataset->next();
-        $inputDocArray = "";
+        $inputDocArray = [];
         $inputDocArray[] = array('INP_DOC_UID' => 'char', 'PRO_UID' => 'char', 'INP_DOC_TITLE' => 'char', 'INP_DOC_DESCRIPTION' => 'char' );
         while ($aRow = $oDataset->getRow()) {
             if (($aRow['INP_DOC_TITLE'] == null) || ($aRow['INP_DOC_TITLE'] == "")) {
@@ -2017,7 +1979,7 @@ class ProcessMap
             $oDataset->next();
         }
         global $_DBArray;
-        $_DBArray = (isset($_SESSION['_DBArray']) ? $_SESSION['_DBArray'] : '');
+        $_DBArray = (isset($_SESSION['_DBArray']) ? $_SESSION['_DBArray'] : []);
 
         $_DBArray['inputDocArrayMain'] = $inputDocArray;
         $_SESSION['_DBArray'] = $_DBArray;
@@ -2071,12 +2033,11 @@ class ProcessMap
         $oDataset = TriggersPeer::doSelectRS($oCriteria);
         $oDataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
         $oDataset->next();
-        $triggersArray = "";
+        $triggersArray = [];
         $triggersArray[] = array('TRI_UID' => 'char', 'PRO_UID' => 'char', 'TRI_TITLE' => 'char', 'TRI_DESCRIPTION' => 'char');
         while ($aRow = $oDataset->getRow()) {
-
             if (($aRow['TRI_TITLE'] == null) || ($aRow['TRI_TITLE'] == "")) {
-                // There is no transaltion for this Trigger name, try to get/regenerate the label
+                // There is no translation for this Trigger name, try to get/regenerate the label
                 $triggerO = new Triggers();
                 $triggerObj = $triggerO->load($aRow['TRI_UID']);
                 $aRow['TRI_TITLE'] = $triggerObj['TRI_TITLE'];
@@ -2097,7 +2058,7 @@ class ProcessMap
 
     public function getTriggers($sProcessUID = '')
     {
-        $aTriggers = Array();
+        $aTriggers = array();
         $oCriteria = $this->getTriggersCriteria($sProcessUID);
 
         $oDataset = RoutePeer::doSelectRS($oCriteria);
@@ -2142,9 +2103,9 @@ class ProcessMap
             $oLogCaseScheduler = new LogCasesScheduler();
             $aRows = $oLogCaseScheduler->getAll();
 
-            $fieldNames = Array('PRO_UID' => 'char', 'TAS_UID' => 'char', 'USR_NAME' => 'char', 'EXEC_DATE' => 'char', 'EXEC_HOUR' => 'char', 'RESULT' => 'char', 'SCH_UID' => 'char', 'WS_CREATE_CASE_STATUS' => 'char', 'WS_ROUTE_CASE_STATUS' => 'char' );
+            $fieldNames = array('PRO_UID' => 'char', 'TAS_UID' => 'char', 'USR_NAME' => 'char', 'EXEC_DATE' => 'char', 'EXEC_HOUR' => 'char', 'RESULT' => 'char', 'SCH_UID' => 'char', 'WS_CREATE_CASE_STATUS' => 'char', 'WS_ROUTE_CASE_STATUS' => 'char' );
 
-            $aRows = array_merge(Array($fieldNames), $aRows);
+            $aRows = array_merge(array($fieldNames), $aRows);
 
             $_DBArray['log_cases_scheduler'] = $aRows;
             $_SESSION['_DBArray'] = $_DBArray;
@@ -2337,7 +2298,6 @@ class ProcessMap
                         throw new Exception(G::loadTranslation('ID_INVALID_ROU_TYPE_DEFINITION_ON_ROUTE_TABLE'));
                         break;
                 }
-
             } else {
                 throw new Exception(G::loadTranslation('ID_NO_DERIVATIONS_DEFINED'));
             }
@@ -2453,7 +2413,6 @@ class ProcessMap
                             break;
                     }
                 } else {
-
                 }
             }
             switch ($sType) {
@@ -2684,7 +2643,7 @@ class ProcessMap
             $oDataset->next();
         }
         global $_DBArray;
-        $_DBArray = (isset($_SESSION['_DBArray']) ? $_SESSION['_DBArray'] : '');
+        $_DBArray = (isset($_SESSION['_DBArray']) ? $_SESSION['_DBArray'] : []);
         $_DBArray['processes'] = $aProcesses;
         $_SESSION['_DBArray'] = $_DBArray;
 
@@ -2791,7 +2750,7 @@ class ProcessMap
                 }
             }
             global $_DBArray;
-            $_DBArray = (isset($_SESSION['_DBArray']) ? $_SESSION['_DBArray'] : '');
+            $_DBArray = (isset($_SESSION['_DBArray']) ? $_SESSION['_DBArray'] : []);
             $_DBArray['reports'] = $row;
             $_SESSION['_DBArray'] = $_DBArray;
 
@@ -3112,8 +3071,7 @@ class ProcessMap
      */
     public function listNoProcessesUser($sProcessUID)
     {
-
-        $memcache = & PMmemcached::getSingleton(config("system.workspace"));
+        $memcache = PMmemcached::getSingleton(config("system.workspace"));
 
         $oCriteria = new Criteria('workflow');
         $oCriteria->addSelectColumn(ProcessUserPeer::USR_UID);
@@ -3226,7 +3184,7 @@ class ProcessMap
      */
     public function assignProcessUser($sProcessUID, $sUsrUID, $sTypeUID)
     {
-        $oProcessUser = new ProcessUser ( );
+        $oProcessUser = new ProcessUser();
         $puType = 'SUPERVISOR';
         if ($sTypeUID == 'Group') {
             $puType = 'GROUP_SUPERVISOR';
@@ -3254,7 +3212,6 @@ class ProcessMap
      */
     public function getObjectsPermissionsCriteria($sProcessUID)
     {
-
         $aObjectsPermissions = array();
         $aObjectsPermissions[] = array('OP_UID' => 'char', 'TASK_TARGET' => 'char', 'GROUP_USER' => 'char', 'TASK_SOURCE' => 'char', 'OBJECT_TYPE' => 'char', 'OBJECT' => 'char', 'PARTICIPATED' => 'char', 'ACTION' => 'char', 'OP_CASE_STATUS' => 'char');
         $oCriteria = new Criteria('workflow');
@@ -3399,7 +3356,7 @@ class ProcessMap
             $oDataset->next();
         }
         global $_DBArray;
-        $_DBArray = (isset($_SESSION['_DBArray']) ? $_SESSION['_DBArray'] : '');
+        $_DBArray = (isset($_SESSION['_DBArray']) ? $_SESSION['_DBArray'] : []);
         $_DBArray['objectsPermissions'] = $aObjectsPermissions;
         $_SESSION['_DBArray'] = $_DBArray;
 
@@ -3427,7 +3384,6 @@ class ProcessMap
 
     public function getExtObjectsPermissions($start, $limit, $sProcessUID)
     {
-
         $aObjectsPermissions = array();
         //$aObjectsPermissions [] = array('OP_UID' => 'char', 'TASK_TARGET' => 'char', 'GROUP_USER' => 'char', 'TASK_SOURCE' => 'char', 'OBJECT_TYPE' => 'char', 'OBJECT' => 'char', 'PARTICIPATED' => 'char', 'ACTION' => 'char', 'OP_CASE_STATUS' => 'char');
         $oCriteria = new Criteria('workflow');
@@ -3648,7 +3604,7 @@ class ProcessMap
             $oDataset->next();
         }
         global $_DBArray;
-        $_DBArray = (isset($_SESSION['_DBArray']) ? $_SESSION['_DBArray'] : '');
+        $_DBArray = (isset($_SESSION['_DBArray']) ? $_SESSION['_DBArray'] : []);
         $_DBArray['allObjects'] = $aAllObjects;
         $_DBArray['allDynaforms'] = $aAllDynaforms;
         $_DBArray['allInputs'] = $aAllInputs;
@@ -3656,13 +3612,19 @@ class ProcessMap
         $_SESSION['_DBArray'] = $_DBArray;
         global $G_PUBLISH;
         $G_PUBLISH = new Publisher();
-        $G_PUBLISH->AddContent('xmlform', 'xmlform', 'processes/processes_NewObjectPermission', '',
+        $G_PUBLISH->AddContent(
+            'xmlform',
+            'xmlform',
+            'processes/processes_NewObjectPermission',
+            '',
             array('GROUP_USER' => $usersGroups,
                   'LANG' => SYS_LANG,
                   'PRO_UID' => $sProcessUID,
                   'ID_DELETE' => G::LoadTranslation('ID_DELETE'),
                   'ID_RESEND' => G::LoadTranslation('ID_RESEND')
-            ), 'processes_SaveObjectPermission');
+            ),
+            'processes_SaveObjectPermission'
+        );
         G::RenderPage('publish', 'raw');
         return true;
     }
@@ -3676,7 +3638,6 @@ class ProcessMap
      */
     public function editObjectPermission($sOP_UID, $sProcessUID)
     {
-
         $user = '';
         $oCriteria = new Criteria();
         $oCriteria->add(ObjectPermissionPeer::OP_UID, $sOP_UID);
@@ -3801,7 +3762,7 @@ class ProcessMap
             $oDataset->next();
         }
         global $_DBArray;
-        $_DBArray = (isset($_SESSION['_DBArray']) ? $_SESSION['_DBArray'] : '');
+        $_DBArray = (isset($_SESSION['_DBArray']) ? $_SESSION['_DBArray'] : []);
         $_DBArray['allObjects'] = $aAllObjects;
         $_DBArray['allDynaforms'] = $aAllDynaforms;
         $_DBArray['allInputs'] = $aAllInputs;
@@ -3899,7 +3860,7 @@ class ProcessMap
             $oDataset->next();
         }
         global $_DBArray;
-        $_DBArray = (isset($_SESSION['_DBArray']) ? $_SESSION['_DBArray'] : '');
+        $_DBArray = (isset($_SESSION['_DBArray']) ? $_SESSION['_DBArray'] : []);
         $_DBArray['objects'] = $aObjects;
         $_SESSION['_DBArray'] = $_DBArray;
 
@@ -3996,7 +3957,7 @@ class ProcessMap
             $oDataset->next();
         }
         global $_DBArray;
-        $_DBArray = (isset($_SESSION['_DBArray']) ? $_SESSION['_DBArray'] : '');
+        $_DBArray = (isset($_SESSION['_DBArray']) ? $_SESSION['_DBArray'] : []);
         $_DBArray['availableObjects'] = $aAvailableObjects;
         $_SESSION['_DBArray'] = $_DBArray;
 
@@ -4104,7 +4065,6 @@ class ProcessMap
      */
     public function processFilesManager($sProcessUID)
     {
-
         global $_DBArray;
         global $G_PUBLISH;
 
@@ -4116,7 +4076,7 @@ class ProcessMap
         $aDirectories[] = array('DIRECTORY' => '<a href="#" onclick="goToDirectory(\'' . $sProcessUID . '\', \'mailTemplates\', \'\');return false;" class="pagedTableHeader">' . G::loadTranslation('ID_TEMPLATES') . '</a>' );
         $aDirectories[] = array('DIRECTORY' => '<a href="#" onclick="goToDirectory(\'' . $sProcessUID . '\', \'public\', \'\');return false;" class="pagedTableHeader">' . G::loadTranslation('ID_PUBLIC') . '</a>' );
 
-        $_DBArray = (isset($_SESSION['_DBArray']) ? $_SESSION['_DBArray'] : '');
+        $_DBArray = (isset($_SESSION['_DBArray']) ? $_SESSION['_DBArray'] : []);
         $_DBArray['directories'] = $aDirectories;
         $_SESSION['_DBArray'] = $_DBArray;
 
@@ -4181,7 +4141,7 @@ class ProcessMap
             $aTheFiles[] = array('PATH' => $aFile['FILE'], 'EDIT' => ($sMainDirectory == 'mailTemplates' ? 'Edit' : ''), 'EDIT_JS' => "editFile('{$sProcessUID}', @@PATH);return false;", 'DOWNLOAD_TEXT' => G::LoadTranslation('ID_DOWNLOAD'), 'DOWNLOAD_JS' => 'downloadFile(\'' . $sProcessUID . '\', \'' . $sMainDirectory . '\', \'' . $sCurrentDirectory . '\', \'' . $aFile['FILE'] . '\');return false;', 'DELETE_TEXT' => G::LoadTranslation('ID_DELETE'), 'DELETE_JS' => 'deleteFile(\'' . $sProcessUID . '\', \'' . $sMainDirectory . '\', \'' . $sCurrentDirectory . '\', \'' . $aFile['FILE'] . '\');return false;' );
         }
         global $_DBArray;
-        $_DBArray = (isset($_SESSION['_DBArray']) ? $_SESSION['_DBArray'] : '');
+        $_DBArray = (isset($_SESSION['_DBArray']) ? $_SESSION['_DBArray'] : []);
         $_DBArray['objects'] = $aTheFiles;
         $_SESSION['_DBArray'] = $_DBArray;
 
@@ -4344,7 +4304,7 @@ class ProcessMap
 
             /* Prepare page before to show */
             global $_DBArray;
-            $_DBArray = (isset($_SESSION['_DBArray']) ? $_SESSION['_DBArray'] : '');
+            $_DBArray = (isset($_SESSION['_DBArray']) ? $_SESSION['_DBArray'] : []);
             $_DBArray['NewCase'] = $this->subProcess_TaskIni($sProcessUID);
             unset($_DBArray['TheProcesses']);
             $_DBArray['TheProcesses'][] = array('pro_uid' => 'char', 'value' => 'char');
@@ -4455,7 +4415,7 @@ class ProcessMap
         try {
             global $G_PUBLISH;
             $G_PUBLISH = new Publisher();
-            $oHeadPublisher = & headPublisher::getSingleton();
+            $oHeadPublisher = headPublisher::getSingleton();
             $oHeadPublisher->addScriptFile('/jscore/events/events.js');
 
             switch ($type) {
@@ -4572,7 +4532,7 @@ class ProcessMap
     public function loadProcessCategory()
     {
         $aProcessCategory = '';
-        require_once ("classes/model/ProcessCategory.php");
+        require_once("classes/model/ProcessCategory.php");
         $Criteria = new Criteria('workflow');
         $Criteria->clearSelectColumns();
 
@@ -4663,33 +4623,27 @@ class ProcessMap
     }
 
     /**
-     * get all the Active process
+     * Get all the active processes
      *
-     * SELECT PROCESS.PRO_UID AS UID, CONTENT.CON_VALUE AS VALUE FROM PROCESS, CONTENT
-     * WHERE (PROCESS.PRO_UID=CONTENT.CON_ID AND PROCESS.PRO_STATUS!='DISABLED' AND CONTENT.CON_CATEGORY='PRO_TITLE' AND CONTENT.CON_LANG='en')
-     * ORDER BY CONTENT.CON_VALUE
-     * ]]>
      */
     public function getAllProcesses()
     {
+        $processes = [];
 
-        $aProcesses = array();
-        //$aProcesses [] = array ('PRO_UID' => 'char', 'PRO_TITLE' => 'char');
-        $oCriteria = new Criteria('workflow');
-        $oCriteria->addSelectColumn(ProcessPeer::PRO_UID);
-        $oCriteria->add(ProcessPeer::PRO_STATUS, 'DISABLED', Criteria::NOT_EQUAL);
-        $oDataset = ProcessPeer::doSelectRS($oCriteria);
-        $oDataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+        $criteria = new Criteria('workflow');
+        $criteria->addSelectColumn(ProcessPeer::PRO_UID);
+        $criteria->addSelectColumn(ProcessPeer::PRO_TITLE);
+        $criteria->add(ProcessPeer::PRO_STATUS, 'DISABLED', Criteria::NOT_EQUAL);
+        $dataset = ProcessPeer::doSelectRS($criteria);
+        $dataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+        $dataset->next();
 
-        $oDataset->next();
-        $oProcess = new Process();
-        while ($aRow = $oDataset->getRow()) {
-            $aProcess = $oProcess->load($aRow['PRO_UID']);
-            $aProcesses[] = array('value' => $aProcess['PRO_UID'], 'name' => $aProcess['PRO_TITLE'] );
-            $oDataset->next();
+        while ($row = $dataset->getRow()) {
+            $processes[] = ['value' => $row['PRO_UID'], 'name' => $row['PRO_TITLE']];
+            $dataset->next();
         }
-        //$oJSON = new Services_JSON();
-        return Bootstrap::json_encode($aProcesses); //$oJSON->encode( $aProcesses );
+
+        return Bootstrap::json_encode($processes);
     }
 
     /*
@@ -4950,7 +4904,7 @@ class ProcessMap
                 $oDataset->next();
             }
             global $_DBArray;
-            $_DBArray = (isset($_SESSION['_DBArray']) ? $_SESSION['_DBArray'] : '');
+            $_DBArray = (isset($_SESSION['_DBArray']) ? $_SESSION['_DBArray'] : []);
             $_DBArray['taskUsers'] = $aUsers;
             $_SESSION['_DBArray'] = $_DBArray;
 
@@ -5021,7 +4975,7 @@ class ProcessMap
                 $oDataset->next();
             }
             global $_DBArray;
-            $_DBArray = (isset($_SESSION['_DBArray']) ? $_SESSION['_DBArray'] : '');
+            $_DBArray = (isset($_SESSION['_DBArray']) ? $_SESSION['_DBArray'] : []);
             $_DBArray['availableUsers'] = $aUsers;
             $_SESSION['_DBArray'] = $_DBArray;
 
@@ -5147,7 +5101,7 @@ class ProcessMap
             }
 
             global $_DBArray;
-            $_DBArray = (isset($_SESSION['_DBArray']) ? $_SESSION['_DBArray'] : '');
+            $_DBArray = (isset($_SESSION['_DBArray']) ? $_SESSION['_DBArray'] : []);
             $_DBArray['availableBB'] = $aBB;
             $_SESSION['_DBArray'] = $_DBArray;
 
@@ -5265,7 +5219,7 @@ class ProcessMap
             }
 
             global $_DBArray;
-            $_DBArray = (isset($_SESSION['_DBArray']) ? $_SESSION['_DBArray'] : '');
+            $_DBArray = (isset($_SESSION['_DBArray']) ? $_SESSION['_DBArray'] : []);
             $_DBArray['steps'] = $aSteps;
             $_SESSION['_DBArray'] = $_DBArray;
 
@@ -5640,7 +5594,7 @@ class ProcessMap
             $oDataset->next();
         }
         global $_DBArray;
-        $_DBArray = (isset($_SESSION['_DBArray']) ? $_SESSION['_DBArray'] : '');
+        $_DBArray = (isset($_SESSION['_DBArray']) ? $_SESSION['_DBArray'] : []);
         $_DBArray['outputDocArray'] = $outputDocArray;
         $_SESSION['_DBArray'] = $_DBArray;
 
@@ -5667,7 +5621,7 @@ class ProcessMap
 
             /* Prepare page before to show */
             global $_DBArray;
-            $_DBArray = (isset($_SESSION['_DBArray']) ? $_SESSION['_DBArray'] : '');
+            $_DBArray = (isset($_SESSION['_DBArray']) ? $_SESSION['_DBArray'] : []);
             $_DBArray['NewCase'] = $this->subProcess_TaskIni($sProcessUID);
             unset($_DBArray['TheProcesses']);
             $_DBArray['TheProcesses'][] = array('pro_uid' => 'char', 'value' => 'char' );
@@ -5766,7 +5720,6 @@ class ProcessMap
      */
     public function listExtProcessesSupervisors($start, $limit, $sProcessUID)
     {
-
         $oCriteria = new Criteria('workflow');
         $oCriteria->addSelectColumn(ProcessUserPeer::PU_UID);
         $oCriteria->addSelectColumn(ProcessUserPeer::USR_UID);
@@ -5804,8 +5757,7 @@ class ProcessMap
      */
     public function listExtNoProcessesUser($sProcessUID)
     {
-
-        $memcache = & PMmemcached::getSingleton(config("system.workspace"));
+        $memcache = PMmemcached::getSingleton(config("system.workspace"));
 
         $oCriteria = new Criteria('workflow');
         $oCriteria->addSelectColumn(ProcessUserPeer::USR_UID);
@@ -6208,7 +6160,7 @@ class ProcessMap
             $oDataset->next();
         }
         global $_DBArray;
-        $_DBArray = (isset($_SESSION['_DBArray']) ? $_SESSION['_DBArray'] : '');
+        $_DBArray = (isset($_SESSION['_DBArray']) ? $_SESSION['_DBArray'] : []);
 
         switch ($sAction) {
             case 'tasks':
@@ -6316,7 +6268,7 @@ class ProcessMap
         }
         // return $aObjects;
         global $_DBArray;
-        $_DBArray = (isset($_SESSION['_DBArray']) ? $_SESSION['_DBArray'] : '');
+        $_DBArray = (isset($_SESSION['_DBArray']) ? $_SESSION['_DBArray'] : []);
         $_DBArray['objects'] = $aObjects;
         $_SESSION['_DBArray'] = $_DBArray;
 
@@ -6499,7 +6451,7 @@ class ProcessMap
                 $oDataset->next();
             }
             global $_DBArray;
-            $_DBArray = (isset($_SESSION['_DBArray']) ? $_SESSION['_DBArray'] : '');
+            $_DBArray = (isset($_SESSION['_DBArray']) ? $_SESSION['_DBArray'] : []);
             $_DBArray['availableUsers'] = $aUsers;
             $_SESSION['_DBArray'] = $_DBArray;
             return $_SESSION['_DBArray']['availableUsers'];
@@ -6578,7 +6530,7 @@ class ProcessMap
                 $oDataset->next();
             }
             global $_DBArray;
-            $_DBArray = (isset($_SESSION['_DBArray']) ? $_SESSION['_DBArray'] : '');
+            $_DBArray = (isset($_SESSION['_DBArray']) ? $_SESSION['_DBArray'] : []);
             $_DBArray['taskUsers'] = $aUsers;
             $_SESSION['_DBArray'] = $_DBArray;
             $oCriteria = new Criteria('dbarray');
@@ -6812,7 +6764,6 @@ class ProcessMap
         $triggersArray = "";
         $triggersArray[] = array('TRI_UID' => 'char', 'PRO_UID' => 'char', 'TRI_TITLE' => 'char', 'TRI_DESCRIPTION' => 'char' );
         while ($aRow = $oDataset->getRow()) {
-
             if (($aRow['TRI_TITLE'] == null) || ($aRow['TRI_TITLE'] == "")) {
                 // There is no translation for this Trigger name, try to get/regenerate the label
                 $triggerO = new Triggers();
@@ -6860,4 +6811,3 @@ class ProcessMap
         return (int) $row['MAX_X'];
     }
 }
-

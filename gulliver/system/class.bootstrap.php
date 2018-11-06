@@ -134,7 +134,7 @@ class Bootstrap
 
         $filter = new InputFilter();
 
-        $smarty = new Smarty ();
+        $smarty = new Smarty();
         $smarty->compile_dir = Bootstrap::sys_get_temp_dir();
         $smarty->cache_dir = Bootstrap::sys_get_temp_dir();
         $configDir = PATH_THIRDPARTY . 'smarty/configs';
@@ -320,7 +320,7 @@ class Bootstrap
                     if ($download) {
                         Bootstrap::sendHeaders($fileNameIni, "text/plain", $download, $downloadFileName);
                     } else {
-                        require_once ($filename);
+                        require_once($filename);
                         return;
                     }
                     break;
@@ -334,7 +334,7 @@ class Bootstrap
             }
         } else {
             if (strpos($file, 'gulliver') !== false) {
-                list ($path, $filename) = explode('gulliver', $file);
+                list($path, $filename) = explode('gulliver', $file);
             }
 
             $_SESSION['phpFileNotFound'] = $file;
@@ -358,7 +358,7 @@ class Bootstrap
      *
      * @return string
      */
-    static public function parseURI($uri, array $arrayFriendlyUri = null)
+    public static function parseURI($uri, array $arrayFriendlyUri = null)
     {
         // *** process the $_POST with magic_quotes enabled
         // The magic_quotes_gpc feature has been DEPRECATED as of PHP 5.3.0.
@@ -475,21 +475,21 @@ class Bootstrap
      */
     public static function LoadTranslationObject($lang = SYS_LANG)
     {
-        $defaultTranslations = Array();
-        $foreignTranslations = Array();
+        $defaultTranslations = array();
+        $foreignTranslations = array();
 
         // if the default translations table doesn't exist we can't proceed
         if (!is_file(PATH_LANGUAGECONT . 'translation.en')) {
             return null;
         }
         // load the translations table
-        require_once (PATH_LANGUAGECONT . 'translation.en');
+        require_once(PATH_LANGUAGECONT . 'translation.en');
         $defaultTranslations = $translation;
 
         // if some foreign language was requested and its translation file
         // exists
         if ($lang != 'en' && file_exists(PATH_LANGUAGECONT . 'translation.' . $lang)) {
-            require_once (PATH_LANGUAGECONT . 'translation.' . $lang); // load the foreign translations table
+            require_once(PATH_LANGUAGECONT . 'translation.' . $lang); // load the foreign translations table
             $foreignTranslations = $translation;
         }
 
@@ -514,9 +514,9 @@ class Bootstrap
      * @param  array list plugins active
      * @return void
      */
-    public static function LoadTranslationPlugins ($lang = SYS_LANG, $listPluginsActive)
+    public static function LoadTranslationPlugins($lang = SYS_LANG, $listPluginsActive)
     {
-        if ( ! ( is_array ( $listPluginsActive ) ) ) {
+        if (! (is_array($listPluginsActive))) {
             return null;
         }
 
@@ -528,17 +528,17 @@ class Bootstrap
                 Translation::generateFileTranslationPlugin($namePlugin, 'en');
             }
 
-            if ( ($lang != 'en') && (!file_exists(PATH_LANGUAGECONT . $namePlugin . '.' . $lang)) ) {
+            if (($lang != 'en') && (!file_exists(PATH_LANGUAGECONT . $namePlugin . '.' . $lang))) {
                 Translation::generateFileTranslationPlugin($namePlugin, $lang);
             }
 
             if (file_exists(PATH_LANGUAGECONT . $namePlugin . '.' . $lang)) {
                 eval('global $translation'.$namePlugin.';');
-                require_once (PATH_LANGUAGECONT . $namePlugin . '.' . $lang);
+                require_once(PATH_LANGUAGECONT . $namePlugin . '.' . $lang);
             } else {
                 if (file_exists(PATH_LANGUAGECONT . $namePlugin . '.en')) {
                     eval('global $translation'.$namePlugin.';');
-                    require_once (PATH_LANGUAGECONT . $namePlugin . '.en');
+                    require_once(PATH_LANGUAGECONT . $namePlugin . '.en');
                 }
             }
         }
@@ -575,7 +575,7 @@ class Bootstrap
         } catch (Exception $e) {
             global $G_PUBLISH;
             if (is_null($G_PUBLISH)) {
-                $G_PUBLISH = new Publisher ();
+                $G_PUBLISH = new Publisher();
             }
             if (count($G_PUBLISH->Parts) == 1) {
                 array_shift($G_PUBLISH->Parts);
@@ -594,7 +594,7 @@ class Bootstrap
             } else {
                 $token = strtotime("now");
                 PMException::registerErrorLog($e, $token);
-                G::outRes( G::LoadTranslation("ID_EXCEPTION_LOG_INTERFAZ", array($token)) );
+                G::outRes(G::LoadTranslation("ID_EXCEPTION_LOG_INTERFAZ", array($token)));
                 die;
             }
         }
@@ -676,7 +676,7 @@ class Bootstrap
     {
         // Get the current Include path, where the plugins directories should be
         if (!defined('PATH_SEPARATOR')) {
-            define('PATH_SEPARATOR', (substr(PHP_OS, 0, 3) == 'WIN') ? ';' : ':' );
+            define('PATH_SEPARATOR', (substr(PHP_OS, 0, 3) == 'WIN') ? ';' : ':');
         }
         $path = explode(PATH_SEPARATOR, get_include_path());
 
@@ -687,7 +687,7 @@ class Bootstrap
                     if ($handle = opendir($baseDir)) {
                         while (false !== ($file = readdir($handle))) {
                             if (strpos($file, '.php', 1) && !strpos($file, 'Peer.php', 1)) {
-                                require_once ($baseDir . PATH_SEP . $file);
+                                require_once($baseDir . PATH_SEP . $file);
                             }
                         }
                     }
@@ -756,19 +756,19 @@ class Bootstrap
         $fileConst = ($typeName == 'translation') ? 'translation.' . $locale : 'translation.' . $typeName . '.' . $locale;
 
         if ($typeName == 'translation') {
-            $defaultTranslations = Array();
-            $foreignTranslations = Array();
+            $defaultTranslations = array();
+            $foreignTranslations = array();
             $calendarJs = '';
 
             //load the translations table
             if (is_file(PATH_LANGUAGECONT . 'translation.en')) {
-                require_once (PATH_LANGUAGECONT . 'translation.en');
+                require_once(PATH_LANGUAGECONT . 'translation.en');
                 $defaultTranslations = $translation;
             }
 
             //if some foreign language was requested and its translation file exists
             if ($locale != 'en' && file_exists(PATH_LANGUAGECONT . 'translation.' . $locale)) {
-                require_once (PATH_LANGUAGECONT . 'translation.' . $locale); //load the foreign translations table
+                require_once(PATH_LANGUAGECONT . 'translation.' . $locale); //load the foreign translations table
                 $foreignTranslations = $translation;
             }
 
@@ -790,7 +790,7 @@ class Bootstrap
             unset($typearray[count($typearray)]);
             $newName = implode('.', $typearray);
             if (file_exists(PATH_LANGUAGECONT . $newName)) {
-                require_once (PATH_LANGUAGECONT . $newName);
+                require_once(PATH_LANGUAGECONT . $newName);
                 $return = '';
                 eval('$return = "var TRANSLATIONS_" . strtoupper($typeName) . " = " . Bootstrap::json_encode($translation' . $typeName . ') . ";";');
                 return $return;
@@ -921,8 +921,7 @@ class Bootstrap
 
             if (((in_array($browserName, $enabledBrowsers)) || (in_array('ALL', $enabledBrowsers))) && (!(in_array($browserName, $disabledBrowsers)))) {
                 if ($cssFileInfo['__ATTRIBUTES__']['file'] == 'rtl.css') {
-
-                    $oServerConf = & ServerConf::getSingleton();
+                    $oServerConf = ServerConf::getSingleton();
                     if (!(defined('SYS_LANG'))) {
                         if (isset($_SERVER['HTTP_REFERER'])) {
                             $syss = explode('://', $_SERVER['HTTP_REFERER']);
@@ -997,7 +996,6 @@ class Bootstrap
         }
 
         if (!$download) {
-
             header('Pragma: cache');
 
             if (file_exists($filename)) {
@@ -1203,7 +1201,6 @@ class Bootstrap
         if (function_exists('json_encode')) {
             return json_encode($Json);
         } else {
-
             $oJSON = new Services_JSON();
             return $oJSON->encode($Json);
         }
@@ -1219,7 +1216,6 @@ class Bootstrap
         if (function_exists('json_decode')) {
             return json_decode($Json);
         } else {
-
             $oJSON = new Services_JSON();
             return $oJSON->decode($Json);
         }
@@ -1575,7 +1571,7 @@ class Bootstrap
             //start the search after the first string occurrence
             if (strpos($pv_browser_user_agent, $pv_search_string, $start_pos) !== false) {
                 $start_pos = strpos($pv_browser_user_agent, $pv_search_string, $start_pos) + strlen($pv_search_string);
-                if (!$pv_b_break_last || ( $pv_extra_search && strstr($pv_browser_user_agent, $pv_extra_search) )) {
+                if (!$pv_b_break_last || ($pv_extra_search && strstr($pv_browser_user_agent, $pv_extra_search))) {
                     break;
                 }
             } else {
@@ -1683,7 +1679,7 @@ class Bootstrap
                             $os_working_type = 'nt';
                         } elseif (strstr($pv_browser_string, '95')) {
                             $os_working_number = '95';
-                        } elseif (( strstr($pv_browser_string, '9x 4.9') ) || ( strstr($pv_browser_string, ' me') )) {
+                        } elseif ((strstr($pv_browser_string, '9x 4.9')) || (strstr($pv_browser_string, ' me'))) {
                             $os_working_number = 'me';
                         } elseif (strstr($pv_browser_string, '98')) {
                             $os_working_number = '98';
@@ -1699,9 +1695,9 @@ class Bootstrap
                             } else {
                                 $os_working_number = 10;
                             }
-                        } elseif (( $pv_browser_name == 'saf' ) || ( $pv_browser_name == 'cam' ) ||
-                                ( ( $pv_browser_name == 'moz' ) && ( $pv_version_number >= 1.3 ) ) ||
-                                ( ( $pv_browser_name == 'ie' ) && ( $pv_version_number >= 5.2 ) )) {
+                        } elseif (($pv_browser_name == 'saf') || ($pv_browser_name == 'cam') ||
+                                (($pv_browser_name == 'moz') && ($pv_version_number >= 1.3)) ||
+                                (($pv_browser_name == 'ie') && ($pv_version_number >= 5.2))) {
                             $os_working_number = 10;
                         }
                         break;
@@ -1712,23 +1708,23 @@ class Bootstrap
                         break;
                 }
                 break;
-            } elseif (is_array($os_working_data) && ( $i == ( $i_count - 2 ) )) {
+            } elseif (is_array($os_working_data) && ($i == ($i_count - 2))) {
                 $j_count = count($os_working_data);
                 for ($j = 0; $j < $j_count; $j++) {
                     if (strstr($pv_browser_string, $os_working_data[$j])) {
                         $os_working_type = 'unix'; //if the os is in the unix array, it's unix, obviously...
-                        $os_working_number = ( $os_working_data[$j] != 'unix' ) ? $os_working_data[$j] : ''; // assign sub unix version from the unix array
+                        $os_working_number = ($os_working_data[$j] != 'unix') ? $os_working_data[$j] : ''; // assign sub unix version from the unix array
                         break;
                     }
                 }
-            } elseif (is_array($os_working_data) && ( $i == ( $i_count - 1 ))) {
+            } elseif (is_array($os_working_data) && ($i == ($i_count - 1))) {
                 $j_count = count($os_working_data);
                 for ($j = 0; $j < $j_count; $j++) {
                     if (strstr($pv_browser_string, $os_working_data[$j])) {
                         $os_working_type = 'lin';
                         // assign linux distro from the linux array, there's a default
                         //search for 'lin', if it's that, set version to ''
-                        $os_working_number = ( $os_working_data[$j] != 'linux' ) ? $os_working_data[$j] : '';
+                        $os_working_number = ($os_working_data[$j] != 'linux') ? $os_working_data[$j] : '';
                         break;
                     }
                 }
@@ -1827,7 +1823,7 @@ class Bootstrap
             }
         }
         // just for cases where we know it's a mobile device already
-        if (!$mobile_os && ( $mobile_browser || $mobile_device || $mobile_server ) && strstr($pv_browser_user_agent, 'linux')) {
+        if (!$mobile_os && ($mobile_browser || $mobile_device || $mobile_server) && strstr($pv_browser_user_agent, 'linux')) {
             $mobile_os = 'linux';
             $mobile_os_number = Bootstrap::get_item_version($pv_browser_user_agent, 'linux');
         }
@@ -2051,7 +2047,7 @@ class Bootstrap
     public function array_merges()
     {
         $array = array();
-        $arrays = & func_get_args();
+        $arrays = func_get_args();
         foreach ($arrays as $array_i) {
             if (is_array($array_i)) {
                 Bootstrap::array_merge_2($array, $array_i);
@@ -2176,7 +2172,7 @@ class Bootstrap
         switch ($DBEngine) {
             case 'mysql':
                 $con = Propel::getConnection('workflow');
-                return mysql_real_escape_string(stripslashes($sqlString), $con->getResource());
+                return mysqli_real_escape_string($con->getResource(), stripslashes($sqlString));
                 break;
             case 'myxml':
                 $sqlString = str_replace('"', '""', $sqlString);
@@ -2207,13 +2203,13 @@ class Bootstrap
         // Check if its a user template
         if (file_exists($file)) {
             //require_once( $file );
-            include ($file);
+            include($file);
         } else {
             // Try to get the global system template
             $file = PATH_TEMPLATE . PATH_SEP . $temp;
             //require_once( $file );
             if (file_exists($file)) {
-                include ($file);
+                include($file);
             }
         }
     }
@@ -2295,8 +2291,8 @@ class Bootstrap
             $lang = defined(SYS_LANG) ? SYS_LANG : 'en';
         }
         $aux = explode(' ', $date); //para dividir la fecha del dia
-        $date = explode('-', isset($aux[0]) ? $aux[0] : '00-00-00' ); //para obtener los dias, el mes, y el año.
-        $time = explode(':', isset($aux[1]) ? $aux[1] : '00:00:00' ); //para obtener las horas, minutos, segundos.
+        $date = explode('-', isset($aux[0]) ? $aux[0] : '00-00-00'); //para obtener los dias, el mes, y el año.
+        $time = explode(':', isset($aux[1]) ? $aux[1] : '00:00:00'); //para obtener las horas, minutos, segundos.
 
 
         $year = (int) ((isset($date[0])) ? $date[0] : '0'); //year
@@ -2309,7 +2305,7 @@ class Bootstrap
         $s = isset($time[2]) ? $time[2] : '00'; //second
 
 
-        $MONTHS = Array();
+        $MONTHS = array();
         for ($i = 1; $i <= 12; $i++) {
             $MONTHS[$i] = Bootstrap::LoadTranslation("ID_MONTH_$i", $lang);
         }
@@ -2418,7 +2414,7 @@ class Bootstrap
      */
     public function evalJScript($c)
     {
-        print ("<script language=\"javascript\">{$c}</script>");
+        print("<script language=\"javascript\">{$c}</script>");
     }
 
     /**
@@ -2561,7 +2557,7 @@ class Bootstrap
         return $passwordHashConfig['current'];
     }
 
-    public function hashPassword($pass, $hashType = '', $includeHashType = false)
+    public static function hashPassword($pass, $hashType = '', $includeHashType = false)
     {
         if ($hashType == '') {
             $hashType = Bootstrap::getPasswordHashType();
@@ -2595,13 +2591,13 @@ class Bootstrap
             //To enable compatibility with soap login
             if ((Bootstrap::hashPassword($pass, $hashTypeCurrent) == $userPass) || ($pass === $hashTypeCurrent . ':' . $userPass)) {
                 $acceptance = true;
-            } else if ((Bootstrap::hashPassword($pass, $hashTypePrevious) == $userPass) || ($pass === $hashTypePrevious . ':' . $userPass)) {
+            } elseif ((Bootstrap::hashPassword($pass, $hashTypePrevious) == $userPass) || ($pass === $hashTypePrevious . ':' . $userPass)) {
                 $acceptance = true;
             }
         } else {
             if (Bootstrap::hashPassword($pass, $hashTypeCurrent) == $userPass) {
                 $acceptance = true;
-            } else if (Bootstrap::hashPassword($pass, $hashTypePrevious) == $userPass) {
+            } elseif (Bootstrap::hashPassword($pass, $hashTypePrevious) == $userPass) {
                 $acceptance = true;
             }
         }
@@ -2613,7 +2609,7 @@ class Bootstrap
      * @param $string
      * @return mixed
      */
-    public function encryptOld ($string)
+    public function encryptOld($string)
     {
         $consthashFx = self::hashFx;
         return $consthashFx($string);
@@ -2630,7 +2626,7 @@ class Bootstrap
             $translationsTable = $Translations->getTranslationEnvironments();
             $inLang = false;
             foreach ($translationsTable as $locale) {
-                if ($locale['LOCALE'] == $acceptLanguage){
+                if ($locale['LOCALE'] == $acceptLanguage) {
                     $inLang = true;
                     break;
                 }
@@ -2638,7 +2634,6 @@ class Bootstrap
             $lang = $inLang?$acceptLanguage:'en';
             define("SYS_LANG", $lang);
         }
-
     }
 
     /**
@@ -2659,20 +2654,27 @@ class Bootstrap
     /**
      * Stores a message in the log file, if the file size exceeds
      *
-     * @param string $channel
-     * @param string $message
-     * @param array  $context
-     * @param string $file
-     * @param string $pathData
-     * @param string $ws workspace
+     * @param string $channel The logging channel
+     * @param int $level The logging level
+     * @param string $message The log message
+     * @param array $context The log context
+     * @param string $workspace name workspace
+     * @param string $file name file
+     * @param boolean $readLoggingLevel
      *
      * @return void
      */
-    public static function registerMonolog($channel, $level, $message, $context, $ws, $file = 'cron.log', $pathData = PATH_DATA)
+    public static function registerMonolog(
+        $channel,
+        $level,
+        $message,
+        $context,
+        $workspace,
+        $file = 'cron.log',
+        $readLoggingLevel = true
+    )
     {
-        $fileLog = $pathData .'sites'. PATH_SEP . $ws . PATH_SEP . 'log' . PATH_SEP . $file;
-
-        $registerLogger = &MonologProvider::getSingleton($channel, $fileLog);
+        $registerLogger = MonologProvider::getSingleton($channel, $file, $readLoggingLevel);
         $registerLogger->addLog($level, $message, $context);
     }
 
@@ -2747,6 +2749,4 @@ class Bootstrap
         }
         set_include_path(get_include_path() . PATH_SEPARATOR . PATH_DATA_SITE);
     }
-
 }
-

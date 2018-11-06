@@ -67,6 +67,8 @@ class ListCanceledMapBuilder
 
         $tMap->addPrimaryKey('APP_UID', 'AppUid', 'string', CreoleTypes::VARCHAR, true, 32);
 
+        $tMap->addPrimaryKey('DEL_INDEX', 'DelIndex', 'int', CreoleTypes::INTEGER, true, null);
+
         $tMap->addColumn('USR_UID', 'UsrUid', 'string', CreoleTypes::VARCHAR, true, 32);
 
         $tMap->addColumn('TAS_UID', 'TasUid', 'string', CreoleTypes::VARCHAR, true, 32);
@@ -82,8 +84,6 @@ class ListCanceledMapBuilder
         $tMap->addColumn('APP_TAS_TITLE', 'AppTasTitle', 'string', CreoleTypes::LONGVARCHAR, false, null);
 
         $tMap->addColumn('APP_CANCELED_DATE', 'AppCanceledDate', 'int', CreoleTypes::TIMESTAMP, false, null);
-
-        $tMap->addColumn('DEL_INDEX', 'DelIndex', 'int', CreoleTypes::INTEGER, true, null);
 
         $tMap->addColumn('DEL_PREVIOUS_USR_UID', 'DelPreviousUsrUid', 'string', CreoleTypes::VARCHAR, false, 32);
 

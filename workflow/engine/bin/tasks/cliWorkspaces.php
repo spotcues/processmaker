@@ -151,21 +151,6 @@ EOT
 CLI::taskOpt("workspace", "Select the workspace whose case folders will be migrated, if multiple workspaces are present in the server.\n        Ex: -wworkflow.        Ex: --workspace=workflow", "w:", "workspace=");
 CLI::taskRun("runStructureDirectories");
 
-CLI::taskName("database-generate-self-service-by-value");
-CLI::taskDescription(<<<EOT
-  Generate or upgrade the table "self-service by value".
-
-  This command populates the table "self-service by value" for cases whose
-  task is defined with "Self Service Value Based Assignment" in "Assignment
-  Rules".
-
-  If no workspace is specified, the command will be run in all workspaces. More
-  than one workspace can be specified.
-EOT
-);
-CLI::taskArg("workspace-name", true, true);
-CLI::taskRun("run_database_generate_self_service_by_value");
-
 CLI::taskName('database-verify-consistency');
 CLI::taskDescription(<<<EOT
   Verify that the database data is consistent so any database-upgrade operation will be executed flawlessly.
@@ -209,46 +194,7 @@ EOT
 CLI::taskArg('workspace', true, true);
 CLI::taskRun("run_migrate_itee_to_dummytask");
 
-/* ----------------------------------********--------------------------------- */
-CLI::taskName("check-workspace-disabled-code");
-CLI::taskDescription(<<<EOT
-  Check disabled code for the specified workspace(s).
-
-  This command checks the disabled code in the specified workspace(s).
-
-  If no workspace is specified, the command will be run in all workspaces.
-  More than one workspace can be specified.
-EOT
-);
-CLI::taskArg("workspace-name", true, true);
-CLI::taskRun("run_check_workspace_disabled_code");
-
-CLI::taskName('migrate-new-cases-lists');
-CLI::taskDescription(<<<EOT
-  Migrating the list cases schema to match the latest version
-
-  Specify the WORKSPACE to migrate from a existing workspace.
-
-  If no workspace is specified, then the tables schema will be upgraded or
-  migrate on all available workspaces.
-EOT
-);
-CLI::taskArg('workspace', true, true);
-CLI::taskRun("run_migrate_new_cases_lists");
-
-CLI::taskName('migrate-list-unassigned');
-CLI::taskDescription(<<<EOT
-  Migrating the AppCacheView table to match the latest version of List Unassigned
-
-  Specify the WORKSPACE to migrate from a existing workspace.
-
-  If no workspace is specified, then the tables schema will be upgraded or
-  migrate on all available workspaces.
-EOT
-);
-CLI::taskArg('workspace', true, true);
-CLI::taskRun("run_migrate_list_unassigned");
-/* ----------------------------------********--------------------------------- */
+/*----------------------------------********---------------------------------*/
 
 CLI::taskName('migrate-indexing-acv');
 CLI::taskDescription(<<<EOT
@@ -342,17 +288,38 @@ EOT
 CLI::taskArg('workspace');
 CLI::taskRun("regenerate_pmtable_classes");
 
+/*----------------------------------********---------------------------------*/
+
+/**
+ * Remove the DYN_CONTENT_HISTORY
+ */
+CLI::taskName('clear-dyn-content-history-data');
+CLI::taskDescription(<<<EOT
+    Clear History of Use data from APP_HISTORY table
+EOT
+);
+CLI::taskArg('workspace');
+CLI::taskRun("run_clear_dyn_content_history_data");
+
 /**
  * Function run_info
- * access public
+ * 
+ * @param array $args
+ * @param array $opts
  */
 function run_info($args, $opts)
 {
-    $workspaces = get_workspaces_from_args($args);
     WorkspaceTools::printSysInfo();
-    foreach ($workspaces as $workspace) {
-        echo "\n";
-        $workspace->printMetadata(false);
+
+    //Check if the command is executed by a specific workspace
+    $workspaces = get_workspaces_from_args($args);
+    if (count($args) === 1) {
+        $workspaces[0]->printMetadata(false);
+    } else {
+        foreach ($workspaces as $workspace) {
+            echo "\n";
+            passthru(PHP_BINARY . " processmaker info " . $workspace->name);
+        }
     }
 }
 
@@ -832,6 +799,9 @@ function run_workspace_restore($args, $opts)
         $info = array_key_exists("info", $opts);
         $lang = array_key_exists("lang", $opts) ? $opts['lang'] : 'en';
         $port = array_key_exists("port", $opts) ? $opts['port'] : '';
+        $optionMigrateHistoryData = [
+            /*----------------------------------********---------------------------------*/
+        ];
         if ($info) {
             WorkspaceTools::getBackupInfo($filename);
         } else {
@@ -857,7 +827,7 @@ function run_workspace_restore($args, $opts)
                     CLI::error("Please, you should use -m parameter to restore them.\n");
                     return;
                 }
-                WorkspaceTools::restore($filename, $workspace, $dstWorkspace, $overwrite, $lang, $port);
+                WorkspaceTools::restore($filename, $workspace, $dstWorkspace, $overwrite, $lang, $port, $optionMigrateHistoryData);
             }
         }
     } else {
@@ -865,49 +835,32 @@ function run_workspace_restore($args, $opts)
     }
 }
 
+/**
+ * Migrating cases folders of the workspaces
+ * 
+ * @param array $command
+ * @param array $args
+ */
 function runStructureDirectories($command, $args)
 {
     $workspaces = get_workspaces_from_args($command);
-    $count = count($workspaces);
-    $errors = false;
-    $countWorkspace = 0;
-    foreach ($workspaces as $index => $workspace) {
+    if (count($command) === 1) {
         try {
-            $countWorkspace++;
-            CLI::logging("Updating workspaces ($countWorkspace/$count): " . CLI::info($workspace->name) . "\n");
+            $workspace = $workspaces[0];
+            CLI::logging(": " . CLI::info($workspace->name) . "\n");
             $workspace->updateStructureDirectories($workspace->name);
             $workspace->close();
         } catch (Exception $e) {
             CLI::logging("Errors upgrading workspace " . CLI::info($workspace->name) . ": " . CLI::error($e->getMessage()) . "\n");
-            $errors = true;
         }
-    }
-}
-
-function run_database_generate_self_service_by_value($args, $opts)
-{
-    $filter = new InputFilter();
-    $opts = $filter->xssFilterHard($opts);
-    $args = $filter->xssFilterHard($args);
-    try {
-        $arrayWorkspace = get_workspaces_from_args($args);
-
-        foreach ($arrayWorkspace as $value) {
-            $workspace = $value;
-
-            try {
-                G::outRes("Generating the table \"self-service by value\" for " . pakeColor::colorize($workspace->name, "INFO") . "\n");
-                $workspace->appAssignSelfServiceValueTableGenerateData();
-            } catch (Exception $e) {
-                G::outRes("Errors generating the table \"self-service by value\" of workspace " . CLI::info($workspace->name) . ": " . CLI::error($e->getMessage()) . "\n");
-            }
-
-            echo "\n";
+    } else {
+        $count = count($workspaces);
+        $countWorkspace = 0;
+        foreach ($workspaces as $index => $workspace) {
+            $countWorkspace++;
+            CLI::logging("Updating workspaces ($countWorkspace/$count)");
+            passthru(PHP_BINARY . " processmaker migrate-cases-folders " . $workspace->name);
         }
-
-        echo "Done!\n";
-    } catch (Exception $e) {
-        G::outRes(CLI::error($e->getMessage()) . "\n");
     }
 }
 
@@ -981,144 +934,7 @@ function run_migrate_itee_to_dummytask($args, $opts)
         }
     }
 }
-/* ----------------------------------********--------------------------------- */
-
-/**
- * Check if we need to execute an external program for each workspace
- * If we apply the command for all workspaces we will need to execute one by one by redefining the constants
- * @param string $args, workspaceName that we need to apply the database-upgrade
- * @param string $opts
- *
- * @return void
- */
-function run_check_workspace_disabled_code($args, $opts)
-{
-    //Check if the command is executed by a specific workspace
-    if (count($args) === 1) {
-        check_workspace_disabled_code($args, $opts);
-    } else {
-        $workspaces = get_workspaces_from_args($args);
-        foreach ($workspaces as $workspace) {
-            passthru(PHP_BINARY . ' processmaker check-workspace-disabled-code ' . $workspace->name);
-        }
-    }
-}
-
-/**
- * This function is executed only by one workspace
- * Code Security Scanner related to the custom blacklist
- * @param array $args, the specific actions must be: upgrade|check
- * @param array $opts, workspaceName for to apply the database-upgrade
- *
- * @return void
- */
-function check_workspace_disabled_code($args, $opts)
-{
-    try {
-        //Load the attributes for the workspace
-        $arrayWorkspace = get_workspaces_from_args($args);
-        //Loop, read all the attributes related to the one workspace
-        $wsName = $arrayWorkspace[key($arrayWorkspace)]->name;
-        Bootstrap::setConstantsRelatedWs($wsName);
-
-        foreach ($arrayWorkspace as $value) {
-            $workspace = $value;
-
-            if (!$workspace->pmLicensedFeaturesVerifyFeature("B0oWlBLY3hHdWY0YUNpZEtFQm5CeTJhQlIwN3IxMEkwaG4=")) {
-                throw new Exception("Error: This command cannot be used because your license does not include it.");
-            }
-
-            echo "> Workspace: " . $workspace->name . "\n";
-            try {
-                $arrayFoundDisabledCode = $workspace->getDisabledCode();
-
-                if (!empty($arrayFoundDisabledCode)) {
-                    $strFoundDisabledCode = "";
-
-                    foreach ($arrayFoundDisabledCode as $value2) {
-                        $arrayProcessData = $value2;
-                        $strFoundDisabledCode .= ($strFoundDisabledCode != "") ? "\n" : "";
-                        $strFoundDisabledCode .= "  Process: " . $arrayProcessData["processTitle"] . "\n";
-                        $strFoundDisabledCode .= "  Triggers:\n";
-
-                        foreach ($arrayProcessData["triggers"] as $value3) {
-                            $arrayTriggerData = $value3;
-                            $strCodeAndLine = "";
-
-                            foreach ($arrayTriggerData["disabledCode"] as $key4 => $value4) {
-                                $strCodeAndLine .= (($strCodeAndLine != "") ? ", " : "") . $key4 . " (Lines " . implode(", ", $value4) . ")";
-                            }
-                            $strFoundDisabledCode .= "    - " . $arrayTriggerData["triggerTitle"] . ": " . $strCodeAndLine . "\n";
-                        }
-                    }
-                    echo $strFoundDisabledCode . "\n";
-                } else {
-                    echo "The workspace it's OK\n\n";
-                }
-            } catch (Exception $e) {
-                G::outRes("Errors to check disabled code: " . CLI::error($e->getMessage()) . "\n\n");
-            }
-            $workspace->close();
-        }
-        echo "Done!\n\n";
-    } catch (Exception $e) {
-        G::outRes(CLI::error($e->getMessage()) . "\n");
-    }
-}
-
-function migrate_new_cases_lists($command, $args, $opts)
-{
-    $filter = new InputFilter();
-    $opts = $filter->xssFilterHard($opts);
-    $args = $filter->xssFilterHard($args);
-    $lang = array_key_exists("lang", $opts) ? $opts['lang'] : 'en';
-    $workspaces = get_workspaces_from_args($args);
-    foreach ($workspaces as $workspace) {
-        print_r("Upgrading database in " . pakeColor::colorize($workspace->name, "INFO") . "\n");
-        try {
-            $workspace->migrateList($workspace->name, true, $lang);
-            echo "> List tables are done\n";
-        } catch (Exception $e) {
-            G::outRes("> Error: " . CLI::error($e->getMessage()) . "\n");
-        }
-    }
-}
-
-function migrate_counters($command, $args)
-{
-    $workspaces = get_workspaces_from_args($args);
-
-    foreach ($workspaces as $workspace) {
-        print_r("Regenerating counters in: " . pakeColor::colorize($workspace->name, "INFO") . "\n");
-
-        try {
-            $workspace->migrateCounters($workspace->name, true);
-
-            echo "> Counters are done\n";
-        } catch (Exception $e) {
-            G::outRes("> Error: " . CLI::error($e->getMessage()) . "\n");
-        }
-    }
-}
-
-function migrate_list_unassigned($command, $args, $opts)
-{
-    $filter = new InputFilter();
-    $opts = $filter->xssFilterHard($opts);
-    $args = $filter->xssFilterHard($args);
-    $lang = array_key_exists("lang", $opts) ? $opts['lang'] : 'en';
-    $workspaces = get_workspaces_from_args($args);
-    foreach ($workspaces as $workspace) {
-        print_r("Upgrading Unassigned List in" . pakeColor::colorize($workspace->name, "INFO") . "\n");
-        try {
-            $workspace->regenerateListUnassigned();
-            echo "> Unassigned List is done\n";
-        } catch (Exception $e) {
-            G::outRes("> Error: " . CLI::error($e->getMessage()) . "\n");
-        }
-    }
-}
-/* ----------------------------------********--------------------------------- */
+/*----------------------------------********---------------------------------*/
 
 /**
  * Check if we need to execute an external program for each workspace
@@ -1249,4 +1065,28 @@ function regenerate_pmtable_classes($args, $opts)
     } else {
         throw new Exception("No workspace specified for updating generated class files.");
     }
+}
+
+/*----------------------------------********---------------------------------*/
+
+/**
+ * Will be clean the History of use from the table
+ * Will be remove the DYN_CONTENT_HISTORY from APP_HISTORY
+ *
+ * @param array $args
+ * @param array $opts
+ *
+ * @return void
+*/
+function run_clear_dyn_content_history_data($args, $opts)
+{
+    $workspaces = get_workspaces_from_args($args);
+    $start = microtime(true);
+    CLI::logging("> Cleaning history data from APP_HISTORY...\n");
+    foreach ($workspaces as $workspace) {
+        CLI::logging('Remove history of use: ' . pakeColor::colorize($workspace->name, 'INFO') . "\n");
+        $workspace->clearDynContentHistoryData(true);
+    }
+    $stop = microtime(true);
+    CLI::logging("<*>   Cleaning history data from APP_HISTORY process took " . ($stop - $start) . " seconds.\n");
 }

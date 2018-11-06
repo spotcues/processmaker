@@ -242,6 +242,7 @@ jQuery(document).ready(function ($) {
     project = new PMProject({
         id: prj_uid,
         name: 'Untitled Process',
+        readOnly: prj_readonly === "true",
         keys: {
             access_token: credentials.access_token,
             expires_in: credentials.expires_in,
@@ -510,7 +511,6 @@ jQuery(document).ready(function ($) {
         var saveas;
         menu.hide();
         PMDesigner.project.remoteProxy.setUrl(HTTP_SERVER_HOSTNAME + "/api/1.0/" + WORKSPACE + "/project/" + PMDesigner.project.id);
-        PMDesigner.project.isSave = true;
         PMDesigner.project.save(true);
         saveas = new SaveAs();
         saveas.open();
@@ -696,14 +696,10 @@ jQuery(document).ready(function ($) {
      ==============================================*/
     PMDesigner.project.setSaveInterval(40000);
     setInterval(function () {
-        if (PMDesigner.project.isDirty()) {
+        if (PMDesigner.project.isDirty() && PMDesigner.project.readOnly === false) {
             PMDesigner.project.remoteProxy.setUrl(HTTP_SERVER_HOSTNAME + "/api/1.0/" + WORKSPACE + "/project/" + prj_uid);
-            if (PMDesigner.project.isSave === true) {
-                PMDesigner.msgFlash('Saving Process'.translate(), document.body, 'success', 5000, 5);
-            } else {
-                PMDesigner.project.isSave = true;
-                PMDesigner.project.save(true);
-            }
+            PMDesigner.msgFlash('Saving Process'.translate(), document.body, 'success', 5000, 5);
+            PMDesigner.project.save(true);
         }
     }, PMDesigner.project.saveInterval);
     /*-----  End of Autosave functionality  ------*/
@@ -1025,15 +1021,9 @@ PMDesigner.supportBrowser = function (functionality) {
  ============================================================*/
 window.onbeforeunload = function (e) {
     var message;
-    if (PMDesigner.project.isDirty()
-        && PMDesigner.project.isClose == false
-        && PMDesigner.project.isSave == false) {
-        PMDesigner.project.remoteProxy.setUrl(HTTP_SERVER_HOSTNAME + "/api/1.0/" + WORKSPACE + "/project/" + prj_uid);
-        if (PMDesigner.project.isSave === true) {
-            PMDesigner.msgFlash('Saving Process'.translate(), document.body, 'success', 5000, 5);
-        } else {
-            PMDesigner.project.verifyAndSave(true);
-        }
+    if ((PMDesigner.project.isDirty()
+        && !PMDesigner.project.readOnly)
+        || PMDesigner.project.isSave) {
         message = "There are unsaved changes, if you leave the editor some changes won't be saved.".translate();
         e = e || window.event;
         if (e) {

@@ -571,7 +571,8 @@ class Language extends BaseLanguage
         $buildhash = file_get_contents($buildhash);
 
         $michelangeloFE = PATH_HTML . "lib/js";
-        $pathFileMafe = array_pop(glob($michelangeloFE . '/' . '*' . $buildhash . '*', GLOB_BRACE));
+        $array = glob($michelangeloFE . '/' . '*' . $buildhash . '*', GLOB_BRACE);
+        $pathFileMafe = array_pop($array);
         if (file_exists($pathFileMafe) && is_readable($pathFileMafe)) {
             $labels = self::readLabelsDirectory($pathFileMafe, true);
         }

@@ -3,6 +3,7 @@ namespace ProcessMaker\Services\OAuth2;
 
 use Luracast\Restler\iAuthenticate;
 use Luracast\Restler\RestException;
+/*----------------------------------********---------------------------------*/
 use ProcessMaker\Core\System;
 
 class Server implements iAuthenticate
@@ -372,6 +373,8 @@ class Server implements iAuthenticate
 
             $_SESSION['USR_TIME_ZONE'] = $userTimeZone;
         }
+
+        /*----------------------------------********---------------------------------*/
 
         return $allowed;
     }

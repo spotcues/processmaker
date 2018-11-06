@@ -25,8 +25,9 @@
 
 if (defined('PATH_DB') && !empty(config("system.workspace"))) {
 
-    if (!file_exists(PATH_DB . config("system.workspace") . '/db.php'))
+    if (!file_exists(PATH_DB . config("system.workspace") . '/db.php')) {
         throw new Exception("Could not find db.php in current workspace " . config("system.workspace"));
+    }
 
     require_once(PATH_DB . config("system.workspace") . '/db.php');
     //to do: enable for other databases
@@ -63,7 +64,15 @@ if (defined('PATH_DB') && !empty(config("system.workspace"))) {
 
     $pro ['datasources']['rp']['connection'] = $dsnReport;
     $pro ['datasources']['rp']['adapter'] = DB_ADAPTER;
-
+    
+    $dbHost = explode(':', DB_HOST);
+    config(['database.connections.workflow.host' => $dbHost[0]]);
+    config(['database.connections.workflow.database' => DB_NAME]);
+    config(['database.connections.workflow.username' => DB_USER]);
+    config(['database.connections.workflow.password' => DB_PASS]);
+    if (count($dbHost) > 1) {
+        config(['database.connections.workflow.port' => $dbHost[1]]);
+    }
 }
 
 $pro ['datasources']['dbarray']['connection'] = 'dbarray://user:pass@localhost/pm_os';

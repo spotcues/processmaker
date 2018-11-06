@@ -1,4 +1,5 @@
 <?php
+
 if (!isset($_SESSION['USER_LOGGED'])) {
     $response = new stdClass();
     $response->message = G::LoadTranslation('ID_LOGIN_AGAIN');
@@ -146,8 +147,10 @@ if ($actionAjax == "verifySession") {
         print G::json_encode($response);
         die();
     } else {
-        $response = new stdclass();
+        /** Action: Reassign from casesList */
         GLOBAL $RBAC;
+        $response = new stdclass();
+
         //Check if the user is a supervisor to this Process
         if ($RBAC->userCanAccess('PM_REASSIGNCASE') == 1) {
             $response->reassigncase = true;
@@ -160,7 +163,6 @@ if ($actionAjax == "verifySession") {
             $listProcess = $processUser->getProUidSupervisor($_SESSION['USER_LOGGED']);
             $response->processeslist = G::json_encode($listProcess);
         }
-
         print G::json_encode($response);
         die();
     }

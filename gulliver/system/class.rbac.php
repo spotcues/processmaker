@@ -43,6 +43,7 @@ use ProcessMaker\Exception\RBACException;
  */
 class RBAC
 {
+    const ADMIN_USER_UID = '00000000000000000000000000000001';
     const SETUPERMISSIONUID = '00000000000000000000000000000002';
     const PER_SYSTEM = '00000000000000000000000000000002';
     const PM_GUEST_CASE = 'PM_GUEST_CASE';
@@ -200,21 +201,10 @@ class RBAC
                 'unassigned' => ['PM_CASES'],
                 'to_reassign' => ['PM_REASSIGNCASE,PM_REASSIGNCASE_SUPERVISOR'],
                 'to_revise' => ['PM_SUPERVISOR']
-            ],
-            'proxyCasesList.php' => [
-                'todo' => ['PM_CASES'], //community
-                'draft' => ['PM_CASES'], //community
-                'sent' => ['PM_CASES'], //community
-                'unassigned' => ['PM_CASES'], //community
-                'paused' => ['PM_CASES'], //community
-                'to_revise' => ['PM_ALLCASES'], //community
-                'to_reassign' => ['PM_ALLCASES'], //community
-                'search' => ['PM_ALLCASES']
             ]
         ];
         $this->aliasPermissions['PM_CASES'] = [self::PM_GUEST_CASE];
         $this->aliasPermissions['PM_LOGIN'] = [self::PM_GUEST_CASE];
-
     }
 
     /**
@@ -241,37 +231,30 @@ class RBAC
     public function initRBAC()
     {
         if (is_null($this->userObj)) {
-
             $this->userObj = new RbacUsers();
         }
 
         if (is_null($this->systemObj)) {
-
             $this->systemObj = new Systems();
         }
 
         if (is_null($this->usersRolesObj)) {
-
             $this->usersRolesObj = new UsersRoles();
         }
 
         if (is_null($this->rolesObj)) {
-
             $this->rolesObj = new Roles();
         }
 
         if (is_null($this->permissionsObj)) {
-
             $this->permissionsObj = new Permissions();
         }
 
         if (is_null($this->rolesPermissionsObj)) {
-
             $this->rolesPermissionsObj = new RolesPermissions();
         }
 
         if (is_null($this->authSourcesObj)) {
-
             $this->authSourcesObj = new AuthenticationSource();
         }
         //hook for RBAC plugins
@@ -279,13 +262,11 @@ class RBAC
         if (is_dir($pathPlugins)) {
             if ($handle = opendir($pathPlugins)) {
                 while (false !== ($file = readdir($handle))) {
-                    if (strpos($file, '.php', 1) && is_file($pathPlugins . PATH_SEP . $file) && substr($file, 0,
-                            6) == 'class.' && substr($file, -4) == '.php') {
-
+                    if (strpos($file, '.php', 1) && is_file($pathPlugins . PATH_SEP . $file) &&
+                        substr($file, 0, 6) === 'class.' && substr($file, -4) === '.php') {
                         $className = substr($file, 6, strlen($file) - 10);
                         require_once($pathPlugins . PATH_SEP . $file);
                         $this->aRbacPlugins[] = $className;
-
                     }
                 }
             }
@@ -301,7 +282,7 @@ class RBAC
      * gets the Role and their permissions for Administrator Processmaker
      *
      * @access public
-     * @return $this->permissionsAdmin[ $permissionsAdmin ]
+     * @return array $this->permissionsAdmin[ $permissionsAdmin ]
      */
     public function loadPermissionAdmin()
     {
@@ -631,7 +612,13 @@ class RBAC
                 "PER_UID" => "00000000000000000000000000000065",
                 "PER_CODE" => "PM_SETUP_CUSTOM_CASES_LIST",
                 "PER_NAME" => "Setup Custom Cases List"
+            ],
+            [
+                'PER_UID' => '00000000000000000000000000000067',
+                'PER_CODE' => 'PM_SETUP_LOG_FILES',
+                'PER_NAME' => 'Log Files'
             ]
+
         ];
 
         return $permissionsAdmin;
@@ -883,9 +870,9 @@ class RBAC
      */
     public function VerifyWithOtherAuthenticationSource($authType, $userFields, $strPass)
     {
-        if ($authType == '' || $authType == 'MYSQL') {
+        if ($authType === '' || $authType === 'MYSQL') {
             //check if the user is active
-            if ($userFields['USR_STATUS'] != 1) {
+            if ($userFields['USR_STATUS'] !== 1) {
                 return -3; //inactive user
             }
 
@@ -896,13 +883,16 @@ class RBAC
         }
 
         foreach ($this->aRbacPlugins as $className) {
-            if (strtolower($className) == strtolower($authType)) {
+            if (strtolower($className) === strtolower($authType)) {
                 $plugin = new $className();
-                $plugin->sAuthSource = $userFields["UID_AUTH_SOURCE"];
+                $reflectionClass = new ReflectionClass($plugin);
+                if ($reflectionClass->hasConstant('AUTH_TYPE')) {
+                    return $plugin->VerifyLogin($userFields['USR_USERNAME'], $strPass);
+                }
+                $plugin->sAuthSource = $userFields['UID_AUTH_SOURCE'];
                 $plugin->sSystem = $this->sSystem;
 
-                $bValidUser = false;
-                $bValidUser = $plugin->VerifyLogin($userFields["USR_AUTH_USER_DN"], $strPass);
+                $bValidUser = $plugin->VerifyLogin($userFields['USR_AUTH_USER_DN'], $strPass);
                 if ($bValidUser === true) {
                     return ($userFields['USR_UID']);
                 } else {
@@ -934,7 +924,7 @@ class RBAC
     {
         /*----------------------------------********---------------------------------*/
 
-        if (strlen($strPass) == 0) {
+        if (strlen($strPass) === 0) {
             return -2;
         }
         //check if the user exists in the table RB_WORKFLOW.USERS
@@ -958,12 +948,10 @@ class RBAC
         //Hook for RBAC plugins
         if ($authType != "mysql" && $authType != "") {
             $res = $this->VerifyWithOtherAuthenticationSource($authType, $this->userObj->fields, $strPass);
-
             return $res;
         } else {
             $this->userObj->reuseUserFields = true;
             $res = $this->userObj->VerifyLogin($strUser, $strPass);
-
             return $res;
         }
     }
@@ -979,7 +967,6 @@ class RBAC
     public function verifyUser($strUser)
     {
         $res = $this->userObj->verifyUser($strUser);
-
         return $res;
     }
 
@@ -993,7 +980,6 @@ class RBAC
     public function verifyUserId($strUserId)
     {
         $res = $this->userObj->verifyUserId($strUserId);
-
         return $res;
     }
 
@@ -1054,24 +1040,24 @@ class RBAC
      */
     public function createUser($dataCase = [], $rolCode = '')
     {
-        if ($dataCase["USR_STATUS"] . "" == "1") {
-            $dataCase["USR_STATUS"] = "ACTIVE";
+        if ($dataCase['USR_STATUS'] . '' === '1') {
+            $dataCase['USR_STATUS'] = 'ACTIVE';
         }
 
-        if ($dataCase["USR_STATUS"] . "" == "0") {
-            $dataCase["USR_STATUS"] = "INACTIVE";
+        if ($dataCase['USR_STATUS'] . '' === '0') {
+            $dataCase['USR_STATUS'] = 'INACTIVE';
         }
 
-        if ($dataCase['USR_STATUS'] == 'ACTIVE') {
+        if ($dataCase['USR_STATUS'] === 'ACTIVE') {
             $dataCase['USR_STATUS'] = 1;
         }
-        if ($dataCase['USR_STATUS'] == 'INACTIVE') {
+        if ($dataCase['USR_STATUS'] === 'INACTIVE') {
             $dataCase['USR_STATUS'] = 0;
         }
 
         $userUid = $this->userObj->create($dataCase);
 
-        if ($rolCode != '') {
+        if ($rolCode !== '') {
             $this->assignRoleToUser($userUid, $rolCode);
         }
 
@@ -1089,7 +1075,7 @@ class RBAC
     public function updateUser($dataCase = [], $rolCode = '')
     {
         if (isset($dataCase['USR_STATUS'])) {
-            if ($dataCase['USR_STATUS'] == 'ACTIVE') {
+            if ($dataCase['USR_STATUS'] === 'ACTIVE') {
                 $dataCase['USR_STATUS'] = 1;
             }
         }
@@ -1144,9 +1130,9 @@ class RBAC
             $userStatus = 1;
         }
 
-        $aFields = $this->userObj->load($userUid);
-        $aFields['USR_STATUS'] = $userStatus;
-        $this->userObj->update($aFields);
+        $fields = $this->userObj->load($userUid);
+        $fields['USR_STATUS'] = $userStatus;
+        $this->userObj->update($fields);
     }
 
     /**
@@ -1197,7 +1183,7 @@ class RBAC
      */
     public function createPermision($code)
     {
-        return $this->permissionsObj->create(array('PER_CODE' => $code));
+        return $this->permissionsObj->create(['PER_CODE' => $code]);
     }
 
     /**
@@ -1324,6 +1310,33 @@ class RBAC
     public function loadById($rolUid)
     {
         return $this->rolesObj->loadById($rolUid);
+    }
+
+    /**
+     * Get Role code
+     *
+     * @access public
+     *
+     * @param string $role
+     *
+     * @return string
+     */
+    public function getRoleCodeValid($role)
+    {
+        $roleCode = '';
+
+        if (!empty($role)) {
+            if ($this->verifyByCode($role)) {
+                //If is a valid ROL_CODE
+                $roleCode = $role;
+            } else {
+                //We will to check by ROL_UID
+                $roleInfo = $this->loadById($role);
+                $roleCode = !empty($roleInfo['ROL_CODE']) ? $roleInfo['ROL_CODE'] : '';
+            }
+        }
+
+        return $roleCode;
     }
 
     /**
@@ -1653,8 +1666,10 @@ class RBAC
      */
     public function createAuthSource($dataCase)
     {
-        $dataCase['AUTH_SOURCE_PASSWORD'] = G::encrypt($dataCase['AUTH_SOURCE_PASSWORD'],
-                $dataCase['AUTH_SOURCE_SERVER_NAME']) . "_2NnV3ujj3w";
+        $dataCase['AUTH_SOURCE_PASSWORD'] = G::encrypt(
+                $dataCase['AUTH_SOURCE_PASSWORD'],
+                $dataCase['AUTH_SOURCE_SERVER_NAME']
+            ) . "_2NnV3ujj3w";
         $this->authSourcesObj->create($dataCase);
     }
 
@@ -1669,8 +1684,10 @@ class RBAC
      */
     public function updateAuthSource($dataCase)
     {
-        $dataCase['AUTH_SOURCE_PASSWORD'] = G::encrypt($dataCase['AUTH_SOURCE_PASSWORD'],
-                $dataCase['AUTH_SOURCE_SERVER_NAME']) . "_2NnV3ujj3w";
+        $dataCase['AUTH_SOURCE_PASSWORD'] = G::encrypt(
+                $dataCase['AUTH_SOURCE_PASSWORD'],
+                $dataCase['AUTH_SOURCE_SERVER_NAME']
+            ) . "_2NnV3ujj3w";
         $this->authSourcesObj->update($dataCase);
     }
 
@@ -1931,14 +1948,18 @@ class RBAC
                 $isAssignedNewpermissions = $this->getPermissionAssignedRole($aRow['ROL_UID'], $item['PER_UID']);
                 $assignPermissions = true;
                 if (!$isAssignedNewpermissions) {
-                    if ($aRow['ROL_CODE'] == 'PROCESSMAKER_OPERATOR' && in_array($item['PER_CODE'],
-                            $permissionsForOperator)) {
+                    if ($aRow['ROL_CODE'] == 'PROCESSMAKER_OPERATOR' && in_array(
+                            $item['PER_CODE'],
+                            $permissionsForOperator
+                        )) {
                         $assignPermissions = false;
                     }
                     if (!in_array($aRow['ROL_CODE'], $perCodePM)) {
                         $assignPermissions = false;
-                        $checkPermisionEdit = $this->getPermissionAssignedRole($aRow['ROL_UID'],
-                            '00000000000000000000000000000014');
+                        $checkPermisionEdit = $this->getPermissionAssignedRole(
+                            $aRow['ROL_UID'],
+                            '00000000000000000000000000000014'
+                        );
                         if ($checkPermisionEdit && !in_array($item['PER_CODE'], $permissionsForOperator)) {
                             $assignPermissions = true;
                         }
@@ -2028,4 +2049,3 @@ class RBAC
         return self::GUEST_USER_UID === $usrUid;
     }
 }
-

@@ -35,12 +35,12 @@ class XmlFormFieldToolBar extends XmlFormField
      * @param string $value
      * @return string
      */
-    public function render($value)
+    public function render($value = null, $paramDummy2 = NULL)
     {
         $this->toolBar = new ToolBar($this->xmlfile, $this->home);
         $template = PATH_CORE . 'templates/' . $this->type . '.html';
         $out = $this->toolBar->render($template, $scriptCode);
-        $oHeadPublisher = & headPublisher::getSingleton();
+        $oHeadPublisher = headPublisher::getSingleton();
         $oHeadPublisher->addScriptFile($this->toolBar->scriptURL);
         $oHeadPublisher->addScriptCode($scriptCode);
         return $out;

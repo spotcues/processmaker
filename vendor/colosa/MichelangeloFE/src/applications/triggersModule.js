@@ -1921,6 +1921,7 @@
             codeMirrorControl.setSize(580, 150);
             codeMirrorControl.refresh();
         }
+        codeMirrorControl.refresh();
         formEditTriggerCustom.getItems()[1].setHeight(170);
         formEditTriggerCustom.reset();
     };

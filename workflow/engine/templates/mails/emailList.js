@@ -358,10 +358,11 @@ Ext.onReady(function(){
                             params : {
                                 request : 'updateStatusMessage',
                                 APP_MSG_UID: row.data.APP_MSG_UID,
-                                APP_MSG_STATUS: this.value
+                                APP_MSG_STATUS_ID: this.value
                             },
                             success: function ( result, request ) {
                                 Ext.MessageBox.hide();
+                                emailsGrid.store.load();
                             },
                             failure: function ( result, request) {
                                 if (typeof(result.responseText) != 'undefined') {

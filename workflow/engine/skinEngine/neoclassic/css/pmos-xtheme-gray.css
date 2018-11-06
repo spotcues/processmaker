@@ -890,6 +890,10 @@ antes funcionaba.
     width: 16px !important;
     height: 16px !important;
 }
+
+.ICON_STANDARD_LOGGING{
+  background-image: url(/images/import.gif) !important;
+}
 .ICON_EMAILS {
   /*ss_email_edit*/
 

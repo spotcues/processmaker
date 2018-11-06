@@ -29,6 +29,7 @@ return array (
     'dynaformeditor' => 'DynaformEditor',
     'dynaformeditorajax' => 'DynaformEditorAjax',
     'dynaformfield' => 'DynaFormField',
+    'dynaformhandler' => 'DynaformHandler',
     'enterpriseclass' => 'EnterpriseClass',
     'enterpriseutils' => 'EnterpriseUtils',
     'featuresdetail' => 'FeaturesDetail',
@@ -248,6 +249,10 @@ return array (
     'DynaFormField' => 
     array (
       'dynaformfield' => 'dynaformfield',
+    ),
+    'DynaformHandler' => 
+    array (
+      'dynaformhandler' => 'dynaformhandler',
     ),
     'EnterpriseClass' => 
     array (

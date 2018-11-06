@@ -1,30 +1,30 @@
-[13 days ago] b824a87  HOR-4751 <Julio Cesar Laura Avendano>
-[13 days ago] 3bd6f73  HOR-4749 <Julio Cesar Laura Avendaño>
-[13 days ago] bb88703  (origin/bugfix/HOR-4748) HOR-4748 <Paula Quispe>
-[2 weeks ago] 34a374c  Merged in bugfix/HOR-4735 (pull request #6555) <Gustavo Cruz>
-[4 weeks ago] 905ba63  (origin/bugfix/HOR-4716) HOR-4716 <Roly Rudy Gutierrez Pinto>
-[4 weeks ago] 3aa23b3  HOR-4713 <Julio Cesar Laura Avendaño>
-[6 weeks ago] 7c452f0  (origin/bugfix/HOR-4674) HOR-4674 <Roly Rudy Gutierrez Pinto>
-[7 weeks ago] 678b60e  (origin/bugfix/HOR-4668) HOR-4668 <Paula Quispe>
-[7 weeks ago] 52b53a4  (origin/bugfix/HOR-4662) HOR-4662 <Julio Cesar Laura Avendaño>
-[8 weeks ago] 4d037b4  (origin/bugfix/HOR-4632) HOR-4632 <Roly Rudy Gutierrez Pinto>
-[8 weeks ago] a9ea4d9  (origin/bugfix/HOR-4609) HOR-4609 <Julio Cesar Laura Avendaño>
-[9 weeks ago] 5d2b2e0  HOR-4606: Does check the permission PM_SETUP_EMAIL from GET endpoint <Gustavo Silva>
-[9 weeks ago] d9e0aa2  (origin/bugfix/HOR-4599) HOR-4599 <Roly Rudy Gutierrez Pinto>
-[9 weeks ago] 7a4825e  HOR-4605: Ouput_Document > The documents are not being exported with their extensions <Gustavo Silva>
-[9 weeks ago] 9f51282  HOR-4385: Capture Email credentials in clear text <Gustavo Silva>
-[9 weeks ago] b9ab3da  (origin/bugfix/HOR-4576) HOR-4576 <Paula Quispe>
-[10 weeks ago] f6b2d5e  (origin/bugfix/HOR-4573) HOR-4573 <Paula Quispe>
-[10 weeks ago] 44b7a13  (origin/bugfix/HOR-4589) HOR-4589 <Paula Quispe>
-[3 months ago] 03376eb  (origin/bugfix/HOR-4575) HOR-4575 <Julio Cesar Laura Avendaño>
-[3 months ago] d273956  (origin/bugfix/HOR-4577) HOR-4577 <Paula Quispe>
-[3 months ago] 49e344c  (origin/bugfix/HOR-4572) HOR-4572 <Julio Cesar Laura Avendaño>
-[3 months ago] 2bd249f  FBI-2401:RTL> Styles have been broken in 3.2.3 with an RTL language <Fabio Guachalla>
-[3 months ago] a9b2089  (origin/bugfix/HOR-4521-B) HOR-4521 <Julio Cesar Laura Avendaño>
-[3 months ago] 9a940ca  (origin/bugfix/HOR-4512) HOR-4512 <Roly Rudy Gutierrez Pinto>
-[4 months ago] 0e65d8c  FBI-2377:HTML editor >> Buttons overlap preview panel <Fabio Guachalla>
-[4 months ago] b7b0061  (origin/bugfix/HOR-4496) HOR-4496 <Paula Quispe>
-[4 months ago] ba0b9f0  (origin/bugfix/HOR-4500) HOR-4450 <Roly Rudy Gutierrez Pinto>
-[4 months ago] 6a18d96  HOR-4410 <Roly Rudy Gutierrez Pinto>
-[4 months ago] d70d4fa  HOR-4185 <dante>
-[4 months ago] 2c64b9d  (origin/bugfix/FBI-2356_B) FBI-2356: when we enter a Template, ouputDocument, IEE, the buttons come out one on top of the other <Rodrigo Quelca>
+[26 hours ago] b5ea7a8  (origin/bugfix/HOR-4924) HOR-4924 <Roly Rudy Gutierrez Pinto>
+[2 days ago] 646a71f  (origin/bugfix/HOR-4911) HOR-4911 <Paula Quispe>
+[3 days ago] d62c891  (origin/feature/FBI-2511) FBI-2511 [GeoMap mobile field] Google Maps shows "For development purposes only" <Roly Rudy Gutierrez Pinto>
+[3 days ago] 156ee4b  (origin/bugfix/HOR-4909) HOR-4909 <Roly Rudy Gutierrez Pinto>
+[3 days ago] 3f4e3dc  fix Cr notes <Rodrigo Quelca>
+[3 days ago] 406ef19  FBI-2511 [GeoMap mobile field] Google Maps shows “For development purposes only” <Rodrigo Quelca>
+[6 days ago] e2c480b  (origin/bugfix/HOR-4903) HOR-4903 <Roly Rudy Gutierrez Pinto>
+[6 days ago] 8e7cb35  HOR-4908 <Julio Cesar Laura Avendaño>
+[7 days ago] 5f4d99b  (origin/bugfix/HOR-4901) HOR-4901 <Roly Rudy Gutierrez Pinto>
+[10 days ago] be8f6b6  (origin/bugfix/HOR-4900) HOR-4900 <Paula Quispe>
+[13 days ago] f4966b5  (origin/bugfix/HOR-4899) HOR-4899 <Paula Quispe>
+[3 weeks ago] 87ad01c  (origin/feature/HOR-4894) HOR-4894 <Roly Rudy Gutierrez Pinto>
+[3 weeks ago] 3a207b3  (origin/bugfix/GAP-9) GAP-9 <Roly Rudy Gutierrez Pinto>
+[4 weeks ago] f791823  (origin/feature/HOR-4884) HOR-4884 <Paula Quispe>
+[4 weeks ago] a03142c  (origin/bugfix/GAP-10) GAP-10 <Roly Rudy Gutierrez Pinto>
+[4 weeks ago] 9ba28f9  (origin/bugfix/HOR-4879) HOR-4879 <Roly Rudy Gutierrez Pinto>
+[5 weeks ago] 3fc5f21  (origin/feature/HOR-4878) HOR-4878 <Paula Quispe>
+[5 weeks ago] 2699833  (origin/bugfix/HOR-4873) HOR-4873 <Paula Quispe>
+[5 weeks ago] 1b6c6f6  (origin/bugfix/HOR-4872) HOR-4872 <Paula Quispe>
+[5 weeks ago] 81d4d8f  (origin/bugfix/HOR-4865) HOR-4865 <Roly Rudy Gutierrez Pinto>
+[5 weeks ago] 26abb66  (origin/bugfix/HOR-4866) HOR-4866 <Roly Rudy Gutierrez Pinto>
+[6 weeks ago] f22a949  (origin/bugfix/HOR-4859) HOR-4859 <Paula Quispe>
+[6 weeks ago] 6e9ee0c  (origin/bugfix/HOR-4862) HOR-4862 <Paula Quispe>
+[7 weeks ago] ec2a3ef  (origin/bugfix/GAP-4) GAP-4 <Roly Rudy Gutierrez Pinto>
+[7 weeks ago] 5297cac  (origin/bugfix/HOR-4840) HOR-4840 <Paula Quispe>
+[8 weeks ago] 46b6c4c  (origin/bugfix/HOR-4834) HOR-4834 <Julio Cesar Laura Avendaño>
+[8 weeks ago] 1a5c0ca  (origin/feature/HOR-4825) HOR-4825 <Paula Quispe>
+[8 weeks ago] d4c97b8  HOR-4750 <Julio Cesar Laura Avendaño>
+[8 weeks ago] 153d261  (origin/bugfix/HOR-4818) HOR-4397 Cannot get case summary via REST from Unassigned folder <Marco Antonio Nina Mena>
+[9 weeks ago] 8c7fe41  (origin/bugfix/HOR-4815) HOR-4815 <Roly Rudy Gutierrez Pinto>

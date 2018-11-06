@@ -171,7 +171,7 @@ class PHPMailer {
    * @var boolean
    */
   public $UseSendmailOptions	= true;
-  
+
   /**
    * Path to PHPMailer plugins.  Useful if the SMTP class
    * is in a different directory than the PHP include path.
@@ -264,7 +264,7 @@ class PHPMailer {
    *  @var string
    */
   public $AuthType      = '';
-  
+
   /**
    *  Sets SMTP realm.
    *  @var string
@@ -496,27 +496,28 @@ class PHPMailer {
   // METHODS, VARIABLES
   /////////////////////////////////////////////////
 
-  /**
-   * Calls actual mail() function, but in a safe_mode aware fashion
-   * Also, unless sendmail_path points to sendmail (or something that
-   * claims to be sendmail), don't pass params (not a perfect fix,
-   * but it will do)
-   * @param string $to To
-   * @param string $subject Subject
-   * @param string $body Message Body
-   * @param string $header Additional Header(s)
-   * @param string $params Params
-   * @access private
-   * @return bool
-   */
-  private function mail_passthru($to, $subject, $body, $header, $params) {
-    if ( ini_get('safe_mode') || !($this->UseSendmailOptions) ) {
-        $rt = @mail($to, $this->EncodeHeader($this->SecureHeader($subject)), $body, $header);
-    } else {
-        $rt = @mail($to, $this->EncodeHeader($this->SecureHeader($subject)), $body, $header, $params);
+    /**
+     * Calls actual mail() function
+     * Also, unless sendmail_path points to sendmail (or something that
+     * claims to be sendmail), don't pass params (not a perfect fix,
+     * but it will do)
+     * @param string $to To
+     * @param string $subject Subject
+     * @param string $body Message Body
+     * @param string $header Additional Header(s)
+     * @param string $params Params
+     * @access private
+     * @return bool
+     */
+    private function mail_passthru($to, $subject, $body, $header, $params)
+    {
+        if (!$this->UseSendmailOptions) {
+            $rt = @mail($to, $this->EncodeHeader($this->SecureHeader($subject)), $body, $header);
+        } else {
+            $rt = @mail($to, $this->EncodeHeader($this->SecureHeader($subject)), $body, $header, $params);
+        }
+        return $rt;
     }
-    return $rt;
-  }
 
   /**
    * Outputs debugging info via user-defined method
@@ -907,52 +908,53 @@ class PHPMailer {
     return true;
   }
 
-  /**
-   * Sends mail using the PHP mail() function.
-   * @param string $header The message headers
-   * @param string $body The message body
+    /**
+     * Sends mail using the PHP mail() function.
+     * @param string $header The message headers
+     * @param string $body The message body
      * @throws phpmailerException
-   * @access protected
-   * @return bool
-   */
-  protected function MailSend($header, $body) {
-    $toArr = array();
-    foreach($this->to as $t) {
-      $toArr[] = $this->AddrFormat($t);
-    }
-    $to = implode(', ', $toArr);
+     * @access protected
+     * @return bool
+     */
+    protected function MailSend($header, $body)
+    {
+        $toArr = array();
+        foreach ($this->to as $t) {
+            $toArr[] = $this->AddrFormat($t);
+        }
+        $to = implode(', ', $toArr);
 
-    if (empty($this->Sender)) {
-      $params = "-oi ";
-    } else {
-      $params = sprintf("-oi -f%s", $this->Sender);
+        if (empty($this->Sender)) {
+            $params = "-oi ";
+        } else {
+            $params = sprintf("-oi -f%s", $this->Sender);
+        }
+        if ($this->Sender != '') {
+            $old_from = ini_get('sendmail_from');
+            ini_set('sendmail_from', $this->Sender);
+        }
+        $rt = false;
+        if ($this->SingleTo === true && count($toArr) > 1) {
+            foreach ($toArr as $val) {
+                $rt = $this->mail_passthru($val, $this->Subject, $body, $header, $params);
+                // implement call back function if it exists
+                $isSent = ($rt == 1) ? 1 : 0;
+                $this->doCallback($isSent, $val, $this->cc, $this->bcc, $this->Subject, $body);
+            }
+        } else {
+            $rt = $this->mail_passthru($to, $this->Subject, $body, $header, $params);
+            // implement call back function if it exists
+            $isSent = ($rt == 1) ? 1 : 0;
+            $this->doCallback($isSent, $to, $this->cc, $this->bcc, $this->Subject, $body);
+        }
+        if (isset($old_from)) {
+            ini_set('sendmail_from', $old_from);
+        }
+        if (!$rt) {
+            throw new phpmailerException($this->Lang('instantiate'), self::STOP_CRITICAL);
+        }
+        return true;
     }
-    if ($this->Sender != '' and !ini_get('safe_mode')) {
-      $old_from = ini_get('sendmail_from');
-      ini_set('sendmail_from', $this->Sender);
-    }
-      $rt = false;
-    if ($this->SingleTo === true && count($toArr) > 1) {
-      foreach ($toArr as $val) {
-        $rt = $this->mail_passthru($val, $this->Subject, $body, $header, $params);
-        // implement call back function if it exists
-        $isSent = ($rt == 1) ? 1 : 0;
-        $this->doCallback($isSent, $val, $this->cc, $this->bcc, $this->Subject, $body);
-      }
-    } else {
-      $rt = $this->mail_passthru($to, $this->Subject, $body, $header, $params);
-      // implement call back function if it exists
-      $isSent = ($rt == 1) ? 1 : 0;
-      $this->doCallback($isSent, $to, $this->cc, $this->bcc, $this->Subject, $body);
-    }
-    if (isset($old_from)) {
-      ini_set('sendmail_from', $old_from);
-    }
-    if(!$rt) {
-      throw new phpmailerException($this->Lang('instantiate'), self::STOP_CRITICAL);
-    }
-    return true;
-  }
 
   /**
    * Sends mail via SMTP using PhpSMTP

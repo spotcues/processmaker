@@ -124,7 +124,7 @@ $docuroot = explode ( PATH_SEP , $_SERVER['DOCUMENT_ROOT'] );
 
 //***************** Call Gulliver Classes **************************
 
-  $oHeadPublisher =& headPublisher::getSingleton();
+  $oHeadPublisher = headPublisher::getSingleton();
 
   //***************** database and workspace definition  ************************
   //if SYS_TEMP exists, the URL has a workspace, now we need to verify if exists their db.php file
@@ -203,7 +203,7 @@ $docuroot = explode ( PATH_SEP , $_SERVER['DOCUMENT_ROOT'] );
 //  //the singleton has a list of enabled plugins
 
 //  $sSerializedFile = PATH_DATA_SITE . 'plugin.singleton';
-//  $oPluginRegistry =& PMPluginRegistry::getSingleton();
+//  $oPluginRegistry = PMPluginRegistry::getSingleton();
 //  if ( file_exists ($sSerializedFile) )
 //    $oPluginRegistry->unSerializeInstance( file_get_contents  ( $sSerializedFile ) );
 //
@@ -297,7 +297,7 @@ $docuroot = explode ( PATH_SEP , $_SERVER['DOCUMENT_ROOT'] );
 
 //  ***************** enable rbac **************************
 
-    $RBAC =& RBAC::getSingleton();
+    $RBAC = RBAC::getSingleton();
     $RBAC->sSystem = '{rbacProjectName}';
 
 //  ***************** Headers **************************

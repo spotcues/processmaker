@@ -4,18 +4,25 @@ namespace ProcessMaker\Core;
 
 use AppCacheView;
 use Archive_Tar;
+use Bootstrap;
 use Configuration;
 use Exception;
 use G;
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\DB;
+use InstallerModule;
+use ProcessMaker\Util\Common;
 
 class Installer
 {
-
-    public $options = Array();
-    public $result = Array();
-    public $error = Array();
-    public $report = Array();
+    public $options = [];
+    public $result = [];
+    public $error = [];
+    public $report = [];
     private $connection_database;
+
+    const CONNECTION_INSTALL = 'install';
+    const CONNECTION_TEST_INSTALL = 'testInstall';
 
     /**
      * construct of insert
@@ -32,18 +39,41 @@ class Installer
      *
      * @param array $config
      * @param boolean $confirmed
-     * @return void
+     * @return array
      */
-    public function create_site($config = Array(), $confirmed = false)
+    public function create_site($config = [], $confirmed = false)
     {
-        $this->options = G::array_concat(Array('isset' => false, 'password' => G::generate_password(15), 'path_data' => @PATH_DATA, 'path_compiled' => @PATH_C, 'name' => $config['name'], 'database' => Array(), 'admin' => Array('username' => 'admin', 'password' => 'admin'
-        ), 'advanced' => Array('ao_db_wf' => 'wf_' . $config['name'], 'ao_db_rb' => 'rb_' . $config['name'], 'ao_db_rp' => 'rp_' . $config['name'], 'ao_db_drop' => false
-        )
-        ), $config);
-        $a = @explode(SYSTEM_HASH, G::decrypt(HASH_INSTALLATION, SYSTEM_HASH));
-        $this->options['database'] = G::array_concat(Array('username' => @$a[1], 'password' => @$a[2], 'hostname' => @$a[0]
-        ), $this->options['database']);
-        return ($confirmed === true) ? $this->make_site() : $this->create_site_test();
+        $this->options = G::array_concat([
+            'isset' => false,
+            'password' => G::generate_password(15),
+            'path_data' => @PATH_DATA,
+            'path_compiled' => @PATH_C,
+            'name' => $config['name'],
+            'database' => [],
+            'admin' => ['username' => 'admin', 'password' => 'admin'],
+            'advanced' => [
+                'ao_db_wf' => 'wf_' . $config['name'],
+                'ao_db_rb' => 'rb_' . $config['name'],
+                'ao_db_rp' => 'rp_' . $config['name'],
+                'ao_db_drop' => false
+            ]
+        ], $config);
+        $configuration = @explode(SYSTEM_HASH, G::decrypt(HASH_INSTALLATION, SYSTEM_HASH));
+
+        $host = explode(':', $configuration[0]);
+        if (count($host) < 2) {
+            $host[1] = 3306;
+        }
+        $configuration[0] = $host[0];
+
+        $this->options['database'] = G::array_concat([
+            'username' => @$configuration[1],
+            'password' => @$configuration[2],
+            'hostname' => @$configuration[0],
+            'port' => $host[1]
+        ], $this->options['database']);
+
+        return $confirmed ? $this->make_site() : $this->create_site_test();
     }
 
     /**
@@ -68,29 +98,44 @@ class Installer
     /**
      * create_site_test
      *
-     * @return void
+     * @return array
      */
     private function create_site_test()
     {
-        $name = (preg_match('/^[\w]+$/i', trim($this->options['name']))) ? true : false;
-        $result = Array('path_data' => $this->is_dir_writable($this->options['path_data']), 'path_compiled' => $this->is_dir_writable($this->options['path_compiled']), 'database' => $this->check_connection(), 'access_level' => $this->cc_status, 'isset' => ($this->options['isset'] == true) ? $this->isset_site($this->options['name']) : false, 'microtime' => microtime(), 'workspace' => $this->options['name'], 'name' => array('status' => $name, 'message' => ($name) ? 'PASSED' : 'Workspace name invalid'
-        ), 'admin' => array('username' => (preg_match('/^[\w@\.-]+$/i', trim($this->options['admin']['username']))) ? true : false, 'password' => ((trim($this->options['admin']['password']) == '') ? false : true)
-        )
-        );
-        $result['name']['message'] = ($result['isset']) ? 'Workspace already exist' : $result['name']['message'];
-        $result['name']['status'] = ($result['isset']) ? false : $result['name']['status'];
-        //print_r($result);
-        return Array('created' => G::var_compare(true,
-            $result['path_data'],
-            $result['database']['connection'],
-            $result['name']['status'],
-            $result['database']['version'],
-            $result['database']['ao']['ao_db_wf']['status'],
-            $result['admin']['username'],
-            (($result['isset']) ? false : true),
-            $result['admin']['password']),
+        $name = preg_match('/^[\w]+$/i', trim($this->options['name'])) ? true : false;
+        $result = [
+            'path_data' => $this->is_dir_writable($this->options['path_data']),
+            'path_compiled' => $this->is_dir_writable($this->options['path_compiled']),
+            'database' => $this->check_connection(self::CONNECTION_TEST_INSTALL),
+            'access_level' => $this->cc_status,
+            'isset' => $this->options['isset'] === true ? $this->isset_site($this->options['name']) : false,
+            'microtime' => microtime(),
+            'workspace' => $this->options['name'],
+            'name' => [
+                'status' => $name,
+                'message' => $name ? 'PASSED' : 'Workspace name invalid'
+            ],
+            'admin' => [
+                'username' => preg_match('/^[\w@\.-]+$/i', trim($this->options['admin']['username'])) ? true : false,
+                'password' => empty(trim($this->options['admin']['password'])) ? false : true
+            ]
+        ];
+        $result['name']['message'] = $result['isset'] ? 'Workspace already exist' : $result['name']['message'];
+        $result['name']['status'] = $result['isset'] ? false : $result['name']['status'];
+        return [
+            'created' => G::var_compare(
+                true,
+                $result['path_data'],
+                $result['database']['connection'],
+                $result['name']['status'],
+                $result['database']['version'],
+                $result['database']['ao']['ao_db_wf']['status'],
+                $result['admin']['username'],
+                $result['isset'] ? false : true,
+                $result['admin']['password']
+            ),
             'result' => $result
-        );
+        ];
     }
 
     /**
@@ -102,9 +147,10 @@ class Installer
     {
         $test = $this->create_site_test();
 
-        if ($test["created"] == true || $this->options["advanced"]["ao_db_drop"] == true) {
+        if ($test["created"] === true || $this->options["advanced"]["ao_db_drop"] === true) {
             /* Check if the hostname is local (localhost or 127.0.0.1) */
-            $islocal = (strcmp(substr($this->options['database']['hostname'], 0, strlen('localhost')), 'localhost') === 0) || (strcmp(substr($this->options['database']['hostname'], 0, strlen('127.0.0.1')), '127.0.0.1') === 0);
+            $islocal = (strcmp(substr($this->options['database']['hostname'], 0, strlen('localhost')), 'localhost') === 0) ||
+                (strcmp(substr($this->options['database']['hostname'], 0, strlen('127.0.0.1')), '127.0.0.1') === 0);
 
             $this->wf_site_name = $wf = $this->options['advanced']['ao_db_wf'];
             $this->wf_user_db = isset($this->options['advanced']['ao_user_wf']) ? $this->options['advanced']['ao_user_wf'] : uniqid('wf_');
@@ -118,36 +164,39 @@ class Installer
             if ($this->options['advanced']['ao_db_drop'] === true) {
                 //Delete workspace directory if exists
                 //Drop databases
-                $this->run_query("DROP DATABASE IF EXISTS " . $wf, "Drop database $wf");
+                $this->run_query('DROP DATABASE IF EXISTS ' . $wf, 'Drop database $wf', self::CONNECTION_TEST_INSTALL);
             }
 
-            $this->run_query("CREATE DATABASE IF NOT EXISTS " . $wf . " DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci", "Create database $wf");
+            $this->run_query('CREATE DATABASE IF NOT EXISTS ' . $wf . ' DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci', "Create database $wf", self::CONNECTION_TEST_INSTALL);
+
 
             if ($this->cc_status == 1) {
                 $host = ($islocal) ? "localhost" : "%";
-                $this->run_query("GRANT ALL PRIVILEGES ON `$wf`.* TO {$this->wf_user_db}@'$host' IDENTIFIED BY '{$this->options['password']}' WITH GRANT OPTION", "Grant privileges for user {$this->wf_user_db} on database $wf");
+                $this->run_query("GRANT ALL PRIVILEGES ON `$wf`.* TO {$this->wf_user_db}@'$host' IDENTIFIED BY '{$this->options['password']}' WITH GRANT OPTION", "Grant privileges for user {$this->wf_user_db} on database $wf", self::CONNECTION_TEST_INSTALL);
             }
+
 
             /* Dump schema workflow && data  */
 
             $this->log("Import database schema:\n");
-            $myPortA = explode(":", $this->options['database']['hostname']);
-            if (count($myPortA) < 2) {
-                $myPortA[1] = "3306";
-            }
-            $myPort = $myPortA[1];
-            $this->options['database']['hostname'] = $myPortA[0];
 
-            mysql_select_db($wf, $this->connection_database);
+            InstallerModule::setNewConnection(
+                self::CONNECTION_INSTALL,
+                $this->options['database']['hostname'],
+                $this->options['database']['username'],
+                $this->options['database']['password'],
+                $this->wf_site_name,
+                $this->options['database']['port']);
+
             $pws = PATH_WORKFLOW_MYSQL_DATA . $schema;
-            $qws = $this->query_sql_file(PATH_WORKFLOW_MYSQL_DATA . $schema, $this->connection_database);
+            $qws = $this->query_sql_file(PATH_WORKFLOW_MYSQL_DATA . $schema);
             $this->log($qws, isset($qws['errors']));
-            $qwv = $this->query_sql_file(PATH_WORKFLOW_MYSQL_DATA . $values, $this->connection_database);
+            $qwv = $this->query_sql_file(PATH_WORKFLOW_MYSQL_DATA . $values);
             $this->log($qwv, isset($qwv['errors']));
 
-            $http = (G::is_https() == true) ? 'https' : 'http';
+            $http = G::is_https() ? 'https' : 'http';
             $lang = defined('SYS_LANG') ? SYS_LANG : 'en';
-            $host = $_SERVER['SERVER_NAME'] . ($_SERVER['SERVER_PORT'] != '80' ? ':' . $_SERVER['SERVER_PORT'] : '');
+            $host = $_SERVER['SERVER_NAME'] . ($_SERVER['SERVER_PORT'] !== '80' ? ':' . $_SERVER['SERVER_PORT'] : '');
             $workspace = $this->options['name'];
 
             $endpoint = sprintf(
@@ -159,33 +208,51 @@ class Installer
                 SYS_SKIN
             );
 
-            // inserting the outh_client
-            $query = ("INSERT INTO OAUTH_CLIENTS (CLIENT_ID,CLIENT_SECRET,CLIENT_NAME,CLIENT_DESCRIPTION,CLIENT_WEBSITE,REDIRECT_URI,USR_UID ) VALUES
-            		   ('x-pm-local-client','179ad45c6ce2cb97cf1029e212046e81','PM Web Designer','ProcessMaker Web Designer App','www.processmaker.com','" . $endpoint . "','00000000000000000000000000000001' )");
-            $this->run_query($query);
+            DB::connection(self::CONNECTION_INSTALL)
+                ->table('OAUTH_CLIENTS')
+                ->insert([
+                    'CLIENT_ID' => 'x-pm-local-client',
+                    'CLIENT_SECRET' => '179ad45c6ce2cb97cf1029e212046e81',
+                    'CLIENT_NAME' => 'PM Web Designer',
+                    'CLIENT_DESCRIPTION' => 'ProcessMaker Web Designer App',
+                    'CLIENT_WEBSITE' => 'www.processmaker.com',
+                    'REDIRECT_URI' => $endpoint,
+                    'USR_UID' => '00000000000000000000000000000001'
+                ]);
+
+            if (!empty(config('oauthClients.mobile.clientId'))) {
+                DB::connection(self::CONNECTION_INSTALL)
+                    ->table('OAUTH_CLIENTS')
+                    ->insert([
+                        'CLIENT_ID' => config('oauthClients.mobile.clientId'),
+                        'CLIENT_SECRET' => config('oauthClients.mobile.clientSecret'),
+                        'CLIENT_NAME' => config('oauthClients.mobile.clientName'),
+                        'CLIENT_DESCRIPTION' => config('oauthClients.mobile.clientDescription'),
+                        'CLIENT_WEBSITE' => config('oauthClients.mobile.clientWebsite'),
+                        'REDIRECT_URI' => $endpoint,
+                        'USR_UID' => '00000000000000000000000000000001'
+                ]);
+            }
 
             /* Dump schema rbac && data  */
             $pws = PATH_RBAC_MYSQL_DATA . $schema;
-            mysql_select_db($rb, $this->connection_database);
-            $qrs = $this->query_sql_file(PATH_RBAC_MYSQL_DATA . $schema, $this->connection_database);
+            $qrs = $this->query_sql_file(PATH_RBAC_MYSQL_DATA . $schema);
             $this->log($qrs, isset($qrs['errors']));
-            $qrv = $this->query_sql_file(PATH_RBAC_MYSQL_DATA . $values, $this->connection_database);
+            $qrv = $this->query_sql_file(PATH_RBAC_MYSQL_DATA . $values);
             $this->log($qrv, isset($qrv['errors']));
-
-            mysql_select_db($wf, $this->connection_database);
 
             require_once("propel/Propel.php");
             require_once('classes/model/AppCacheView.php');
 
             $appCache = new AppCacheView();
             $appCache->setPathToAppCacheFiles(PATH_METHODS . 'setup/setupSchemas/');
-            $triggers = $appCache->getTriggers("en");
+            $triggers = $appCache->getTriggers('en');
             $this->log("Create 'cases list cache' triggers");
             foreach ($triggers as $triggerName => $trigger) {
-                $this->run_query($trigger, "-> Trigger $triggerName");
+                $this->runTrigger($trigger, "-> Trigger $triggerName");
             }
 
-            $path_site = $this->options['path_data'] . "/sites/" . $this->options['name'] . "/";
+            $path_site = $this->options['path_data'] . '/sites/' . $this->options['name'] . '/';
 
             @mkdir($path_site, 0777, true);
             @mkdir($path_site . "files/", 0777, true);
@@ -195,8 +262,27 @@ class Installer
             @mkdir($path_site . "xmlForms", 0777, true);
 
             //Generate the db.php file
+            $hostname = $this->options['database']['hostname'] . ':' . $this->options['database']['port'];
+            $username = $this->cc_status === 1 ? $this->wf_user_db : $this->options['database']['username'];
+            $password = $this->cc_status === 1 ? $this->options['password'] : $this->options['database']['password'];
             $db_file = $path_site . 'db.php';
-            $db_text = "<?php\n" . "// Processmaker configuration\n" . "define ('DB_ADAPTER', 'mysql' );\n" . "define ('DB_HOST', '" . $this->options['database']['hostname'] . ":" . $myPort . "' );\n" . "define ('DB_NAME', '" . $wf . "' );\n" . "define ('DB_USER', '" . (($this->cc_status == 1) ? $this->wf_user_db : $this->options['database']['username']) . "' );\n" . "define ('DB_PASS', '" . (($this->cc_status == 1) ? $this->options['password'] : $this->options['database']['password']) . "' );\n" . "define ('DB_RBAC_HOST', '" . $this->options['database']['hostname'] . ":" . $myPort . "' );\n" . "define ('DB_RBAC_NAME', '" . $rb . "' );\n" . "define ('DB_RBAC_USER', '" . (($this->cc_status == 1) ? $this->wf_user_db : $this->options['database']['username']) . "' );\n" . "define ('DB_RBAC_PASS', '" . (($this->cc_status == 1) ? $this->options['password'] : $this->options['database']['password']) . "' );\n" . "define ('DB_REPORT_HOST', '" . $this->options['database']['hostname'] . ":" . $myPort . "' );\n" . "define ('DB_REPORT_NAME', '" . $rp . "' );\n" . "define ('DB_REPORT_USER', '" . (($this->cc_status == 1) ? $this->wf_user_db : $this->options['database']['username']) . "' );\n" . "define ('DB_REPORT_PASS', '" . (($this->cc_status == 1) ? $this->options['password'] : $this->options['database']['password']) . "' );\n";
+            $db_text = "<?php\n"
+                    . "// Processmaker configuration\n" 
+                    . "  define ('DB_ADAPTER', 'mysql' );\n" 
+                    . "  define ('DB_HOST', '" . $hostname . "' );\n" 
+                    . "  define ('DB_NAME', '" . $wf . "' );\n" 
+                    . "  define ('DB_USER', '" . $username . "' );\n" 
+                    . "  define ('DB_PASS', '" . $password . "' );\n" 
+                    . "  define ('DB_RBAC_HOST', '" . $hostname . "' );\n" 
+                    . "  define ('DB_RBAC_NAME', '" . $rb . "' );\n" 
+                    . "  define ('DB_RBAC_USER', '" . $username . "' );\n" 
+                    . "  define ('DB_RBAC_PASS', '" . $password . "' );\n" 
+                    . "  define ('DB_REPORT_HOST', '" . $hostname . "' );\n" 
+                    . "  define ('DB_REPORT_NAME', '" . $rp . "' );\n" 
+                    . "  define ('DB_REPORT_USER', '" . $username . "' );\n" 
+                    . "  define ('DB_REPORT_PASS', '" . $password . "' );\n"
+                    . "";
+
             if (defined('PARTNER_FLAG') || isset($_REQUEST['PARTNER_FLAG'])) {
                 $db_text .= "define ('PARTNER_FLAG', " . ((defined('PARTNER_FLAG') && PARTNER_FLAG != '') ? PARTNER_FLAG : ((isset($_REQUEST['PARTNER_FLAG'])) ? $_REQUEST['PARTNER_FLAG'] : 'false')) . ");\n";
                 if (defined('SYSTEM_NAME')) {
@@ -207,7 +293,7 @@ class Installer
 
             $fp = @fopen($db_file, "w");
             $this->log("Create: " . $db_file . "  => " . ((!$fp) ? $fp : "OK") . "\n", $fp === false);
-            $ff = @fputs($fp, $db_text, strlen($db_text));
+            $ff = @fwrite($fp, $db_text, strlen($db_text));
             $this->log("Write: " . $db_file . "  => " . ((!$ff) ? $ff : "OK") . "\n", $ff === false);
             fclose($fp);
 
@@ -217,9 +303,12 @@ class Installer
             $this->setPartner();
             $this->setAdmin();
 
-            $querySql = "INSERT INTO EMAIL_SERVER(MESS_UID, MESS_ENGINE) VALUES('" . \ProcessMaker\Util\Common::generateUID() . "', 'MAIL')";
-
-            $this->run_query($querySql);
+            DB::connection(self::CONNECTION_INSTALL)
+                ->table('EMAIL_SERVER')
+                ->insert([
+                    'MESS_UID' => Common::generateUID(),
+                    'MESS_ENGINE' => 'MAIL'
+                ]);
         }
         return $test;
     }
@@ -236,17 +325,16 @@ class Installer
             // Execute sql for partner
             $pathMysqlPartner = PATH_CORE . 'data' . PATH_SEP . 'partner' . PATH_SEP . 'mysql' . PATH_SEP;
             if (G::verifyPath($pathMysqlPartner)) {
-                $res = array();
                 $filesSlq = glob($pathMysqlPartner . '*.sql');
                 foreach ($filesSlq as $value) {
-                    $this->query_sql_file($value, $this->connection_database);
+                    $this->query_sql_file($value);
                 }
             }
 
             // Execute to change of skin
             $pathSkinPartner = PATH_CORE . 'data' . PATH_SEP . 'partner' . PATH_SEP . 'skin' . PATH_SEP;
             if (G::verifyPath($pathSkinPartner)) {
-                $res = array();
+                $res = [];
                 $fileTar = glob($pathSkinPartner . '*.tar');
                 foreach ($fileTar as $value) {
                     $dataFile = pathinfo($value);
@@ -321,7 +409,7 @@ class Installer
             curl_close($ch);
 
             $ch = curl_init();
-            $postData = array();
+            $postData = [];
             // resolv the plugin name
             $plugins = glob(PATH_CORE . "plugins/*.tar");
             if (count($plugins) > 0) {
@@ -346,10 +434,10 @@ class Installer
         }
     }
 
-    function copyFile($fromDir, $toDir, $chmod = 0777)
+    public function copyFile($fromDir, $toDir, $chmod = 0777)
     {
-        $errors = array();
-        $messages = array();
+        $errors = [];
+        $messages = [];
 
         if (!is_writable($toDir)) {
             $errors[] = 'target ' . $toDir . ' is not writable';
@@ -396,10 +484,10 @@ class Installer
      */
     public function setConfiguration()
     {
-        $oConf = new Configuration();
-        $dataCondif = $oConf->getAll();
-        if (count($dataCondif)) {
-            foreach ($dataCondif as $value) {
+        $configuration = new Configuration();
+        $dataConfig = $configuration->getAll();
+        if (count($dataConfig)) {
+            foreach ($dataConfig as $value) {
                 if ($value['CFG_UID'] == 'ENVIRONMENT_SETTINGS') {
                     $query = 'INSERT INTO CONFIGURATION (CFG_UID, OBJ_UID, CFG_VALUE, PRO_UID, USR_UID, APP_UID) VALUES';
                     $query .= "('" .
@@ -409,7 +497,6 @@ class Installer
                         $value['PRO_UID'] . "', '" .
                         $value['USR_UID'] . "', '" .
                         $value['APP_UID'] . "')";
-                    mysql_select_db($this->wf_site_name, $this->connection_database);
                     $this->run_query($query, "Copy configuracion environment");
                     break;
                 }
@@ -424,59 +511,95 @@ class Installer
      */
     public function setAdmin()
     {
-        mysql_select_db($this->wf_site_name, $this->connection_database);
-        //  The mysql_escape_string function has been DEPRECATED as of PHP 5.3.0.
-        //  $this->run_query('UPDATE USERS SET USR_USERNAME = \''.mysql_escape_string($this->options['admin']['username']).'\', `USR_PASSWORD` = \''.md5($this->options['admin']['password']).'\' WHERE `USR_UID` = \'00000000000000000000000000000001\' LIMIT 1',
-        //    "Add 'admin' user in ProcessMaker (wf)");
-        $this->run_query('UPDATE USERS SET USR_USERNAME = \'' . mysql_real_escape_string($this->options['admin']['username']) . '\', ' . '  `USR_PASSWORD` = \'' . G::encryptHash($this->options['admin']['password']) . '\' ' . '  WHERE `USR_UID` = \'00000000000000000000000000000001\' LIMIT 1', "Add 'admin' user in ProcessMaker (wf)");
-        mysql_select_db($this->rbac_site_name, $this->connection_database);
-        // The mysql_escape_string function has been DEPRECATED as of PHP 5.3.0.
-        // $this->run_query('UPDATE USERS SET USR_USERNAME = \''.mysql_escape_string($this->options['admin']['username']).'\', `USR_PASSWORD` = \''.md5($this->options['admin']['password']).'\' WHERE `USR_UID` = \'00000000000000000000000000000001\' LIMIT 1',
-        //   "Add 'admin' user in ProcessMaker (rb)");
-        $this->run_query('UPDATE RBAC_USERS SET USR_USERNAME = \'' . mysql_real_escape_string($this->options['admin']['username']) . '\', ' . '  `USR_PASSWORD` = \'' . G::encryptHash($this->options['admin']['password']) . '\' ' . '  WHERE `USR_UID` = \'00000000000000000000000000000001\' LIMIT 1', "Add 'admin' user in ProcessMaker (rb)");
+        // Change admin user
+        DB::connection(self::CONNECTION_INSTALL)
+            ->table('USERS')
+            ->where('USR_UID', '00000000000000000000000000000001')
+            ->update([
+                'USR_USERNAME' => $this->options['admin']['username'],
+                'USR_PASSWORD' => G::encryptHash($this->options['admin']['password'])
+            ]);
+
+        DB::connection(self::CONNECTION_INSTALL)
+            ->table('RBAC_USERS')
+            ->where('USR_UID', '00000000000000000000000000000001')
+            ->update([
+                'USR_USERNAME' => $this->options['admin']['username'],
+                'USR_PASSWORD' => G::encryptHash($this->options['admin']['password'])
+            ]);
     }
 
     /**
-     * Run a mysql query on the current database and take care of logging and
+     *  Run a mysql script on the current database and take care of logging and
      * error handling.
      *
      * @param string $query SQL command
      * @param string $description Description to log instead of $query
+     * @param string $connection default connection install
+     * @throws Exception
      */
-    private function run_query($query, $description = null)
+    private function runTrigger($query, $description = '', $connection = self::CONNECTION_INSTALL)
     {
-        $result = @mysql_query($query, $this->connection_database);
-        $error = ($result) ? false : mysql_error();
-        $this->log(($description ? $description : $query) . " => " . (($error) ? $error : "OK") . "\n", $error);
+        $this->run_query($query, $description, $connection, 'UNPREPARED');
     }
 
     /**
-     * query_sql_file
+     *  Run a mysql query on the current database and take care of logging and
+     * error handling.
      *
-     * @param string $file
-     * @param string $connection
-     * @return array $report
+     * @param string $query SQL command
+     * @param string $description Description to log instead of $query
+     * @param string $connection default connection install
+     * @param string $type STATEMENT|RAW
      */
-    public function query_sql_file($file, $connection)
+    private function run_query($query, $description = '', $connection = self::CONNECTION_INSTALL, $type = 'STATEMENT')
+    {
+        try {
+            $message = '';
+            switch ($type) {
+                case 'STATEMENT':
+                    DB::connection($connection)->statement($query);
+                    break;
+                case 'RAW':
+                    DB::connection($connection)->raw($query);
+                    break;
+                case 'UNPREPARED':
+                    DB::connection($connection)->unprepared($query);
+                    break;
+            }
+
+        } catch (QueryException $exception) {
+            $message = $exception->getMessage();
+        }
+        $this->log(!empty($description) ? $description : $query . ' => ' . (!empty($message) ? $message : 'OK') . "\n", !empty($message));
+    }
+
+    /**
+     * Query sql file
+     *
+     * @param $file
+     * @param string $connection
+     */
+    public function query_sql_file($file, $connection = self::CONNECTION_INSTALL)
     {
         $lines = file($file);
         $previous = null;
         $errors = '';
-        @mysql_query("SET NAMES 'utf8';");
+        DB::connection($connection)
+            ->statement("SET NAMES 'utf8'");
         foreach ($lines as $j => $line) {
             $line = trim($line); // Remove comments from the script
 
-
-            if (strpos($line, "--") === 0) {
-                $line = substr($line, 0, strpos($line, "--"));
+            if (strpos($line, '--') === 0) {
+                $line = substr($line, 0, strpos($line, '--'));
             }
 
             if (empty($line)) {
                 continue;
             }
 
-            if (strpos($line, "#") === 0) {
-                $line = substr($line, 0, strpos($line, "#"));
+            if (strpos($line, '#') === 0) {
+                $line = substr($line, 0, strpos($line, '#'));
             }
 
             if (empty($line)) {
@@ -485,30 +608,21 @@ class Installer
 
             // Concatenate the previous line, if any, with the current
             if ($previous) {
-                $line = $previous . " " . $line;
+                $line = $previous . ' ' . $line;
             }
             $previous = null;
 
             // If the current line doesnt end with ; then put this line together
             // with the next one, thus supporting multi-line statements.
-            if (strrpos($line, ";") != strlen($line) - 1) {
+            if (strrpos($line, ';') != strlen($line) - 1) {
                 $previous = $line;
                 continue;
             }
 
-            $line = substr($line, 0, strrpos($line, ";"));
-            @mysql_query($line, $connection);
+            $line = substr($line, 0, strrpos($line, ';'));
+            DB::connection($connection)
+                ->statement($line);
         }
-    }
-
-    /**
-     * check_path
-     *
-     * @return void
-     * @todo Empty function
-     */
-    private function check_path()
-    {
     }
 
     /**
@@ -563,11 +677,11 @@ class Installer
      * getDirectoryFiles
      *
      * @param string $dir default value empty
-     * @return string $path
+     * @return array
      */
     public function getDirectoryFiles($dir, $extension)
     {
-        $filesArray = array();
+        $filesArray = [];
         if (file_exists($dir)) {
             if ($handle = opendir($dir)) {
                 while (false !== ($file = readdir($handle))) {
@@ -585,131 +699,149 @@ class Installer
     /**
      * check_db_empty
      *
-     * @param string $dbName
+     * @param string$dbName
      * @return boolean true or false
+     * @throws Exception
      */
     public function check_db_empty($dbName)
     {
-        $a = @mysql_select_db($dbName, $this->connection_database);
-        if (!$a) {
-            return true;
+        try
+        {
+            $result = DB::connection(self::CONNECTION_TEST_INSTALL)->select("show databases like '$dbName'");
+            if (!$result) {
+                return true;
+            } else {
+                $result = DB::connection(self::CONNECTION_TEST_INSTALL)->select("show tables from $dbName");
+                return !$result;
+            }
+        } catch (QueryException $exception) {
+            throw new Exception('User without permissions. ' . $exception->getMessage());
         }
-        $q = @mysql_query('SHOW TABLES', $this->connection_database);
-        return (@mysql_num_rows($q) > 0) ? false : true;
     }
 
     /**
      * check_db
      *
      * @param string $dbName
-     * @return Array Array('status' => true or false,'message' => string)
+     * @return array Array('status' => true or false,'message' => string)
      */
     public function check_db($dbName)
     {
+        $response = [];
+        $response['status'] = false;
+        $response['message'] = '';
         if (!$this->connection_database) {
-            //erik: new verification if the mysql extension is enabled
-            $error = class_exists('mysql_error') ? mysql_error() : 'Mysql Module for PHP is not enabled!';
-            return Array('status' => false, 'message' => $error
-            );
+            //new verification if the mysql extension is enabled
+            $response['message'] = 'Mysql Module for PHP is not enabled!';
         } else {
-            if (!mysql_select_db($dbName, $this->connection_database) && $this->cc_status != 1) {
-                return Array('status' => false, 'message' => mysql_error()
-                );
+            if ($this->cc_status != 1) {
+                $result = DB::connection(self::CONNECTION_TEST_INSTALL)->select("show databases like '$dbName'");
             } else {
-                /*        var_dump($this->options['advanced']['ao_db_drop'],$this->cc_status,$this->check_db_empty($dbName));
-                  if(($this->options['advanced']['ao_db_drop']===false && $this->cc_status!=1 && !$this->check_db_empty($dbName)) )
-                  {
-                  return Array('status'=>false,'message'=>'Database is not empty');
-                  }
-                  else
-                  {
-                  return Array('status'=>true,'message'=>'OK');
-                  } */
                 if ($this->options['advanced']['ao_db_drop'] === true || $this->check_db_empty($dbName)) {
-                    return Array('status' => true, 'message' => 'PASSED'
-                    );
+                    $response['status'] = true;
+                    $response['message'] = 'PASSED';
                 } else {
-                    return Array('status' => false, 'message' => 'Database is not empty'
-                    );
+                    $response['message'] = 'Database is not empty';
                 }
             }
         }
+        return $response;
     }
 
     /**
      * check_connection
      *
-     * @return Array $rt
+     * @return array $rt
      */
-    private function check_connection()
+    private function check_connection($nameConnection)
     {
-        if (!function_exists("mysql_connect")) {
-            $this->cc_status = 0;
-            $rt = Array('connection' => false, 'grant' => 0, 'version' => false, 'message' => "ERROR: Mysql Module for PHP is not enabled, try install <b>php-mysql</b> package.", 'ao' => Array('ao_db_wf' => false, 'ao_db_rb' => false, 'ao_db_rp' => false
-            )
-            );
-        } else {
-            $this->connection_database = @mysql_connect($this->options['database']['hostname'], $this->options['database']['username'], $this->options['database']['password']);
-            $rt = Array('version' => false, 'ao' => Array('ao_db_wf' => false, 'ao_db_rb' => false, 'ao_db_rp' => false
-            )
-            );
-            if (!$this->connection_database) {
-                $this->cc_status = 0;
-                $rt['connection'] = false;
-                $rt['grant'] = 0;
-                $rt['message'] = "Mysql error: " . mysql_error();
-            } else {
-                preg_match('@[0-9]+\.[0-9]+\.[0-9]+@', mysql_get_server_info($this->connection_database), $version);
-                $rt['version'] = version_compare(@$version[0], "4.1.0", ">=");
+        $this->cc_status = 0;
+        $rt = [
+            'connection' => false,
+            'grant' => 0,
+            'version' => false,
+            'message' => 'ERROR: Mysql Module for PHP is not enabled, try install <b>php-mysqli</b> package.',
+            'ao' => [
+                'ao_db_wf' => false,
+                'ao_db_rb' => false,
+                'ao_db_rp' => false
+            ]
+        ];
+
+        if (function_exists('mysqli_connect')) {
+            try {
+                InstallerModule::setNewConnection(
+                    $nameConnection,
+                    $this->options['database']['hostname'],
+                    $this->options['database']['username'],
+                    $this->options['database']['password'],
+                    '',
+                    $this->options['database']['port']);
+                $rt = [
+                    'version' => false,
+                    'ao' => [
+                        'ao_db_wf' => false,
+                        'ao_db_rb' => false,
+                        'ao_db_rp' => false
+                    ]
+                ];
+
+                $results = DB::connection($nameConnection)->select(DB::raw('select version()'));
+
+                preg_match('@[0-9]+\.[0-9]+\.[0-9]+@', $results[0]->{'version()'}, $version);
+                $rt['version'] = version_compare($mysql_version = $version[0], '4.1.0', '>=');
                 $rt['connection'] = true;
 
-                $dbNameTest = "PROCESSMAKERTESTDC";
-                $db = @mysql_query("CREATE DATABASE " . $dbNameTest, $this->connection_database);
+                $dbNameTest = 'PROCESSMAKERTESTDC';
+                $db = DB::connection($nameConnection)->statement("CREATE DATABASE IF NOT EXISTS $dbNameTest");
+                $this->connection_database = true;
+
                 if (!$db) {
                     $this->cc_status = 3;
                     $rt['grant'] = 3;
-                    //$rt['message'] = "Db GRANTS error:  ".mysql_error();
-                    $rt['message'] = "Successful connection";
+                    $rt['message'] = 'Successful connection';
                 } else {
+                    $usrTest = 'wfrbtest';
+                    $chkG = "GRANT ALL PRIVILEGES ON `" . $dbNameTest . "`.* TO " . $usrTest . "@'%' IDENTIFIED BY '!Sample123' WITH GRANT OPTION";
+                    $ch = DB::connection($nameConnection)
+                        ->statement($chkG);
 
-                    //@mysql_drop_db("processmaker_testGA");
-                    $usrTest = "wfrbtest";
-                    $chkG = "GRANT ALL PRIVILEGES ON `" . $dbNameTest . "`.* TO " . $usrTest . "@'%' IDENTIFIED BY 'sample' WITH GRANT OPTION";
-                    $ch = @mysql_query($chkG, $this->connection_database);
                     if (!$ch) {
                         $this->cc_status = 2;
                         $rt['grant'] = 2;
-                        //$rt['message'] = "USER PRIVILEGES ERROR";
-                        $rt['message'] = "Successful connection";
+                        $rt['message'] = 'Successful connection';
                     } else {
                         $this->cc_status = 1;
-                        @mysql_query("DROP USER " . $usrTest . "@'%'", $this->connection_database);
+                        DB::connection($nameConnection)
+                            ->statement("DROP USER " . $usrTest . "@'%'");
                         $rt['grant'] = 1;
-                        $rt['message'] = "Successful connection";
+                        $rt['message'] = 'Successful connection';
                     }
-                    @mysql_query("DROP DATABASE " . $dbNameTest, $this->connection_database);
+                    DB::connection($nameConnection)
+                        ->statement('DROP DATABASE ' . $dbNameTest);
                 }
-                //        var_dump($wf,$rb,$rp);
+            } catch (Exception $exception) {
+                $rt['connection'] = false;
+                $rt['grant'] = 0;
+                $rt['message'] = 'Mysql error: ' . $exception->getMessage();
             }
         }
         $rt['ao']['ao_db_wf'] = $this->check_db($this->options['advanced']['ao_db_wf']);
-        //$rt['ao']['ao_db_rb'] = $this->check_db($this->options['advanced']['ao_db_rb']);
-        //$rt['ao']['ao_db_rp'] = $this->check_db($this->options['advanced']['ao_db_rp']);
         return $rt;
     }
 
     /**
-     * log
+     * Log
      *
      * @param string $text
-     * @return void
+     * @param boolean $failed
+     * @throws Exception
      */
-    public function log($text, $failed = null)
+    public function log($text, $failed = false)
     {
-        array_push($this->report, $text);
+        $this->report[] = $text;
         if ($failed) {
             throw new Exception(is_string($text) ? $text : var_export($text, true));
         }
     }
 }
-

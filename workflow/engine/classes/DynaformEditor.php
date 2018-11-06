@@ -2,14 +2,13 @@
 
 /**
  * Created on 21/12/2007
- * Dynaform - Dynaform 
+ * Dynaform - Dynaform
 /**
  *
  * @package workflow.engine.classes
  */
 class DynaformEditor extends WebResource
 {
-
     private $isOldCopy = false;
     public $file = '';
     public $title = 'New Dynaform';
@@ -60,24 +59,7 @@ class DynaformEditor extends WebResource
         //Create the default Dynaform
         $sampleForm = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
         $sampleForm .= '<dynaForm type="' . $this->dyn_type . '" name="" width="500" enabletemplate="0" mode="edit">' . "\n";
-        switch ($this->dyn_type) {
-            case "xmlform":
-                /* $sampleForm.='<title type="title" enablehtml="0">' . "\n" .
-                  '  <en>Sample form</en>' . "\n" .
-                  '</title>'."\n";
-                  $sampleForm.='<submit type="submit" enablehtml="0" onclick="">' . "\n" .
-                  '  <en>Submit</en>' . "\n" .
-                  '</submit>'."\n"; */
-                break;
-            case "grid":
-                /* $sampleForm.='<fieldA type="text" >' . "\n" .
-                  '<en>A</en>' . "\n" .
-                  '</fieldA>'."\n";
-                  $sampleForm.='<fieldB type="text" >' . "\n" .
-                  '<en>B</en>' . "\n" .
-                  '</fieldB>'."\n"; */
-                break;
-        }
+
         $sampleForm .= '</dynaForm>';
         G::verifyPath(dirname($fileName), true);
         $fp = fopen($fileName, 'w');
@@ -129,7 +111,7 @@ class DynaformEditor extends WebResource
             $G_PUBLISH = new Publisher();
             $sName = 'dynaformEditor';
             $G_PUBLISH->publisherId = $sName;
-            $oHeadPublisher = & headPublisher::getSingleton();
+            $oHeadPublisher = headPublisher::getSingleton();
             $oHeadPublisher->setTitle(G::LoadTranslation('ID_DYNAFORM_EDITOR') . ' - ' . $Properties['DYN_TITLE']);
             $G_PUBLISH->AddContent('blank');
             $this->panelConf['title'] = '';
@@ -167,7 +149,6 @@ class DynaformEditor extends WebResource
             $G_PUBLISH->AddContent('blank');
             $G_PUBLISH->AddContent('xmlform', 'xmlform', 'dynaforms/dynaforms_JSEditor', 'display:none', $JSEditor, '', '');
         } catch (Exception $e) {
-
         }
         $G_PUBLISH->AddContent('xmlform', 'xmlform', 'dynaforms/dynaforms_Properties', 'display:none', $Properties, '', '');
         //for showHide tab option @Neyek
@@ -189,10 +170,10 @@ class DynaformEditor extends WebResource
         }
 
         $G_PUBLISH->AddContent('panel-close');
-        $oHeadPublisher->addScriptFile("/js/maborak/core/maborak.loader.js",2);
+        $oHeadPublisher->addScriptFile("/js/maborak/core/maborak.loader.js", 2);
         $oHeadPublisher->addScriptFile('/jscore/dynaformEditor/core/dynaformEditor.js');
 
-        $oHeadPublisher->addScriptFile('/js/codemirrorOld/js/codemirror.js',1);
+        $oHeadPublisher->addScriptFile('/js/codemirrorOld/js/codemirror.js', 1);
 
         $oHeadPublisher->addScriptFile('/js/grid/core/grid.js');
         $oHeadPublisher->addScriptCode('

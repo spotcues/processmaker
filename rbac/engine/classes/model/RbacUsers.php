@@ -401,6 +401,38 @@ class RbacUsers extends BaseRbacUsers
 
         return $array;
     }
+
+    /**
+     * Verify if user have the permission
+     *
+     * @param string $userUid
+     * @param string $permission
+     *
+     * @return bool
+     * @throws Exception
+     */
+    public function verifyPermission($userUid, $permission)
+    {
+        try {
+            $criteria = new Criteria('rbac');
+            $criteria->clearSelectColumns();
+            $criteria->add(PermissionsPeer::PER_CODE, $permission, Criteria::EQUAL);
+            $criteria->addJoin(UsersRolesPeer::ROL_UID, RolesPermissionsPeer::ROL_UID, Criteria::LEFT_JOIN);
+            $criteria->addJoin(RolesPermissionsPeer::PER_UID, PermissionsPeer::PER_UID, Criteria::LEFT_JOIN);
+            $criteria->add(UsersRolesPeer::USR_UID, $userUid, Criteria::EQUAL);
+
+            $response = false;
+            $permission = PermissionsPeer::doSelectOne($criteria);
+            if ($permission) {
+                $response = true;
+            }
+
+            return $response;
+        } catch (Exception $error) {
+            throw($error);
+        }
+
+    }
 }
 
 // Users

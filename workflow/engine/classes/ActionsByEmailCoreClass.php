@@ -86,28 +86,13 @@ class ActionsByEmailCoreClass extends PMPlugin
 
             if (!empty($emailSetup)) {
                 $cases = new Cases();
-                $caseFields = $cases->loadCase($data->APP_UID);
-                $criteria = new Criteria();
-                $criteria->addSelectColumn(AbeConfigurationPeer::ABE_UID);
-                $criteria->addSelectColumn(AbeConfigurationPeer::PRO_UID);
-                $criteria->addSelectColumn(AbeConfigurationPeer::ABE_TYPE);
-                $criteria->addSelectColumn(AbeConfigurationPeer::TAS_UID);
-                $criteria->addSelectColumn(AbeConfigurationPeer::ABE_TEMPLATE);
-                $criteria->addSelectColumn(AbeConfigurationPeer::ABE_DYN_TYPE);
-                $criteria->addSelectColumn(AbeConfigurationPeer::DYN_UID);
-                $criteria->addSelectColumn(AbeConfigurationPeer::ABE_EMAIL_FIELD);
-                $criteria->addSelectColumn(AbeConfigurationPeer::ABE_ACTION_FIELD);
-                $criteria->addSelectColumn(AbeConfigurationPeer::ABE_SUBJECT_FIELD);
-                $criteria->addSelectColumn(AbeConfigurationPeer::ABE_MAILSERVER_OR_MAILCURRENT);
-                $criteria->addSelectColumn(AbeConfigurationPeer::ABE_CUSTOM_GRID);
-                $criteria->addSelectColumn(DynaformPeer::DYN_CONTENT);
-                $criteria->addJoin( AbeConfigurationPeer::DYN_UID, DynaformPeer::DYN_UID, Criteria::LEFT_JOIN );
-                $criteria->add(AbeConfigurationPeer::PRO_UID, $caseFields['PRO_UID']);
-                $criteria->add(AbeConfigurationPeer::TAS_UID, $data->TAS_UID);
-                $result = AbeConfigurationPeer::doSelectRS($criteria);
-                $result->setFetchmode(ResultSet::FETCHMODE_ASSOC);
-                $result->next();
-                if ($configuration = $result->getRow()) {
+                $caseFields = $cases->loadCase($data->APP_UID, $data->DEL_INDEX);
+                $actionEmailTable = new AbeConfiguration();
+                $configuration = $actionEmailTable->getTaskConfiguration($caseFields['PRO_UID'], $data->TAS_UID);
+                $caseFields['APP_DATA']['PRO_ID'] = $configuration['PRO_ID'];
+                $caseFields['APP_DATA']['TAS_ID'] = $configuration['TAS_ID'];
+
+                if (!empty($configuration)) {
                     $configuration['ABE_EMAIL_FIELD'] = str_replace('@@', '', $configuration['ABE_EMAIL_FIELD']);
                     if ($configuration['ABE_EMAIL_FIELD'] != '' && isset($caseFields['APP_DATA'][$configuration['ABE_EMAIL_FIELD']])) {
                         $email = trim($caseFields['APP_DATA'][$configuration['ABE_EMAIL_FIELD']]);
@@ -303,7 +288,7 @@ class ActionsByEmailCoreClass extends PMPlugin
                                 $caseFields['APP_DATA'],
                                 null,
                                 true,
-                                0,
+                                $data->DEL_INDEX,
                                 $emailSetup,
                                 0
                             );

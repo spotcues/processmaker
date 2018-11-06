@@ -9,12 +9,13 @@ PMProject = function (options) {
     this.isClose = false;
     this.userSettings = null;
     this.definitions = null;
+    this.loadingProcess = false;
     this.dirtyElements = [
         {
             laneset: {},
             lanes: {},
             activities: {},
-            events: {},
+            events: {}, 
             gateways: {},
             flows: {},
             artifacts: {},
@@ -45,6 +46,7 @@ PMProject.prototype.init = function (options) {
         description: "",
         remoteProxy: null,
         localProxy: null,
+        readOnly: false,
         keys: {
             access_token: null,
             expires_in: null,
@@ -72,7 +74,8 @@ PMProject.prototype.init = function (options) {
     this.setKeysClient(defaults.keys)
         .setID(defaults.id)
         .setTokens(defaults.keys)
-        .setListeners(defaults.listeners);
+        .setListeners(defaults.listeners)   
+        .setReadOnly(defaults.readOnly);
     this.remoteProxy = new PMUI.proxy.RestProxy();
 };
 
@@ -93,6 +96,14 @@ PMProject.prototype.setXMLSupported = function (value) {
         this.XMLSupported = value;
     return this;
 };
+/**
+ * Sets the readOnly Mode
+ * @param {PMProject} value
+ */
+PMProject.prototype.setReadOnly = function(value) {
+  if (typeof value === "boolean") this.readOnly = value;
+  return this;
+};
 
 PMProject.prototype.setProjectName = function (name) {
     if (typeof name === "string") {
@@ -106,6 +117,17 @@ PMProject.prototype.setProjectName = function (name) {
 
     }
     return this;
+};
+/**
+ * Sets loading process
+ * @param settings
+ * @returns {PMProject}
+ */
+PMProject.prototype.setLoadingProcess = function(loading) {
+    if (typeof loading === "boolean") {
+        this.loadingProcess = loading;
+    }
+  return this;
 };
 /**
  * Sets the user settings to the local property
@@ -174,7 +196,7 @@ PMProject.prototype.buildCanvas = function (selectors, options) {
             selectors: selectors
         },
         container: "pmcanvas",
-        readOnly: prj_readonly === 'true' ? true : false,
+        readOnly: this.readOnly,
         hasClickEvent: true,
         copyAndPasteReferences: {
             PMEvent: PMEvent,
@@ -249,7 +271,7 @@ PMProject.prototype.loadProject = function (project) {
         canvas,
         sidebarCanvas = [];
     if (project) {
-        this.loadingProcess = true;
+        this.setLoadingProcess(true);
         this.setProjectId(project.prj_uid);
         this.setProjectName(project.prj_name);
         this.setDescription(project.prj_description);
@@ -300,8 +322,7 @@ PMProject.prototype.loadProject = function (project) {
                         canvas.setDefaultStartEvent();
                         PMDesigner.helper.startIntro();
                     }
-                    that.setDirty(false);
-                    that.loadingProcess = false;
+                    that.setLoadingProcess(false);
                     that.loaded = true;
                     that.setSaveButtonDisabled();
                     PMDesigner.modeReadOnly();
@@ -320,7 +341,6 @@ PMProject.prototype.loadProject = function (project) {
  */
 
 PMProject.prototype.importDiagram = function (data) {
-    this.isSave = true;
     PMDesigner.moddle.fromXML(data, function (err, definitions) {
         if (err) {
             PMDesigner.msgFlash('Import Error: '.translate() + err.message, document.body, 'error', 5000, 5);
@@ -356,7 +376,8 @@ PMProject.prototype.isDirty = function () {
 PMProject.prototype.save = function (options) {
     var keys = this.getKeysClient(),
         that = this;
-    if (this.isDirty()) {
+    if (!this.readOnly && this.isDirty()) {
+        that.isSave = true;
         $.ajax({
             url: that.remoteProxy.url,
             type: "PUT",
@@ -368,7 +389,6 @@ PMProject.prototype.save = function (options) {
             },
             success: function (data, textStatus, xhr) {
                 that.listeners.success(that, textStatus, data);
-
                 that.isSave = false;
             },
             error: function (xhr, textStatus, errorThrown) {
@@ -397,7 +417,6 @@ PMProject.prototype.save = function (options) {
                         },
                         error: function (xhr, textStatus, errorThrown) {
                             that.listeners.failure(that, textStatus, xhr);
-
                             that.isSave = false;
                         }
                     });
@@ -411,29 +430,12 @@ PMProject.prototype.save = function (options) {
     }
     return this;
 };
-PMProject.prototype.verifyAndSave = function () {
-    var i,
-        max,
-        canvas,
-        isDragging;
-    this.isSave = true;
-    this.isSave = true;
-    for (i = 0, max = this.diagrams.getSize(); i < max; i += 1) {
-        canvas = this.diagrams.get(i);
-        if (canvas.isDragging) {
-            isDragging = canvas.isDragging;
-            break;
-        }
-    }
-    if (!isDragging) {
-        this.save(true);
-    }
-    return this;
-};
+
 PMProject.prototype.saveClose = function (options) {
     var keys = this.getKeysClient(),
         that = this;
-    if (this.isDirty()) {
+    if (!this.readOnly && this.isDirty()) {
+        that.isSave = true;
         $.ajax({
             url: that.remoteProxy.url,
             type: 'PUT',
@@ -621,11 +623,11 @@ PMProject.prototype.addElement = function (element) {
             shape.createBpmn(shape.getBpmnElementType());
         }
     }
-    this.dirty = true;
-    //Call to Create callBack
-    this.listeners.create(this, element);
     if (!this.loadingProcess) {
+        this.setDirty(true);
         PMDesigner.connectValidator.bpmnValidator();
+        //Call to Create callBack
+        this.listeners.create(this, element);
     }
 };
 
@@ -663,12 +665,12 @@ PMProject.prototype.updateElement = function (updateElement) {
             }
         }
     }
-    this.dirty = true;
-    //Call to Update callBack
-    this.listeners.update(this, updateElement);
     //run the process validator only when the project has been loaded
     if(!this.loadingProcess){
+        this.setDirty(true);
         PMDesigner.connectValidator.bpmnValidator();
+        //Call to Update callBack
+        this.listeners.update(this, updateElement);
     }
 };
 
@@ -720,10 +722,10 @@ PMProject.prototype.removeElement = function (updateElement) {
         dirtyEmptyCounter = dirtyEmptyCounter && (this.dirtyElements[0].artifacts === emptyObject);
         dirtyEmptyCounter = dirtyEmptyCounter && (this.dirtyElements[0].flows === emptyObject);
         if (dirtyEmptyCounter) {
-            this.dirty = false;
+            this.setDirty(false);
         }
     }
-    this.dirty = true;
+    this.setDirty(true);
     //Call to Remove callBack
     this.listeners.remove(this, updateElement);
     PMDesigner.connectValidator.bpmnValidator();

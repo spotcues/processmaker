@@ -30,7 +30,10 @@ require_once __DIR__ . '/../../../bootstrap/app.php';
 // php reindex_solr.php workspacename [reindexall|reindexmissing|optimizeindex] [-skip 1005] [-reindextrunksize 1000]
 // var_dump($argv);
 //(count ($argv) == 4) || ((count ($argv) == 5) && ($argv [3] != '-skip'))
+use Illuminate\Foundation\Http\Kernel;
 use ProcessMaker\Core\System;
+
+app()->make(Kernel::class)->bootstrap();
 
 $commandLineSyntaxMsg = "Invalid command line arguments: \n " .
   "syntax: ".
@@ -126,6 +129,8 @@ if (! defined ('PATH_HOME')) {
 print "PATH_HOME: " . PATH_HOME . "\n";
 print "PATH_DB: " . PATH_DB . "\n";
 print "PATH_CORE: " . PATH_CORE . "\n";
+
+app()->useStoragePath(realpath(PATH_DATA));
 
 // define the site name (instance name)
 if (empty(config("system.workspace"))) {

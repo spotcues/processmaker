@@ -5,11 +5,26 @@
  */
 class ReportTables
 {
-    private $aDef = array('mysql' => array('number' => 'DOUBLE', 'char' => 'VARCHAR(255)', 'text' => 'TEXT', 'date' => 'DATETIME'
-    ), 'pgsql' => array('number' => 'DOUBLE', 'char' => 'VARCHAR(255)', 'text' => 'TEXT', 'date' => 'DATETIME'
-    ), 'mssql' => array('number' => 'FLOAT', 'char' => 'NVARCHAR(255)', 'text' => 'TEXT', 'date' => 'CHAR(19)'
-    ) /* Changed DATETIME CHAR(19) for compatibility issues. */);
-    //private $sPrefix = 'REP_';
+    private $aDef = array(
+        'mysql' => array(
+            'number' => 'DOUBLE',
+            'char' => 'VARCHAR(255)',
+            'text' => 'TEXT',
+            'date' => 'DATETIME'
+        ),
+        'pgsql' => array(
+            'number' => 'DOUBLE',
+            'char' => 'VARCHAR(255)',
+            'text' => 'TEXT',
+            'date' => 'DATETIME'
+        ),
+        'mssql' => array(
+            'number' => 'FLOAT',
+            'char' => 'NVARCHAR(255)',
+            'text' => 'TEXT',
+            'date' => 'CHAR(19)'
+        ) /* Changed DATETIME CHAR(19) for compatibility issues. */
+    );
     private $sPrefix = '';
 
     /**
@@ -17,7 +32,9 @@ class ReportTables
      * This function delete all reports
      *
      * @access public
+     *
      * @param string $$sRepTabUid
+     *
      * @return void
      */
     public function deleteAllReportVars($sRepTabUid = '')
@@ -36,8 +53,10 @@ class ReportTables
      * This function removes the table
      *
      * @access public
+     *
      * @param string $sTableName Table name
      * @param string $sConnection Conexion
+     *
      * @return void
      */
     public function dropTable($sTableName, $sConnection = 'report')
@@ -54,7 +73,7 @@ class ReportTables
                     break;
                 case 'mssql':
                     $rs = $stmt->executeQuery("IF OBJECT_ID (N'" . $sTableName . "', N'U') IS NOT NULL
-																		  DROP TABLE [" . $sTableName . "]");
+                        DROP TABLE [" . $sTableName . "]");
                     break;
             }
         } catch (Exception $oError) {
@@ -67,14 +86,22 @@ class ReportTables
      * This Function creates the table
      *
      * @access public
+     *
      * @param string $sTableName Table name
      * @param string $sConnection Connection name
      * @param string $sType
      * @param array $aFields
      * @param string $bDefaultFields
+     *
      * @return void
      */
-    public function createTable($sTableName, $sConnection = 'report', $sType = 'NORMAL', $aFields = array(), $bDefaultFields = true)
+    public function createTable(
+        $sTableName,
+        $sConnection = 'report',
+        $sType = 'NORMAL',
+        $aFields = array(),
+        $bDefaultFields = true
+    )
     {
         $sTableName = $this->sPrefix . $sTableName;
         //we have to do the propel connection
@@ -108,7 +135,7 @@ class ReportTables
                         }
                     }
                     if ($bDefaultFields) {
-                        $sQuery .= 'PRIMARY KEY (APP_UID' . ($sType == 'GRID' ? ',ROW' : '') . ')) ';
+                        $sQuery .= 'PRIMARY KEY (APP_UID' . ($sType === 'GRID' ? ',ROW' : '') . ')) ';
                     }
                     $sQuery .= ' DEFAULT CHARSET=utf8;';
                     $rs = $stmt->executeQuery($sQuery);
@@ -157,15 +184,24 @@ class ReportTables
      * This Function fills the table
      *
      * @access public
+     *
      * @param string $sTableName Table name
      * @param string $sConnection Connection name
      * @param string $sType
      * @param array $aFields
      * @param string $sProcessUid
      * @param string $sGrid
+     *
      * @return void
      */
-    public function populateTable($sTableName, $sConnection = 'report', $sType = 'NORMAL', $aFields = array(), $sProcessUid = '', $sGrid = '')
+    public function populateTable(
+        $sTableName,
+        $sConnection = 'report',
+        $sType = 'NORMAL',
+        $aFields = array(),
+        $sProcessUid = '',
+        $sGrid = ''
+    )
     {
         $sTableName = $this->sPrefix . $sTableName;
         //we have to do the propel connection
@@ -201,14 +237,21 @@ class ReportTables
                             foreach ($aFields as $aField) {
                                 switch ($aField['sType']) {
                                     case 'number':
-                                        $sQuery .= ',' . (isset($aData[$aField['sFieldName']]) ? (float)str_replace(',', '', $aData[$aField['sFieldName']]) : '0');
+                                        $sQuery .= ',' . (isset($aData[$aField['sFieldName']]) ? (float)str_replace(
+                                                ',',
+                                                '',
+                                                $aData[$aField['sFieldName']]
+                                            ) : '0');
                                         break;
                                     case 'char':
                                     case 'text':
                                         if (!isset($aData[$aField['sFieldName']])) {
                                             $aData[$aField['sFieldName']] = '';
                                         }
-                                        $sQuery .= ",'" . (isset($aData[$aField['sFieldName']]) ? @mysql_real_escape_string($aData[$aField['sFieldName']]) : '') . "'";
+                                        $sQuery .= ",'" . (isset($aData[$aField['sFieldName']]) ? mysqli_real_escape_string(
+                                                $con->getResource(),
+                                                $aData[$aField['sFieldName']]
+                                            ) : '') . "'";
                                         break;
                                     case 'date':
                                         $value = (isset($aData[$aField['sFieldName']]) && trim($aData[$aField['sFieldName']])) != '' ? "'" . $aData[$aField['sFieldName']] . "'" : 'NULL';
@@ -230,14 +273,21 @@ class ReportTables
                                     foreach ($aFields as $aField) {
                                         switch ($aField['sType']) {
                                             case 'number':
-                                                $sQuery .= ',' . (isset($aGridRow[$aField['sFieldName']]) ? (float)str_replace(',', '', $aGridRow[$aField['sFieldName']]) : '0');
+                                                $sQuery .= ',' . (isset($aGridRow[$aField['sFieldName']]) ? (float)str_replace(
+                                                        ',',
+                                                        '',
+                                                        $aGridRow[$aField['sFieldName']]
+                                                    ) : '0');
                                                 break;
                                             case 'char':
                                             case 'text':
                                                 if (!isset($aGridRow[$aField['sFieldName']])) {
                                                     $aGridRow[$aField['sFieldName']] = '';
                                                 }
-                                                $sQuery .= ",'" . (isset($aGridRow[$aField['sFieldName']]) ? mysql_real_escape_string($aGridRow[$aField['sFieldName']]) : '') . "'";
+                                                $sQuery .= ",'" . (isset($aGridRow[$aField['sFieldName']]) ? mysqli_real_escape_string(
+                                                        $con->getResource(),
+                                                        $aGridRow[$aField['sFieldName']]
+                                                    ) : '') . "'";
                                                 break;
                                             case 'date':
                                                 $value = (isset($aGridRow[$aField['sFieldName']]) && trim($aGridRow[$aField['sFieldName']])) != '' ? "'" . $aGridRow[$aField['sFieldName']] . "'" : 'NULL';
@@ -266,7 +316,11 @@ class ReportTables
                     $oDataset->next();
                     while ($aRow = $oDataset->getRow()) {
                         $aData = unserialize($aRow['APP_DATA']);
-                        mysql_query('DELETE FROM [' . $sTableName . "] WHERE APP_UID = '" . $aRow['APP_UID'] . "'");
+                        //verify use mssql
+                        mysqli_query(
+                            $con->getResource(),
+                            'DELETE FROM [' . $sTableName . "] WHERE APP_UID = '" . $aRow['APP_UID'] . "'"
+                        );
                         if ($sType == 'NORMAL') {
                             $sQuery = 'INSERT INTO [' . $sTableName . '] (';
                             $sQuery .= '[APP_UID],[APP_NUMBER]';
@@ -277,14 +331,21 @@ class ReportTables
                             foreach ($aFields as $aField) {
                                 switch ($aField['sType']) {
                                     case 'number':
-                                        $sQuery .= ',' . (isset($aData[$aField['sFieldName']]) ? (float)str_replace(',', '', $aData[$aField['sFieldName']]) : '0');
+                                        $sQuery .= ',' . (isset($aData[$aField['sFieldName']]) ? (float)str_replace(
+                                                ',',
+                                                '',
+                                                $aData[$aField['sFieldName']]
+                                            ) : '0');
                                         break;
                                     case 'char':
                                     case 'text':
                                         if (!isset($aData[$aField['sFieldName']])) {
                                             $aData[$aField['sFieldName']] = '';
                                         }
-                                        $sQuery .= ",'" . (isset($aData[$aField['sFieldName']]) ? mysql_real_escape_string($aData[$aField['sFieldName']]) : '') . "'";
+                                        $sQuery .= ",'" . (isset($aData[$aField['sFieldName']]) ? mysqli_real_escape_string(
+                                                $con->getResource(),
+                                                $aData[$aField['sFieldName']]
+                                            ) : '') . "'";
                                         break;
                                     case 'date':
                                         $sQuery .= ",'" . (isset($aData[$aField['sFieldName']]) ? $aData[$aField['sFieldName']] : '') . "'";
@@ -305,14 +366,21 @@ class ReportTables
                                     foreach ($aFields as $aField) {
                                         switch ($aField['sType']) {
                                             case 'number':
-                                                $sQuery .= ',' . (isset($aGridRow[$aField['sFieldName']]) ? (float)str_replace(',', '', $aGridRow[$aField['sFieldName']]) : '0');
+                                                $sQuery .= ',' . (isset($aGridRow[$aField['sFieldName']]) ? (float)str_replace(
+                                                        ',',
+                                                        '',
+                                                        $aGridRow[$aField['sFieldName']]
+                                                    ) : '0');
                                                 break;
                                             case 'char':
                                             case 'text':
                                                 if (!isset($aGridRow[$aField['sFieldName']])) {
                                                     $aGridRow[$aField['sFieldName']] = '';
                                                 }
-                                                $sQuery .= ",'" . (isset($aGridRow[$aField['sFieldName']]) ? mysql_real_escape_string($aGridRow[$aField['sFieldName']]) : '') . "'";
+                                                $sQuery .= ",'" . (isset($aGridRow[$aField['sFieldName']]) ? mysqli_real_escape_string(
+                                                        $con->getResource(),
+                                                        $aGridRow[$aField['sFieldName']]
+                                                    ) : '') . "'";
                                                 break;
                                             case 'date':
                                                 $sQuery .= ",'" . (isset($aGridRow[$aField['sFieldName']]) ? $aGridRow[$aField['sFieldName']] : '') . "'";
@@ -338,8 +406,10 @@ class ReportTables
      * Function getTableVars
      *
      * @access public
+     *
      * @param string $sRepTabUid
      * @param boolean $bWhitType
+     *
      * @return void
      */
     public function getTableVars($sRepTabUid, $bWhitType = false)
@@ -356,7 +426,9 @@ class ReportTables
                 if ($bWhitType) {
                     if (!in_array($aRow['REP_VAR_NAME'], $aImportedVars)) {
                         $aImportedVars[] = $aRow['REP_VAR_NAME'];
-                        $aVars[] = array('sFieldName' => $aRow['REP_VAR_NAME'], 'sType' => $aRow['REP_VAR_TYPE']
+                        $aVars[] = array(
+                            'sFieldName' => $aRow['REP_VAR_NAME'],
+                            'sType' => $aRow['REP_VAR_TYPE']
                         );
                     }
                 } else {
@@ -375,7 +447,9 @@ class ReportTables
      * This Function deletes report table
      *
      * @access public
+     *
      * @param string $sRepTabUid
+     *
      * @return void
      */
     public function deleteReportTable($sRepTabUid)
@@ -400,8 +474,10 @@ class ReportTables
      * This function gets the split date
      *
      * @access public
+     *
      * @param date $date
      * @param string $mask
+     *
      * @return array
      */
     public function getSplitDate($date, $mask)
@@ -465,7 +541,10 @@ class ReportTables
                     break;
             }
         }
-        return Array(isset($d1) ? $d1 : '', isset($d2) ? $d2 : '', isset($d3) ? $d3 : ''
+        return array(
+            isset($d1) ? $d1 : '',
+            isset($d2) ? $d2 : '',
+            isset($d3) ? $d3 : ''
         );
     }
 
@@ -474,13 +553,14 @@ class ReportTables
      * This function returns the date formated
      *
      * @access public
+     *
      * @param date $sDate
      * @param date $sMask
+     *
      * @return date
      */
     public function getFormatDate($sDate, $sMask)
     {
-        //print $sDate." *** ". $sMask."<BR>";
         $dateTime = explode(" ", $sDate); //To accept the Hour part
         $aDate = explode('-', str_replace("/", "-", $dateTime[0]));
         $bResult = true;
@@ -512,10 +592,12 @@ class ReportTables
      * This function updated the Report Tables
      *
      * @access public
+     *
      * @param string $sProcessUid
      * @param string $sApplicationUid
      * @param string $iApplicationNumber
      * @param string $aFields
+     *
      * @return void
      */
     public function updateTables($sProcessUid, $sApplicationUid, $iApplicationNumber, $aFields)
@@ -545,6 +627,7 @@ class ReportTables
                 $aRow['REP_TAB_NAME'] = $this->sPrefix . $aRow['REP_TAB_NAME'];
                 $PropelDatabase = $this->chooseDB($aRow['REP_TAB_CONNECTION']);
                 $con = Propel::getConnection($PropelDatabase);
+                $con->getResource();
                 $stmt = $con->createStatement();
                 switch (DB_ADAPTER) {
                     case 'mysql':
@@ -570,7 +653,11 @@ class ReportTables
 
                                     switch ($aField['sType']) {
                                         case 'number':
-                                            $sQuery .= (isset($aFields[$aField['sFieldName']]) ? (float)str_replace(',', '', $aFields[$aField['sFieldName']]) : '0') . ',';
+                                            $sQuery .= (isset($aFields[$aField['sFieldName']]) ? (float)str_replace(
+                                                    ',',
+                                                    '',
+                                                    $aFields[$aField['sFieldName']]
+                                                ) : '0') . ',';
                                             break;
                                         case 'char':
                                         case 'text':
@@ -583,7 +670,10 @@ class ReportTables
                                             if (is_array($aFields[$aField['sFieldName']])) {
                                                 $sQuery .= "'" . (isset($aFields[$aField['sFieldName']]) ? $aFields[$aField['sFieldName']][0] : '') . "',";
                                             } else {
-                                                $sQuery .= '\'' . ((isset($aFields[$aField['sFieldName']])) ? @mysql_real_escape_string($aFields[$aField['sFieldName']]) : '') . '\',';
+                                                $sQuery .= '\'' . ((isset($aFields[$aField['sFieldName']])) ? mysqli_real_escape_string(
+                                                        $con->getResource(),
+                                                        $aFields[$aField['sFieldName']]
+                                                    ) : '') . '\',';
                                             }
                                             break;
                                         case 'date':
@@ -605,9 +695,15 @@ class ReportTables
                                     try {
                                         $rs = $stmt->executeQuery($sQuery);
                                     } catch (Exception $e) {
-                                        Bootstrap::registerMonolog('sqlExecution', 400, 'Sql Execution', ['sql' => $sQuery,'error' => $e->getMessage()], config("system.workspace"), 'processmaker.log');
+                                        Bootstrap::registerMonolog(
+                                            'sqlExecution',
+                                            400,
+                                            'Sql Execution',
+                                            ['sql' => $sQuery, 'error' => $e->getMessage()],
+                                            config("system.workspace"),
+                                            'processmaker.log'
+                                        );
                                     }
-
                                 }
                             } else {
                                 $sQuery = 'INSERT INTO `' . $aRow['REP_TAB_NAME'] . '` (';
@@ -619,14 +715,21 @@ class ReportTables
                                 foreach ($aTableFields as $aField) {
                                     switch ($aField['sType']) {
                                         case 'number':
-                                            $sQuery .= ',' . (isset($aFields[$aField['sFieldName']]) ? (float)str_replace(',', '', $aFields[$aField['sFieldName']]) : '0');
+                                            $sQuery .= ',' . (isset($aFields[$aField['sFieldName']]) ? (float)str_replace(
+                                                    ',',
+                                                    '',
+                                                    $aFields[$aField['sFieldName']]
+                                                ) : '0');
                                             break;
                                         case 'char':
                                         case 'text':
                                             if (!isset($aFields[$aField['sFieldName']])) {
                                                 $aFields[$aField['sFieldName']] = '';
                                             }
-                                            $sQuery .= ",'" . (isset($aFields[$aField['sFieldName']]) ? mysql_real_escape_string($aFields[$aField['sFieldName']]) : '') . "'";
+                                            $sQuery .= ",'" . (isset($aFields[$aField['sFieldName']]) ? mysqli_real_escape_string(
+                                                    $con->getResource(),
+                                                    $aFields[$aField['sFieldName']]
+                                                ) : '') . "'";
                                             break;
                                         case 'date':
                                             $mysqlDate = (isset($aFields[$aField['sFieldName']]) ? $aFields[$aField['sFieldName']] : '');
@@ -644,7 +747,14 @@ class ReportTables
                                 try {
                                     $rs = $stmt->executeQuery($sQuery);
                                 } catch (Exception $e) {
-                                    Bootstrap::registerMonolog('sqlExecution', 400, 'Sql Execution', ['sql' => $sQuery,'error' => $e->getMessage()], config("system.workspace"), 'processmaker.log');
+                                    Bootstrap::registerMonolog(
+                                        'sqlExecution',
+                                        400,
+                                        'Sql Execution',
+                                        ['sql' => $sQuery, 'error' => $e->getMessage()],
+                                        config("system.workspace"),
+                                        'processmaker.log'
+                                    );
                                 }
                             }
                         } else {
@@ -665,14 +775,21 @@ class ReportTables
                                         foreach ($aTableFields as $aField) {
                                             switch ($aField['sType']) {
                                                 case 'number':
-                                                    $sQuery .= ',' . (isset($aGridRow[$aField['sFieldName']]) ? (float)str_replace(',', '', $aGridRow[$aField['sFieldName']]) : '0');
+                                                    $sQuery .= ',' . (isset($aGridRow[$aField['sFieldName']]) ? (float)str_replace(
+                                                            ',',
+                                                            '',
+                                                            $aGridRow[$aField['sFieldName']]
+                                                        ) : '0');
                                                     break;
                                                 case 'char':
                                                 case 'text':
                                                     if (!isset($aGridRow[$aField['sFieldName']])) {
                                                         $aGridRow[$aField['sFieldName']] = '';
                                                     }
-                                                    $sQuery .= ",'" . (isset($aGridRow[$aField['sFieldName']]) ? mysql_real_escape_string($aGridRow[$aField['sFieldName']]) : '') . "'";
+                                                    $sQuery .= ",'" . (isset($aGridRow[$aField['sFieldName']]) ? mysqli_real_escape_string(
+                                                            $con->getResource(),
+                                                            $aGridRow[$aField['sFieldName']]
+                                                        ) : '') . "'";
                                                     break;
                                                 case 'date':
                                                     $sQuery .= ",'" . (isset($aGridRow[$aField['sFieldName']]) ? $aGridRow[$aField['sFieldName']] : '') . "'";
@@ -700,14 +817,21 @@ class ReportTables
                                     $sQuery .= '[' . $aField['sFieldName'] . '] = ';
                                     switch ($aField['sType']) {
                                         case 'number':
-                                            $sQuery .= (isset($aFields[$aField['sFieldName']]) ? (float)str_replace(',', '', $aFields[$aField['sFieldName']]) : '0') . ',';
+                                            $sQuery .= (isset($aFields[$aField['sFieldName']]) ? (float)str_replace(
+                                                    ',',
+                                                    '',
+                                                    $aFields[$aField['sFieldName']]
+                                                ) : '0') . ',';
                                             break;
                                         case 'char':
                                         case 'text':
                                             if (!isset($aFields[$aField['sFieldName']])) {
                                                 $aFields[$aField['sFieldName']] = '';
                                             }
-                                            $sQuery .= "'" . (isset($aFields[$aField['sFieldName']]) ? mysql_real_escape_string($aFields[$aField['sFieldName']]) : '') . "',";
+                                            $sQuery .= "'" . (isset($aFields[$aField['sFieldName']]) ? mysqli_real_escape_string(
+                                                    $con->getResource(),
+                                                    $aFields[$aField['sFieldName']]
+                                                ) : '') . "',";
                                             break;
                                         case 'date':
                                             $sQuery .= "'" . (isset($aFields[$aField['sFieldName']]) ? $aFields[$aField['sFieldName']] : '') . "',";
@@ -726,14 +850,21 @@ class ReportTables
                                 foreach ($aTableFields as $aField) {
                                     switch ($aField['sType']) {
                                         case 'number':
-                                            $sQuery .= ',' . (isset($aFields[$aField['sFieldName']]) ? (float)str_replace(',', '', $aFields[$aField['sFieldName']]) : '0');
+                                            $sQuery .= ',' . (isset($aFields[$aField['sFieldName']]) ? (float)str_replace(
+                                                    ',',
+                                                    '',
+                                                    $aFields[$aField['sFieldName']]
+                                                ) : '0');
                                             break;
                                         case 'char':
                                         case 'text':
                                             if (!isset($aFields[$aField['sFieldName']])) {
                                                 $aFields[$aField['sFieldName']] = '';
                                             }
-                                            $sQuery .= ",'" . (isset($aFields[$aField['sFieldName']]) ? mysql_real_escape_string($aFields[$aField['sFieldName']]) : '') . "'";
+                                            $sQuery .= ",'" . (isset($aFields[$aField['sFieldName']]) ? mysqli_real_escape_string(
+                                                    $con->getResource(),
+                                                    $aFields[$aField['sFieldName']]
+                                                ) : '') . "'";
                                             break;
                                         case 'date':
                                             $sQuery .= ",'" . (isset($aFields[$aField['sFieldName']]) ? $aFields[$aField['sFieldName']] : '') . "'";
@@ -744,7 +875,11 @@ class ReportTables
                             }
                             $rs = $stmt->executeQuery($sQuery);
                         } else {
-                            mysql_query('DELETE FROM [' . $aRow['REP_TAB_NAME'] . "] WHERE APP_UID = '" . $sApplicationUid . "'");
+                            //Verify use in mssql
+                            mysqli_query(
+                                $con->getResource(),
+                                'DELETE FROM [' . $aRow['REP_TAB_NAME'] . "] WHERE APP_UID = '" . $sApplicationUid . "'"
+                            );
                             $aAux = explode('-', $aRow['REP_TAB_GRID']);
                             if (isset($aFields[$aAux[0]])) {
                                 foreach ($aFields[$aAux[0]] as $iRow => $aGridRow) {
@@ -757,14 +892,21 @@ class ReportTables
                                     foreach ($aTableFields as $aField) {
                                         switch ($aField['sType']) {
                                             case 'number':
-                                                $sQuery .= ',' . (isset($aGridRow[$aField['sFieldName']]) ? (float)str_replace(',', '', $aGridRow[$aField['sFieldName']]) : '0');
+                                                $sQuery .= ',' . (isset($aGridRow[$aField['sFieldName']]) ? (float)str_replace(
+                                                        ',',
+                                                        '',
+                                                        $aGridRow[$aField['sFieldName']]
+                                                    ) : '0');
                                                 break;
                                             case 'char':
                                             case 'text':
                                                 if (!isset($aGridRow[$aField['sFieldName']])) {
                                                     $aGridRow[$aField['sFieldName']] = '';
                                                 }
-                                                $sQuery .= ",'" . (isset($aGridRow[$aField['sFieldName']]) ? mysql_real_escape_string($aGridRow[$aField['sFieldName']]) : '') . "'";
+                                                $sQuery .= ",'" . (isset($aGridRow[$aField['sFieldName']]) ? mysqli_real_escape_string(
+                                                        $con->getResource(),
+                                                        $aGridRow[$aField['sFieldName']]
+                                                    ) : '') . "'";
                                                 break;
                                             case 'date':
                                                 $sQuery .= ",'" . (isset($aGridRow[$aField['sFieldName']]) ? $aGridRow[$aField['sFieldName']] : '') . "'";
@@ -809,7 +951,9 @@ class ReportTables
      * Choose the database to connect
      *
      * @access public
+     *
      * @param string $TabConnectionk
+     *
      * @return string
      */
     public function chooseDB($TabConnectionk)

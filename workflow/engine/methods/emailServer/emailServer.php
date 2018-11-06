@@ -15,7 +15,7 @@ $arrayConfigPage = $configuration->getConfiguration("emailServerList", "pageSize
 $arrayConfig = array();
 $arrayConfig["pageSize"] = (isset($arrayConfigPage["pageSize"]))? $arrayConfigPage["pageSize"] : 20;
 
-$headPublisher = &headPublisher::getSingleton();
+$headPublisher = headPublisher::getSingleton();
 $headPublisher->addContent("emailServer/emailServer"); //Adding a HTML file
 $headPublisher->addExtJsScript("emailServer/emailServer", false); //Adding a JavaScript file
 $headPublisher->assign("CONFIG", $arrayConfig);
@@ -23,4 +23,3 @@ $headPublisher->assign("CONFIG", $arrayConfig);
 /*----------------------------------********---------------------------------*/
 
 G::RenderPage("publish", "extJs");
-

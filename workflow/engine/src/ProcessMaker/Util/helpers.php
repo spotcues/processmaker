@@ -12,6 +12,7 @@ function postNote($httpData)
 {
     $appUid = (isset($httpData->appUid)) ? $httpData->appUid : '';
     $usrUid = (isset($httpData->usrUid)) ? $httpData->usrUid : '';
+    $delIndex = (isset($httpData->delIndex)) ? $httpData->delIndex : 0;
     $appNotes = new AppNotes();
     $noteContent = addslashes($httpData->noteText);
     $result = $appNotes->postNewNote($appUid, $usrUid, $noteContent, false);
@@ -33,7 +34,7 @@ function postNote($httpData)
     }
 
     $noteRecipients = implode(",", $noteRecipientsList);
-    $appNotes->sendNoteNotification($appUid, $usrUid, $noteContent, $noteRecipients);
+    $appNotes->sendNoteNotification($appUid, $usrUid, $noteContent, $noteRecipients, '', $delIndex);
 }
 
 /**
@@ -407,4 +408,13 @@ function verifyCsrfToken($request)
 function csrfToken()
 {
     return isset($_SESSION['USR_CSRF_TOKEN']) ? $_SESSION['USR_CSRF_TOKEN'] : '';
+}
+
+// Methods deleted in PHP 7.x, added in this file in order to keep compatibility with old libraries included/used in ProcessMaker
+if (!function_exists('set_magic_quotes_runtime')) {
+    function set_magic_quotes_runtime($value) {
+        // This method always return false, because this method doesn't set anything from PHP version 5.3
+        // http://www.php.net/manual/en/function.set-magic-quotes-runtime.php
+        return false;
+    }
 }

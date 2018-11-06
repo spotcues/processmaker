@@ -42,7 +42,7 @@ class ldapadvancedClassCron
     */
     public function executeCron($debug)
     {
-        $rbac = &RBAC::getSingleton();
+        $rbac = RBAC::getSingleton();
 
         if (is_null($rbac->authSourcesObj)) {
             $rbac->authSourcesObj = new AuthenticationSource();
@@ -203,7 +203,7 @@ class ldapadvancedClassCron
 
                     unset($arrayAuthenticationSourceData["AUTH_SOURCE_DATA"]["DEPARTMENTS_TO_UNASSIGN"]);
 
-                    $rbac = &RBAC::getSingleton();
+                    $rbac = RBAC::getSingleton();
                     $rbac->authSourcesObj->update($arrayAuthenticationSourceData);
                 }
 
@@ -240,7 +240,7 @@ class ldapadvancedClassCron
 
                     unset($arrayAuthenticationSourceData["AUTH_SOURCE_DATA"]["GROUPS_TO_UNASSIGN"]);
 
-                    $rbac = &RBAC::getSingleton();
+                    $rbac = RBAC::getSingleton();
                     $rbac->authSourcesObj->update($arrayAuthenticationSourceData);
                 }
 
@@ -599,4 +599,3 @@ class ldapadvancedClassCron
         }
     }
 }
-

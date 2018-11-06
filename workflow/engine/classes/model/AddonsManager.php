@@ -138,7 +138,7 @@ class AddonsManager extends BaseAddonsManager
         $filter = new InputFilter();
         $requiredPath = PATH_PLUGINS . $this->getAddonName() . ".php";
         $requiredPath = $filter->validateInput($requiredPath, 'path');
-        require_once ($requiredPath);
+        require_once($requiredPath);
 
         if ($enable) {
             $oPluginRegistry->enablePlugin($this->getAddonName());
@@ -223,7 +223,7 @@ class AddonsManager extends BaseAddonsManager
         }
 
         ///////
-        $licenseManager = &PmLicenseManager::getSingleton();
+        $licenseManager = PmLicenseManager::getSingleton();
         $activeLicense = $licenseManager->getActiveLicense();
 
         $data = $data . "Content-Disposition: form-data; name=\"licenseFile\"; filename=\"" . $licenseManager->file . "\"\n";
@@ -474,18 +474,18 @@ class AddonsManager extends BaseAddonsManager
      */
     public function update($data)
     {
-        $con = Propel::getConnection( AddonsManagerPeer::DATABASE_NAME );
+        $con = Propel::getConnection(AddonsManagerPeer::DATABASE_NAME);
         try {
             $con->begin();
-            $this->setNew( false );
-            $this->fromArray( $data, BasePeer::TYPE_FIELDNAME );
+            $this->setNew(false);
+            $this->fromArray($data, BasePeer::TYPE_FIELDNAME);
             if ($this->validate()) {
                 $result = $this->save();
                 $con->commit();
                 return $result;
             } else {
                 $con->rollback();
-                throw (new Exception( "Failed Validation in class " . get_class( $this ) . "." ));
+                throw (new Exception("Failed Validation in class " . get_class($this) . "."));
             }
         } catch (Exception $e) {
             $con->rollback();

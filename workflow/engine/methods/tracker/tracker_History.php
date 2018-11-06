@@ -60,7 +60,7 @@ $G_PUBLISH = new Publisher();
 if ($noShowTitle == 0) {
     $G_PUBLISH->AddContent( 'smarty', 'cases/cases_title', '', '', $aFields );
 }
-$G_PUBLISH->AddContent( 'propeltable', 'paged-table', 'tracker/tracker_TransferHistory', Cases::getTransferHistoryCriteria( $_SESSION['APPLICATION'] ), array () );
+$G_PUBLISH->AddContent('propeltable', 'paged-table', 'tracker/tracker_TransferHistory', Cases::getTransferHistoryCriteria($aFields['APP_NUMBER']), []);
 
 $bpmn = new ProcessMaker\Project\Bpmn();
 $flagIsBpmn = ($bpmn->exists($_SESSION["PROCESS"]))? true : false;

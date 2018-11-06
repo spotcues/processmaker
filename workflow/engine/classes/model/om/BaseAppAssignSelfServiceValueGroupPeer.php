@@ -25,7 +25,7 @@ abstract class BaseAppAssignSelfServiceValueGroupPeer
     const CLASS_DEFAULT = 'classes.model.AppAssignSelfServiceValueGroup';
 
     /** The total number of columns. */
-    const NUM_COLUMNS = 2;
+    const NUM_COLUMNS = 4;
 
     /** The number of lazy-loaded columns. */
     const NUM_LAZY_LOAD_COLUMNS = 0;
@@ -36,6 +36,12 @@ abstract class BaseAppAssignSelfServiceValueGroupPeer
 
     /** the column name for the GRP_UID field */
     const GRP_UID = 'APP_ASSIGN_SELF_SERVICE_VALUE_GROUP.GRP_UID';
+
+    /** the column name for the ASSIGNEE_ID field */
+    const ASSIGNEE_ID = 'APP_ASSIGN_SELF_SERVICE_VALUE_GROUP.ASSIGNEE_ID';
+
+    /** the column name for the ASSIGNEE_TYPE field */
+    const ASSIGNEE_TYPE = 'APP_ASSIGN_SELF_SERVICE_VALUE_GROUP.ASSIGNEE_TYPE';
 
     /** The PHP to DB Name Mapping */
     private static $phpNameMap = null;
@@ -48,10 +54,10 @@ abstract class BaseAppAssignSelfServiceValueGroupPeer
      * e.g. self::$fieldNames[self::TYPE_PHPNAME][0] = 'Id'
      */
     private static $fieldNames = array (
-        BasePeer::TYPE_PHPNAME => array ('Id', 'GrpUid', ),
-        BasePeer::TYPE_COLNAME => array (AppAssignSelfServiceValueGroupPeer::ID, AppAssignSelfServiceValueGroupPeer::GRP_UID, ),
-        BasePeer::TYPE_FIELDNAME => array ('ID', 'GRP_UID', ),
-        BasePeer::TYPE_NUM => array (0, 1, )
+        BasePeer::TYPE_PHPNAME => array ('Id', 'GrpUid', 'AssigneeId', 'AssigneeType', ),
+        BasePeer::TYPE_COLNAME => array (AppAssignSelfServiceValueGroupPeer::ID, AppAssignSelfServiceValueGroupPeer::GRP_UID, AppAssignSelfServiceValueGroupPeer::ASSIGNEE_ID, AppAssignSelfServiceValueGroupPeer::ASSIGNEE_TYPE, ),
+        BasePeer::TYPE_FIELDNAME => array ('ID', 'GRP_UID', 'ASSIGNEE_ID', 'ASSIGNEE_TYPE', ),
+        BasePeer::TYPE_NUM => array (0, 1, 2, 3, )
     );
 
     /**
@@ -61,10 +67,10 @@ abstract class BaseAppAssignSelfServiceValueGroupPeer
      * e.g. self::$fieldNames[BasePeer::TYPE_PHPNAME]['Id'] = 0
      */
     private static $fieldKeys = array (
-        BasePeer::TYPE_PHPNAME => array ('Id' => 0, 'GrpUid' => 1, ),
-        BasePeer::TYPE_COLNAME => array (AppAssignSelfServiceValueGroupPeer::ID => 0, AppAssignSelfServiceValueGroupPeer::GRP_UID => 1, ),
-        BasePeer::TYPE_FIELDNAME => array ('ID' => 0, 'GRP_UID' => 1, ),
-        BasePeer::TYPE_NUM => array (0, 1, )
+        BasePeer::TYPE_PHPNAME => array ('Id' => 0, 'GrpUid' => 1, 'AssigneeId' => 2, 'AssigneeType' => 3, ),
+        BasePeer::TYPE_COLNAME => array (AppAssignSelfServiceValueGroupPeer::ID => 0, AppAssignSelfServiceValueGroupPeer::GRP_UID => 1, AppAssignSelfServiceValueGroupPeer::ASSIGNEE_ID => 2, AppAssignSelfServiceValueGroupPeer::ASSIGNEE_TYPE => 3, ),
+        BasePeer::TYPE_FIELDNAME => array ('ID' => 0, 'GRP_UID' => 1, 'ASSIGNEE_ID' => 2, 'ASSIGNEE_TYPE' => 3, ),
+        BasePeer::TYPE_NUM => array (0, 1, 2, 3, )
     );
 
     /**
@@ -168,6 +174,10 @@ abstract class BaseAppAssignSelfServiceValueGroupPeer
         $criteria->addSelectColumn(AppAssignSelfServiceValueGroupPeer::ID);
 
         $criteria->addSelectColumn(AppAssignSelfServiceValueGroupPeer::GRP_UID);
+
+        $criteria->addSelectColumn(AppAssignSelfServiceValueGroupPeer::ASSIGNEE_ID);
+
+        $criteria->addSelectColumn(AppAssignSelfServiceValueGroupPeer::ASSIGNEE_TYPE);
 
     }
 

@@ -471,26 +471,21 @@ abstract class ArrayBasePeer
     public static function doSelect(Criteria $criteria, $tableName, $con = null)
     {
         $dbMap = Propel::getDatabaseMap($criteria->getDbName());
-
         $stmt = null;
-
         try {
             $params = array();
             $sql = self::createSelectSql($criteria, $tableName, $params);
             $sql['params'] = $params;
             $stmt = $con->prepareStatement($sql);
-            //$stmt->setLimit($criteria->getLimit());
-            $sql['limit'] = $criteria->getLimit();
-            //$stmt->setOffset($criteria->getOffset());
-            $sql['offset'] = $criteria->getOffset();
-            //$rs = $stmt->executeQuery(ResultSet::FETCHMODE_NUM);
+            $sql['limit'] = (int) $criteria->getLimit();
+            $sql['offset'] = (int) $criteria->getOffset();
             $rs = $con->executeQuery($sql, ResultSet::FETCHMODE_NUM);
         } catch (Exception $e) {
-            if ($stmt)
+            if ($stmt) {
                 $stmt->close();
+            }
             throw new PropelException($e);
         }
-
         return $rs;
     }
 

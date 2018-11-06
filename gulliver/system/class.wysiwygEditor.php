@@ -29,13 +29,12 @@
  * XmlFormFieldWYSIWYGEditor class definition
  * It is useful to see dynaforms how are built
  *
- * @package gulliver.system
+ * @package       gulliver.system
  * @author
  *
  * @copyright (C) 2012 by Colosa Development Team.
  *
  */
-
 class XmlFormFieldWYSIWYGEditor extends XmlFormField
 {
     public $width = '100%';
@@ -50,15 +49,21 @@ class XmlFormFieldWYSIWYGEditor extends XmlFormField
      *
      * @author
      * @access public
+     *
      * @param string $value
      * @param string $owner
+     *
      * @return string
      *
      */
-    public function render ($value, $owner = null)
+    public function render($value = null, $owner = null)
     {
+        if ($value === null) {
+            $value = '';
+        }
         $value = ($value == '') ? '<br/>' : $value;
-        $html  = "<textArea class='tmceEditor' id='form[" . $this->name . "]' name='form[" . $this->name . "]' >" . htmlentities( $value, ENT_QUOTES, 'UTF-8' ) . "</textarea>";
+        $html = "<textArea class='tmceEditor' id='form[" . $this->name . "]' name='form[" . $this->name . "]' >" . htmlentities($value,
+                ENT_QUOTES, 'UTF-8') . "</textarea>";
         return $html;
     }
 
@@ -68,19 +73,21 @@ class XmlFormFieldWYSIWYGEditor extends XmlFormField
      *
      * @author
      * @access public
+     *
      * @param string $element
+     *
      * @return string
      *
      */
-    public function attachEvents ($element)
+    public function attachEvents($element)
     {
-        $editorDefinition  = 'tinyMCE.baseURL = "/js/tinymce/jscripts/tiny_mce"; ';
-        $editorDefinition .= 'var domainURL   = "/sys'.config("system.workspace").'/'.SYS_LANG.'/'.SYS_SKIN.'/"';
-        $serverConf =& ServerConf::getSingleton();
+        $editorDefinition = 'tinyMCE.baseURL = "/js/tinymce/jscripts/tiny_mce"; ';
+        $editorDefinition .= 'var domainURL   = "/sys' . config("system.workspace") . '/' . SYS_LANG . '/' . SYS_SKIN . '/"';
+        $serverConf = ServerConf::getSingleton();
 
-        switch ($this->editorType){
+        switch ($this->editorType) {
             case 'EMAIL_TEMPLATE':
-                $editorDefinition.= '
+                $editorDefinition .= '
                 // is necessary the process uid variable in order to load the picker correctly
                 var actualCaretPositionBookmark;
                 var formProcessID = document.getElementById("form[pro_uid]").value;
@@ -118,7 +125,7 @@ class XmlFormFieldWYSIWYGEditor extends XmlFormField
                 ';
                 break;
             case 'OUTPUT_DOCUMENT':
-                $editorDefinition.= '
+                $editorDefinition .= '
                 // is necessary the process uid variable in order to load the picker correctly
                 var formProcessID = document.getElementById("form[PRO_UID]").value;
                 tinyMCE.init({
@@ -156,7 +163,7 @@ class XmlFormFieldWYSIWYGEditor extends XmlFormField
                 break;
 
             case 'DYNAFORM_TEMPLATE':
-                $editorDefinition.= '
+                $editorDefinition .= '
                 var formProcessID = document.getElementById("form[PRO_UID]").value;
                 var formDynaformID = document.getElementById("form[DYN_UID]").value;
                 var actualCaretPositionBookmark;
@@ -177,7 +184,7 @@ class XmlFormFieldWYSIWYGEditor extends XmlFormField
                     popup_css : "/js/tinymce/jscripts/tiny_mce/themes/advanced/skins/default/dialog.css",
                     skin : "o2k7",
                     skin_variant : "silver",
-                    content_css : "/css/'.SYS_SKIN.'.css",
+                    content_css : "/css/' . SYS_SKIN . '.css",
                     template_external_list_url : "js/template_list.js",
                     external_link_list_url : "js/link_list.js",
                     external_image_list_url : "js/image_list.js",
@@ -207,7 +214,7 @@ class XmlFormFieldWYSIWYGEditor extends XmlFormField
                 ';
                 break;
             default:
-                $editorDefinition.= '
+                $editorDefinition .= '
                     tinyMCE.init({
                         // General options
                         mode : "textareas",

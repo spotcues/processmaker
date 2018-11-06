@@ -225,7 +225,7 @@ class Bpmn extends Handler
         $response = array();
         foreach ($data as $key => $val) {
             //Review if the type is "prj_uid"
-            if (isset($val['prj_uid']) && !empty($val['prj_uid']) ) {
+            if (isset($val['prj_uid']) && !empty($val['prj_uid'])) {
                 //The project exist?
                 if (!Bpmn::exists($val['prj_uid'])) {
                     $response[] = array(
@@ -514,7 +514,8 @@ class Bpmn extends Handler
         }
 
         // setting defaults
-        $data['PRO_UID'] = array_key_exists('PRO_UID', $data) ? $data['PRO_UID'] : Common::generateUID();;
+        $data['PRO_UID'] = array_key_exists('PRO_UID', $data) ? $data['PRO_UID'] : Common::generateUID();
+        ;
         $data['PRO_NAME'] = array_key_exists('PRO_NAME', $data) ? $data['PRO_NAME'] : $this->diagram->getDiaName();
 
         $this->process = new Process();
@@ -696,7 +697,7 @@ class Bpmn extends Handler
         );
     }
 
-    public function updateEvent($evnUid, $data)
+    public function updateEvent($evnUid, array $data)
     {
         /*if (array_key_exists("EVN_CANCEL_ACTIVITY", $data)) {
             $data["EVN_CANCEL_ACTIVITY"] = $data["EVN_CANCEL_ACTIVITY"] ? 1 : 0;
@@ -913,15 +914,22 @@ class Bpmn extends Handler
                 case "bpmnLaneset": $class = "BpmnLaneset"; break;
                 case "bpmnLane": $class = "BpmnLane"; break;
                 default:
-                    throw new \RuntimeException(sprintf("Invalid Object type, accepted types: [%s|%s|%s|%s], given %s.",
-                        "BpmnActivity", "BpmnBpmnGateway", "BpmnEvent", "bpmnArtifact", $data["FLO_ELEMENT_ORIGIN_TYPE"]
+                    throw new \RuntimeException(sprintf(
+                        "Invalid Object type, accepted types: [%s|%s|%s|%s], given %s.",
+                        "BpmnActivity",
+                        "BpmnBpmnGateway",
+                        "BpmnEvent",
+                        "bpmnArtifact",
+                        $data["FLO_ELEMENT_ORIGIN_TYPE"]
                     ));
             }
 
             // Validate origin object exists
             if (! $class::exists($data["FLO_ELEMENT_ORIGIN"])) {
-                throw new \RuntimeException(sprintf("Reference not found, the %s with UID: %s, does not exist!",
-                    ucfirst($data["FLO_ELEMENT_ORIGIN_TYPE"]), $data["FLO_ELEMENT_ORIGIN"]
+                throw new \RuntimeException(sprintf(
+                    "Reference not found, the %s with UID: %s, does not exist!",
+                    ucfirst($data["FLO_ELEMENT_ORIGIN_TYPE"]),
+                    $data["FLO_ELEMENT_ORIGIN"]
                 ));
             }
 
@@ -935,15 +943,22 @@ class Bpmn extends Handler
                 case "bpmnLaneset": $class = "BpmnLaneset"; break;
                 case "bpmnLane": $class = "BpmnLane"; break;
                 default:
-                    throw new \RuntimeException(sprintf("Invalid Object type, accepted types: [%s|%s|%s|%s], given %s.",
-                        "BpmnActivity", "BpmnBpmnGateway", "BpmnEvent", "bpmnArtifact", $data["FLO_ELEMENT_DEST_TYPE"]
+                    throw new \RuntimeException(sprintf(
+                        "Invalid Object type, accepted types: [%s|%s|%s|%s], given %s.",
+                        "BpmnActivity",
+                        "BpmnBpmnGateway",
+                        "BpmnEvent",
+                        "bpmnArtifact",
+                        $data["FLO_ELEMENT_DEST_TYPE"]
                     ));
             }
 
             // Validate origin object exists
             if (! $class::exists($data["FLO_ELEMENT_DEST"])) {
-                throw new \RuntimeException(sprintf("Reference not found, the %s with UID: %s, does not exist!",
-                    ucfirst($data["FLO_ELEMENT_DEST_TYPE"]), $data["FLO_ELEMENT_DEST"]
+                throw new \RuntimeException(sprintf(
+                    "Reference not found, the %s with UID: %s, does not exist!",
+                    ucfirst($data["FLO_ELEMENT_DEST_TYPE"]),
+                    $data["FLO_ELEMENT_DEST"]
                 ));
             }
 
@@ -1536,12 +1551,11 @@ class Bpmn extends Handler
         }
     }
 
-    public function getFlowNextPosition ($sFloUid, $sFloType, $sFloElementOrigin)
+    public function getFlowNextPosition($sFloUid, $sFloType, $sFloElementOrigin)
     {
         try {
-
             $oCriteria = new Criteria('workflow');
-            $oCriteria->addSelectColumn( '(COUNT(*) + 1) AS FLOW_POS' );
+            $oCriteria->addSelectColumn('(COUNT(*) + 1) AS FLOW_POS');
             $oCriteria->add(\BpmnFlowPeer::PRJ_UID, $this->getUid());
             $oCriteria->add(\BpmnFlowPeer::DIA_UID, $this->getDiagram("object")->getDiaUid());
             $oCriteria->add(\BpmnFlowPeer::FLO_UID, $sFloUid, \Criteria::NOT_EQUAL);
@@ -1552,26 +1566,25 @@ class Bpmn extends Handler
             $oDataset->next();
             $aRow = $oDataset->getRow();
             return (int)($aRow["FLOW_POS"]);
-
         } catch (Exception $oException) {
             throw $oException;
         }
     }
 
-    public function reOrderFlowPosition ($sFloOrigin, $iPosition)
+    public function reOrderFlowPosition($sFloOrigin, $iPosition)
     {
         try {
             $con = \Propel::getConnection('workflow');
-            $oCriteria = new Criteria( 'workflow' );
-            $oCriteria->add( \BpmnFlowPeer::FLO_ELEMENT_ORIGIN, $sFloOrigin );
-            $oCriteria->add( \BpmnFlowPeer::FLO_POSITION, $iPosition, '>' );
-            $oDataset = \BpmnFlowPeer::doSelectRS( $oCriteria );
-            $oDataset->setFetchmode( ResultSet::FETCHMODE_ASSOC );
+            $oCriteria = new Criteria('workflow');
+            $oCriteria->add(\BpmnFlowPeer::FLO_ELEMENT_ORIGIN, $sFloOrigin);
+            $oCriteria->add(\BpmnFlowPeer::FLO_POSITION, $iPosition, '>');
+            $oDataset = \BpmnFlowPeer::doSelectRS($oCriteria);
+            $oDataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
             while ($oDataset->next()) {
                 $aRow = $oDataset->getRow();
                 $newPosition = ((int)$aRow['FLO_POSITION'])-1;
-                $oCriteriaTemp = new Criteria( 'workflow' );
-                $oCriteriaTemp->add( \BpmnFlowPeer::FLO_UID, $aRow['FLO_UID'] );
+                $oCriteriaTemp = new Criteria('workflow');
+                $oCriteriaTemp->add(\BpmnFlowPeer::FLO_UID, $aRow['FLO_UID']);
                 $oCriteria2 = new Criteria('workflow');
                 $oCriteria2->add(\BpmnFlowPeer::FLO_POSITION, $newPosition);
                 BasePeer::doUpdate($oCriteriaTemp, $oCriteria2, $con);
@@ -1680,8 +1693,7 @@ class Bpmn extends Handler
         $level,
         $message,
         $context = array()
-    )
-    {
+    ) {
         try {
             Bootstrap::registerMonolog($channel, $level, $message, $context, $context['workspace'], 'processmaker.log');
         } catch (Exception $e) {
@@ -1689,4 +1701,3 @@ class Bpmn extends Handler
         }
     }
 }
-

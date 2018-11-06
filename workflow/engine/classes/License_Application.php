@@ -409,7 +409,7 @@ class license_application extends Padl
                         $DATA['RESULT'] = 'TMINUS';
                     }
                     # the license has expired
-                    if ($DATA['DATE']['END'] - time() < 0 && $DATA['DATE']['SPAN'] != 'NEVER' && $DATA['DATE']['SPAN'] != '~') {
+                    if (intval($DATA['DATE']['END']) - time() < 0 && $DATA['DATE']['SPAN'] !== 'NEVER' && $DATA['DATE']['SPAN'] !== '~') {
                         $DATA['RESULT'] = 'EXPIRED';
                     }
                     $DATA['DATE']['HUMAN']['START'] = date($this->DATE_STRING, $DATA['DATE']['START']);

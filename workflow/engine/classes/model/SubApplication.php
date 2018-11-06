@@ -111,5 +111,46 @@ class SubApplication extends BaseSubApplication
         }
         return false;
     }
+
+    /**
+     * Verify if is a case related to the subProcess
+     *
+     * @param string $appUid
+     *
+     * @return boolean
+     */
+    public static function isCaseSubProcess($appUid)
+    {
+        $criteria = new Criteria('workflow');
+        $criteria->add(SubApplicationPeer::APP_UID, $appUid);
+        $criteria->add(SubApplicationPeer::SA_STATUS, 'ACTIVE');
+        $dataset = SubApplicationPeer::doSelectOne($criteria);
+
+        return !is_null($dataset);
+    }
+
+    /**
+     * Get information about the subProcess
+     *
+     * @param string $appUid
+     * @param string $status
+     *
+     * @return object
+    */
+    public static function getSubProcessInfo($appUid, $status = 'ACTIVE')
+    {
+        $criteria = new Criteria('workflow');
+        $criteria->add(SubApplicationPeer::APP_UID, $appUid);
+        $criteria->add(SubApplicationPeer::SA_STATUS, $status);
+        $criteria->setLimit(1);
+        $dataSet = SubApplicationPeer::doSelectRS($criteria);
+        $dataSet->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+        $result = [];
+        if ($dataSet->next()) {
+            $result = $dataSet->getRow();
+        }
+
+        return $result;
+    }
 }
 

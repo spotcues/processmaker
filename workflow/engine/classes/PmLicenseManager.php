@@ -15,7 +15,7 @@ class PmLicenseManager
 
     public function __construct($flagActivatePlugins = true)
     {
-        $oServerConf = &ServerConf::getSingleton();
+        $oServerConf = ServerConf::getSingleton();
 
         if ($oServerConf->getProperty('LOGIN_NO_WS') === null || $oServerConf->getProperty('LOGIN_NO_WS') === false) {
             $oServerConf->setProperty('LOGIN_NO_WS', true);
@@ -65,7 +65,7 @@ class PmLicenseManager
             $this->licensedfeaturesList = isset($results ['DATA']['LICENSED_FEATURES_LIST']) ? $results ['DATA']['LICENSED_FEATURES_LIST'] : null;
             $this->status = $this->getCurrentLicenseStatus();
 
-            if (isset ($results ['LIC'])) {
+            if (isset($results ['LIC'])) {
                 $resultsRegister = $results['LIC'];
                 $this->server = $results['LIC']['SRV'];
                 $this->file = $results['LIC']['FILE'];
@@ -183,8 +183,10 @@ class PmLicenseManager
                     }
                     if (!(empty($aDenied))) {
                         if ((SYS_COLLECTION == "enterprise") && (SYS_TARGET == "pluginsList")) {
-                            G::SendMessageText("The following plugins were restricted due to your enterprise license: " . implode(", ",
-                                    $aDenied), "INFO");
+                            G::SendMessageText("The following plugins were restricted due to your enterprise license: " . implode(
+                                    ", ",
+                                    $aDenied
+                                ), "INFO");
                         }
                     }
                 }
@@ -353,7 +355,7 @@ class PmLicenseManager
 
     public function validateLicense($path)
     {
-        $application = new license_application ($path, false, true, false, true, true);
+        $application = new license_application($path, false, true, false, true, true);
         $results = $application->validate(false, false, "", "", "80", true);
 
         if ($results ['RESULT'] != 'OK') {
@@ -365,7 +367,7 @@ class PmLicenseManager
 
     public function installLicense($path, $redirect = true, $includeExpired = true)
     {
-        $application = new license_application ($path, false, true, false, true, true);
+        $application = new license_application($path, false, true, false, true, true);
 
         $results = $application->validate(false, false, "", "", "80", true);
 
@@ -383,8 +385,7 @@ class PmLicenseManager
             G::SendTemporalMessage('ID_ISNT_LICENSE', 'tmp-info', 'labels');
             return false;
         } else {
-
-            $oServerConf = &ServerConf::getSingleton();
+            $oServerConf = ServerConf::getSingleton();
             $oServerConf->setProperty('ACTIVE_LICENSE', [config("system.workspace") => $path]);
             $this->saveDataLicense($results, $path, $redirect);
             if ($redirect) {
@@ -424,16 +425,16 @@ class PmLicenseManager
     {
         require_once("classes/model/LicenseManager.php");
         //obtening info in a row that has ACTIVE status
-        $oCtia = new Criteria ('workflow');
+        $oCtia = new Criteria('workflow');
         $oCtia->add(LicenseManagerPeer::LICENSE_STATUS, 'ACTIVE');
         $oDataset = LicenseManagerPeer::doSelectRS($oCtia);
         $oDataset->next();
         $aRow = $oDataset->getRow();
 
-        $oCtiaA = new Criteria ('workflow');
+        $oCtiaA = new Criteria('workflow');
         $oCtiaA->add(LicenseManagerPeer::LICENSE_UID, $aRow [0]);
 
-        $oCtiaB = new Criteria ('workflow');
+        $oCtiaB = new Criteria('workflow');
         $oCtiaB->add(LicenseManagerPeer::LICENSE_STATUS, 'INACTIVE');
         BasePeer::doUpdate($oCtiaA, $oCtiaB, Propel::getConnection('workflow'));
         return 'ACTIVE';
@@ -468,7 +469,7 @@ class PmLicenseManager
             //if exists the row in the database propel will update it, otherwise will insert.
             $tr = LicenseManagerPeer::retrieveByPK($LicenseUid);
             if (!(is_object($tr) && get_class($tr) == 'LicenseManager')) {
-                $tr = new LicenseManager ();
+                $tr = new LicenseManager();
             }
             $tr->setLicenseUid($LicenseUid);
             $tr->setLicenseUser($LicenseUser);
@@ -492,7 +493,7 @@ class PmLicenseManager
     {
         try {
             require_once("classes/model/LicenseManager.php");
-            $oCriteria = new Criteria ('workflow');
+            $oCriteria = new Criteria('workflow');
             $oCriteria->addSelectColumn(LicenseManagerPeer::LICENSE_USER);
             $oCriteria->addSelectColumn(LicenseManagerPeer::LICENSE_START);
             $oCriteria->addSelectColumn(LicenseManagerPeer::LICENSE_PATH);

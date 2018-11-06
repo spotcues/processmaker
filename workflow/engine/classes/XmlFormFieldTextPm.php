@@ -75,7 +75,7 @@ class XmlFormFieldTextPm extends XmlFormFieldSimpleText
      * @param eter string owner
      * @return string
      */
-    public function renderGrid($values = array(), $owner)
+    public function renderGrid($values = array(), $owner = null, $paramDummy3 = null, $paramDummy4 = null)
     {
         $result = array();
         $r = 1;

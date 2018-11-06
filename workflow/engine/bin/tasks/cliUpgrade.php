@@ -1,30 +1,6 @@
 <?php
-/**
- * cliUpgrade.php
- *
- * ProcessMaker Open Source Edition
- * Copyright (C) 2011 Colosa Inc.
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * For more information, contact Colosa Inc, 2566 Le Jeune Rd.,
- * Coral Gables, FL, 33134, USA, or email info@colosa.com.
- *
- * @author Alexandre Rosenfeld <alexandre@colosa.com>
- * @package workflow-engine-bin-tasks
- */
 
+use Illuminate\Support\Facades\DB;
 use ProcessMaker\Core\System;
 
 CLI::taskName('upgrade');
@@ -32,6 +8,7 @@ CLI::taskDescription("Upgrade workspaces.\n\n This command should be run after u
 
 CLI::taskOpt('buildACV', 'If this option is enabled, the Cache View is built.', 'ACV', 'buildACV');
 CLI::taskOpt('noxml', 'If this option is enabled, the XML files translation is not built.', 'NoXml', 'no-xml');
+/*----------------------------------********---------------------------------*/
 CLI::taskRun("run_upgrade");
 /*----------------------------------********---------------------------------*/
 CLI::taskArg('workspace');
@@ -112,6 +89,9 @@ function run_upgrade($command, $args)
     $countWorkspace = 0;
     $buildCacheView = array_key_exists('buildACV', $args);
     $flagUpdateXml  = !array_key_exists('noxml', $args);
+    $optionMigrateHistoryData = [
+        /*----------------------------------********---------------------------------*/
+    ];
 
     foreach ($workspaces as $index => $workspace) {
         if (empty(config("system.workspace"))) {
@@ -123,14 +103,14 @@ function run_upgrade($command, $args)
             define("PATH_DATA_SITE", PATH_DATA . "sites" . PATH_SEP . config("system.workspace") . PATH_SEP);
         }
 
-        if(!defined('DB_ADAPTER')) {
+        if (!defined('DB_ADAPTER')) {
             define('DB_ADAPTER', 'mysql');
         }
 
         try {
             $countWorkspace++;
             CLI::logging("Upgrading workspaces ($countWorkspace/$count): " . CLI::info($workspace->name) . "\n");
-            $workspace->upgrade($buildCacheView, $workspace->name, false, 'en', ['updateXml' => $flagUpdateXml, 'updateMafe' => $first]);
+            $workspace->upgrade($buildCacheView, $workspace->name, false, 'en', ['updateXml' => $flagUpdateXml, 'updateMafe' => $first], $optionMigrateHistoryData);
             $workspace->close();
             $first = false;
             $flagUpdateXml = false;
@@ -187,13 +167,16 @@ function run_upgrade($command, $args)
     $flag = G::isPMUnderUpdating(0);
 }
 
-function listFiles($dir) {
+function listFiles($dir)
+{
     $files = array();
     $lista = glob($dir.'/*');
-    foreach($lista as $valor) {
+    foreach ($lista as $valor) {
         if (is_dir($valor)) {
             $inner_files =  listFiles($valor);
-            if (is_array($inner_files)) $files = array_merge($files, $inner_files);
+            if (is_array($inner_files)) {
+                $files = array_merge($files, $inner_files);
+            }
         }
         if (is_file($valor)) {
             array_push($files, $valor);

@@ -24,7 +24,7 @@ if (isset($request)) {
                     $_SESSION[$_POST["formID"]][$_POST["gridname"]] = (array)$_SESSION[$_POST["formID"]][$_POST["gridname"]];
                 }
                 ksort($_SESSION[$_POST["formID"]][$_POST["gridname"]]);
-                $oFields = array();
+                $oFields = [];
                 $initialKey = 1;
 
                 foreach ($_SESSION[$_POST["formID"]][$_POST["gridname"]] as $key => $value) {
@@ -66,12 +66,12 @@ if (isset($request)) {
 
 
                 $bdUid = 'workflow';
-                if (isset($_GET['type']) && $_GET['type']==='form' && isset($myForm->fields[$_GET['variable']]->sql)) {
+                if (isset($_GET['type']) && $_GET['type'] === 'form' && isset($myForm->fields[$_GET['variable']]->sql)) {
                     $sqlQuery = $myForm->fields[$_GET['variable']]->sql;
                     if (isset($myForm->fields[$_GET['variable']]->sqlConnection) && !empty($myForm->fields[$_GET['variable']]->sqlConnection)) {
                         $bdUid = $myForm->fields[$_GET['variable']]->sqlConnection;
                     }
-                } elseif (isset($_GET['type']) && $_GET['type']==='grid' &&  isset($myForm->fields[$_GET['grid']])) {
+                } elseif (isset($_GET['type']) && $_GET['type'] === 'grid' && isset($myForm->fields[$_GET['grid']])) {
                     foreach ($myForm->fields[$_GET['grid']] as $index => $value) {
                         if (is_array($value) && isset($value[$_GET['variable']])) {
                             $newObj = $value[$_GET['variable']];
@@ -89,7 +89,7 @@ if (isset($request)) {
                 $aDependentFieldsKeys = explode("|", base64_decode(str_rot13($_GET['dependentFieldsKeys'])));
                 $aDependentFieldsValue = explode("|", $_GET['dependentFieldsValue']);
                 if ($aDependentFieldsKeys) {
-                    $aDependentFields = array();
+                    $aDependentFields = [];
                     foreach ($aDependentFieldsKeys as $nKey => $sFieldVar) {
                         $sKeyDepFields = substr($sFieldVar, 2);
                         $aDependentFields[$sKeyDepFields] = $aDependentFieldsValue[$nKey];
@@ -105,7 +105,7 @@ if (isset($request)) {
                 // Verify parsed array
                 $sqlQuery = queryModified($parser->parsed, $_GET['input'], $searchType);
 
-                $aRows = Array();
+                $aRows = [];
                 try {
                     $con = Propel::getConnection($bdUid);
                     $con->begin();
@@ -122,7 +122,7 @@ if (isset($request)) {
                 $input = strtolower($_GET['input']);
                 $len = strlen($input);
                 $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 0;
-                $aResults = array();
+                $aResults = [];
                 $count = 0;
                 $aRows = sortByChar($aRows, $input);
 
@@ -213,7 +213,7 @@ if (isset($request)) {
                 }
 
                 // See above. Gross, but it works.
-                $field = mysql_real_escape_string($_GET['fld']);
+                $field = mysqli_real_escape_string($con->getResource(), $_GET['fld']);
                 $field = str_replace("`", "", $field);
 
                 $query = "INSERT INTO $tableName ($primaryKeyField, $field) VALUES (?, ?)"; // '$gKey', '{$_GET['value']}')";
@@ -235,8 +235,8 @@ if (isset($request)) {
 
 function sortByChar($aRows, $charSel)
 {
-    $aIniChar = array();
-    $aRest = array();
+    $aIniChar = [];
+    $aRest = [];
     for ($i = 0; $i < count($aRows); $i++) {
         $aRow = $aRows[$i];
         $nCols = sizeof($aRow);

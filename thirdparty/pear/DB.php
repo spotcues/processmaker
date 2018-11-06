@@ -356,6 +356,7 @@ class DB
     function &connect($dsn, $options = array())
     {
         $dsninfo = DB::parseDSN($dsn);
+        $dsninfo['phptype'] = $dsninfo['phptype'] === 'mysql' ? 'mysqli' : $dsninfo['phptype'];
         $type = $dsninfo['phptype'];
 
         if (!is_array($options)) {

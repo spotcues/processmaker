@@ -44,7 +44,7 @@ if (isset($_GET['BROWSER_TIME_ZONE_OFFSET'])) {
             $configuration = $result->getRow();
 
             $action = 'ActionsByEmailDataFormPost.php?APP_UID=' . $_REQUEST['APP_UID'] . '&DEL_INDEX=' .
-                $_REQUEST['DEL_INDEX'] . '&ABER=' . $_REQUEST['ABER'];
+                $_REQUEST['DEL_INDEX'] . '&ABER=' . $_REQUEST['ABER'] . '&DYN_UID=' . $_REQUEST['DYN_UID'];
 
             $record = [];
             $record['DYN_CONTENT'] = $configuration['DYN_CONTENT'];

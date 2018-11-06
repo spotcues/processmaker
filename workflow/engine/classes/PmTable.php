@@ -452,7 +452,8 @@ class PmTable
         $previous = null;
         $queryStack = array();
         $aDNS = $con->getDSN();
-        $dbEngine = $aDNS["phptype"];
+        $dbEngine = $aDNS['phptype'] === 'mysqli' ? 'mysql' : $aDNS['phptype'];
+
 
         foreach ($lines as $j => $line) {
             switch ($dbEngine) {

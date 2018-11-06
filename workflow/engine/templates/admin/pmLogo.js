@@ -245,6 +245,9 @@ Ext.onReady(function () {
                     buttonText: _('ID_SELECT_FILE'),
                     name: 'img',
                     validator: function (filePath) {
+                        if (uploadWin.isVisible() === false) {
+                            return true;
+                        }
                         var flag, btn;
                         btn = Ext.getCmp('btnUpload');
                         btn.disable();
@@ -295,9 +298,9 @@ Ext.onReady(function () {
 
                                     PMExt.notify(_('ID_SUCCESS'), messageError);
                                 }
+                                uploadWin.hide();
                                 panelRightTop.getForm().reset();
                                 store.load();
-                                uploadWin.hide();
                             }
                         });
                     }

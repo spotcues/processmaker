@@ -5,14 +5,16 @@ var defaultCrown = {
             id: "task",
             name: "Task".translate(),
             className: "mafe-corona-task",
-            eventOnClick: function (item) {
-                item.parent.hide();
-            },
             eventOnMouseDown: function (item) {
                 item.canvas.canCreateShape = true;
                 item.canvas.canCreateShapeType = 'TASK';
                 item.canvas.canCreateShapeClass = 'mafe-toolbar-task';
                 item.canvas.connectStartShape = item.parent.parent;
+            },
+            eventOnMouseOut: function (item) {
+                if (item.canvas.canCreateShape) {
+                    item.parent.hide();
+                }
             }
         },
         {
@@ -27,6 +29,11 @@ var defaultCrown = {
                 item.canvas.canCreateShapeType = 'EXCLUSIVE';
                 item.canvas.canCreateShapeClass = 'mafe-toolbar-gateway-exclusive';
                 item.canvas.connectStartShape = item.parent.parent;
+            },
+            eventOnMouseOut: function (item) {
+                if (item.canvas.canCreateShape) {
+                    item.parent.hide();
+                }
             }
         },
         {
@@ -41,6 +48,11 @@ var defaultCrown = {
                 item.canvas.canCreateShapeType = 'INTERMEDIATE_EMAIL';
                 item.canvas.canCreateShapeClass = 'mafe-toolbar-intermediate-send-mesage';
                 item.canvas.connectStartShape = item.parent.parent;
+            },
+            eventOnMouseOut: function (item) {
+                if (item.canvas.canCreateShape) {
+                    item.parent.hide();
+                }
             }
         },
         {
@@ -55,6 +67,11 @@ var defaultCrown = {
                 item.canvas.canCreateShapeType = 'END';
                 item.canvas.canCreateShapeClass = 'mafe-toolbar-end';
                 item.canvas.connectStartShape = item.parent.parent;
+            },
+            eventOnMouseOut: function (item) {
+                if (item.canvas.canCreateShape) {
+                    item.parent.hide();
+                }
             }
         },
         {
@@ -90,6 +107,7 @@ var defaultCrown = {
         }
     ]
 };
+
 var configCrown = {
     'PMActivity': {
         'DEFAULT': {
@@ -500,6 +518,7 @@ jQuery(document).ready(function ($) {
     project = new PMProject({
         id: prj_uid,
         name: 'Untitled Process',
+        readOnly: prj_readonly === "true",
         keys: {
             access_token: credentials.access_token,
             expires_in: credentials.expires_in,
@@ -768,7 +787,6 @@ jQuery(document).ready(function ($) {
         var saveas;
         menu.hide();
         PMDesigner.project.remoteProxy.setUrl(HTTP_SERVER_HOSTNAME + "/api/1.0/" + WORKSPACE + "/project/" + PMDesigner.project.id);
-        PMDesigner.project.isSave = true;
         PMDesigner.project.save(true);
         saveas = new SaveAs();
         saveas.open();
@@ -954,14 +972,10 @@ jQuery(document).ready(function ($) {
      ==============================================*/
     PMDesigner.project.setSaveInterval(40000);
     setInterval(function () {
-        if (PMDesigner.project.isDirty()) {
+        if (PMDesigner.project.isDirty() && PMDesigner.project.readOnly === false) {
             PMDesigner.project.remoteProxy.setUrl(HTTP_SERVER_HOSTNAME + "/api/1.0/" + WORKSPACE + "/project/" + prj_uid);
-            if (PMDesigner.project.isSave === true) {
-                PMDesigner.msgFlash('Saving Process'.translate(), document.body, 'success', 5000, 5);
-            } else {
-                PMDesigner.project.isSave = true;
-                PMDesigner.project.save(true);
-            }
+            PMDesigner.msgFlash('Saving Process'.translate(), document.body, 'success', 5000, 5);
+            PMDesigner.project.save(true);
         }
     }, PMDesigner.project.saveInterval);
     /*-----  End of Autosave functionality  ------*/
@@ -1283,15 +1297,9 @@ PMDesigner.supportBrowser = function (functionality) {
  ============================================================*/
 window.onbeforeunload = function (e) {
     var message;
-    if (PMDesigner.project.isDirty()
-        && PMDesigner.project.isClose == false
-        && PMDesigner.project.isSave == false) {
-        PMDesigner.project.remoteProxy.setUrl(HTTP_SERVER_HOSTNAME + "/api/1.0/" + WORKSPACE + "/project/" + prj_uid);
-        if (PMDesigner.project.isSave === true) {
-            PMDesigner.msgFlash('Saving Process'.translate(), document.body, 'success', 5000, 5);
-        } else {
-            PMDesigner.project.verifyAndSave(true);
-        }
+    if ((PMDesigner.project.isDirty()
+        && !PMDesigner.project.readOnly)
+        || PMDesigner.project.isSave) {
         message = "There are unsaved changes, if you leave the editor some changes won't be saved.".translate();
         e = e || window.event;
         if (e) {
@@ -12542,6 +12550,7 @@ InputDocument.prototype.build = function () {
             codeMirrorControl.setSize(580, 150);
             codeMirrorControl.refresh();
         }
+        codeMirrorControl.refresh();
         formEditTriggerCustom.getItems()[1].setHeight(170);
         formEditTriggerCustom.reset();
     };
@@ -14813,6 +14822,9 @@ stepsTask.prototype.notItemConfig = function () {
                 cboPermission.removeOption("RESEND");
 
                 cboPermission.reset();
+                cboOriginTask.setVisible(true);
+                cboParticipationRequired.setVisible(true);
+                cboStatusCase.setVisible(true);
                 cboDynaForm.setVisible(false);
                 cboInputDocument.setVisible(false);
                 cboOutputDocument.setVisible(false);
@@ -14848,6 +14860,11 @@ stepsTask.prototype.notItemConfig = function () {
                         break;
                     case "ANY":
                         cboPermission.setVisible(true);
+                        break;
+                    case "REASSIGN_MY_CASES":
+                        cboOriginTask.setVisible(false);
+                        cboParticipationRequired.setVisible(false);
+                        cboStatusCase.setVisible(false);
                         break;
                 }
             };
@@ -15082,12 +15099,20 @@ stepsTask.prototype.notItemConfig = function () {
                 {
                     value: "MSGS_HISTORY",
                     label: "Messages History".translate()
+                },
+                {
+                    value: "REASSIGN_MY_CASES",
+                    label: "Reassign my cases".translate()
                 }
             ];
 
             if (enterprise == "1") {
                 optionsType.push({value: "SUMMARY_FORM", label: "Summary Form".translate()});
             }
+            // sorting the optionsType 
+            optionsType.sort(function(a, b) {
+                return (a.label > b.label) ? 1 : ((b.label > a.label) ? -1 : 0);
+            });
 
             cboType = new PMUI.field.DropDownListField({
                 id: "cboType",
@@ -15106,7 +15131,7 @@ stepsTask.prototype.notItemConfig = function () {
                 name: "cboDynaForm",
                 controlsWidth: "300px",
                 label: "DynaForm".translate(),
-                options: null,
+                options: [],
                 visible: false
             });
 
@@ -15115,7 +15140,7 @@ stepsTask.prototype.notItemConfig = function () {
                 name: "cboInputDocument",
                 controlsWidth: "300px",
                 label: "Input Document".translate(),
-                options: null,
+                options: [],
                 visible: false
             });
 
@@ -15124,7 +15149,7 @@ stepsTask.prototype.notItemConfig = function () {
                 name: "cboOutputDocument",
                 controlsWidth: "300px",
                 label: "Output Document".translate(),
-                options: null,
+                options: [],
                 visible: false
             });
 
@@ -15153,11 +15178,11 @@ stepsTask.prototype.notItemConfig = function () {
                 title: "",
                 width: "890px",
                 items: [
+                    cboType,
                     cboStatusCase,
                     cboTargetTask,
                     cboOriginTask,
                     cboParticipationRequired,
-                    cboType,
                     cboDynaForm,
                     cboInputDocument,
                     cboOutputDocument,
@@ -15219,17 +15244,17 @@ stepsTask.prototype.notItemConfig = function () {
                         sortable: true
                     },
                     {
-                        columnData: "participated",
-                        title: "Participation".translate(),
-                        alignmentCell: 'left',
-                        width: "115px",
-                        sortable: true
-                    },
-                    {
                         columnData: "op_obj_type",
                         title: "Type".translate(),
                         alignmentCell: 'left',
                         width: "100px",
+                        sortable: true
+                    },
+                    {
+                        columnData: "participated",
+                        title: "Participation".translate(),
+                        alignmentCell: 'left',
+                        width: "115px",
                         sortable: true
                     },
                     {
@@ -15392,6 +15417,13 @@ stepsTask.prototype.notItemConfig = function () {
                                         data["op_obj_type"] = cboType.getValue();
                                         data["op_action"] = cboPermission.getValue();
                                         break;
+                                    case "REASSIGN_MY_CASES":
+                                        data = {};
+                                        data["op_user_relation"] =  groupOrUser[0];
+                                        data["usr_uid"] = groupOrUser[1];
+                                        data["tas_uid"] = cboTargetTask.getValue() === '0' ? '' : cboTargetTask.getValue();
+                                        data["op_obj_type"] = cboType.getValue();
+                                        break;
                                     default:
                                         data["op_obj_type"] = cboType.getValue();
                                         data["op_action"] = cboPermission.getValue();
@@ -15422,8 +15454,7 @@ stepsTask.prototype.notItemConfig = function () {
             refreshGridPanelInMainWindow();
             if (typeof listProcessPermissions !== "undefined") {
                 winGrdpnlProcessPermissions.open();
-
-                $(cboGroupOrUser.createHTML()).insertAfter(cboTargetTask.html);
+                $(cboGroupOrUser.createHTML()).insertBefore(cboType.html);
 
 
                 cboGroupOrUser.html.find("input").val("");
@@ -16767,7 +16798,8 @@ PMDesigner.taskProperties = function (activity) {
         arrayTrue = '["TRUE"]',
         arrayFalse = '["FALSE"]',
         stringTrue = "TRUE",
-        stringFalse = "FALSE";
+        stringFalse = "FALSE",
+        defaultServerlabel = "Mail (PHP)".translate();
 
     configurationForms = [
         {
@@ -17572,11 +17604,13 @@ PMDesigner.taskProperties = function (activity) {
             for (i = 0; i < response.length; i += 1) {
                 field.addOption({
                     value: response[i].mess_uid,
-                    label: response[i].mess_account
+                    label: response[i].mess_engine === "MAIL" ?
+                        response[i].mess_from_name && response[i].mess_from_name !== "" ?
+                        response[i].mess_from_name : defaultServerlabel : response[i].mess_from_name && response[i].mess_from_name !== "" ?
+                        response[i].mess_from_name + ' <' + response[i].mess_account + '>' : ' <' + response[i].mess_account + '>'
                 });
             }
         }
-
     };
 
     function loadABETemplateField(templates) {
@@ -17607,12 +17641,18 @@ PMDesigner.taskProperties = function (activity) {
                 if (accountField !== null) {
                     accountField.addOption({
                         value: response[i].mess_uid,
-                        label: response[i].mess_account
+                        label: response[i].mess_engine === "MAIL" ?
+                            response[i].mess_from_name && response[i].mess_from_name !== "" ?
+                            response[i].mess_from_name : defaultServerlabel : response[i].mess_from_name && response[i].mess_from_name !== "" ?
+                            response[i].mess_from_name + ' <' + response[i].mess_account + '>' : ' <' + response[i].mess_account + '>'
                     });
                 }
                 abeEmailAcount.options.push({
                     value: response[i].mess_uid,
-                    label: response[i].mess_account
+                    label: response[i].mess_engine === "MAIL" ?
+                        response[i].mess_from_name && response[i].mess_from_name !== "" ?
+                        response[i].mess_from_name : defaultServerlabel : response[i].mess_from_name && response[i].mess_from_name !== "" ?
+                        response[i].mess_from_name + ' <' + response[i].mess_account + '>' : ' <' + response[i].mess_account + '>'
                 });
             }
         }
@@ -18935,15 +18975,17 @@ PMDesigner.ProcessFilesManager = function (processFileManagerOptionPath, optionC
             value = 'blob',
             url = HTTP_SERVER_HOSTNAME + '/api/1.0/' + WORKSPACE + '/project/' + PMDesigner.project.id + '/file-manager/' + rowselectedFile.getData().prf_uid + '/download';
 
-        if (win.XMLHttpRequest)
+        if (win.XMLHttpRequest) {
             xhr = new XMLHttpRequest();
-        else if (win.ActiveXObject)
+        } else if (win.ActiveXObject) {
             xhr = new ActiveXObject('Microsoft.XMLHTTP');
+        }
         win.URL = win.URL || win.webkitURL;
 
         xhr.open('GET', url, true);
         xhr.responseType = value;
         xhr.setRequestHeader('Authorization', 'Bearer ' + PMDesigner.project.keys.access_token);
+        xhr.setRequestHeader ('Cache-Control', 'no-cache');
         xhr.onload = function () {
             if (this.status === 200) {
                 if (processFileManagerOptionPath == "templates") {
@@ -28620,7 +28662,7 @@ WebEntry.prototype = {
                     id: 'tabPropRadioAuthentication',
                     pmType: 'radio',
                     labelVisible: true,
-                    label: 'Authentication',
+                    label: 'Authentication'.translate(),
                     value: 'ANONYMOUS',
                     name: 'authentication',
                     required: true,
@@ -28685,7 +28727,7 @@ WebEntry.prototype = {
                     id: 'tabPropertiesRadioCallback',
                     pmType: 'radio',
                     labelVisible: true,
-                    label: 'Callback Action',
+                    label: 'Callback Action'.translate(),
                     value: 'PROCESSMAKER',
                     required: true,
                     disabled: false,
@@ -33229,7 +33271,7 @@ IntroHelper.prototype.startIntro = function () {
         CodeMirror.commands.autocomplete = function (cm) {
             CodeMirror.showHint(cm, CodeMirror.phpHint);
         };
-
+        
         getListTrigger(triggerEngine);
         getScriptTask();
         /*end form*/
@@ -33265,7 +33307,7 @@ IntroHelper.prototype.startIntro = function () {
         scriptTaskPropertiesWindow.open();
         scriptTaskPropertiesWindow.showFooter();
         domSettings();
-
+        
         $(".showHideScript").on("click", function () {
             if (formScriptTask.getItems()[0].items.get(1).isVisible()) {
                 formScriptTask.getItems()[0].items.get(1).setVisible(false);
@@ -34294,7 +34336,10 @@ IntroHelper.prototype.startIntro = function () {
             oldValues,
             emailEventId = "",
             prf_uid = "",
-            ddSize = 21;
+            ddSize = 21,
+            auxFromMail = {},
+            defaultServerlabel = "Mail (PHP)".translate(),
+            triggerSelectedData;
         /*options to display in drop down*/
 
         /*window*/
@@ -34314,7 +34359,8 @@ IntroHelper.prototype.startIntro = function () {
             text: "Save".translate(),
             handler: function (event) {
                 PMDesigner.hideAllTinyEditorControls();
-                var dataForm = formEmailEvent.getData();
+                var dataForm = formEmailEvent.getData(),
+                    selectedAccount = formEmailEvent.getField('emailAcounts').getValue();
                 if (formEmailEvent.isValid()) {
                     if (dataForm.emailEventId == "") { /*insert*/
                         (new PMRestClient({
@@ -34335,7 +34381,7 @@ IntroHelper.prototype.startIntro = function () {
                                         typeRequest: 'post',
                                         data: {
                                             evn_uid: activityId,
-                                            email_event_from: $(formEmailEvent.getField('emailAcounts').html).find("select option:selected").text(),
+                                            email_event_from: auxFromMail[selectedAccount] || '',
                                             email_event_to: dataForm.ToEmail,
                                             email_event_subject: dataForm.subjectEmail,
                                             email_server_uid: dataForm.emailAcounts,
@@ -34376,7 +34422,7 @@ IntroHelper.prototype.startIntro = function () {
                                         typeRequest: 'update',
                                         data: {
                                             evn_uid: activityId,
-                                            email_event_from: $(formEmailEvent.getField('emailAcounts').html).find("select option:selected").text(),
+                                            email_event_from: auxFromMail[selectedAccount] || '',
                                             email_event_to: dataForm.ToEmail,
                                             email_event_subject: dataForm.subjectEmail,
                                             email_server_uid: dataForm.emailAcounts,
@@ -34469,12 +34515,14 @@ IntroHelper.prototype.startIntro = function () {
             label: "From".translate(),
             options: null,
             controlsWidth: 400,
-            required: true,
+            required: false,
             labelWidth: "15%",
             onChange: function (newValue, prevValue) {
-                var uidTri = newValue, i;
+                var uidTri = newValue,
+                    oldValue,
+                    i;
                 for (i = 0; i < triggerSelectedData.length; i += 1) {
-                    if (triggerSelectedData[i].tri_uid == uidTri) {
+                    if (triggerSelectedData[i].tri_uid === uidTri) {
                         formScriptTask.getItems()[1].controls[0].cm.setValue(triggerSelectedData[i].tri_webbot);
                         oldValue = triggerSelectedData[i].tri_webbot;
                     }
@@ -34499,22 +34547,25 @@ IntroHelper.prototype.startIntro = function () {
                 endpoint: 'email-event/accounts/emailServer',
                 typeRequest: 'get',
                 functionSuccess: function (xhr, response) {
-                    var i, arrayOptions;
+                    var i,
+                        arrayOptions;
                     triggerSelectedData = response;
                     arrayOptions = [];
                     arrayOptions[0] = {
-                        label: "- Select an email account -".translate(),
+                        label: "Default email account".translate(),
                         value: "",
-                        disabled: true,
+                        disabled: false,
                         selected: true
                     };
-                    for (i = 0; i <= triggerSelectedData.length - 1; i += 1) {
-                        arrayOptions.push(
-                            {
-                                value: triggerSelectedData[i].uid,
-                                label: triggerSelectedData[i].email
-                            }
-                        );
+                    for (i = 0; i < triggerSelectedData.length ; i += 1) {
+                        arrayOptions.push({
+                            value: triggerSelectedData[i].uid,
+                            label: response[i].mess_engine === "MAIL" ?
+                                triggerSelectedData[i].mess_from_name && triggerSelectedData[i].mess_from_name !== "" ?
+                                triggerSelectedData[i].mess_from_name : defaultServerlabel : triggerSelectedData[i].mess_from_name && triggerSelectedData[i].mess_from_name !== "" ?
+                                triggerSelectedData[i].mess_from_name + ' <' + triggerSelectedData[i].mess_account + '>' : ' <' + triggerSelectedData[i].mess_account + '>'
+                        });
+                        auxFromMail[triggerSelectedData[i].uid] = triggerSelectedData[i].email;
                     }
                     emailAcounts.setOptions(arrayOptions);
                     emailAcounts.setValue(arrayOptions[0].value);
@@ -34656,19 +34707,14 @@ IntroHelper.prototype.startIntro = function () {
                 typeRequest: 'get',
                 functionSuccess: function (xhr, response) {
                     var valFrom;
-                    if (typeof response == "object") {
+                    if (typeof response === "object") {
                         emailEventId = response.email_event_uid;
-                        if (emailEventId != "" && typeof emailEventId != "undefined") {
+                        if (emailEventId !== "" && typeof emailEventId !== "undefined") {
                             formEmailEvent.getField('emailEventId').setValue(response.email_event_uid);
-
-                            valFrom = $(formEmailEvent.getField('emailAcounts').html).find("select option").filter(function () {
-                                return this.text == response.email_event_from;
-                            }).val();
-
-                            if (valFrom != "" && typeof valFrom != "undefined") {
-                                formEmailEvent.getField('emailAcounts').setValue(valFrom);
+                            // Set as selected the email server by uid
+                            if (response.email_server_uid !== "" && typeof response.email_server_uid !== "undefined") {
+                                formEmailEvent.getField('emailAcounts').setValue(response.email_server_uid);
                             }
-
                             formEmailEvent.getField('subjectEmail').setValue(response.email_event_subject);
                             formEmailEvent.getField('ToEmail').setValue(response.email_event_to);
 

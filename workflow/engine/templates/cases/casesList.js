@@ -1785,7 +1785,7 @@ Ext.onReady ( function() {
                             });
 
                             winReassignInCasesList = new Ext.Window({
-                                title: '',
+                                title: _('ID_REASSIGN_CASE'),
                                 width: 450,
                                 height: 350,
                                 layout:'auto',

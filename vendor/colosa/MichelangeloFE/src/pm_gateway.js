@@ -366,6 +366,9 @@ PMGateway.prototype.beforeContextMenu = function () {
     var i, port, connection, shape, defaultflowItems = [], items, item, name,
         target, menuItem, hasMarker;
     this.canvas.hideAllCoronas();
+    if (this.canvas.readOnly) {
+        return;
+    }
     items = this.menu.items.find('id', 'gatewaytype').childMenu.items;
     for (i = 0; i < items.getSize(); i += 1) {
         menuItem = items.get(i);

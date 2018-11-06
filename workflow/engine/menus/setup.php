@@ -1,27 +1,4 @@
 <?php
-/**
- * setup.php
- *
- * ProcessMaker Open Source Edition
- * Copyright (C) 2004 - 2008 Colosa Inc.23
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as
- * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * For more information, contact Colosa Inc, 2566 Le Jeune Rd.,
- * Coral Gables, FL, 33134, USA, or email info@colosa.com.
- *
- */
 
 use ProcessMaker\Plugins\PluginRegistry;
 
@@ -36,7 +13,7 @@ if ($RBAC->userCanAccess('PM_SETUP') === 1) {
         $G_TMP_MENU->AddIdRawOption(
             'LOGO', '../admin/pmLogo',
             G::LoadTranslation('ID_LOGO'),
-            'icon-pmlogo.png', '','settings'
+            'icon-pmlogo.png', '', 'settings'
         );
     }
     if ($RBAC->userCanAccess('PM_SETUP_EMAIL') === 1) {
@@ -72,7 +49,7 @@ if ($RBAC->userCanAccess('PM_SETUP') === 1) {
     }
     if (!$partnerFlag) {
         /**
-         * Remove heartbeat config from core, it will probably be used again 
+         * Remove heartbeat config from core, it will probably be used again
          * when the functionality will be redesigned.
          */
         if ($RBAC->userCanAccess('PM_SETUP_HEART_BEAT') === 1 && false) {
@@ -129,7 +106,7 @@ if ($RBAC->userCanAccess('PM_SETUP_ADVANCE') === 1) {
         $G_TMP_MENU->AddIdRawOption(
             'LANGUAGES', 'languages',
             G::LoadTranslation('ID_LANGUAGES'),
-            'icon-language.png','', 'settings'
+            'icon-language.png', '', 'settings'
         );
     }
     if ($RBAC->userCanAccess('PM_SETUP_CASES_LIST_CACHE_BUILDER') === 1) {
@@ -183,7 +160,8 @@ if ($RBAC->userCanAccess('PM_SETUP_ADVANCE') === 1 && $RBAC->userCanAccess('PM_U
 }
 
 if ($RBAC->userCanAccess('PM_SETUP') === 1 && $RBAC->userCanAccess('PM_SETUP_LOGS') === 1) {
-    $G_TMP_MENU->AddIdRawOption('EVENT', '../events/eventList', G::LoadTranslation('ID_EVENTS_CLASSIC'), '', '', 'logs');
+    $G_TMP_MENU->AddIdRawOption('EVENT', '../events/eventList', G::LoadTranslation('ID_EVENTS_CLASSIC'), '', '',
+        'logs');
     $G_TMP_MENU->AddIdRawOption(
         'LOG_CASE_SCHEDULER', '../cases/cases_Scheduler_Log',
         G::LoadTranslation('ID_CASE_SCHEDULER_CLASSIC'),
@@ -198,6 +176,9 @@ if ($RBAC->userCanAccess('PM_SETUP') === 1 && $RBAC->userCanAccess('PM_SETUP_LOG
     /*----------------------------------********---------------------------------*/
 }
 
+/*----------------------------------********---------------------------------*/
+
+
 if ($RBAC->userCanAccess('PM_SETUP') === 1) {
     $G_TMP_MENU->AddIdRawOption(
         'PM_REQUIREMENTS', '../setup/systemInfo',
@@ -207,7 +188,7 @@ if ($RBAC->userCanAccess('PM_SETUP') === 1) {
     $G_TMP_MENU->AddIdRawOption(
         'PHP_INFO', '../setup/systemInfo?option=php',
         G::LoadTranslation('ID_PHP_INFO'),
-        '','', 'settings'
+        '', '', 'settings'
     );
     /*----------------------------------********---------------------------------*/
 }

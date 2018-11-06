@@ -28,34 +28,38 @@ $_GET = $filter->xssFilterHard($_GET);
 $_POST = $filter->xssFilterHard($_POST);
 $_REQUEST = $filter->xssFilterHard($_REQUEST);
 
-$actionAjax = isset( $_REQUEST['actionAjax'] ) ? $_REQUEST['actionAjax'] : null;
+$actionAjax = isset($_REQUEST['actionAjax']) ? $_REQUEST['actionAjax'] : null;
 
 if ($actionAjax == "historyDynaformPage") {
     global $G_PUBLISH;
-    $oHeadPublisher = & headPublisher::getSingleton();
+    $oHeadPublisher = headPublisher::getSingleton();
 
     $conf = new Configurations();
-    $oHeadPublisher->addExtJsScript( 'cases/caseHistoryDynaformPage', true ); //adding a javascript file .js
-    $oHeadPublisher->addContent( 'cases/caseHistoryDynaformPage' ); //adding a html file  .html.
-    $oHeadPublisher->assign( 'pageSize', $conf->getEnvSetting( 'casesListRowNumber' ) );
-    G::RenderPage( 'publish', 'extJs' );
+    $oHeadPublisher->addExtJsScript('cases/caseHistoryDynaformPage', true); //adding a javascript file .js
+    $oHeadPublisher->addContent('cases/caseHistoryDynaformPage'); //adding a html file  .html.
+    $oHeadPublisher->assign('pageSize', $conf->getEnvSetting('casesListRowNumber'));
+    G::RenderPage('publish', 'extJs');
 }
 if ($actionAjax == 'historyDynaformGrid_Ajax') {
-
     global $G_PUBLISH;
     $oCase = new Cases();
 
-    $aProcesses = Array ();
-    $c = $oCase->getallDynaformsCriteria( $_SESSION['PROCESS'], $_SESSION['APPLICATION'], $_SESSION['CURRENT_TASK'],
-        $_SESSION['USER_LOGGED'] , $_SESSION['INDEX']);
+    $aProcesses = array();
+    $c = $oCase->getallDynaformsCriteria(
+        $_SESSION['PROCESS'],
+        $_SESSION['APPLICATION'],
+        $_SESSION['CURRENT_TASK'],
+        $_SESSION['USER_LOGGED'],
+        $_SESSION['INDEX']
+    );
 
     if ($c->getDbName() == 'dbarray') {
-        $rs = ArrayBasePeer::doSelectRs( $c );
+        $rs = ArrayBasePeer::doSelectRs($c);
     } else {
-        $rs = GulliverBasePeer::doSelectRs( $c );
+        $rs = GulliverBasePeer::doSelectRs($c);
     }
 
-    $rs->setFetchmode( ResultSet::FETCHMODE_ASSOC );
+    $rs->setFetchmode(ResultSet::FETCHMODE_ASSOC);
     $rs->next();
 
     for ($j = 0; $j < $rs->getRecordCount(); $j ++) {
@@ -66,13 +70,13 @@ if ($actionAjax == 'historyDynaformGrid_Ajax') {
     }
 
     $newDir = '/tmp/test/directory';
-    G::verifyPath( $newDir );
+    G::verifyPath($newDir);
 
     $r = new stdclass();
     $r->data = $aProcesses;
     $r->totalCount = 2;
 
-    echo G::json_encode( $r );
+    echo G::json_encode($r);
 }
 
 if ($actionAjax == 'showHistoryMessage') {
@@ -110,19 +114,16 @@ if ($actionAjax == 'showHistoryMessage') {
     $G_PUBLISH = new Publisher();
     $oCase = new Cases();
 
-    $G_PUBLISH->AddContent( 'xmlform', 'xmlform', 'cases/cases_MessagesView', '', $oCase->getHistoryMessagesTrackerView( $_POST['APP_UID'], $_POST['APP_MSG_UID'] ) );
-
-    ?>
+    $G_PUBLISH->AddContent('xmlform', 'xmlform', 'cases/cases_MessagesView', '', $oCase->getHistoryMessagesTrackerView($_POST['APP_UID'], $_POST['APP_MSG_UID'])); ?>
     <script language="javascript">
     <?php
-    global $G_FORM;
-    ?>
-          function loadForm_<?php echo $G_FORM->id;?>(parametro1) {
+    global $G_FORM; ?>
+          function loadForm_<?php echo $G_FORM->id; ?>(parametro1) {
           }
         </script>
     <?php
 
-    G::RenderPage( 'publish', 'raw' );
+    G::RenderPage('publish', 'raw');
 }
 
 if ($actionAjax == 'showDynaformListHistory') {
@@ -130,9 +131,7 @@ if ($actionAjax == 'showDynaformListHistory') {
     $_POST["APP_UID"] = $_REQUEST["APP_UID"];
     $_POST["DYN_UID"] = $_REQUEST["DYN_UID"];
     $_POST["PRO_UID"] = $_REQUEST["PRO_UID"];
-    $_POST["TAS_UID"] = $_REQUEST["TAS_UID"];
-
-    ?>
+    $_POST["TAS_UID"] = $_REQUEST["TAS_UID"]; ?>
     <link rel="stylesheet" type="text/css" href="/css/classic.css" />
     <style type="text/css">
     html {
@@ -341,13 +340,12 @@ if ($actionAjax == 'showDynaformListHistory') {
 
     require_once 'classes/model/AppHistory.php';
     $G_PUBLISH = new Publisher();
-    $G_PUBLISH->AddContent( 'view', 'cases/cases_DynaformHistory' );
+    $G_PUBLISH->AddContent('view', 'cases/cases_DynaformHistory');
 
-    G::RenderPage( 'publish', 'raw' );
+    G::RenderPage('publish', 'raw');
 }
 
 if ($actionAjax == 'dynaformChangeLogViewHistory') {
-
     ?>
     <link rel="stylesheet" type="text/css" href="/css/classic.css" />
     <style type="text/css">
@@ -395,8 +393,7 @@ if ($actionAjax == 'dynaformChangeLogViewHistory') {
         $a->printView();
     } else {
         $G_PUBLISH->AddContent('dynaform', 'xmlform', $_SESSION['PROCESS'] . '/' . $_POST['DYN_UID'], '', $Fields['APP_DATA'], '', '', 'view');
-    }
-    ?>
+    } ?>
 
     <script language="javascript">
     window.onload = function () {
@@ -412,14 +409,13 @@ if ($actionAjax == 'dynaformChangeLogViewHistory') {
 
     <script language="javascript">
     <?php
-    global $G_FORM;
-    ?>
-          function loadForm_<?php echo $G_FORM->id;?>(parametro1) {
+    global $G_FORM; ?>
+          function loadForm_<?php echo $G_FORM->id; ?>(parametro1) {
           }
     </script>
     <?php
 
-    G::RenderPage( 'publish', 'raw' );
+    G::RenderPage('publish', 'raw');
 }
 if ($actionAjax == 'historyDynaformGridPreview') {
     ?>
@@ -453,13 +449,12 @@ if ($actionAjax == 'historyDynaformGridPreview') {
 
     $G_PUBLISH = new Publisher();
     $oCase = new Cases();
-    $Fields = $oCase->loadCase( $_SESSION['APPLICATION'] );
+    $Fields = $oCase->loadCase($_SESSION['APPLICATION']);
     $Fields['APP_DATA']['__DYNAFORM_OPTIONS']['PREVIOUS_STEP_LABEL'] = '';
     $Fields['APP_DATA']['__DYNAFORM_OPTIONS']['NEXT_STEP_LABEL'] = '';
     $Fields['APP_DATA']['__DYNAFORM_OPTIONS']['NEXT_STEP'] = '#';
     $Fields['APP_DATA']['__DYNAFORM_OPTIONS']['NEXT_ACTION'] = 'return false;';
-    $Fields['APP_DATA']['__DYNAFORM_OPTIONS']['DYNUIDPRINT'] = $_POST['DYN_UID'];
-    ?>
+    $Fields['APP_DATA']['__DYNAFORM_OPTIONS']['DYNUIDPRINT'] = $_POST['DYN_UID']; ?>
 
     <script language="javascript">
     window.onload = function () {
@@ -484,21 +479,18 @@ if ($actionAjax == 'historyDynaformGridPreview') {
         $a->printView();
     } else {
         $G_PUBLISH->AddContent('dynaform', 'xmlform', $_SESSION['PROCESS'] . '/' . $_POST['DYN_UID'], '', $Fields['APP_DATA'], '', '', 'view');
-    }
-    ?>
+    } ?>
     <script language="javascript">
 
     function popUp(URL, width, height, left, top, resizable) {
         window.open(URL, '', 'toolbar=0,scrollbars=1,location=0,statusbar=0,menubar=1,resizable='+resizable+',width='+width+',height='+height+',left = '+left+',top = '+top+'');
     }
     <?php
-    global $G_FORM;
-    ?>
-    function loadForm_<?php echo $G_FORM->id;?>(parametro1) {
+    global $G_FORM; ?>
+    function loadForm_<?php echo $G_FORM->id; ?>(parametro1) {
     }
     </script>
     <?php
 
-    G::RenderPage( 'publish', 'blank' );
+    G::RenderPage('publish', 'blank');
 }
-

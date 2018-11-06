@@ -583,7 +583,7 @@ class SOAP_Transport_HTTP extends SOAP_Transport
         if (defined('CURLOPT_HTTP_VERSION')) {
             curl_setopt($ch, CURLOPT_HTTP_VERSION, 1);
         }
-        if (!ini_get('safe_mode') && !ini_get('open_basedir')) {
+        if (!ini_get('open_basedir')) {
             curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
         }
         $cookies = $this->_generateCookieHeader($options);

@@ -41,7 +41,7 @@ $G_ID_SUB_MENU_SELECTED = '';
 
 $G_PUBLISH = new Publisher();
 
-$oHeadPublisher = &headPublisher::getSingleton();
+$oHeadPublisher = headPublisher::getSingleton();
 $oHeadPublisher->addExtJsScript('processCategory/processCategoryList', false); //adding a javascript file .js
 $oHeadPublisher->addContent('processCategory/processCategoryList'); //adding a html file  .html.
 $oHeadPublisher->assign('FORMATS', $c->getFormats());

@@ -600,3 +600,74 @@ function setExtStateManagerSetProvider(cache, additionalPrefix) {
     } catch (e) {
     }
 }
+
+/**
+ * Download file with object XMLHttpRequest|ActiveXObject, with response type BLOB
+ *
+ * @param string method POST
+ * @param string url endpoint
+ * @param object headers
+ * @param object formData
+ * @param function callBack
+ */
+function downloadFile(method, url, headers, formData, callBack) {
+
+    var xhr,
+        win = window,
+        value = 'blob',
+        loadingFile = new Ext.LoadMask(Ext.getBody(), {msg: _('ID_LOADING')});
+
+    method = method || 'POST';
+
+    loadingFile.show();
+
+    if (win.XMLHttpRequest) {
+        xhr = new XMLHttpRequest();
+    } else if (win.ActiveXObject) {
+        xhr = new ActiveXObject('Microsoft.XMLHTTP');
+    }
+
+    win.URL = win.URL || win.webkitURL;
+
+    xhr.open(method, url, true);
+    xhr.responseType = value;
+
+    Object.keys(headers).forEach(function (key) {
+        xhr.setRequestHeader(key, headers[key]);
+    });
+
+    xhr.onload = function (e) {
+        loadingFile.hide();
+        if (xhr.status === 200) {
+            if (xhr.getResponseHeader("Content-Disposition") !== null) {
+                var fileName = xhr.getResponseHeader("Content-Disposition").match(/\sfilename="([^"]+)"(\s|$)/)[1];
+                var blob = xhr.response;
+                if ((navigator.userAgent.indexOf("MSIE") !== -1) ||
+                    (navigator.userAgent.indexOf("Trident") !== -1) ||
+                    (navigator.userAgent.indexOf("Edge") !== -1)) {
+                    win.navigator.msSaveBlob(blob, fileName);
+                } else {
+                    var doc = win.document,
+                        a = doc.createElementNS('http://www.w3.org/1999/xhtml', 'a'),
+                        event = doc.createEvent('MouseEvents');
+
+                    event.initMouseEvent('click', true, false, win, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+
+                    a.href = win.URL.createObjectURL(blob);
+                    a.download = fileName;
+                    a.dispatchEvent(event);
+                }
+                if (typeof(callBack) !== 'undefined') {
+                    callBack(xhr);
+                }
+            } else {
+                PMExt.error(_('ID_ERROR'), _('ID_UNEXPECTED_ERROR_OCCURRED_PLEASE'));
+            }
+        } else {
+            PMExt.error(_('ID_ERROR'), xhr.statusText);
+        }
+
+    };
+    xhr.send(formData);
+}
+

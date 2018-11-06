@@ -84,7 +84,7 @@ class XmlFormFieldXmlMenu extends XmlFormField
         $this->type = 'xmlmenuDyn';
         $template = PATH_CORE . 'templates/' . $this->type . '.html';
         $out = $this->xmlMenu->render( $template, $scriptCode );
-        $oHeadPublisher = & headPublisher::getSingleton();
+        $oHeadPublisher = headPublisher::getSingleton();
         $oHeadPublisher->addScriptFile( $this->xmlMenu->scriptURL );
         $oHeadPublisher->addScriptCode( $scriptCode );
         return $out;

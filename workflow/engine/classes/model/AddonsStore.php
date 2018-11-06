@@ -35,7 +35,7 @@ class AddonsStore extends BaseAddonsStore
     public static function checkLicenseStore()
     {
         //getting the licenseManager....
-        $licenseManager = &PmLicenseManager::getSingleton();
+        $licenseManager = PmLicenseManager::getSingleton();
 
         if (isset($licenseManager->id)) {
             //Remove any license store that is not the active license
@@ -72,7 +72,7 @@ class AddonsStore extends BaseAddonsStore
 
         AddonsStore::checkLicenseStore();
 
-        $licenseManager = &PmLicenseManager::getSingleton(); //Getting the licenseManager
+        $licenseManager = PmLicenseManager::getSingleton(); //Getting the licenseManager
 
         $result["store_errors"] = array();
         list($stores, $errors)  = AddonsStore::updateAll(false, $type);
@@ -155,7 +155,7 @@ class AddonsStore extends BaseAddonsStore
             if ($addon->getAddonId() == "enterprise" && $status== 'ready') {
                 $status = 'installed';
             }
-            if ($status == 'minus-circle' ) {
+            if ($status == 'minus-circle') {
                 $status = "available";
             }
 
@@ -187,7 +187,7 @@ class AddonsStore extends BaseAddonsStore
 
         AddonsStore::checkLicenseStore();
 
-        $licenseManager = &PmLicenseManager::getSingleton(); //Getting the licenseManager
+        $licenseManager = PmLicenseManager::getSingleton(); //Getting the licenseManager
 
         $result["store_errors"] = array();
         list($stores, $errors)  = AddonsStore::updateAll(false);
@@ -256,7 +256,7 @@ class AddonsStore extends BaseAddonsStore
             if ($addon->getAddonId() == "enterprise" && $status== 'ready') {
                 $status = 'installed';
             }
-            if ($status == 'minus-circle' ) {
+            if ($status == 'minus-circle') {
                 $status = "available";
             }
 
@@ -358,7 +358,7 @@ class AddonsStore extends BaseAddonsStore
             $aPluginsPP = unserialize(trim(file_get_contents(PATH_DATA_SITE . 'ee')));
         }
 
-        $pmLicenseManagerO = &PmLicenseManager::getSingleton();
+        $pmLicenseManagerO = PmLicenseManager::getSingleton();
         $localPlugins = array();
 
         if ($type == 'plugin') {
@@ -436,7 +436,7 @@ class AddonsStore extends BaseAddonsStore
             if (is_array($list)) {
                 foreach ($list['addons'] as $key => $feature) {
                     $addon = new AddonsManager();
-                    if($addon->exists($feature['name'],$feature['guid'])){
+                    if ($addon->exists($feature['name'], $feature['guid'])) {
                         $arrayData['ADDON_ID']   = $feature['name'];
                         $arrayData['STORE_ID']   = $feature['guid'];
                         $arrayData['ADDON_NAME'] = $feature['name'];

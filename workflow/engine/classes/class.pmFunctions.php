@@ -303,13 +303,12 @@ function executeQuery ($SqlStatement, $DBConnectionUID = 'workflow', $aParameter
             switch (true) {
                 case preg_match( "/^(SELECT|EXECUTE|EXEC|SHOW|DESCRIBE|EXPLAIN|BEGIN)\s/i", $statement ):
                     $rs = $con->executeQuery( $SqlStatement );
-                    $con->commit();
-
                     $result = Array ();
                     $i = 1;
                     while ($rs->next()) {
                         $result[$i ++] = $rs->getRow();
                     }
+                    $con->commit();
                     break;
                 case preg_match( "/^INSERT\s/i", $statement ):
                     $rs = $con->executeUpdate( $SqlStatement );
@@ -2241,6 +2240,10 @@ function PMFUpdateUser ($userUid, $userName, $firstName = null, $lastName = null
     $ws = new WsBase();
     $result = $ws->updateUser( $userUid, $userName, $firstName, $lastName, $email, $dueDate, $status, $role, $password );
 
+    //When the user is created the $result parameter is an array, in other case is a object exception
+    if (!is_object($result)) {
+        $result = (object)$result;
+    }
     if ($result->status_code == 0) {
         return 1;
     } else {
@@ -2764,22 +2767,29 @@ function PMFDeleteCase ($caseUid)
  * @return int | $result | Result of the cancelation | Returns 1 if the case is cancel successfully; otherwise, returns 0 if an error occurred.
  *
  */
-function PMFCancelCase ($caseUid, $delIndex, $userUid)
+function PMFCancelCase($caseUid, $delIndex = null, $userUid = null)
 {
     $ws = new WsBase();
-    $result = $ws->cancelCase( $caseUid, $delIndex, $userUid );
-
+    $result = $ws->cancelCase($caseUid, $delIndex, $userUid);
+    $result = (object)$result;
+    $sessionAppUid = $_SESSION['APPLICATION'];
     if ($result->status_code == 0) {
-        if (isset($_SESSION['APPLICATION']) && isset($_SESSION['INDEX'])) {
-            if ($_SESSION['APPLICATION'] == $caseUid && $_SESSION['INDEX'] == $delIndex) {
-                if (!defined('WEB_SERVICE_VERSION')) {
-                    G::header('Location: ../cases/casesListExtJsRedirector');
-                    die();
-                } else {
-                    die(G::LoadTranslation('ID_PM_FUNCTION_CHANGE_CASE', SYS_LANG, array('PMFCancelCase', G::LoadTranslation('ID_CANCELLED'))));
-                }
+        //It was cancelled the same case in the execution
+        if ($sessionAppUid === $caseUid) {
+            if (!defined('WEB_SERVICE_VERSION')) {
+                G::header('Location: ../cases/casesListExtJsRedirector');
+                die;
+            } else {
+                die(
+                    G::LoadTranslation(
+                        'ID_PM_FUNCTION_CHANGE_CASE',
+                        SYS_LANG,
+                        ['PMFCancelCase', G::LoadTranslation('ID_CANCELLED')]
+                    )
+                );
             }
         }
+
         return 1;
     } else {
         return 0;

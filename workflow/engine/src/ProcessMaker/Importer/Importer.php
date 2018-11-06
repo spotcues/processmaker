@@ -1,12 +1,15 @@
 <?php
 namespace ProcessMaker\Importer;
 
+use Processes;
 use ProcessMaker\Util;
 use ProcessMaker\Project;
 use ProcessMaker\Project\Adapter;
 use ProcessMaker\BusinessModel\Migrator;
 use ProcessMaker\BusinessModel\Migrator\ImportException;
 use ProcessMaker\Util\Common;
+use ProcessPeer;
+use stdClass;
 
 abstract class Importer
 {
@@ -16,6 +19,11 @@ abstract class Importer
     protected $saveDir = "";
     protected $metadata = array();
     protected $prjCreateUser = '';
+    /**
+     * Stores the current objects before import.
+     * @var object 
+     */
+    protected $currentProcess;
     /**
      * Title of the process before being updated/deleted.
      * @var string
@@ -169,7 +177,8 @@ abstract class Importer
                 $generateUid = false;
                 break;
             case self::IMPORT_OPTION_OVERWRITE:
-                $obj = \ProcessPeer::retrieveByPK($this->metadata['uid']);
+                $this->saveCurrentProcess($this->metadata['uid']);
+                $obj = $this->getCurrentProcess()->process;
                 if (is_object($obj)) {
                     if ($obj->getProTitle() !== $name) {
                         if (\Process::existsByProTitle($name)) {
@@ -502,6 +511,16 @@ abstract class Importer
                 list($arrayWorkflowTables, $arrayWorkflowFiles) = $workflow->updateDataUidByArrayUid($arrayWorkflowTables, $arrayWorkflowFiles, $result);
             }
 
+            foreach ($arrayWorkflowTables["abeConfiguration"] as &$abeConfiguration) {
+                $this->preserveAbeConfiguration($abeConfiguration);
+            }
+
+            foreach ($arrayWorkflowTables["emailEvent"] as &$emailEvent) {
+                $this->preserveEmailEventConfiguration($emailEvent);
+            }
+            
+            $this->preserveCurrentId($arrayWorkflowTables);
+
             $this->importWfTables($arrayWorkflowTables);
 
             //Import workflow files
@@ -514,6 +533,7 @@ abstract class Importer
             foreach ($arrayWorkflowTables["tasks"] as $key => $value) {
                 $arrayTaskData = $value;
                 if ( !in_array($arrayTaskData["TAS_TYPE"], $dummyTaskTypes) ) {
+                    $this->preserveTaskConfiguration($arrayTaskData);
                     $result = $workflow->updateTask($arrayTaskData["TAS_UID"], $arrayTaskData);
                 }
             }
@@ -733,6 +753,183 @@ abstract class Importer
             return ['prj_uid' => $this->doImport(true, false)];
         } catch (\Exception $e) {
             return $e->getMessage();
+        }
+    }
+
+    /**
+     * Set the current objects before import.
+     * 
+     * @param object $currentProcess
+     */
+    public function setCurrentProcess($currentProcess)
+    {
+        $this->currentProcess = $currentProcess;
+    }
+
+    /**
+     * Get the current objects before import.
+     * 
+     * @return object
+     */
+    public function getCurrentProcess()
+    {
+        return $this->currentProcess;
+    }
+
+    /**
+     * Saves the current objects before import.
+     * 
+     * @param string $proUid
+     */
+    public function saveCurrentProcess($proUid)
+    {
+        $result = new StdClass();
+
+        $result->process = ProcessPeer::retrieveByPK($proUid);
+
+        $processes = new Processes();
+        $result->tasks = $processes->getTaskRows($proUid);
+        $result->abeConfigurations = $processes->getActionsByEmail($proUid);
+        $result->emailEvents = $processes->getEmailEvent($proUid);
+        $result->dynaforms = $processes->getDynaformRows($proUid);
+        $result->inputs = $processes->getInputRows($proUid);
+        $result->outputs = $processes->getOutputRows($proUid);
+
+        $this->setCurrentProcess($result);
+    }
+
+    /**
+     * Restore some specific values for the tasks configuration.
+     * 
+     * @param array $data
+     */
+    public function preserveTaskConfiguration(&$data)
+    {
+        $currentProcess = $this->getCurrentProcess();
+        if (is_object($currentProcess)) {
+            $tasks = $currentProcess->tasks;
+            if (is_array($tasks)) {
+                foreach ($tasks as $task) {
+                    if ($task["TAS_UID"] === $data["TAS_UID"]) {
+                        $data["TAS_EMAIL_SERVER_UID"] = $task["TAS_EMAIL_SERVER_UID"];
+                        $data["TAS_RECEIVE_SERVER_UID"] = $task["TAS_RECEIVE_SERVER_UID"];
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Restore some specific values for the abe configuration.
+     * 
+     * @param array $data
+     */
+    public function preserveAbeConfiguration(&$data)
+    {
+        $currentProcess = $this->getCurrentProcess();
+        if (is_object($currentProcess)) {
+            $abeConfigurations = $currentProcess->abeConfigurations;
+            if (is_array($abeConfigurations)) {
+                foreach ($abeConfigurations as $abeConfiguration) {
+                    if ($abeConfiguration["PRO_UID"] === $data["PRO_UID"] &&
+                            $abeConfiguration["TAS_UID"] === $data["TAS_UID"]) {
+                        $data["ABE_EMAIL_SERVER_UID"] = $abeConfiguration["ABE_EMAIL_SERVER_UID"];
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Restore some specific values for the email event configuration.
+     * 
+     * @param array $data
+     */
+    public function preserveEmailEventConfiguration(&$data)
+    {
+        $currentProcess = $this->getCurrentProcess();
+        if (is_object($currentProcess)) {
+            $emailEvents = $currentProcess->emailEvents;
+            if (is_array($emailEvents)) {
+                foreach ($emailEvents as $emailEvent) {
+                    if ($emailEvent["PRJ_UID"] === $data["PRJ_UID"] &&
+                            $emailEvent["EVN_UID"] === $data["EVN_UID"]) {
+                        $data["EMAIL_SERVER_UID"] = $emailEvent["EMAIL_SERVER_UID"];
+                        $data["EMAIL_EVENT_FROM"] = $emailEvent["EMAIL_EVENT_FROM"];
+                        $data["__EMAIL_SERVER_UID_PRESERVED__"] = true;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Restore id values for the dynaforms, input documents and output documents.
+     * 
+     * @param type $arrayWorkflowTables
+     */
+    private function preserveCurrentId(&$arrayWorkflowTables)
+    {
+        $currentProcess = $this->getCurrentProcess();
+
+        //dynaforms
+        foreach ($arrayWorkflowTables["dynaforms"] as &$data) {
+            if (!is_object($currentProcess)) {
+                unset($data['DYN_ID']);
+                continue;
+            }
+            $currentElements = $currentProcess->dynaforms;
+            if (!is_array($currentElements)) {
+                unset($data['DYN_ID']);
+                continue;
+            }
+            foreach ($currentElements as $currentElement) {
+                if ($currentElement["PRO_UID"] === $data["PRO_UID"] &&
+                        $currentElement["DYN_UID"] === $data["DYN_UID"]) {
+                    $data['DYN_ID'] = $currentElement["DYN_ID"];
+                }
+            }
+        }
+
+        //input documents
+        foreach ($arrayWorkflowTables["inputs"] as &$data) {
+            if (!is_object($currentProcess)) {
+                unset($data['INP_DOC_ID']);
+                continue;
+            }
+            $currentElements = $currentProcess->inputs;
+            if (!is_array($currentElements)) {
+                unset($data['INP_DOC_ID']);
+                continue;
+            }
+            foreach ($currentElements as $currentElement) {
+                if ($currentElement["PRO_UID"] === $data["PRO_UID"] &&
+                        $currentElement["INP_DOC_UID"] === $data["INP_DOC_UID"]) {
+                    $data['INP_DOC_ID'] = $currentElement['INP_DOC_ID'];
+                }
+            }
+        }
+
+        //output documents
+        foreach ($arrayWorkflowTables["outputs"] as &$data) {
+            if (!is_object($currentProcess)) {
+                unset($data['OUT_DOC_ID']);
+                continue;
+            }
+            $currentElements = $currentProcess->outputs;
+            if (!is_array($currentElements)) {
+                unset($data['OUT_DOC_ID']);
+                continue;
+            }
+            foreach ($currentElements as $currentElement) {
+                if ($currentElement["PRO_UID"] === $data["PRO_UID"] &&
+                        $currentElement["OUT_DOC_UID"] === $data["OUT_DOC_UID"]) {
+                    $data['OUT_DOC_ID'] = $currentElement['OUT_DOC_ID'];
+                }
+            }
         }
     }
 }

@@ -41,7 +41,7 @@ if ($RBAC->userCanAccess( 'PM_CASES' ) != 1) {
     }
 }
 
-$oCase = new Cases();
+$caseInstance = new Cases();
 
 //cleaning the case session data
 Cases::clearCaseSessionData();
@@ -49,8 +49,8 @@ Cases::clearCaseSessionData();
 try {
     //Loading data for a Jump request
     if (!isset($_GET['APP_UID']) && isset($_GET['APP_NUMBER'])) {
-        $_GET['APP_UID'] = $oCase->getApplicationUIDByNumber( $_GET['APP_NUMBER'] );
-        $_GET['DEL_INDEX'] = $oCase->getCurrentDelegation( $_GET['APP_UID'], $_SESSION['USER_LOGGED'] );
+        $_GET['APP_UID'] = $caseInstance->getApplicationUIDByNumber( $_GET['APP_NUMBER'] );
+        $_GET['DEL_INDEX'] = $caseInstance->getCurrentDelegation( $_GET['APP_UID'], $_SESSION['USER_LOGGED'] );
 
         //if the application doesn't exist
         if (is_null($_GET['APP_UID'])) {
@@ -65,8 +65,6 @@ try {
             G::header( 'location: casesListExtJs' );
             exit();
         }
-        //wrong implemented, need refactored
-        //$participated = $oCase->userParticipatedInCase($_GET['APP_UID'], $_SESSION['USER_LOGGED']); ???????
     }
 
     $sAppUid = $_GET['APP_UID'];
@@ -74,7 +72,7 @@ try {
     $_action = isset($_GET['action']) ? $_GET['action'] : '';
 
     //loading application data
-    $aFields = $oCase->loadCase( $sAppUid, $iDelIndex );
+    $aFields = $caseInstance->loadCase( $sAppUid, $iDelIndex );
 
     if (!isset($_SESSION['CURRENT_TASK'])) {
         $_SESSION['CURRENT_TASK'] = $aFields['TAS_UID'];
@@ -149,10 +147,10 @@ try {
                 $_SESSION['CURRENT_TASK'] = $aFields['TAS_UID'];
 
                 //if the task is in the valid selfservice tasks for this user, then catch the case, else just view the resume
-                if ($oCase->isSelfService( $_SESSION['USER_LOGGED'], $aFields['TAS_UID'], $sAppUid )) {
-                    require_once (PATH_METHODS . 'cases' . PATH_SEP . 'cases_CatchSelfService.php');
+                if ($caseInstance->isSelfService($_SESSION['USER_LOGGED'], $aFields['TAS_UID'], $sAppUid)) {
+                    require_once(PATH_METHODS . 'cases' . PATH_SEP . 'cases_CatchSelfService.php');
                 } else {
-                    require_once (PATH_METHODS . 'cases' . PATH_SEP . 'cases_Resume.php');
+                    require_once(PATH_METHODS . 'cases' . PATH_SEP . 'cases_Resume.php');
                 }
 
                 exit();
@@ -164,8 +162,8 @@ try {
                 $_SESSION['INDEX'] = $iDelIndex;
 
                 if (is_null( $aFields['DEL_INIT_DATE'] )) {
-                    $oCase->setDelInitDate( $sAppUid, $iDelIndex );
-                    $aFields = $oCase->loadCase( $sAppUid, $iDelIndex );
+                    $caseInstance->setDelInitDate( $sAppUid, $iDelIndex );
+                    $aFields = $caseInstance->loadCase( $sAppUid, $iDelIndex );
                 }
 
                 $_SESSION['PROCESS'] = $aFields['PRO_UID'];
@@ -176,10 +174,10 @@ try {
                 unset( $_SESSION['bNoShowSteps'] );
 
                 /* Execute Before Triggers for first Task*/
-                $oCase->getExecuteTriggerProcess($sAppUid, 'OPEN');
+                $caseInstance->getExecuteTriggerProcess($sAppUid, 'OPEN');
                 /*end Execute Before Triggers for first Task*/
 
-                $aNextStep = $oCase->getNextStep( $_SESSION['PROCESS'], $_SESSION['APPLICATION'], $_SESSION['INDEX'], $_SESSION['STEP_POSITION'] );
+                $aNextStep = $caseInstance->getNextStep( $_SESSION['PROCESS'], $_SESSION['APPLICATION'], $_SESSION['INDEX'], $_SESSION['STEP_POSITION'] );
                 $sPage = $aNextStep['PAGE'];
                 G::header( 'location: ' . $sPage );
 
@@ -208,7 +206,7 @@ try {
                     $_SESSION['INDEX'] = $row['DEL_INDEX'];
                 }
 
-                $Fields = $oCase->loadCase($_SESSION['APPLICATION'], $_SESSION['INDEX'], $flagJump);
+                $Fields = $caseInstance->loadCase($_SESSION['APPLICATION'], $_SESSION['INDEX'], $flagJump);
 
                 $_SESSION['CURRENT_TASK'] = $Fields['TAS_UID'];
                 require_once (PATH_METHODS . 'cases' . PATH_SEP . 'cases_Resume.php');
@@ -217,11 +215,11 @@ try {
             break;
         default: //APP_STATUS IS COMPLETED OR CANCELLED
             $_SESSION['APPLICATION'] = $sAppUid;
-            $_SESSION['INDEX'] = $oCase->getCurrentDelegationCase( $_GET['APP_UID'] );
+            $_SESSION['INDEX'] = $caseInstance->getCurrentDelegationCase( $_GET['APP_UID'] );
             $_SESSION['PROCESS'] = $aFields['PRO_UID'];
             $_SESSION['TASK'] = - 1;
             $_SESSION['STEP_POSITION'] = 0;
-            $Fields = $oCase->loadCase($_SESSION['APPLICATION'], $_SESSION['INDEX'], $flagJump);
+            $Fields = $caseInstance->loadCase($_SESSION['APPLICATION'], $_SESSION['INDEX'], $flagJump);
             $_SESSION['CURRENT_TASK'] = $Fields['TAS_UID'];
 
             require_once (PATH_METHODS . 'cases' . PATH_SEP . 'cases_Resume.php');

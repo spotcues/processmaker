@@ -1123,6 +1123,9 @@ PMActivity.prototype.beforeContextMenu = function () {
         menuItem,
         hasMarker = false;
     this.canvas.hideAllCoronas();
+    if (this.canvas.readOnly) {
+        return;
+    }
     if (this.getActivityType() === 'TASK') {
         items = this.menu.items.find('id', 'taskType').childMenu.items;
         for (i = 0; i < items.getSize(); i += 1) {

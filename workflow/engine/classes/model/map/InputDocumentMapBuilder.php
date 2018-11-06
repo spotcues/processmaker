@@ -63,9 +63,11 @@ class InputDocumentMapBuilder
         $tMap = $this->dbMap->addTable('INPUT_DOCUMENT');
         $tMap->setPhpName('InputDocument');
 
-        $tMap->setUseIdGenerator(false);
+        $tMap->setUseIdGenerator(true);
 
         $tMap->addPrimaryKey('INP_DOC_UID', 'InpDocUid', 'string', CreoleTypes::VARCHAR, true, 32);
+
+        $tMap->addColumn('INP_DOC_ID', 'InpDocId', 'int', CreoleTypes::INTEGER, true, null);
 
         $tMap->addColumn('PRO_UID', 'ProUid', 'string', CreoleTypes::VARCHAR, true, 32);
 

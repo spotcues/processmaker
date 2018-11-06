@@ -4,6 +4,7 @@ use Illuminate\Foundation\Http\Kernel;
 use Maveriks\WebApplication;
 use Maveriks\Http\Response;
 use Maveriks\Pattern\Mvc\PhtmlView;
+use ProcessMaker\Core\AppEvent;
 use ProcessMaker\Exception\RBACException;
 
 // Because laravel has a __ helper function, it's important we include the class.g file to ensure our __ is used.
@@ -11,6 +12,7 @@ require_once __DIR__ . '/../../gulliver/system/class.g.php';
 require_once __DIR__ . '/../../bootstrap/autoload.php';
 require_once __DIR__ . '/../../bootstrap/app.php';
 
+AppEvent::getAppEvent();
 
 register_shutdown_function(
     create_function(

@@ -519,8 +519,11 @@ class pmTablesProxy extends HttpProxyController
                             $query .= substr($queryRow, 0, -1) . '),';
                             try {
                                 if ($conData == $countRow) {
-                                    $query = substr($query, 0, -1);
-                                    executeQuery($insert . $query . ';', $aAdditionalTables['DBS_UID']);
+                                    $query = $insert . substr($query, 0, -1) . ';';
+                                    $con = Propel::getConnection($aAdditionalTables['DBS_UID']);
+                                    $con->begin();
+                                    $con->executeUpdate($query);
+                                    $con->commit();
                                     $query = '';
                                     $conData = 0;
                                 }
@@ -535,8 +538,11 @@ class pmTablesProxy extends HttpProxyController
                 }
                 fclose($oFile);
                 if ($conData > 0) {
-                    $query = substr($query, 0, -1);
-                    executeQuery($insert . $query . ';', $aAdditionalTables['DBS_UID']);
+                    $query = $insert . substr($query, 0, -1) . ';';
+                    $con = Propel::getConnection($aAdditionalTables['DBS_UID']);
+                    $con->begin();
+                    $con->executeUpdate($query);
+                    $con->commit();
                 }
             }
             if ($sErrorMessages != '') {

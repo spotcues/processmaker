@@ -65,7 +65,7 @@ $tasUid = (isset($_GET['TAS_UID'])) ? $tasUid = htmlspecialchars($_GET['TAS_UID'
 $oCase = new Cases();
 $conf = new Configurations();
 
-$oHeadPublisher = &headPublisher::getSingleton();
+$oHeadPublisher = headPublisher::getSingleton();
 
 $urlToRedirectAfterPause = 'casesListExtJs';
 
@@ -144,4 +144,3 @@ if (!isset($_SESSION['APPLICATION']) || !isset($_SESSION['TASK']) || !isset($_SE
 }
 $_SESSION['actionCaseOptions'] = (isset($_REQUEST['action'])) ? $_REQUEST['action'] : '';
 G::RenderPage('publish', 'extJs');
-

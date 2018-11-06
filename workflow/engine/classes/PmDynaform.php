@@ -40,7 +40,7 @@ class PmDynaform
         $this->context = \Bootstrap::getDefaultContextLog();
         $this->dataSources = array("database", "dataVariable");
         $this->pathRTLCss = '/lib/pmdynaform/build/css/PMDynaform-rtl.css';
-        $this->serverConf = &ServerConf::getSingleton();
+        $this->serverConf = ServerConf::getSingleton();
         $this->isRTL = ($this->serverConf->isRtl(SYS_LANG)) ? 'true' : 'false';
         $this->fields = $fields;
         $this->propertiesToExclude = array('dataVariable');
@@ -50,12 +50,6 @@ class PmDynaform
         $this->getCredentials();
         if (is_array($this->fields) && !isset($this->fields["APP_UID"])) {
             $this->fields["APP_UID"] = null;
-        }
-        if (isset($this->fields["APP_DATA"]["DYN_CONTENT_HISTORY"])) {
-            $decode = base64_decode($this->fields["APP_DATA"]["DYN_CONTENT_HISTORY"], true);
-            if ($decode !== false) {
-                $this->record["DYN_CONTENT"] = $decode;
-            }
         }
 
         //todo: compatibility checkbox
@@ -546,7 +540,7 @@ class PmDynaform
                                 $json->data->label = $io->label;
                             }
                         }
-                        $_SESSION["TRIGGER_DEBUG"]["DATA"][] = Array("key" => $json->name . "_label", "value" => $json->data->label);
+                        $_SESSION["TRIGGER_DEBUG"]["DATA"][] = array("key" => $json->name . "_label", "value" => $json->data->label);
                     }
                 }
                 if ($key === "type" && ($value === "checkgroup")) {
@@ -554,8 +548,9 @@ class PmDynaform
                         $dataValue = array();
                         $dataLabel = array();
                         $dv = array();
-                        if (isset($this->fields["APP_DATA"][$json->name]))
+                        if (isset($this->fields["APP_DATA"][$json->name])) {
                             $dv = $this->fields["APP_DATA"][$json->name];
+                        }
                         if (!is_array($dv)) {
                             $dv = explode(",", $dv);
                         }
@@ -575,13 +570,13 @@ class PmDynaform
                         }
                         $json->data->value = $dataValue;
                         $json->data->label = G::json_encode($dataLabel);
-                        $_SESSION["TRIGGER_DEBUG"]["DATA"][] = Array("key" => $json->name . "_label", "value" => $json->data->label);
+                        $_SESSION["TRIGGER_DEBUG"]["DATA"][] = array("key" => $json->name . "_label", "value" => $json->data->label);
                     }
                 }
                 if ($key === "type" && ($value === "datetime")) {
                     if (isset($this->fields["APP_DATA"]["__VAR_CHANGED__"]) && in_array($json->name, explode(",", $this->fields["APP_DATA"]["__VAR_CHANGED__"]))) {
                         $json->data->label = $json->data->value;
-                        $_SESSION["TRIGGER_DEBUG"]["DATA"][] = Array("key" => $json->name . "_label", "value" => $json->data->label);
+                        $_SESSION["TRIGGER_DEBUG"]["DATA"][] = array("key" => $json->name . "_label", "value" => $json->data->label);
                     }
                 }
                 //clear optionsSql
@@ -711,7 +706,8 @@ class PmDynaform
                 if ($value[0] === $json->variable) {
                     continue;
                 }
-                $jsonSearch = $this->jsonsf(G::json_decode($this->record["DYN_CONTENT"]), $value[0], $json->variable === "" ? "id" : "variable");
+                $jsonDecode = G::json_decode($this->record["DYN_CONTENT"]);
+                $jsonSearch = $this->jsonsf($jsonDecode, $value[0], $json->variable === "" ? "id" : "variable");
                 $a = $this->getValuesDependentFields($jsonSearch);
                 foreach ($a as $i => $v) {
                     $data[$i] = $v;
@@ -1027,6 +1023,7 @@ class PmDynaform
                 var isRTL = \"" . $this->isRTL . "\";
                 var pathRTLCss = \"" . $this->pathRTLCss . "\";
                 var delIndex = " . (isset($this->fields["DEL_INDEX"]) ? $this->fields["DEL_INDEX"] : "0") . ";
+                " . $this->getTheStringVariableForGoogleMaps() . "\n
                 $(window).load(function ()
                 {
                     var data = jsondata;
@@ -1041,7 +1038,8 @@ class PmDynaform
                             workspace: workspace
                         },
                         token: credentials,
-                        submitRest: false
+                        submitRest: false,
+                        googleMaps: googleMaps
                     });
                     $(document).find(\"form\").submit(function (e) {
                         e.preventDefault();
@@ -1089,6 +1087,7 @@ class PmDynaform
                 "var pathRTLCss = '" . $this->pathRTLCss . "';\n" .
                 "var delIndex = " . (isset($this->fields["DEL_INDEX"]) ? $this->fields["DEL_INDEX"] : "0") . ";\n" .
                 "var leaveCaseWarning = " . $this->getLeaveCaseWarning() . ";\n" .
+                $this->getTheStringVariableForGoogleMaps() . "\n" .
                 "$(window).load(function () {\n" .
                 "    var data = jsondata;\n" .
                 "    window.dynaform = new PMDynaform.core.Project({\n" .
@@ -1101,7 +1100,8 @@ class PmDynaform
                 "            workspace: workspace\n" .
                 "        },\n" .
                 "        token: credentials,\n" .
-                "        submitRest: false\n" .
+                "        submitRest: false,\n" .
+                "        googleMaps: googleMaps\n" .
                 "    });\n" .
                 "    $(document).find('form').find('button').on('click', function (e) {\n" .
                 "        e.preventDefault();\n" .
@@ -1132,12 +1132,15 @@ class PmDynaform
         $msg = "";
         if (isset($_SESSION['G_MESSAGE_TYPE']) && isset($_SESSION['G_MESSAGE'])) {
             $color = "green";
-            if ($_SESSION['G_MESSAGE_TYPE'] === "ERROR")
+            if ($_SESSION['G_MESSAGE_TYPE'] === "ERROR") {
                 $color = "red";
-            if ($_SESSION['G_MESSAGE_TYPE'] === "WARNING")
+            }
+            if ($_SESSION['G_MESSAGE_TYPE'] === "WARNING") {
                 $color = "#C3C380";
-            if ($_SESSION['G_MESSAGE_TYPE'] === "INFO")
+            }
+            if ($_SESSION['G_MESSAGE_TYPE'] === "INFO") {
                 $color = "green";
+            }
             $msg = "<div style='background-color:" . $color . ";color: white;padding: 1px 2px 1px 5px;' class='userGroupTitle'>" . $_SESSION['G_MESSAGE_TYPE'] . ": " . $_SESSION['G_MESSAGE'] . "</div>";
             unset($_SESSION['G_MESSAGE_TYPE']);
             unset($_SESSION['G_MESSAGE']);
@@ -1168,10 +1171,11 @@ class PmDynaform
                 "var pathRTLCss = '" . $this->pathRTLCss . "';\n" .
                 "var delIndex = " . (isset($this->fields["DEL_INDEX"]) ? $this->fields["DEL_INDEX"] : "0") . ";\n" .
                 "var leaveCaseWarning = " . $this->getLeaveCaseWarning() . ";\n" .
+                $this->getTheStringVariableForGoogleMaps() . "\n" .
                 "</script>\n" .
                 "<script type='text/javascript' src='/jscore/cases/core/cases_Step.js'></script>\n" .
                 "<script type='text/javascript' src='/jscore/cases/core/pmDynaform.js'></script>\n" .
-                ($this->fields["PRO_SHOW_MESSAGE"] === 1 ? '' : $title ) .
+                ($this->fields["PRO_SHOW_MESSAGE"] === 1 ? '' : $title) .
                 "<div style='width:100%;padding:0px 10px 0px 10px;margin:15px 0px 0px 0px;'>\n" .
                 "    <img src='/images/bulletButtonLeft.gif' style='float:left;'>&nbsp;\n" .
                 "    <a id='dyn_backward' href='" . $this->fields["APP_DATA"]["__DYNAFORM_OPTIONS"]["PREVIOUS_STEP"] . "' style='float:left;font-size:12px;line-height:1;margin:0px 0px 1px 5px;'>\n" .
@@ -1225,6 +1229,7 @@ class PmDynaform
             var pathRTLCss = \"" . $this->pathRTLCss . "\";
             var delIndex = " . (isset($this->fields["DEL_INDEX"]) ? $this->fields["DEL_INDEX"] : "0") . ";
             var leaveCaseWarning = " . $this->getLeaveCaseWarning() . ";
+            " . $this->getTheStringVariableForGoogleMaps() . "
         </script>
 
         <script type=\"text/javascript\" src=\"/jscore/cases/core/pmDynaform.js\"></script>
@@ -1269,6 +1274,7 @@ class PmDynaform
                 "var pathRTLCss = '" . $this->pathRTLCss . "';\n" .
                 "var delIndex = " . (isset($this->fields["DEL_INDEX"]) ? $this->fields["DEL_INDEX"] : "0") . ";\n" .
                 "var leaveCaseWarning = " . $this->getLeaveCaseWarning() . ";\n" .
+                $this->getTheStringVariableForGoogleMaps() . "\n" .
                 "</script>\n" .
                 "<script type='text/javascript' src='/jscore/cases/core/pmDynaform.js'></script>\n" .
                 "<div style='width:100%;padding: 0px 10px 0px 10px;margin:15px 0px 0px 0px;'>\n" .
@@ -1311,6 +1317,7 @@ class PmDynaform
                 "var pathRTLCss = '" . $this->pathRTLCss . "';\n" .
                 "var delIndex = " . (isset($this->fields["DEL_INDEX"]) ? G::decrypt($this->fields["DEL_INDEX"], URL_KEY) : "0") . ";\n" .
                 "var leaveCaseWarning = " . $this->getLeaveCaseWarning() . ";\n" .
+                $this->getTheStringVariableForGoogleMaps() . "\n" .
                 "</script>\n" .
                 "<script type='text/javascript' src='/jscore/cases/core/pmDynaform.js'></script>\n" .
                 "<div style='width:100%;padding: 0px 10px 0px 10px;margin:15px 0px 0px 0px;'>\n" .
@@ -1338,6 +1345,7 @@ class PmDynaform
                 "var jsonData = " . $this->json_encode($json) . ";\n" .
                 "var httpServerHostname = \"" . System::getHttpServerHostnameRequestsFrontEnd() . "\";\n" .
                 "var leaveCaseWarning = " . $this->getLeaveCaseWarning() . ";\n" .
+                $this->getTheStringVariableForGoogleMaps() . "\n" .
                 $js .
                 "</script>";
 
@@ -1374,6 +1382,7 @@ class PmDynaform
                 "var pathRTLCss = '" . $this->pathRTLCss . "';\n" .
                 "var delIndex = " . (isset($this->fields["DEL_INDEX"]) ? $this->fields["DEL_INDEX"] : "0") . ";\n" .
                 "var leaveCaseWarning = " . $this->getLeaveCaseWarning() . ";\n" .
+                $this->getTheStringVariableForGoogleMaps() . "\n" .
                 "</script>\n" .
                 "<script type='text/javascript' src='/jscore/cases/core/pmDynaform.js'></script>\n" .
                 "<div style='width:100%;padding: 0px 10px 0px 10px;margin:15px 0px 0px 0px;'>\n" .
@@ -1456,16 +1465,21 @@ class PmDynaform
             if (!$sw1 && !$sw2) {
                 if ($key === "variable" && $json->variable === $oldVariable["VAR_NAME"]) {
                     $json->variable = $newVariable["VAR_NAME"];
-                    if (isset($json->dataType))
+                    if (isset($json->dataType)) {
                         $json->dataType = $newVariable["VAR_FIELD_TYPE"];
-                    if (isset($json->name))
+                    }
+                    if (isset($json->name)) {
                         $json->name = $newVariable["VAR_NAME"];
-                    if (isset($json->dbConnection) && $json->dbConnection === $oldVariable["VAR_DBCONNECTION"])
+                    }
+                    if (isset($json->dbConnection) && $json->dbConnection === $oldVariable["VAR_DBCONNECTION"]) {
                         $json->dbConnection = $newVariable["VAR_DBCONNECTION"];
-                    if (isset($json->dbConnectionLabel) && $json->dbConnectionLabel === $oldVariable["VAR_DBCONNECTION_LABEL"])
+                    }
+                    if (isset($json->dbConnectionLabel) && $json->dbConnectionLabel === $oldVariable["VAR_DBCONNECTION_LABEL"]) {
                         $json->dbConnectionLabel = $newVariable["VAR_DBCONNECTION_LABEL"];
-                    if (isset($json->sql) && $json->sql === $oldVariable["VAR_SQL"])
+                    }
+                    if (isset($json->sql) && $json->sql === $oldVariable["VAR_SQL"]) {
                         $json->sql = $newVariable["VAR_SQL"];
+                    }
                     if (isset($json->options) && G::json_encode($json->options) === $oldVariable["VAR_ACCEPTED_VALUES"]) {
                         $json->options = G::json_decode($newVariable["VAR_ACCEPTED_VALUES"]);
                     }
@@ -1656,8 +1670,9 @@ class PmDynaform
             $sw2 = is_object($value);
             if ($sw1 || $sw2) {
                 $val = $this->jsonsf($value, $id, $for);
-                if ($val !== null)
+                if ($val !== null) {
                     return $val;
+                }
             }
             if (!$sw1 && !$sw2) {
                 if ($key === $for && $id === $value) {
@@ -1792,7 +1807,7 @@ class PmDynaform
         if ($oPro->getDynLabel() !== null && $oPro->getDynLabel() !== "") {
             $dyn_labels = G::json_decode($oPro->getDynLabel());
         }
-        $dyn_labels->$name[count($name) - 2] = $content;
+        $dyn_labels->{$name[count($name) - 2]} = $content;
 
         $oPro->setDynLabel(G::json_encode($dyn_labels));
         $oPro->save();
@@ -1897,7 +1912,7 @@ class PmDynaform
     {
         $result = array();
         $previusFunction = $this->onPropertyRead;
-        $this->onPropertyRead = function($json, $key, $value) use (&$post) {
+        $this->onPropertyRead = function ($json, $key, $value) use (&$post) {
             if ($key === "type" && isset($json->variable) && !empty($json->variable)) {
                 //clears the data in the appData for grids
                 $isThereIdIntoPost = array_key_exists($json->id, $post);
@@ -2047,7 +2062,8 @@ class PmDynaform
                                 break;
                             case 'form':
                                 $arrayGrid = array_merge(
-                                    $arrayGrid, self::getGridsAndFields($field, $flagGridAssocToVar)
+                                    $arrayGrid,
+                                    self::getGridsAndFields($field, $flagGridAssocToVar)
                                 );
                                 break;
                         }
@@ -2143,7 +2159,8 @@ class PmDynaform
                         $value === "suggest" ||
                         $value === "hidden" ||
                         $value === "file" ||
-                        $value === "grid")) {
+                        $value === "grid"
+                )) {
                     if ($value === "grid" && $property === "data") {
                         $json->{$property} = [];
                     } else {
@@ -2179,6 +2196,21 @@ class PmDynaform
             $result['userInfo'] = $e->getUserInfo();
         }
 
+        return $result;
+    }
+
+    /**
+     * Get the string variable for google maps
+     * 
+     * @return string
+     */
+    private function getTheStringVariableForGoogleMaps()
+    {
+        $config = Bootstrap::getSystemConfiguration();
+        $googleMaps = new stdClass();
+        $googleMaps->key = $config['google_map_api_key'];
+        $googleMaps->signature = $config['google_map_signature'];
+        $result = 'var googleMaps = ' . G::json_encode($googleMaps) . ';';
         return $result;
     }
 }

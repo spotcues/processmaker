@@ -115,9 +115,10 @@ class FilesManager
                                           'prf_content' => $fcontent,
                                           'prf_derivation_screen' => $derivationScreen);
                 } else {
-                    $extention = end(explode(".", $aFile['FILE']));
-                    if ($extention == 'docx' || $extention == 'doc' || $extention == 'html' || $extention == 'php' || $extention == 'jsp'
-                        || $extention == 'xlsx' || $extention == 'xls' || $extention == 'js' || $extention == 'css' || $extention == 'txt') {
+                    $explodeExt = explode(".", $aFile['FILE']);
+                    $extension = end($explodeExt);
+                    if ($extension == 'docx' || $extension == 'doc' || $extension == 'html' || $extension == 'php' || $extension == 'jsp'
+                        || $extension == 'xlsx' || $extension == 'xls' || $extension == 'js' || $extension == 'css' || $extension == 'txt') {
                         $editable = 'true';
                     } else {
                         $editable = 'false';
@@ -374,10 +375,12 @@ class FilesManager
                 $extention = '.html';
                 $_FILES['prf_file']['name'] = $_FILES['prf_file']['name'].$extention;
             }
-            $file = end(explode("/",$path));
+            $explodePath = explode("/", $path);
+            $file = end($explodePath);
             if(strpos($file,"\\") > 0) {
                 $file = str_replace('\\', '/', $file);
-                $file = end(explode("/",$file));
+                $explodeFile = explode("/", $file);
+                $file = end($explodeFile);
             }
             $path = str_replace($file,'',$path);
             if ($file == $_FILES['prf_file']['name']) {
@@ -478,9 +481,10 @@ class FilesManager
             } else {
                 $sMainDirectory = 'public';
             }
-            $extention = end(explode(".", $sFile));
-            if ($extention == 'docx' || $extention == 'doc' || $extention == 'html' || $extention == 'php' || $extention == 'jsp' ||
-                $extention == 'xlsx' || $extention == 'xls' || $extention == 'js' || $extention == 'css' || $extention == 'txt') {
+            $explode = explode(".", $sFile);
+            $extension = end($explode);
+            if ($extension == 'docx' || $extension == 'doc' || $extension == 'html' || $extension == 'php' || $extension == 'jsp' ||
+                $extension == 'xlsx' || $extension == 'xls' || $extension == 'js' || $extension == 'css' || $extension == 'txt') {
                 $sEditable = true;
             } else {
                 $sEditable = false;
@@ -554,12 +558,13 @@ class FilesManager
                 $relationshipEmailEvent = true;
                 $rsCriteria->next();
             }
+            $explodePath = explode(DIRECTORY_SEPARATOR,$path);
             if ($relationshipEmailEvent && !$verifyingRelationship) {
                 throw new \Exception(\G::LoadTranslation(G::LoadTranslation('ID_CANNOT_REMOVE_TEMPLATE_EMAIL_EVENT',
-                    array(end(explode(DIRECTORY_SEPARATOR,$path))))));
+                    [end($explodePath)])));
             }
 
-            $sFile = end(explode(DIRECTORY_SEPARATOR,$path));
+            $sFile = end($explodePath);
             $path = PATH_DATA_MAILTEMPLATES.$sProcessUID.DIRECTORY_SEPARATOR.$sFile;
 
             if (file_exists($path) && !is_dir($path)) {
@@ -603,7 +608,8 @@ class FilesManager
             if ($path == '') {
                 throw new \Exception(\G::LoadTranslation("ID_INVALID_VALUE_FOR", array('prf_uid')));
             }
-            $sFile = end(explode("/",str_replace('\\', '/',$path)));
+            $explodePath =  explode("/",str_replace('\\', '/',$path));
+            $sFile = end($explodePath);
             $sPath = str_replace($sFile,'',$path);
             $sSubDirectory = substr(str_replace($sProcessUID,'',substr($sPath,(strpos($sPath, $sProcessUID)))),0,-1);
             $sMainDirectory = str_replace(substr($sPath, strpos($sPath, $sProcessUID)),'', $sPath);
@@ -634,7 +640,8 @@ class FilesManager
     public function deleteFolderProcessFilesManager($sProcessUID, $path)
     {
         try {
-            $sDirToDelete = end(explode("/",$path));
+            $explodePath = explode("/",$path);
+            $sDirToDelete = end($explodePath);
             $sPath = str_replace($sDirToDelete,'',$path);
             $sSubDirectory = substr(str_replace($sProcessUID,'',substr($sPath,(strpos($sPath, $sProcessUID)))),0,-1);
             $sMainDirectory = current(explode("/", $path));

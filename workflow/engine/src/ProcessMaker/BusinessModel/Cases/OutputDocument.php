@@ -81,8 +81,10 @@ class OutputDocument
                 $criteria2->add(\ObjectPermissionPeer::OP_OBJ_TYPE, "OUTPUT", \Criteria::EQUAL);
                 $criteria2->add(
                     $criteria2->getNewCriterion(\ObjectPermissionPeer::OP_OBJ_UID, $outputDocumentUid, \Criteria::EQUAL)->addOr(
-                    $criteria2->getNewCriterion(\ObjectPermissionPeer::OP_OBJ_UID, "0", \Criteria::EQUAL))->addOr(
-                    $criteria2->getNewCriterion(\ObjectPermissionPeer::OP_OBJ_UID, "", \Criteria::EQUAL))
+                    $criteria2->getNewCriterion(\ObjectPermissionPeer::OP_OBJ_UID, "0", \Criteria::EQUAL)
+                    )->addOr(
+                    $criteria2->getNewCriterion(\ObjectPermissionPeer::OP_OBJ_UID, "", \Criteria::EQUAL)
+                    )
                 );
                 $criteria2->add(\ObjectPermissionPeer::OP_ACTION, "DELETE", \Criteria::EQUAL);
 
@@ -203,16 +205,16 @@ class OutputDocument
     {
         try {
             $oCase = new \Cases();
-            $fields = $oCase->loadCase( $applicationUid );
+            $fields = $oCase->loadCase($applicationUid);
             $sProcessUID = $fields['PRO_UID'];
             $sTaskUID = '';
             $oCriteria = new \ProcessMaker\BusinessModel\Cases();
-            $oCriteria->getAllGeneratedDocumentsCriteria( $sProcessUID, $applicationUid, $sTaskUID, $userUid);
-            $result = array ();
+            $oCriteria->getAllGeneratedDocumentsCriteria($sProcessUID, $applicationUid, $sTaskUID, $userUid);
+            $result = array();
             global $_DBArray;
             foreach ($_DBArray['outputDocuments'] as $key => $row) {
-                if (isset( $row['DOC_VERSION'] )) {
-                    $docrow = array ();
+                if (isset($row['DOC_VERSION'])) {
+                    $docrow = array();
                     $docrow['app_doc_uid'] = $row['APP_DOC_UID'];
                     $docrow['app_doc_filename'] = $row['DOWNLOAD_FILE'];
                     $docrow['doc_uid'] = $row['DOC_UID'];
@@ -246,16 +248,16 @@ class OutputDocument
             $sApplicationUID = $applicationUid;
             $sUserUID = $userUid;
             $oCase = new \Cases();
-            $fields = $oCase->loadCase( $sApplicationUID );
+            $fields = $oCase->loadCase($sApplicationUID);
             $sProcessUID = $fields['PRO_UID'];
             $sTaskUID = '';
             $oCaseRest = new \ProcessMaker\BusinessModel\Cases();
-            $oCaseRest->getAllGeneratedDocumentsCriteria( $sProcessUID, $sApplicationUID, $sTaskUID, $sUserUID );
-            $result = array ();
+            $oCaseRest->getAllGeneratedDocumentsCriteria($sProcessUID, $sApplicationUID, $sTaskUID, $sUserUID);
+            $result = array();
             global $_DBArray;
             foreach ($_DBArray['outputDocuments'] as $key => $row) {
-                if (isset( $row['DOC_VERSION'] )) {
-                    $docrow = array ();
+                if (isset($row['DOC_VERSION'])) {
+                    $docrow = array();
                     $docrow['app_doc_uid'] = $row['APP_DOC_UID'];
                     $docrow['app_doc_filename'] = $row['DOWNLOAD_FILE'];
                     $docrow['doc_uid'] = $row['DOC_UID'];
@@ -266,8 +268,8 @@ class OutputDocument
                     $docrow['app_doc_index'] = $row['APP_DOC_INDEX'];
                     $docrow['app_doc_link'] = $row['DOWNLOAD_LINK'];
                     if ($docrow['app_doc_uid'] == $applicationDocumentUid) {
-                        $oAppDocument = \AppDocumentPeer::retrieveByPK( $applicationDocumentUid, $row['DOC_VERSION'] );
-                        if (is_null( $oAppDocument )) {
+                        $oAppDocument = \AppDocumentPeer::retrieveByPK($applicationDocumentUid, $row['DOC_VERSION']);
+                        if (is_null($oAppDocument)) {
                             throw new \Exception(\G::LoadTranslation("ID_CASES_OUTPUT_DOES_NOT_EXIST", array($applicationDocumentUid)));
                         }
                         $result = $docrow;
@@ -413,12 +415,12 @@ class OutputDocument
         try {
             $oAppDocumentVersion = new \AppDocument();
             $lastDocVersion = $oAppDocumentVersion->getLastAppDocVersion($applicationDocumentUid);
-            $oAppDocument = \AppDocumentPeer::retrieveByPK( $applicationDocumentUid, $lastDocVersion);
-            if (is_null( $oAppDocument ) || $oAppDocument->getAppDocStatus() == 'DELETED') {
+            $oAppDocument = \AppDocumentPeer::retrieveByPK($applicationDocumentUid, $lastDocVersion);
+            if (is_null($oAppDocument) || $oAppDocument->getAppDocStatus() == 'DELETED') {
                 throw new \Exception(\G::LoadTranslation("ID_CASES_OUTPUT_DOES_NOT_EXIST", array($applicationDocumentUid)));
             }
-            $aFields = array ('APP_DOC_UID' => $applicationDocumentUid,'DOC_VERSION' => $lastDocVersion,'APP_DOC_STATUS' => 'DELETED');
-            $oAppDocument->update( $aFields );
+            $aFields = array('APP_DOC_UID' => $applicationDocumentUid,'DOC_VERSION' => $lastDocVersion,'APP_DOC_STATUS' => 'DELETED');
+            $oAppDocument->update($aFields);
         } catch (\Exception $e) {
             throw $e;
         }
@@ -443,47 +445,47 @@ class OutputDocument
             $g = new \G();
             $g->sessionVarSave();
             $oCase = new \Cases();
-            $oCase->thisIsTheCurrentUser( $sApplication, $index, $sUserLogged, '', 'casesListExtJs' );
+            $oCase->thisIsTheCurrentUser($sApplication, $index, $sUserLogged, '', 'casesListExtJs');
             //require_once 'classes/model/OutputDocument.php';
             $oOutputDocument = new \OutputDocument();
-            $aOD = $oOutputDocument->load( $outputID );
-            $Fields = $oCase->loadCase( $sApplication );
-            $sFilename = preg_replace( '[^A-Za-z0-9_]', '_', \G::replaceDataField( $aOD['OUT_DOC_FILENAME'], $Fields['APP_DATA'] ) );
-            require_once (PATH_TRUNK . "workflow" . PATH_SEP . "engine" . PATH_SEP . "classes" . PATH_SEP . "model" . PATH_SEP . "AppFolder.php");
-            require_once (PATH_TRUNK . "workflow" . PATH_SEP . "engine" . PATH_SEP . "classes" . PATH_SEP . "model" . PATH_SEP . "AppDocument.php");
+            $aOD = $oOutputDocument->load($outputID);
+            $Fields = $oCase->loadCase($sApplication);
+            $sFilename = preg_replace('[^A-Za-z0-9_]', '_', \G::replaceDataField($aOD['OUT_DOC_FILENAME'], $Fields['APP_DATA']));
+            require_once(PATH_TRUNK . "workflow" . PATH_SEP . "engine" . PATH_SEP . "classes" . PATH_SEP . "model" . PATH_SEP . "AppFolder.php");
+            require_once(PATH_TRUNK . "workflow" . PATH_SEP . "engine" . PATH_SEP . "classes" . PATH_SEP . "model" . PATH_SEP . "AppDocument.php");
             //Get the Custom Folder ID (create if necessary)
             $oFolder = new \AppFolder();
-            $folderId = $oFolder->createFromPath( $aOD['OUT_DOC_DESTINATION_PATH'], $sApplication );
+            $folderId = $oFolder->createFromPath($aOD['OUT_DOC_DESTINATION_PATH'], $sApplication);
             //Tags
-            $fileTags = $oFolder->parseTags( $aOD['OUT_DOC_TAGS'], $sApplication );
+            $fileTags = $oFolder->parseTags($aOD['OUT_DOC_TAGS'], $sApplication);
             //Get last Document Version and apply versioning if is enabled
             $oAppDocument = new \AppDocument();
-            $lastDocVersion = $oAppDocument->getLastDocVersion( $outputID, $sApplication );
-            $oCriteria = new \Criteria( 'workflow' );
-            $oCriteria->add( \AppDocumentPeer::APP_UID, $sApplication );
-            $oCriteria->add( \AppDocumentPeer::DOC_UID, $outputID );
-            $oCriteria->add( \AppDocumentPeer::DOC_VERSION, $lastDocVersion );
-            $oCriteria->add( \AppDocumentPeer::APP_DOC_TYPE, 'OUTPUT' );
-            $oDataset = \AppDocumentPeer::doSelectRS( $oCriteria );
-            $oDataset->setFetchmode( \ResultSet::FETCHMODE_ASSOC );
+            $lastDocVersion = $oAppDocument->getLastDocVersion($outputID, $sApplication);
+            $oCriteria = new \Criteria('workflow');
+            $oCriteria->add(\AppDocumentPeer::APP_UID, $sApplication);
+            $oCriteria->add(\AppDocumentPeer::DOC_UID, $outputID);
+            $oCriteria->add(\AppDocumentPeer::DOC_VERSION, $lastDocVersion);
+            $oCriteria->add(\AppDocumentPeer::APP_DOC_TYPE, 'OUTPUT');
+            $oDataset = \AppDocumentPeer::doSelectRS($oCriteria);
+            $oDataset->setFetchmode(\ResultSet::FETCHMODE_ASSOC);
             $oDataset->next();
             if (($aOD['OUT_DOC_VERSIONING']) && ($lastDocVersion != 0)) {
                 //Create new Version of current output
                 $lastDocVersion ++;
                 if ($aRow = $oDataset->getRow()) {
-                    $aFields = array ('APP_DOC_UID' => $aRow['APP_DOC_UID'],'APP_UID' => $sApplication,'DEL_INDEX' => $index,'DOC_UID' => $outputID,'DOC_VERSION' => $lastDocVersion + 1,'USR_UID' => $sUserLogged,'APP_DOC_TYPE' => 'OUTPUT','APP_DOC_CREATE_DATE' => date( 'Y-m-d H:i:s' ),'APP_DOC_FILENAME' => $sFilename,'FOLDER_UID' => $folderId,'APP_DOC_TAGS' => $fileTags);
+                    $aFields = array('APP_DOC_UID' => $aRow['APP_DOC_UID'],'APP_UID' => $sApplication,'DEL_INDEX' => $index,'DOC_UID' => $outputID,'DOC_VERSION' => $lastDocVersion + 1,'USR_UID' => $sUserLogged,'APP_DOC_TYPE' => 'OUTPUT','APP_DOC_CREATE_DATE' => date('Y-m-d H:i:s'),'APP_DOC_FILENAME' => $sFilename,'FOLDER_UID' => $folderId,'APP_DOC_TAGS' => $fileTags);
                     $oAppDocument = new \AppDocument();
-                    $oAppDocument->create( $aFields );
+                    $oAppDocument->create($aFields);
                     $sDocUID = $aRow['APP_DOC_UID'];
                 }
             } else {
                 ////No versioning so Update a current Output or Create new if no exist
                 if ($aRow = $oDataset->getRow()) {
                     //Update
-                    $aFields = array ('APP_DOC_UID' => $aRow['APP_DOC_UID'],'APP_UID' => $sApplication,'DEL_INDEX' => $index,'DOC_UID' => $outputID,'DOC_VERSION' => $lastDocVersion,'USR_UID' => $sUserLogged,'APP_DOC_TYPE' => 'OUTPUT','APP_DOC_CREATE_DATE' => date( 'Y-m-d H:i:s' ),'APP_DOC_FILENAME' => $sFilename,'FOLDER_UID' => $folderId,'APP_DOC_TAGS' => $fileTags
+                    $aFields = array('APP_DOC_UID' => $aRow['APP_DOC_UID'],'APP_UID' => $sApplication,'DEL_INDEX' => $index,'DOC_UID' => $outputID,'DOC_VERSION' => $lastDocVersion,'USR_UID' => $sUserLogged,'APP_DOC_TYPE' => 'OUTPUT','APP_DOC_CREATE_DATE' => date('Y-m-d H:i:s'),'APP_DOC_FILENAME' => $sFilename,'FOLDER_UID' => $folderId,'APP_DOC_TAGS' => $fileTags
                     );
                     $oAppDocument = new \AppDocument();
-                    $oAppDocument->update( $aFields );
+                    $oAppDocument->update($aFields);
                     $sDocUID = $aRow['APP_DOC_UID'];
                 } else {
                     //we are creating the appdocument row
@@ -491,92 +493,92 @@ class OutputDocument
                     if ($lastDocVersion == 0) {
                         $lastDocVersion ++;
                     }
-                    $aFields = array ('APP_UID' => $sApplication,'DEL_INDEX' => $index,'DOC_UID' => $outputID,'DOC_VERSION' => $lastDocVersion,'USR_UID' => $sUserLogged,'APP_DOC_TYPE' => 'OUTPUT','APP_DOC_CREATE_DATE' => date( 'Y-m-d H:i:s' ),'APP_DOC_FILENAME' => $sFilename,'FOLDER_UID' => $folderId,'APP_DOC_TAGS' => $fileTags
+                    $aFields = array('APP_UID' => $sApplication,'DEL_INDEX' => $index,'DOC_UID' => $outputID,'DOC_VERSION' => $lastDocVersion,'USR_UID' => $sUserLogged,'APP_DOC_TYPE' => 'OUTPUT','APP_DOC_CREATE_DATE' => date('Y-m-d H:i:s'),'APP_DOC_FILENAME' => $sFilename,'FOLDER_UID' => $folderId,'APP_DOC_TAGS' => $fileTags
                     );
                     $oAppDocument = new \AppDocument();
-                    $aFields['APP_DOC_UID'] = $sDocUID = $oAppDocument->create( $aFields );
+                    $aFields['APP_DOC_UID'] = $sDocUID = $oAppDocument->create($aFields);
                 }
             }
             $sFilename = $aFields['APP_DOC_UID'] . "_" . $lastDocVersion;
             $pathOutput = PATH_DOCUMENT . \G::getPathFromUID($sApplication) . PATH_SEP . 'outdocs' . PATH_SEP; //G::pr($sFilename);die;
-            \G::mk_dir( $pathOutput );
-            $aProperties = array ();
-            if (! isset( $aOD['OUT_DOC_MEDIA'] )) {
+            \G::mk_dir($pathOutput);
+            $aProperties = array();
+            if (! isset($aOD['OUT_DOC_MEDIA'])) {
                 $aOD['OUT_DOC_MEDIA'] = 'Letter';
             }
-            if (! isset( $aOD['OUT_DOC_LEFT_MARGIN'] )) {
+            if (! isset($aOD['OUT_DOC_LEFT_MARGIN'])) {
                 $aOD['OUT_DOC_LEFT_MARGIN'] = '15';
             }
-            if (! isset( $aOD['OUT_DOC_RIGHT_MARGIN'] )) {
+            if (! isset($aOD['OUT_DOC_RIGHT_MARGIN'])) {
                 $aOD['OUT_DOC_RIGHT_MARGIN'] = '15';
             }
-            if (! isset( $aOD['OUT_DOC_TOP_MARGIN'] )) {
+            if (! isset($aOD['OUT_DOC_TOP_MARGIN'])) {
                 $aOD['OUT_DOC_TOP_MARGIN'] = '15';
             }
-            if (! isset( $aOD['OUT_DOC_BOTTOM_MARGIN'] )) {
+            if (! isset($aOD['OUT_DOC_BOTTOM_MARGIN'])) {
                 $aOD['OUT_DOC_BOTTOM_MARGIN'] = '15';
             }
             $aProperties['media'] = $aOD['OUT_DOC_MEDIA'];
-            $aProperties['margins'] = array ('left' => $aOD['OUT_DOC_LEFT_MARGIN'],'right' => $aOD['OUT_DOC_RIGHT_MARGIN'],'top' => $aOD['OUT_DOC_TOP_MARGIN'],'bottom' => $aOD['OUT_DOC_BOTTOM_MARGIN']
+            $aProperties['margins'] = array('left' => $aOD['OUT_DOC_LEFT_MARGIN'],'right' => $aOD['OUT_DOC_RIGHT_MARGIN'],'top' => $aOD['OUT_DOC_TOP_MARGIN'],'bottom' => $aOD['OUT_DOC_BOTTOM_MARGIN']
             );
             if (isset($aOD['OUT_DOC_REPORT_GENERATOR'])) {
                 $aProperties['report_generator'] = $aOD['OUT_DOC_REPORT_GENERATOR'];
             }
-            $this->generate( $outputID, $Fields['APP_DATA'], $pathOutput, $sFilename, $aOD['OUT_DOC_TEMPLATE'], (boolean) $aOD['OUT_DOC_LANDSCAPE'], $aOD['OUT_DOC_GENERATE'], $aProperties , $applicationUid);
+            $this->generate($outputID, $Fields['APP_DATA'], $pathOutput, $sFilename, $aOD['OUT_DOC_TEMPLATE'], (boolean) $aOD['OUT_DOC_LANDSCAPE'], $aOD['OUT_DOC_GENERATE'], $aProperties, $applicationUid);
 
             //Plugin Hook PM_UPLOAD_DOCUMENT for upload document
             $oPluginRegistry = PluginRegistry::loadSingleton();
-            if ($oPluginRegistry->existsTrigger( PM_UPLOAD_DOCUMENT ) && class_exists( 'uploadDocumentData' )) {
-                $triggerDetail = $oPluginRegistry->getTriggerInfo( PM_UPLOAD_DOCUMENT );
+            if ($oPluginRegistry->existsTrigger(PM_UPLOAD_DOCUMENT) && class_exists('uploadDocumentData')) {
+                $triggerDetail = $oPluginRegistry->getTriggerInfo(PM_UPLOAD_DOCUMENT);
                 $aFields['APP_DOC_PLUGIN'] = $triggerDetail->getNamespace();
                 $oAppDocument1 = new \AppDocument();
-                $oAppDocument1->update( $aFields );
+                $oAppDocument1->update($aFields);
                 $sPathName = PATH_DOCUMENT . \G::getPathFromUID($sApplication) . PATH_SEP;
                 $oData['APP_UID'] = $sApplication;
                 $oData['ATTACHMENT_FOLDER'] = true;
                 switch ($aOD['OUT_DOC_GENERATE']) {
                     case "BOTH":
-                        $documentData = new \uploadDocumentData( $sApplication, $sUserLogged, $pathOutput . $sFilename . '.pdf', $sFilename . '.pdf', $sDocUID, $oAppDocument->getDocVersion() );
+                        $documentData = new \uploadDocumentData($sApplication, $sUserLogged, $pathOutput . $sFilename . '.pdf', $sFilename . '.pdf', $sDocUID, $oAppDocument->getDocVersion());
                         $documentData->sFileType = "PDF";
                         $documentData->bUseOutputFolder = true;
-                        $uploadReturn = $oPluginRegistry->executeTriggers( PM_UPLOAD_DOCUMENT, $documentData );
+                        $uploadReturn = $oPluginRegistry->executeTriggers(PM_UPLOAD_DOCUMENT, $documentData);
                         if ($uploadReturn) {
                             //Only delete if the file was saved correctly
-                            unlink( $pathOutput . $sFilename . '.pdf' );
+                            unlink($pathOutput . $sFilename . '.pdf');
                         }
-                        $documentData = new \uploadDocumentData( $sApplication, $sUserLogged, $pathOutput . $sFilename . '.doc', $sFilename . '.doc', $sDocUID, $oAppDocument->getDocVersion() );
+                        $documentData = new \uploadDocumentData($sApplication, $sUserLogged, $pathOutput . $sFilename . '.doc', $sFilename . '.doc', $sDocUID, $oAppDocument->getDocVersion());
                         $documentData->sFileType = "DOC";
                         $documentData->bUseOutputFolder = true;
-                        $uploadReturn = $oPluginRegistry->executeTriggers( PM_UPLOAD_DOCUMENT, $documentData );
+                        $uploadReturn = $oPluginRegistry->executeTriggers(PM_UPLOAD_DOCUMENT, $documentData);
                         if ($uploadReturn) {
                             //Only delete if the file was saved correctly
-                            unlink( $pathOutput . $sFilename . '.doc' );
+                            unlink($pathOutput . $sFilename . '.doc');
                         }
                         break;
                     case "PDF":
-                        $documentData = new \uploadDocumentData( $sApplication, $sUserLogged, $pathOutput . $sFilename . '.pdf', $sFilename . '.pdf', $sDocUID, $oAppDocument->getDocVersion() );
+                        $documentData = new \uploadDocumentData($sApplication, $sUserLogged, $pathOutput . $sFilename . '.pdf', $sFilename . '.pdf', $sDocUID, $oAppDocument->getDocVersion());
                         $documentData->sFileType = "PDF";
                         $documentData->bUseOutputFolder = true;
-                        $uploadReturn = $oPluginRegistry->executeTriggers( PM_UPLOAD_DOCUMENT, $documentData );
+                        $uploadReturn = $oPluginRegistry->executeTriggers(PM_UPLOAD_DOCUMENT, $documentData);
                         if ($uploadReturn) {
                             //Only delete if the file was saved correctly
-                            unlink( $pathOutput . $sFilename . '.pdf' );
+                            unlink($pathOutput . $sFilename . '.pdf');
                         }
                         break;
                     case "DOC":
-                        $documentData = new \uploadDocumentData( $sApplication, $sUserLogged, $pathOutput . $sFilename . '.doc', $sFilename . '.doc', $sDocUID, $oAppDocument->getDocVersion() );
+                        $documentData = new \uploadDocumentData($sApplication, $sUserLogged, $pathOutput . $sFilename . '.doc', $sFilename . '.doc', $sDocUID, $oAppDocument->getDocVersion());
                         $documentData->sFileType = "DOC";
                         $documentData->bUseOutputFolder = true;
-                        $uploadReturn = $oPluginRegistry->executeTriggers( PM_UPLOAD_DOCUMENT, $documentData );
+                        $uploadReturn = $oPluginRegistry->executeTriggers(PM_UPLOAD_DOCUMENT, $documentData);
                         if ($uploadReturn) {
                             //Only delete if the file was saved correctly
-                            unlink( $pathOutput . $sFilename . '.doc' );
+                            unlink($pathOutput . $sFilename . '.doc');
                         }
                         break;
                 }
             }
             $g->sessionVarRestore();
-            $oAppDocument = \AppDocumentPeer::retrieveByPK( $aFields['APP_DOC_UID'], $lastDocVersion);
+            $oAppDocument = \AppDocumentPeer::retrieveByPK($aFields['APP_DOC_UID'], $lastDocVersion);
             if ($oAppDocument->getAppDocStatus() == 'DELETED') {
                 $oAppDocument->setAppDocStatus('ACTIVE');
                 $oAppDocument->save();
@@ -746,7 +748,13 @@ class OutputDocument
             /* End - Create .pdf */
         } else {
             return \PEAR::raiseError(
-                null, G_ERROR_USER_UID, null, null, 'You tried to call to a generate method without send the Output Document UID, fields to use and the file path!', 'G_Error', true
+                null,
+                G_ERROR_USER_UID,
+                null,
+                null,
+                'You tried to call to a generate method without send the Output Document UID, fields to use and the file path!',
+                'G_Error',
+                true
             );
         }
     }
@@ -764,8 +772,8 @@ class OutputDocument
         define("MAX_FREE_FRACTION", 1);
         define('PATH_OUTPUT_FILE_DIRECTORY', PATH_HTML . 'files/' . $sApplication . '/outdocs/');
         \G::verifyPath(PATH_OUTPUT_FILE_DIRECTORY, true);
-        require_once (PATH_THIRDPARTY . 'html2ps_pdf/config.inc.php');
-        require_once (PATH_THIRDPARTY . 'html2ps_pdf/pipeline.factory.class.php');
+        require_once(PATH_THIRDPARTY . 'html2ps_pdf/config.inc.php');
+        require_once(PATH_THIRDPARTY . 'html2ps_pdf/pipeline.factory.class.php');
         parse_config_file(PATH_THIRDPARTY . 'html2ps_pdf/html2ps.config');
         $GLOBALS['g_config'] = array(
             'cssmedia' => 'screen',
@@ -803,14 +811,16 @@ class OutputDocument
                 $GLOBALS['g_config']['pdfSecurity']['openPassword'] != ""
             ) {
                 $GLOBALS['g_config']['pdfSecurity']['openPassword'] = G::decrypt(
-                    $GLOBALS['g_config']['pdfSecurity']['openPassword'], $sUID
+                    $GLOBALS['g_config']['pdfSecurity']['openPassword'],
+                    $sUID
                 );
             }
             if (isset($GLOBALS['g_config']['pdfSecurity']['ownerPassword']) &&
                 $GLOBALS['g_config']['pdfSecurity']['ownerPassword'] != ""
             ) {
                 $GLOBALS['g_config']['pdfSecurity']['ownerPassword'] = G::decrypt(
-                    $GLOBALS['g_config']['pdfSecurity']['ownerPassword'], $sUID
+                    $GLOBALS['g_config']['pdfSecurity']['ownerPassword'],
+                    $sUID
                 );
             }
             $g_media->set_security($GLOBALS['g_config']['pdfSecurity']);
@@ -887,7 +897,7 @@ class OutputDocument
         }
         $pipeline->output_driver->set_watermark($watermark_text);
         if ($watermark_text != '') {
-            $dispatcher = & $pipeline->getDispatcher();
+            $dispatcher = $pipeline->getDispatcher();
         }
         if ($GLOBALS['g_config']['debugbox']) {
             $pipeline->output_driver->set_debug_boxes(true);
@@ -964,7 +974,7 @@ class OutputDocument
         $arrayAllObjectsFrom = $case->getAllObjectsFrom($processUid, $applicationUid, null, $userUid, $action, $delIndex);
 
         if (array_key_exists('OUTPUT_DOCUMENTS', $arrayAllObjectsFrom) && !empty($arrayAllObjectsFrom['OUTPUT_DOCUMENTS'])) {
-            foreach($arrayAllObjectsFrom['OUTPUT_DOCUMENTS'] as $value) {
+            foreach ($arrayAllObjectsFrom['OUTPUT_DOCUMENTS'] as $value) {
                 if ($value == $appDocumentUid) {
                     return true;
                 }

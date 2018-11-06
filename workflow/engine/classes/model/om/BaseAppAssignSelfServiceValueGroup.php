@@ -40,6 +40,18 @@ abstract class BaseAppAssignSelfServiceValueGroup extends BaseObject implements 
     protected $grp_uid;
 
     /**
+     * The value for the assignee_id field.
+     * @var        int
+     */
+    protected $assignee_id = 0;
+
+    /**
+     * The value for the assignee_type field.
+     * @var        int
+     */
+    protected $assignee_type = 0;
+
+    /**
      * Flag to prevent endless save loop, if this object is referenced
      * by another object which falls in this transaction.
      * @var        boolean
@@ -73,6 +85,28 @@ abstract class BaseAppAssignSelfServiceValueGroup extends BaseObject implements 
     {
 
         return $this->grp_uid;
+    }
+
+    /**
+     * Get the [assignee_id] column value.
+     * 
+     * @return     int
+     */
+    public function getAssigneeId()
+    {
+
+        return $this->assignee_id;
+    }
+
+    /**
+     * Get the [assignee_type] column value.
+     * 
+     * @return     int
+     */
+    public function getAssigneeType()
+    {
+
+        return $this->assignee_type;
     }
 
     /**
@@ -120,6 +154,50 @@ abstract class BaseAppAssignSelfServiceValueGroup extends BaseObject implements 
     } // setGrpUid()
 
     /**
+     * Set the value of [assignee_id] column.
+     * 
+     * @param      int $v new value
+     * @return     void
+     */
+    public function setAssigneeId($v)
+    {
+
+        // Since the native PHP type for this column is integer,
+        // we will cast the input value to an int (if it is not).
+        if ($v !== null && !is_int($v) && is_numeric($v)) {
+            $v = (int) $v;
+        }
+
+        if ($this->assignee_id !== $v || $v === 0) {
+            $this->assignee_id = $v;
+            $this->modifiedColumns[] = AppAssignSelfServiceValueGroupPeer::ASSIGNEE_ID;
+        }
+
+    } // setAssigneeId()
+
+    /**
+     * Set the value of [assignee_type] column.
+     * 
+     * @param      int $v new value
+     * @return     void
+     */
+    public function setAssigneeType($v)
+    {
+
+        // Since the native PHP type for this column is integer,
+        // we will cast the input value to an int (if it is not).
+        if ($v !== null && !is_int($v) && is_numeric($v)) {
+            $v = (int) $v;
+        }
+
+        if ($this->assignee_type !== $v || $v === 0) {
+            $this->assignee_type = $v;
+            $this->modifiedColumns[] = AppAssignSelfServiceValueGroupPeer::ASSIGNEE_TYPE;
+        }
+
+    } // setAssigneeType()
+
+    /**
      * Hydrates (populates) the object variables with values from the database resultset.
      *
      * An offset (1-based "start column") is specified so that objects can be hydrated
@@ -140,12 +218,16 @@ abstract class BaseAppAssignSelfServiceValueGroup extends BaseObject implements 
 
             $this->grp_uid = $rs->getString($startcol + 1);
 
+            $this->assignee_id = $rs->getInt($startcol + 2);
+
+            $this->assignee_type = $rs->getInt($startcol + 3);
+
             $this->resetModified();
 
             $this->setNew(false);
 
             // FIXME - using NUM_COLUMNS may be clearer.
-            return $startcol + 2; // 2 = AppAssignSelfServiceValueGroupPeer::NUM_COLUMNS - AppAssignSelfServiceValueGroupPeer::NUM_LAZY_LOAD_COLUMNS).
+            return $startcol + 4; // 4 = AppAssignSelfServiceValueGroupPeer::NUM_COLUMNS - AppAssignSelfServiceValueGroupPeer::NUM_LAZY_LOAD_COLUMNS).
 
         } catch (Exception $e) {
             throw new PropelException("Error populating AppAssignSelfServiceValueGroup object", $e);
@@ -355,6 +437,12 @@ abstract class BaseAppAssignSelfServiceValueGroup extends BaseObject implements 
             case 1:
                 return $this->getGrpUid();
                 break;
+            case 2:
+                return $this->getAssigneeId();
+                break;
+            case 3:
+                return $this->getAssigneeType();
+                break;
             default:
                 return null;
                 break;
@@ -377,6 +465,8 @@ abstract class BaseAppAssignSelfServiceValueGroup extends BaseObject implements 
         $result = array(
             $keys[0] => $this->getId(),
             $keys[1] => $this->getGrpUid(),
+            $keys[2] => $this->getAssigneeId(),
+            $keys[3] => $this->getAssigneeType(),
         );
         return $result;
     }
@@ -414,6 +504,12 @@ abstract class BaseAppAssignSelfServiceValueGroup extends BaseObject implements 
             case 1:
                 $this->setGrpUid($value);
                 break;
+            case 2:
+                $this->setAssigneeId($value);
+                break;
+            case 3:
+                $this->setAssigneeType($value);
+                break;
         } // switch()
     }
 
@@ -445,6 +541,14 @@ abstract class BaseAppAssignSelfServiceValueGroup extends BaseObject implements 
             $this->setGrpUid($arr[$keys[1]]);
         }
 
+        if (array_key_exists($keys[2], $arr)) {
+            $this->setAssigneeId($arr[$keys[2]]);
+        }
+
+        if (array_key_exists($keys[3], $arr)) {
+            $this->setAssigneeType($arr[$keys[3]]);
+        }
+
     }
 
     /**
@@ -462,6 +566,14 @@ abstract class BaseAppAssignSelfServiceValueGroup extends BaseObject implements 
 
         if ($this->isColumnModified(AppAssignSelfServiceValueGroupPeer::GRP_UID)) {
             $criteria->add(AppAssignSelfServiceValueGroupPeer::GRP_UID, $this->grp_uid);
+        }
+
+        if ($this->isColumnModified(AppAssignSelfServiceValueGroupPeer::ASSIGNEE_ID)) {
+            $criteria->add(AppAssignSelfServiceValueGroupPeer::ASSIGNEE_ID, $this->assignee_id);
+        }
+
+        if ($this->isColumnModified(AppAssignSelfServiceValueGroupPeer::ASSIGNEE_TYPE)) {
+            $criteria->add(AppAssignSelfServiceValueGroupPeer::ASSIGNEE_TYPE, $this->assignee_type);
         }
 
 
@@ -524,6 +636,10 @@ abstract class BaseAppAssignSelfServiceValueGroup extends BaseObject implements 
         $copyObj->setId($this->id);
 
         $copyObj->setGrpUid($this->grp_uid);
+
+        $copyObj->setAssigneeId($this->assignee_id);
+
+        $copyObj->setAssigneeType($this->assignee_type);
 
 
         $copyObj->setNew(true);

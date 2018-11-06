@@ -96,7 +96,7 @@ class headPublisher
         $this->addScriptCode(' var __usernameLogged__ = "' . (isset($_SESSION['USR_USERNAME']) ? $_SESSION['USR_USERNAME'] : '') . '";var SYS_LANG = "' . SYS_LANG . '";');
     }
 
-    public function &getSingleton()
+    public static function &getSingleton()
     {
         if (self::$instance == null) {
             self::$instance = new headPublisher();
@@ -360,7 +360,7 @@ class headPublisher
         //$head .= $this->getExtJsStylesheets();
         $head .= $this->getExtJsScripts();
         $head .= $this->getExtJsVariablesScript();
-        $oServerConf = & ServerConf::getSingleton();
+        $oServerConf = ServerConf::getSingleton();
         if ($oServerConf->isRtl(SYS_LANG)) {
             $head = $head . "  <script type=\"text/javascript\" src=\"" . G::browserCacheFilesUrl("/js/ext/extjs_rtl.js") . "\"></script>\n";
         }
@@ -752,7 +752,7 @@ class headPublisher
         $views = array();
         $keyState = "extJsViewState";
         $prefixExtJs = "ys-";
-        $oServerConf = &ServerConf::getSingleton();
+        $oServerConf = ServerConf::getSingleton();
         $deleteCache = true;
 
         $sjson = $oServerConf->getProperty($keyState);

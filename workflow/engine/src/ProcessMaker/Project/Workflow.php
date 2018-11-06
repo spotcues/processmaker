@@ -15,6 +15,7 @@ use ProcessMaker\Util\Common;
 use ProcessMaker\Exception;
 use ProcessMaker\Util;
 use ReportTables;
+
 /**
  * Class Workflow
  *
@@ -68,7 +69,7 @@ class Workflow extends Handler
 
             $testTitle = htmlspecialchars($data['PRO_TITLE']);
 
-            if($testTitle != $data['PRO_TITLE']) {
+            if ($testTitle != $data['PRO_TITLE']) {
                 $data['PRO_TITLE'] = $testTitle;
             }
 
@@ -174,7 +175,7 @@ class Workflow extends Handler
      * Projects elements handlers
      */
 
-    public function addTask($taskData)
+    public function addTask(array $taskData)
     {
         // Setting defaults
         $taskData['TAS_UID'] = array_key_exists('TAS_UID', $taskData) ? $taskData['TAS_UID'] : Common::generateUID();
@@ -190,7 +191,6 @@ class Workflow extends Handler
             if ($task->getTasType() == "SUBPROCESS") {
                 $this->addSubProcess($this->proUid, $tasUid);
             }
-
         } catch (\Exception $e) {
             self::log("Exception: ", $e->getMessage(), "Trace: ", $e->getTraceAsString());
             throw $e;
@@ -242,7 +242,6 @@ class Workflow extends Handler
                     }
                 }
             }
-
         } catch (\Exception $e) {
             self::log("Exception: ", $e->getMessage(), "Trace: ", $e->getTraceAsString());
             throw $e;
@@ -254,7 +253,7 @@ class Workflow extends Handler
         try {
             $task = new ClassesTask();
             $taskData = $task->load($tasUid);
-        } catch (\Exception $e){
+        } catch (\Exception $e) {
             $taskData = null;
         }
 
@@ -320,7 +319,6 @@ class Workflow extends Handler
 
     public function updateSubProcess()
     {
-
     }
 
     /**
@@ -398,8 +396,8 @@ class Workflow extends Handler
             }
 
             //if ($type == 'SEQUENTIAL' || $type == 'SEC-JOIN' || $type == 'DISCRIMINATOR') {
-                //$oTasks = new Tasks();
-                //$oTasks->deleteAllRoutesOfTask($this->proUid, $fromTasUid);
+            //$oTasks = new Tasks();
+            //$oTasks->deleteAllRoutesOfTask($this->proUid, $fromTasUid);
             //}
 
             $route = \Route::findOneBy([
@@ -547,7 +545,7 @@ class Workflow extends Handler
             $aFields["ROU_TYPE"] = $sType;
             $aFields["ROU_DEFAULT"] = $default;
 
-            if(! empty($condition)) {
+            if (! empty($condition)) {
                 $aFields['ROU_CONDITION'] = $condition;
             }
 
@@ -894,7 +892,7 @@ class Workflow extends Handler
 
             while ($rsCriteria->next()) {
                 $row = $rsCriteria->getRow();
-                $emailEvent->delete($sProcessUID,$row["EMAIL_EVENT_UID"],false);
+                $emailEvent->delete($sProcessUID, $row["EMAIL_EVENT_UID"], false);
             }
 
             if (!$onlyDiagram) {
@@ -945,7 +943,7 @@ class Workflow extends Handler
                 'PRO_UID'=>$this->proUid,
                 'TAS_UID'=>'',
                 'SCH_TIME_NEXT_RUN'=>date('Y-m-d H:i:s'),
-                'SCH_LAST_RUN_TIME'=>NULL,
+                'SCH_LAST_RUN_TIME'=>null,
                 'SCH_STATE'=>'',
                 'SCH_LAST_STATE'=>'',
                 'USR_UID'=>'',
@@ -953,7 +951,7 @@ class Workflow extends Handler
                 'SCH_START_TIME'=>date('Y-m-d H:i:s'),
                 'SCH_START_DATE'=>date('Y-m-d H:i:s'),
                 'SCH_DAYS_PERFORM_TASK'=>'',
-                'SCH_EVERY_DAYS'=>NULL,
+                'SCH_EVERY_DAYS'=>null,
                 'SCH_WEEK_DAYS'=>'',
                 'SCH_START_DAY'=>'',
                 'SCH_START_DAY_OPT_1'=>'',
@@ -962,7 +960,7 @@ class Workflow extends Handler
                 'SCH_END_DATE'=>date('Y-m-d H:i:s'),
                 'SCH_REPEAT_EVERY'=>'',
                 'SCH_REPEAT_STOP_IF_RUNNING'=>'',
-                'CASE_SH_PLUGIN_UID'=>NULL,
+                'CASE_SH_PLUGIN_UID'=>null,
                 'SCH_DEL_USER_PASS'=>'',
                 'SCH_UID'=>$schUid,
                 'SCH_REPEAT_UNTIL'=>''
@@ -1047,7 +1045,6 @@ class Workflow extends Handler
             self::log("Exception: ", $e->getMessage(), "Trace: ", $e->getTraceAsString());
             throw $e;
         }
-
     }
 
     public function addLine($position, $direction = "HORIZONTAL")
@@ -1323,8 +1320,8 @@ class Workflow extends Handler
                         isset($arrayWorkflowData["uid"][$value["CTO_TYPE_OBJ"]]) &&
                         isset($arrayWorkflowData["uid"][$value["CTO_TYPE_OBJ"]][$value["CTO_UID_OBJ"]])) {
                     $arrayWorkflowData["caseTrackerObject"][$key]["CTO_UID_OBJ"] = $arrayWorkflowData["uid"][$value["CTO_TYPE_OBJ"]][$value["CTO_UID_OBJ"]];
-                        }
-                    }
+                }
+            }
 
             //Synchronize variables with process variables.
             foreach ($arrayWorkflowData["processVariables"] as $key => $value) {
@@ -1378,4 +1375,3 @@ class Workflow extends Handler
         }
     }
 }
-

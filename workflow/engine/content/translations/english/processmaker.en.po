@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ProcessMaker (Branch 3.2.3)\n"
 "POT-Creation-Date: \n"
-"PO-Revision-Date: 2017-11-22 20:50:02\n"
+"PO-Revision-Date: 2018-02-19 20:22:41\n"
 "Last-Translator: \n"
 "Language-Team: Colosa Developers Team <developers@colosa.com>\n"
 "MIME-Version: 1.0\n"
@@ -8322,6 +8322,18 @@ msgid "File \"{0}\" imported successfully."
 msgstr "File \"{0}\" imported successfully."
 
 # TRANSLATION
+# LABEL/ID_FILE_LOG_CREATED
+#: LABEL/ID_FILE_LOG_CREATED
+msgid "Created on"
+msgstr "Created on"
+
+# TRANSLATION
+# LABEL/ID_FILE_LOG_SIZE
+#: LABEL/ID_FILE_LOG_SIZE
+msgid "File size"
+msgstr "File size"
+
+# TRANSLATION
 # LABEL/ID_FILE_NAME
 #: LABEL/ID_FILE_NAME
 msgid "File Name"
@@ -8574,6 +8586,36 @@ msgid "@function() It evaluates the value, then executes a PHP function"
 msgstr "@function() It evaluates the value, then executes a PHP function"
 
 # TRANSLATION
+# LABEL/ID_G_SUITE_CONFIGURATION_SAVED
+#: LABEL/ID_G_SUITE_CONFIGURATION_SAVED
+msgid "G Suite Configuration Saved"
+msgstr "G Suite Configuration Saved"
+
+# TRANSLATION
+# LABEL/ID_G_SUITE_CONNECT
+#: LABEL/ID_G_SUITE_CONNECT
+msgid "Request G Suite connection"
+msgstr "Request G Suite connection"
+
+# TRANSLATION
+# LABEL/ID_G_SUITE_DISCONNECT
+#: LABEL/ID_G_SUITE_DISCONNECT
+msgid "Disconnect G Suite"
+msgstr "Disconnect G Suite"
+
+# TRANSLATION
+# LABEL/ID_G_SUITE_LOAD_GROUPS
+#: LABEL/ID_G_SUITE_LOAD_GROUPS
+msgid "Update G Suite groups"
+msgstr "Update G Suite groups"
+
+# TRANSLATION
+# LABEL/ID_G_SUITE_SYNC_USERS
+#: LABEL/ID_G_SUITE_SYNC_USERS
+msgid "Syncing Users"
+msgstr "Syncing Users"
+
+# TRANSLATION
 # LABEL/ID_GENERAL
 #: LABEL/ID_GENERAL
 msgid "General"
@@ -8782,6 +8824,12 @@ msgstr "Displaying emails {0} - {1} of {2}"
 #: LABEL/ID_GRID_PAGE_DISPLAYING_EVENT_MESSAGE
 msgid "Displaying events {0} - {1} of {2}"
 msgstr "Displaying events {0} - {1} of {2}"
+
+# TRANSLATION
+# LABEL/ID_GRID_PAGE_DISPLAYING_FILE_LOGS
+#: LABEL/ID_GRID_PAGE_DISPLAYING_FILE_LOGS
+msgid "Displaying log files {0} - {1} of {2}"
+msgstr "Displaying log files {0} - {1} of {2}"
 
 # TRANSLATION
 # LABEL/ID_GRID_PAGE_DISPLAYING_GROUPS_MESSAGE
@@ -9912,6 +9960,18 @@ msgid "INT"
 msgstr "INT"
 
 # TRANSLATION
+# LABEL/ID_INTERMEDIATE_CATCH_MESSAGE_EVENT
+#: LABEL/ID_INTERMEDIATE_CATCH_MESSAGE_EVENT
+msgid "Untitled - Intermediate Send Message Event"
+msgstr "Untitled - Intermediate Send Message Event"
+
+# TRANSLATION
+# LABEL/ID_INTERMEDIATE_CATCH_TIMER_EVENT
+#: LABEL/ID_INTERMEDIATE_CATCH_TIMER_EVENT
+msgid "Untitled - Intermediate Timer Event"
+msgstr "Untitled - Intermediate Timer Event"
+
+# TRANSLATION
 # LABEL/ID_INTERMEDIATE_MESSAGE_EVENT
 #: LABEL/ID_INTERMEDIATE_MESSAGE_EVENT
 msgid "Intermediate Message Events (Task Notifications)"
@@ -9934,6 +9994,18 @@ msgstr "Intermediate Timer Event (Multiple Event)"
 #: LABEL/ID_INTERMEDIATE_TIMER_EVENTS
 msgid "[LABEL/ID_INTERMEDIATE_TIMER_EVENTS] Intermediate Timer Event (Multiple Event)"
 msgstr "Intermediate Timer Event (Multiple Event)"
+
+# TRANSLATION
+# LABEL/ID_INTERMEDIATE_THROW_EMAIL_EVENT
+#: LABEL/ID_INTERMEDIATE_THROW_EMAIL_EVENT
+msgid "Untitled - Intermediate Email Event"
+msgstr "Untitled - Intermediate Email Event"
+
+# TRANSLATION
+# LABEL/ID_INTERMEDIATE_THROW_MESSAGE_EVENT
+#: LABEL/ID_INTERMEDIATE_THROW_MESSAGE_EVENT
+msgid "Untitled - Intermediate Receive Message Event"
+msgstr "Untitled - Intermediate Receive Message Event"
 
 # TRANSLATION
 # LABEL/ID_INTERNATIONAL
@@ -10198,12 +10270,6 @@ msgstr "Issued to"
 #: LABEL/ID_IS_NOT_REGISTERED
 msgid "is not registered!"
 msgstr "is not registered!"
-
-# TRANSLATION
-# LABEL/ID_THE_USERNAME_EMAIL_IS_INCORRECT
-#: LABEL/ID_THE_USERNAME_EMAIL_IS_INCORRECT
-msgid "The username or email is incorrect"
-msgstr "The username or email is incorrect"
 
 # TRANSLATION
 # LABEL/ID_IS_REQUIRED
@@ -10950,6 +11016,12 @@ msgid "(HH:MM) Format 24 hrs."
 msgstr "(HH:MM) Format 24 hrs."
 
 # TRANSLATION
+# LABEL/ID_MAFE_0a10134c1999989ce854ac519eb97249
+#: LABEL/ID_MAFE_0a10134c1999989ce854ac519eb97249
+msgid "Web Entry Anonymous Authentication"
+msgstr "Web Entry Anonymous Authentication"
+
+# TRANSLATION
 # LABEL/ID_MAFE_0a33cdf242201623275b9897d8b4d8c4
 #: LABEL/ID_MAFE_0a33cdf242201623275b9897d8b4d8c4
 msgid "Html Template"
@@ -10998,10 +11070,22 @@ msgid "Please configure a script to send a signal."
 msgstr "Please configure a script to send a signal."
 
 # TRANSLATION
+# LABEL/ID_MAFE_0b9d04ab06dac3da0142bb369637bfa4
+#: LABEL/ID_MAFE_0b9d04ab06dac3da0142bb369637bfa4
+msgid "qr code"
+msgstr "qr code"
+
+# TRANSLATION
 # LABEL/ID_MAFE_0bb8309239953b782fec18706fe60b4a
 #: LABEL/ID_MAFE_0bb8309239953b782fec18706fe60b4a
 msgid "Digital"
 msgstr "Digital"
+
+# TRANSLATION
+# LABEL/ID_MAFE_0bf7c19f7eac3bfa5ad960a50ad602dc
+#: LABEL/ID_MAFE_0bf7c19f7eac3bfa5ad960a50ad602dc
+msgid "[LABEL/ID_MAFE_0bf7c19f7eac3bfa5ad960a50ad602dc] subtitle"
+msgstr "subtitle"
 
 # TRANSLATION
 # LABEL/ID_MAFE_0c06d45a9f58aba5f4c4d50b03f65b04
@@ -11838,6 +11922,12 @@ msgid "B5"
 msgstr "B5"
 
 # TRANSLATION
+# LABEL/ID_MAFE_2a304a1348456ccd2234cd71a81bd338
+#: LABEL/ID_MAFE_2a304a1348456ccd2234cd71a81bd338
+msgid "[LABEL/ID_MAFE_2a304a1348456ccd2234cd71a81bd338] link"
+msgstr "link"
+
+# TRANSLATION
 # LABEL/ID_MAFE_2a37d240713f300cf06d390798b0efad
 #: LABEL/ID_MAFE_2a37d240713f300cf06d390798b0efad
 msgid "Please, specify a name for the Message Field."
@@ -11992,6 +12082,18 @@ msgstr "Store value in"
 #: LABEL/ID_MAFE_308a5146b0818a721c5081d2b1932398
 msgid "is duplicated."
 msgstr "is duplicated."
+
+# TRANSLATION
+# LABEL/ID_MAFE_30a2dae0a135701b862050465b3e4e97
+#: LABEL/ID_MAFE_30a2dae0a135701b862050465b3e4e97
+msgid "Triggers after and before a step are not supported when working offline"
+msgstr "Triggers after and before a step are not supported when working offline"
+
+# TRANSLATION
+# LABEL/ID_MAFE_30c40215e6d00c574ca23451003db9b9
+#: LABEL/ID_MAFE_30c40215e6d00c574ca23451003db9b9
+msgid "[LABEL/ID_MAFE_30c40215e6d00c574ca23451003db9b9] checkgroup"
+msgstr "checkgroup"
 
 # TRANSLATION
 # LABEL/ID_MAFE_3120001274fa32a921770c1b41e6dc0a
@@ -12468,6 +12570,12 @@ msgid "Messages"
 msgstr "Messages"
 
 # TRANSLATION
+# LABEL/ID_MAFE_41e80c3ce414de15ab19d996f7072429
+#: LABEL/ID_MAFE_41e80c3ce414de15ab19d996f7072429
+msgid "fileupload"
+msgstr "fileupload"
+
+# TRANSLATION
 # LABEL/ID_MAFE_41fffd09332a35491d3bed5a34f91410
 #: LABEL/ID_MAFE_41fffd09332a35491d3bed5a34f91410
 msgid "http://eonasdan.github.io/bootstrap-datetimepicker/</a>"
@@ -12478,6 +12586,12 @@ msgstr "http://eonasdan.github.io/bootstrap-datetimepicker/</a>"
 #: LABEL/ID_MAFE_42184184a95464c63c790acc3a69e564
 msgid "[LABEL/ID_MAFE_42184184a95464c63c790acc3a69e564] Routing History"
 msgstr "Routing History"
+
+# TRANSLATION
+# LABEL/ID_MAFE_421b47ffd946ca083b65cd668c6b17e6
+#: LABEL/ID_MAFE_421b47ffd946ca083b65cd668c6b17e6
+msgid "video"
+msgstr "video"
 
 # TRANSLATION
 # LABEL/ID_MAFE_4252b72e6ebcd4d4b4c2e46a786f03d2
@@ -12832,6 +12946,12 @@ msgstr "Generate Link"
 #: LABEL/ID_MAFE_50b5d3dcade1bb32254e0f8d54c493de
 msgid "Please insert variable before adding to the list."
 msgstr "Please insert variable before adding to the list."
+
+# TRANSLATION
+# LABEL/ID_MAFE_5174307b9097d47b1a506bc8171c2bb3
+#: LABEL/ID_MAFE_5174307b9097d47b1a506bc8171c2bb3
+msgid "textbox"
+msgstr "textbox"
 
 # TRANSLATION
 # LABEL/ID_MAFE_5174d1309f275ba6f275db3af9eb3e18
@@ -13608,6 +13728,12 @@ msgid "Assignee saved successfully"
 msgstr "Assignee saved successfully"
 
 # TRANSLATION
+# LABEL/ID_MAFE_6be8bfc7078373aa92b3a862b5253e7e
+#: LABEL/ID_MAFE_6be8bfc7078373aa92b3a862b5253e7e
+msgid "Mobile controls"
+msgstr "Mobile controls"
+
+# TRANSLATION
 # LABEL/ID_MAFE_6c24f6923944d3f9d84bcf924661abff
 #: LABEL/ID_MAFE_6c24f6923944d3f9d84bcf924661abff
 msgid "New variables created"
@@ -13770,12 +13896,6 @@ msgid "Error Update File"
 msgstr "Error Update File"
 
 # TRANSLATION
-# LABEL/ID_MAFE_7215ee9c7d9dc229d2921a40e899ec5f
-#: LABEL/ID_MAFE_7215ee9c7d9dc229d2921a40e899ec5f
-msgid "[LABEL/ID_MAFE_7215ee9c7d9dc229d2921a40e899ec5f] "
-msgstr ""
-
-# TRANSLATION
 # LABEL/ID_MAFE_725255d7ccc0cf426c1da6abe0afe7e4
 #: LABEL/ID_MAFE_725255d7ccc0cf426c1da6abe0afe7e4
 msgid "SDV"
@@ -13906,6 +14026,12 @@ msgstr "Sub-process"
 #: LABEL/ID_MAFE_786c4135070aa1910d2f4ac8b2253235
 msgid "Routing"
 msgstr "Routing"
+
+# TRANSLATION
+# LABEL/ID_MAFE_78805a221a988e79ef3f42d7c5bfd418
+#: LABEL/ID_MAFE_78805a221a988e79ef3f42d7c5bfd418
+msgid "image"
+msgstr "image"
 
 # TRANSLATION
 # LABEL/ID_MAFE_788287625aa640447c5d9fff50644915
@@ -15336,6 +15462,12 @@ msgid "setOrientation(): parameter is not valid"
 msgstr "setOrientation(): parameter is not valid"
 
 # TRANSLATION
+# LABEL/ID_MAFE_a5ca0b5894324f8bb54bb9fffad29d1e
+#: LABEL/ID_MAFE_a5ca0b5894324f8bb54bb9fffad29d1e
+msgid "audio"
+msgstr "audio"
+
+# TRANSLATION
 # LABEL/ID_MAFE_a603905470e2a5b8c13e96b579ef0dba
 #: LABEL/ID_MAFE_a603905470e2a5b8c13e96b579ef0dba
 msgid "Debug"
@@ -15510,6 +15642,12 @@ msgid "Create Message Type"
 msgstr "Create Message Type"
 
 # TRANSLATION
+# LABEL/ID_MAFE_ac201fd270c3b96beab24f2829780ab2
+#: LABEL/ID_MAFE_ac201fd270c3b96beab24f2829780ab2
+msgid "signature"
+msgstr "signature"
+
+# TRANSLATION
 # LABEL/ID_MAFE_ac48a7776ff0e8dc13b0a1300fc0a75f
 #: LABEL/ID_MAFE_ac48a7776ff0e8dc13b0a1300fc0a75f
 msgid "Must connect to a Task"
@@ -15532,6 +15670,12 @@ msgstr "required"
 #: LABEL/ID_MAFE_ac68b62abfd6a9fe26e8ac4236c8ce0c
 msgid "forms"
 msgstr "forms"
+
+# TRANSLATION
+# LABEL/ID_MAFE_acd6337dfeb8a29685e3856bfa76756c
+#: LABEL/ID_MAFE_acd6337dfeb8a29685e3856bfa76756c
+msgid "History of use"
+msgstr "History of use"
 
 # TRANSLATION
 # LABEL/ID_MAFE_ad7bdeed2bf3d72e17abe1a8d0508958
@@ -15760,6 +15904,12 @@ msgstr "<tr><td><b>Hour</b></td><td>H</td><td>0 1 ... 22 23</td></tr><tr><td></t
 #: LABEL/ID_MAFE_b5a7adde1af5c87d7fd797b6245c2a39
 msgid "[LABEL/ID_MAFE_b5a7adde1af5c87d7fd797b6245c2a39] Description"
 msgstr "Description"
+
+# TRANSLATION
+# LABEL/ID_MAFE_b5ceb80c90c6b834060fcd7e0d2c0c28
+#: LABEL/ID_MAFE_b5ceb80c90c6b834060fcd7e0d2c0c28
+msgid "subform"
+msgstr "subform"
 
 # TRANSLATION
 # LABEL/ID_MAFE_b5d4d25fe3fa9f8263b5f279a372b709
@@ -16260,6 +16410,12 @@ msgid "Execute a trigger when a case is opened"
 msgstr "Execute a trigger when a case is opened"
 
 # TRANSLATION
+# LABEL/ID_MAFE_c79bdf421714f5087fc34b7c538b6807
+#: LABEL/ID_MAFE_c79bdf421714f5087fc34b7c538b6807
+msgid "[LABEL/ID_MAFE_c79bdf421714f5087fc34b7c538b6807] submit"
+msgstr "submit"
+
+# TRANSLATION
 # LABEL/ID_MAFE_c7f8f8652db6d74e086d297129179d2f
 #: LABEL/ID_MAFE_c7f8f8652db6d74e086d297129179d2f
 msgid "Task/sub-process name can't be empty"
@@ -16450,6 +16606,12 @@ msgstr "multiple"
 #: LABEL/ID_MAFE_ce4d4b319a571fda7b689cee71432d5d
 msgid "[LABEL/ID_MAFE_ce4d4b319a571fda7b689cee71432d5d] Custom Trigger"
 msgstr "Custom Trigger"
+
+# TRANSLATION
+# LABEL/ID_MAFE_ce50a09343724eb82df11390e2c1de18
+#: LABEL/ID_MAFE_ce50a09343724eb82df11390e2c1de18
+msgid "[LABEL/ID_MAFE_ce50a09343724eb82df11390e2c1de18] button"
+msgstr "button"
 
 # TRANSLATION
 # LABEL/ID_MAFE_ce5f8a0a2fea8e45ddfd3fe51ae60703
@@ -16902,6 +17064,12 @@ msgid "Parallel gateway"
 msgstr "Parallel gateway"
 
 # TRANSLATION
+# LABEL/ID_MAFE_dfeaaeb4316477bd556ea5e8c3295887
+#: LABEL/ID_MAFE_dfeaaeb4316477bd556ea5e8c3295887
+msgid "datetime"
+msgstr "datetime"
+
+# TRANSLATION
 # LABEL/ID_MAFE_e019dd49d439bb6d6765f7d2f6915333
 #: LABEL/ID_MAFE_e019dd49d439bb6d6765f7d2f6915333
 msgid "Close Validator"
@@ -17146,6 +17314,12 @@ msgstr "Days"
 #: LABEL/ID_MAFE_e8308c9bdecef89676a80116e65d9210
 msgid "- Select an input document -"
 msgstr "- Select an input document -"
+
+# TRANSLATION
+# LABEL/ID_MAFE_e889b1ca9624a9fbe23c4f062d7e5f01
+#: LABEL/ID_MAFE_e889b1ca9624a9fbe23c4f062d7e5f01
+msgid "geomap"
+msgstr "geomap"
 
 # TRANSLATION
 # LABEL/ID_MAFE_e8be55bf3a30501aef09d2e74de97976
@@ -17434,6 +17608,12 @@ msgstr "Flow"
 #: LABEL/ID_MAFE_f1e505c1ac6b1e2409fd1dd6520da2ce
 msgid "Step editing successfully."
 msgstr "Step editing successfully."
+
+# TRANSLATION
+# LABEL/ID_MAFE_f1e5d7a5fe13498abbdeb0f1f19136a8
+#: LABEL/ID_MAFE_f1e5d7a5fe13498abbdeb0f1f19136a8
+msgid "panel"
+msgstr "panel"
 
 # TRANSLATION
 # LABEL/ID_MAFE_f217bd2ed27f82d5c856035f95801373
@@ -17766,6 +17946,12 @@ msgid "textfield"
 msgstr "textfield"
 
 # TRANSLATION
+# LABEL/ID_MAFE_ff4a008470319a22d9cf3d14af485977
+#: LABEL/ID_MAFE_ff4a008470319a22d9cf3d14af485977
+msgid "[LABEL/ID_MAFE_ff4a008470319a22d9cf3d14af485977] grid"
+msgstr "grid"
+
+# TRANSLATION
 # LABEL/ID_MAFE_ffc1dca70df11105d22d9f427a9e260b
 #: LABEL/ID_MAFE_ffc1dca70df11105d22d9f427a9e260b
 msgid "Edit Label"
@@ -17776,6 +17962,18 @@ msgstr "Edit Label"
 #: LABEL/ID_MAFE_ffcf70e892b8ac3facbac0f88602396b
 msgid "Every"
 msgstr "Every"
+
+# TRANSLATION
+# LABEL/ID_MAFE_TRANSLATION_DIRECTORY
+#: LABEL/ID_MAFE_TRANSLATION_DIRECTORY
+msgid "Mafe Translation Directory"
+msgstr "Mafe Translation Directory"
+
+# TRANSLATION
+# LABEL/ID_MAFE_TRANSLATION_NOT_WRITEABLE
+#: LABEL/ID_MAFE_TRANSLATION_NOT_WRITEABLE
+msgid "The mafe translation file is not writable. <br/>Please give write permission to file:"
+msgstr "The mafe translation file is not writable. <br/>Please give write permission to file:"
 
 # TRANSLATION
 # LABEL/ID_MAIL_SENT_SUCCESSFULLY
@@ -19110,6 +19308,12 @@ msgid "Notify users of case"
 msgstr "Notify users of case"
 
 # TRANSLATION
+# LABEL/ID_NOT_ABLE_REASSIGN
+#: LABEL/ID_NOT_ABLE_REASSIGN
+msgid "You are not able to reassign cases of this process."
+msgstr "You are not able to reassign cases of this process."
+
+# TRANSLATION
 # LABEL/ID_NOT_AVAILABLE_DATABASE
 #: LABEL/ID_NOT_AVAILABLE_DATABASE
 msgid "Not available."
@@ -20118,6 +20322,12 @@ msgid "php-mssql is Not Installed"
 msgstr "php-mssql is Not Installed"
 
 # TRANSLATION
+# LABEL/ID_PHP_MYSQLI_NOT_INSTALL
+#: LABEL/ID_PHP_MYSQLI_NOT_INSTALL
+msgid "php-mysqli is Not Installed"
+msgstr "php-mysqli is Not Installed"
+
+# TRANSLATION
 # LABEL/ID_PHP_MYSQL_NOT _INSTALL
 #: LABEL/ID_PHP_MYSQL_NOT _INSTALL
 msgid "php-mysql is Not Installed"
@@ -21056,8 +21266,8 @@ msgstr "Open SSL is optional"
 # TRANSLATION
 # LABEL/ID_PROCESSMAKER_REQUIREMENTS_PHP
 #: LABEL/ID_PROCESSMAKER_REQUIREMENTS_PHP
-msgid "PHP recommended version 5.6 or higher (7.0 not supported)"
-msgstr "PHP recommended version 5.6 or higher (7.0 not supported)"
+msgid "PHP recommended version 5.6 or higher, PHP 7.2 is not yet supported"
+msgstr "PHP recommended version 5.6 or higher, PHP 7.2 is not yet supported"
 
 # TRANSLATION
 # LABEL/ID_PROCESSMAKER_REQUIREMENTS_SOAP
@@ -21738,6 +21948,12 @@ msgid "Reassign All Cases by Task"
 msgstr "Reassign All Cases by Task"
 
 # TRANSLATION
+# LABEL/ID_REASSIGN_CASE
+#: LABEL/ID_REASSIGN_CASE
+msgid "Reassign Case"
+msgstr "Reassign Case"
+
+# TRANSLATION
 # LABEL/ID_REASSIGN_CASES
 #: LABEL/ID_REASSIGN_CASES
 msgid "Reassign Cases"
@@ -21748,6 +21964,12 @@ msgstr "Reassign Cases"
 #: LABEL/ID_REASSIGN_CONFIRM
 msgid "Do you want to reassign the case?"
 msgstr "Do you want to reassign the case?"
+
+# TRANSLATION
+# LABEL/ID_REASSIGN_MY_CASES
+#: LABEL/ID_REASSIGN_MY_CASES
+msgid "Reassign my cases"
+msgstr "Reassign my cases"
 
 # TRANSLATION
 # LABEL/ID_REASSIGN_TO
@@ -23772,6 +23994,12 @@ msgid "Stages"
 msgstr "Stages"
 
 # TRANSLATION
+# LABEL/ID_STANDARD_LOGGING
+#: LABEL/ID_STANDARD_LOGGING
+msgid "Log Files"
+msgstr "Log Files"
+
+# TRANSLATION
 # LABEL/ID_STARTED_CASES
 #: LABEL/ID_STARTED_CASES
 msgid "My Started Cases"
@@ -24544,6 +24772,12 @@ msgstr "The change might cause data loss in the PM table. Do you want to continu
 #: LABEL/ID_THE_REASON_REASSIGN_USER_EMPTY
 msgid "Please complete the reassign reason."
 msgstr "Please complete the reassign reason."
+
+# TRANSLATION
+# LABEL/ID_THE_USERNAME_EMAIL_IS_INCORRECT
+#: LABEL/ID_THE_USERNAME_EMAIL_IS_INCORRECT
+msgid "The username or email is incorrect"
+msgstr "The username or email is incorrect"
 
 # TRANSLATION
 # LABEL/ID_THIS_MONTH
@@ -28124,7 +28358,7 @@ msgstr "File"
 # additionalTables/doExport.xml?SIZE
 # additionalTables/doExport.xml
 #: caption - SIZE
-msgid "File size"
+msgid "[additionalTables/doExport.xml?SIZE] File size"
 msgstr "File size"
 
 # additionalTables/doExport.xml?META

@@ -27,7 +27,7 @@ $webEntryModel = \WebEntryPeer::retrieveByPK($weUid);
         <META HTTP-EQUIV="Expires" CONTENT="-1">
         <script src="/js/bluebird/bluebird.min.js"></script>
         <?php
-            $oHeadPublisher = & headPublisher::getSingleton();
+            $oHeadPublisher = headPublisher::getSingleton();
             echo $oHeadPublisher->getExtJsStylesheets(SYS_SKIN);
         ?>
         <style>

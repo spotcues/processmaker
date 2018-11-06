@@ -9,11 +9,11 @@
 //@Workspace : {ws}
 //@Timestamp : {timestamp}
 
-define("WS_WSDL_URL",   "{wsdlUrl}");
-define("WS_UPLOAD_URL", "{wsUploadUrl}");
-define("WS_USER_ID",    "{wsUser}");
-define("WS_USER_PASS",  "{wsPass}");
-define("WS_ROUNDROBIN", "{wsRoundRobin}");
+define('WS_WSDL_URL',   '{wsdlUrl}');
+define('WS_UPLOAD_URL', '{wsUploadUrl}');
+define('WS_USER_ID',    '{wsUser}');
+define('WS_USER_PASS',  '{wsPass}');
+define('WS_ROUNDROBIN', '{wsRoundRobin}');
 
 try {
     @include_once ("wsClient.php");

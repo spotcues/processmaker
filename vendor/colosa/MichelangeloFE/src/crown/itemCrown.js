@@ -48,6 +48,21 @@ var ItemCrown = function (options) {
      * @type {null}
      */
     this.eventOnMouseDown = null;
+    /**
+     * Event OnMouseUp
+     * @type {null}
+     */
+    this.eventOnMouseUp = null;
+    /**
+     * Event OnMouseMove
+     * @type {null}
+     */
+    this.eventOnMouseMove = null;
+    /**
+     * Event OnMouseOut
+     * @type {null}
+     */
+    this.eventOnMouseOut = null;
     this.init(options);
 };
 /**
@@ -73,6 +88,9 @@ ItemCrown.prototype.init = function (options) {
         this.setClassName(options.className);
         this.setEventOnClick(options.eventOnClick);
         this.setEventOnMouseDown(options.eventOnMouseDown);
+        this.setEventOnMouseUp(options.eventOnMouseUp);
+        this.setEventOnMouseMove(options.eventOnMouseMove);
+        this.setEventOnMouseOut(options.eventOnMouseOut);
     }
     return this;
 };
@@ -221,6 +239,39 @@ ItemCrown.prototype.setEventOnMouseDown = function (func) {
     return this;
 };
 /**
+ * Set Function EventOnMouseUp
+ * @param func
+ * @returns {ItemCrown}
+ */
+ItemCrown.prototype.setEventOnMouseUp = function (func) {
+    if (func && typeof func === "function") {
+        this.eventOnMouseUp = func;
+    }
+    return this;
+};
+/**
+ * Set Function EventOnMouseMove
+ * @param func
+ * @returns {ItemCrown}
+ */
+ItemCrown.prototype.setEventOnMouseMove = function (func) {
+    if (func && typeof func === "function") {
+        this.eventOnMouseMove = func;
+    }
+    return this;
+};
+/**
+ * Set Function EventOnMouseOut
+ * @param func
+ * @returns {ItemCrown}
+ */
+ItemCrown.prototype.setEventOnMouseOut = function (func) {
+    if (func && typeof func === "function") {
+        this.eventOnMouseOut = func;
+    }
+    return this;
+};
+/**
  * Create HTML Item Crown
  * @returns {*}
  */
@@ -249,6 +300,8 @@ ItemCrown.prototype.attachListeners = function () {
         jQuery(htmlItemCrown).click(this.onClick());
         jQuery(htmlItemCrown).mousedown(this.onMouseDown());
         jQuery(htmlItemCrown).mouseup(this.onMouseUp());
+        jQuery(htmlItemCrown).mousemove(this.onMouseMove());
+        jQuery(htmlItemCrown).mouseout(this.onMouseOut());
     }
     this.html = htmlItemCrown;
     return this;
@@ -286,8 +339,40 @@ ItemCrown.prototype.onMouseDown = function () {
  * @returns {Function}
  */
 ItemCrown.prototype.onMouseUp = function () {
+    var that = this;
     return function (e) {
         e.stopPropagation();
         e.preventDefault();
+        if (that.eventOnMouseUp) {
+            that.eventOnMouseUp(that);
+        }
+    };
+};
+/**
+ * OnMouseMove Event
+ * @returns {Function}
+ */
+ItemCrown.prototype.onMouseMove = function () {
+    var that = this;
+    return function (e) {
+        e.stopPropagation();
+        e.preventDefault();
+        if (that.eventOnMouseMove) {
+            that.eventOnMouseMove(that);
+        }
+    };
+};
+/**
+ * OnMouseOut Event
+ * @returns {Function}
+ */
+ItemCrown.prototype.onMouseOut = function () {
+    var that = this;
+    return function (e) {
+        e.stopPropagation();
+        e.preventDefault();
+        if (that.eventOnMouseOut) {
+            that.eventOnMouseOut(that);
+        }
     };
 };

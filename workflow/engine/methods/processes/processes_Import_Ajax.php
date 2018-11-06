@@ -237,8 +237,9 @@ if ($action == "uploadFileNewProcess") {
             $allowedExtensions = array ($processFileType
             );
             $allowedExtensions = array ('pm');
-            if (! in_array( end( explode( ".", $_FILES['PROCESS_FILENAME']['name'] ) ), $allowedExtensions )) {
-                throw new Exception( G::LoadTranslation( "ID_FILE_UPLOAD_INCORRECT_EXTENSION" ) );
+            $explode = explode(".", $_FILES['PROCESS_FILENAME']['name']);
+            if (!in_array(end($explode), $allowedExtensions)) {
+                throw new Exception(G::LoadTranslation("ID_FILE_UPLOAD_INCORRECT_EXTENSION"));
             }
         }
 

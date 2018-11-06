@@ -1,5 +1,7 @@
 <?php
 
+use Illuminate\Support\Facades\DB;
+
 /**
  * Class MultipleFilesBackup
  * create a backup of this workspace
@@ -20,12 +22,12 @@ class MultipleFilesBackup
      *  @filename contains the path and filename of the comppress file(s).
      *  @size     got the Max size of the compressed files, by default if the $size less to zero will mantains 1000 Mb as Max size.
      */
-    public function MultipleFilesBackup($filename, $size)
+    public function __construct($filename, $size)
     {
         if (!empty($filename)) {
             $this->filename = $filename;
         }
-        if (!empty($size) && (int) $size > 0) {
+        if (!empty($size) && (int)$size > 0) {
             $this->fileSize = $size;
         }
     }
@@ -91,6 +93,7 @@ class MultipleFilesBackup
             G::rm_dir($tempDirectory);
         }
     }
+
     /* Restore from file(s) commpressed by letsBackup function, into a temporary directory
      *  @ filename     got the name and path of the compressed file(s), if there are many files with file extention as a numerical series, the extention should be discriminated.
      *  @ srcWorkspace contains the workspace to be restored.
@@ -162,14 +165,14 @@ class MultipleFilesBackup
                 CLI::logging(CLI::warning("> Workspace $backupWorkspace found, but not restoring.") . "\n");
                 continue;
             } else {
-                CLI::logging("> Restoring " . CLI::info($backupWorkspace) . " to " . CLI::info($workspaceName) . "\n");
+                CLI::logging('> Restoring ' . CLI::info($backupWorkspace) . ' to ' . CLI::info($workspaceName) . "\n");
             }
             $workspace = new WorkspaceTools($workspaceName);
             if ($workspace->workspaceExists()) {
                 if ($overwrite) {
                     CLI::logging(CLI::warning("> Workspace $workspaceName already exist, overwriting!") . "\n");
                 } else {
-                    throw new Exception("Destination workspace already exist (use -o to overwrite)");
+                    throw new Exception('Destination workspace already exist (use -o to overwrite)');
                 }
             }
             if (file_exists($workspace->path)) {
@@ -196,31 +199,35 @@ class MultipleFilesBackup
             list($dbHost, $dbUser, $dbPass) = @explode(SYSTEM_HASH, G::decrypt(HASH_INSTALLATION, SYSTEM_HASH));
 
             CLI::logging("> Connecting to system database in '$dbHost'\n");
-            $link = mysql_connect($dbHost, $dbUser, $dbPass);
-            @mysql_query("SET NAMES 'utf8';");
-            @mysql_query("SET FOREIGN_KEY_CHECKS=0;");
-            if (!$link) {
-                throw new Exception('Could not connect to system database: ' . mysql_error());
+
+            try {
+                $connectionLestRestore = 'RESTORE';
+                InstallerModule::setNewConnection($connectionLestRestore, $dbHost, $dbUser, $dbPass, '', '');
+                DB::connection($connectionLestRestore)
+                    ->statement("SET NAMES 'utf8'");
+                DB::connection($connectionLestRestore)
+                    ->statement('SET FOREIGN_KEY_CHECKS=0');
+            } catch (Exception $exception) {
+                throw new Exception('Could not connect to system database: ' . $exception->getMessage());
             }
 
+
+            $onedb = false;
             if (strpos($metadata->DB_RBAC_NAME, 'rb_') === false) {
                 $onedb = true;
-            } else {
-                $onedb = false;
             }
 
             $newDBNames = $workspace->resetDBInfo($dbHost, $createWorkspace, $onedb);
-            $aParameters = array('dbHost' => $dbHost, 'dbUser' => $dbUser, 'dbPass' => $dbPass);
+            $aParameters = ['dbHost' => $dbHost, 'dbUser' => $dbUser, 'dbPass' => $dbPass];
 
             foreach ($metadata->databases as $db) {
                 $dbName = $newDBNames[$db->name];
                 CLI::logging("+> Restoring database {$db->name} to $dbName\n");
-                $workspace->executeSQLScript($dbName, "$tempDirectory/{$db->name}.sql", $aParameters);
-                $workspace->createDBUser($dbName, $db->pass, "localhost", $dbName);
-                $workspace->createDBUser($dbName, $db->pass, "%", $dbName);
+                $workspace->executeSQLScript($dbName, "$tempDirectory/{$db->name}.sql", $aParameters, 1, $connectionLestRestore);
+                $workspace->createDBUser($dbName, $db->pass, "localhost", $dbName, $connectionLestRestore);
+                $workspace->createDBUser($dbName, $db->pass, "%", $dbName, $connectionLestRestore);
             }
             $workspace->upgradeCacheView(false);
-            mysql_close($link);
         }
         CLI::logging("Removing temporary files\n");
         G::rm_dir($tempDirectory);

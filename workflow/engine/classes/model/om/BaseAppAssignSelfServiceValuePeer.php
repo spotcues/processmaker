@@ -25,7 +25,7 @@ abstract class BaseAppAssignSelfServiceValuePeer
     const CLASS_DEFAULT = 'classes.model.AppAssignSelfServiceValue';
 
     /** The total number of columns. */
-    const NUM_COLUMNS = 6;
+    const NUM_COLUMNS = 8;
 
     /** The number of lazy-loaded columns. */
     const NUM_LAZY_LOAD_COLUMNS = 0;
@@ -37,6 +37,9 @@ abstract class BaseAppAssignSelfServiceValuePeer
     /** the column name for the APP_UID field */
     const APP_UID = 'APP_ASSIGN_SELF_SERVICE_VALUE.APP_UID';
 
+    /** the column name for the APP_NUMBER field */
+    const APP_NUMBER = 'APP_ASSIGN_SELF_SERVICE_VALUE.APP_NUMBER';
+
     /** the column name for the DEL_INDEX field */
     const DEL_INDEX = 'APP_ASSIGN_SELF_SERVICE_VALUE.DEL_INDEX';
 
@@ -45,6 +48,9 @@ abstract class BaseAppAssignSelfServiceValuePeer
 
     /** the column name for the TAS_UID field */
     const TAS_UID = 'APP_ASSIGN_SELF_SERVICE_VALUE.TAS_UID';
+
+    /** the column name for the TAS_ID field */
+    const TAS_ID = 'APP_ASSIGN_SELF_SERVICE_VALUE.TAS_ID';
 
     /** the column name for the GRP_UID field */
     const GRP_UID = 'APP_ASSIGN_SELF_SERVICE_VALUE.GRP_UID';
@@ -60,10 +66,10 @@ abstract class BaseAppAssignSelfServiceValuePeer
      * e.g. self::$fieldNames[self::TYPE_PHPNAME][0] = 'Id'
      */
     private static $fieldNames = array (
-        BasePeer::TYPE_PHPNAME => array ('Id', 'AppUid', 'DelIndex', 'ProUid', 'TasUid', 'GrpUid', ),
-        BasePeer::TYPE_COLNAME => array (AppAssignSelfServiceValuePeer::ID, AppAssignSelfServiceValuePeer::APP_UID, AppAssignSelfServiceValuePeer::DEL_INDEX, AppAssignSelfServiceValuePeer::PRO_UID, AppAssignSelfServiceValuePeer::TAS_UID, AppAssignSelfServiceValuePeer::GRP_UID, ),
-        BasePeer::TYPE_FIELDNAME => array ('ID', 'APP_UID', 'DEL_INDEX', 'PRO_UID', 'TAS_UID', 'GRP_UID', ),
-        BasePeer::TYPE_NUM => array (0, 1, 2, 3, 4, 5, )
+        BasePeer::TYPE_PHPNAME => array ('Id', 'AppUid', 'AppNumber', 'DelIndex', 'ProUid', 'TasUid', 'TasId', 'GrpUid', ),
+        BasePeer::TYPE_COLNAME => array (AppAssignSelfServiceValuePeer::ID, AppAssignSelfServiceValuePeer::APP_UID, AppAssignSelfServiceValuePeer::APP_NUMBER, AppAssignSelfServiceValuePeer::DEL_INDEX, AppAssignSelfServiceValuePeer::PRO_UID, AppAssignSelfServiceValuePeer::TAS_UID, AppAssignSelfServiceValuePeer::TAS_ID, AppAssignSelfServiceValuePeer::GRP_UID, ),
+        BasePeer::TYPE_FIELDNAME => array ('ID', 'APP_UID', 'APP_NUMBER', 'DEL_INDEX', 'PRO_UID', 'TAS_UID', 'TAS_ID', 'GRP_UID', ),
+        BasePeer::TYPE_NUM => array (0, 1, 2, 3, 4, 5, 6, 7, )
     );
 
     /**
@@ -73,10 +79,10 @@ abstract class BaseAppAssignSelfServiceValuePeer
      * e.g. self::$fieldNames[BasePeer::TYPE_PHPNAME]['Id'] = 0
      */
     private static $fieldKeys = array (
-        BasePeer::TYPE_PHPNAME => array ('Id' => 0, 'AppUid' => 1, 'DelIndex' => 2, 'ProUid' => 3, 'TasUid' => 4, 'GrpUid' => 5, ),
-        BasePeer::TYPE_COLNAME => array (AppAssignSelfServiceValuePeer::ID => 0, AppAssignSelfServiceValuePeer::APP_UID => 1, AppAssignSelfServiceValuePeer::DEL_INDEX => 2, AppAssignSelfServiceValuePeer::PRO_UID => 3, AppAssignSelfServiceValuePeer::TAS_UID => 4, AppAssignSelfServiceValuePeer::GRP_UID => 5, ),
-        BasePeer::TYPE_FIELDNAME => array ('ID' => 0, 'APP_UID' => 1, 'DEL_INDEX' => 2, 'PRO_UID' => 3, 'TAS_UID' => 4, 'GRP_UID' => 5, ),
-        BasePeer::TYPE_NUM => array (0, 1, 2, 3, 4, 5, )
+        BasePeer::TYPE_PHPNAME => array ('Id' => 0, 'AppUid' => 1, 'AppNumber' => 2, 'DelIndex' => 3, 'ProUid' => 4, 'TasUid' => 5, 'TasId' => 6, 'GrpUid' => 7, ),
+        BasePeer::TYPE_COLNAME => array (AppAssignSelfServiceValuePeer::ID => 0, AppAssignSelfServiceValuePeer::APP_UID => 1, AppAssignSelfServiceValuePeer::APP_NUMBER => 2, AppAssignSelfServiceValuePeer::DEL_INDEX => 3, AppAssignSelfServiceValuePeer::PRO_UID => 4, AppAssignSelfServiceValuePeer::TAS_UID => 5, AppAssignSelfServiceValuePeer::TAS_ID => 6, AppAssignSelfServiceValuePeer::GRP_UID => 7, ),
+        BasePeer::TYPE_FIELDNAME => array ('ID' => 0, 'APP_UID' => 1, 'APP_NUMBER' => 2, 'DEL_INDEX' => 3, 'PRO_UID' => 4, 'TAS_UID' => 5, 'TAS_ID' => 6, 'GRP_UID' => 7, ),
+        BasePeer::TYPE_NUM => array (0, 1, 2, 3, 4, 5, 6, 7, )
     );
 
     /**
@@ -181,11 +187,15 @@ abstract class BaseAppAssignSelfServiceValuePeer
 
         $criteria->addSelectColumn(AppAssignSelfServiceValuePeer::APP_UID);
 
+        $criteria->addSelectColumn(AppAssignSelfServiceValuePeer::APP_NUMBER);
+
         $criteria->addSelectColumn(AppAssignSelfServiceValuePeer::DEL_INDEX);
 
         $criteria->addSelectColumn(AppAssignSelfServiceValuePeer::PRO_UID);
 
         $criteria->addSelectColumn(AppAssignSelfServiceValuePeer::TAS_UID);
+
+        $criteria->addSelectColumn(AppAssignSelfServiceValuePeer::TAS_ID);
 
         $criteria->addSelectColumn(AppAssignSelfServiceValuePeer::GRP_UID);
 

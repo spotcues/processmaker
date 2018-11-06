@@ -15,6 +15,9 @@ use ProcessMaker\BusinessModel\Cases\InputDocument;
 
 class ObjectPermission extends BaseObjectPermission
 {
+    const OP_PARTICIPATE_NO = 0;
+    const OP_PARTICIPATE_YES = 1;
+    const OP_PARTICIPATE_NONE = 2;
     /**
      * Get the fields related to the user uid
      *
@@ -161,32 +164,21 @@ class ObjectPermission extends BaseObjectPermission
      * @param string $proUid the uid of the process
      * @param string $tasUid the uid of the task
      * @param string $action for the object permissions VIEW, BLOCK, RESEND
+     *                       this parameter is no used for the permission REASSIGN_MY_CASES
      * @param array $caseData for review the case status DRAFT, TODO, COMPLETED, PAUSED
      *
      * @return array
      */
     public function verifyObjectPermissionPerUser ($usrUid, $proUid, $tasUid = '', $action = '', $caseData = array())
     {
-        $userPermissions = array();
-        $oCriteria = new Criteria('workflow');
-        $oCriteria->add(
-                $oCriteria->getNewCriterion(ObjectPermissionPeer::USR_UID, $usrUid)->addOr(
-                        $oCriteria->getNewCriterion(ObjectPermissionPeer::USR_UID, '')->addOr(
-                                $oCriteria->getNewCriterion(ObjectPermissionPeer::USR_UID, '0')
-                        )
-                )
-        );
-        $oCriteria->add(ObjectPermissionPeer::PRO_UID, $proUid);
-        $oCriteria->add(ObjectPermissionPeer::OP_ACTION, $action);
-        $oCriteria->add(
-                $oCriteria->getNewCriterion(ObjectPermissionPeer::TAS_UID, $tasUid)->addOr(
-                        $oCriteria->getNewCriterion(ObjectPermissionPeer::TAS_UID, '')->addOr(
-                                $oCriteria->getNewCriterion(ObjectPermissionPeer::TAS_UID, '0')
-                        )
-                )
-        );
+        $userPermissions = [];
+        $criteria = new Criteria('workflow');
+        $criteria->add(ObjectPermissionPeer::USR_UID, ['','0',$usrUid], Criteria::IN);
+        $criteria->add(ObjectPermissionPeer::PRO_UID, $proUid);
+        $criteria->add(ObjectPermissionPeer::OP_ACTION, ['','0',$action], Criteria::IN);
+        $criteria->add(ObjectPermissionPeer::TAS_UID, ['','0',$tasUid], Criteria::IN);
 
-        $rs = ObjectPermissionPeer::doSelectRS($oCriteria);
+        $rs = ObjectPermissionPeer::doSelectRS($criteria);
         $rs->setFetchmode(ResultSet::FETCHMODE_ASSOC);
 
         while ($rs->next()) {
@@ -219,19 +211,13 @@ class ObjectPermission extends BaseObjectPermission
         $groupPermissions = array();
 
         foreach ($records as $group) {
-            $oCriteria = new Criteria('workflow');
-            $oCriteria->add(ObjectPermissionPeer::USR_UID, $group);
-            $oCriteria->add(ObjectPermissionPeer::PRO_UID, $proUid);
-            $oCriteria->add(ObjectPermissionPeer::OP_ACTION, $action);
-            $oCriteria->add(
-                    $oCriteria->getNewCriterion(ObjectPermissionPeer::TAS_UID, $tasUid)->addOr(
-                            $oCriteria->getNewCriterion(ObjectPermissionPeer::TAS_UID, '')->addOr(
-                                    $oCriteria->getNewCriterion(ObjectPermissionPeer::TAS_UID, '0')
-                            )
-                    )
-            );
+            $criteria = new Criteria('workflow');
+            $criteria->add(ObjectPermissionPeer::USR_UID, $group);
+            $criteria->add(ObjectPermissionPeer::PRO_UID, $proUid);
+            $criteria->add(ObjectPermissionPeer::OP_ACTION, ['','0',$action], Criteria::IN);
+            $criteria->add(ObjectPermissionPeer::TAS_UID, ['','0',$tasUid], Criteria::IN);
 
-            $rs = ObjectPermissionPeer::doSelectRS($oCriteria);
+            $rs = ObjectPermissionPeer::doSelectRS($criteria);
             $rs->setFetchmode(ResultSet::FETCHMODE_ASSOC);
             while ($rs->next()) {
                 $row = $rs->getRow();
@@ -422,6 +408,44 @@ class ObjectPermission extends BaseObjectPermission
             }
         }
 
+        return $result;
+    }
+
+    /**
+     * Verify the access to the permission REASSIGN_MY_CASES over the case
+     * Check if the case is TO_DO and if the $tasUid is not empty we will to consider the thread in this task
+     *
+     * @param string $appUid the uid of the case
+     * @param string $proUid the uid of the process
+     * @param string $tasUid the uid of the target Task
+     *
+     * @return array
+     */
+    public function objectPermissionByReassignCases($appUid, $proUid, $tasUid = '')
+    {
+        $result = [];
+        /*----------------------------------********---------------------------------*/
+        $criteria = new Criteria('workflow');
+        $criteria->addSelectColumn(ApplicationPeer::APP_UID);
+        $criteria->add(ApplicationPeer::APP_UID, $appUid, Criteria::EQUAL);
+        $criteria->add(ApplicationPeer::PRO_UID, $proUid, Criteria::EQUAL);
+        $criteria->add(ApplicationPeer::APP_STATUS, 'TO_DO', Criteria::EQUAL);
+
+        //Review if the target task is OPEN
+        if (!empty($tasUid)) {
+            $criteria->addJoin(AppDelegationPeer::APP_NUMBER, ApplicationPeer::APP_NUMBER, Criteria::LEFT_JOIN);
+            $criteria->add(AppDelegationPeer::TAS_UID, $tasUid, Criteria::EQUAL);
+            $criteria->add(AppDelegationPeer::DEL_THREAD_STATUS, 'OPEN', Criteria::EQUAL);
+        }
+
+        $dataset = ApplicationPeer::doSelectRS($criteria);
+        $dataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+        $dataset->next();
+        if ($row = $dataset->getRow()) {
+            $result[] = $row['APP_UID'];
+        }
+
+        /*----------------------------------********---------------------------------*/
         return $result;
     }
 

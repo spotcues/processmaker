@@ -4,19 +4,23 @@ namespace ProcessMaker\BusinessModel;
 
 use AbeConfiguration;
 use AbeConfigurationPeer;
+use AppMessage;
 use AbeRequests;
 use AbeRequestsPeer;
 use AbeResponsesPeer;
 use ApplicationPeer;
 use AppDelegationPeer;
 use Criteria;
+use EmailServerPeer;
 use Exception;
 use G;
 use Publisher;
+use ProcessMaker\BusinessModel\EmailServer;
 use ProcessMaker\Core\System;
 use ProcessMaker\Plugins\PluginRegistry;
 use PmDynaform;
 use PMLicensedFeatures;
+use ProcessPeer;
 use ResultSet;
 use SpoolRun;
 use stdClass;
@@ -378,9 +382,11 @@ class ActionsByEmail
 
     /**
      * Forward the Mail
+     *
      * @param array $arrayData
      *
      * @return string $message
+     * @throws Exception
      */
     public function forwardMail(array $arrayData)
     {
@@ -388,38 +394,15 @@ class ActionsByEmail
             $arrayData['REQ_UID'] = '';
         }
 
-        $criteria = new Criteria();
-        $criteria->addSelectColumn(AbeConfigurationPeer::ABE_UID);
-        $criteria->addSelectColumn(AbeConfigurationPeer::PRO_UID);
-        $criteria->addSelectColumn(AbeConfigurationPeer::TAS_UID);
-        $criteria->addSelectColumn(TaskPeer::TAS_ID);
-        $criteria->addSelectColumn(AbeRequestsPeer::ABE_REQ_UID);
-        $criteria->addSelectColumn(AbeRequestsPeer::APP_UID);
-        $criteria->addSelectColumn(AbeRequestsPeer::DEL_INDEX);
-        $criteria->addSelectColumn(AbeRequestsPeer::ABE_REQ_SENT_TO);
-        $criteria->addSelectColumn(AbeRequestsPeer::ABE_REQ_SUBJECT);
-        $criteria->addSelectColumn(AbeRequestsPeer::ABE_REQ_BODY);
-        $criteria->addSelectColumn(AbeRequestsPeer::ABE_REQ_ANSWERED);
-        $criteria->addSelectColumn(AbeRequestsPeer::ABE_REQ_STATUS);
-        $criteria->addSelectColumn(AppDelegationPeer::DEL_FINISH_DATE);
-        $criteria->addSelectColumn(AppDelegationPeer::APP_NUMBER);
-        $criteria->addJoin(AbeConfigurationPeer::TAS_UID, TaskPeer::TAS_UID, Criteria::LEFT_JOIN);
-        $criteria->addJoin(AbeConfigurationPeer::ABE_UID, AbeRequestsPeer::ABE_UID, Criteria::LEFT_JOIN);
-        $conditions[] = [AbeRequestsPeer::APP_UID, AppDelegationPeer::APP_UID];
-        $conditions[] = [AbeRequestsPeer::DEL_INDEX, AppDelegationPeer::DEL_INDEX];
-        $criteria->addJoinMC($conditions, Criteria::LEFT_JOIN);
-        $criteria->add(AbeRequestsPeer::ABE_REQ_UID, $arrayData['REQ_UID']);
-        $resultRes = AbeRequestsPeer::doSelectRS($criteria);
-        $resultRes->setFetchmode(ResultSet::FETCHMODE_ASSOC);
-        $resultRes->next();
-        $dataRes = [];
+        $abeRequest = new AbeRequests();
+        $dataRes = $abeRequest->getAbeRequest($arrayData['REQ_UID']);
 
-        if ($dataRes = $resultRes->getRow()) {
+        if (!empty($dataRes)) {
             if (is_null($dataRes['DEL_FINISH_DATE'])) {
 
-                $emailServer = new \ProcessMaker\BusinessModel\EmailServer();
+                $emailServer = new EmailServer();
                 $criteria = $emailServer->getEmailServerCriteria();
-                $rsCriteria = \EmailServerPeer::doSelectRS($criteria);
+                $rsCriteria = EmailServerPeer::doSelectRS($criteria);
                 $rsCriteria->setFetchmode(ResultSet::FETCHMODE_ASSOC);
                 if ($rsCriteria->next()) {
                     $row = $rsCriteria->getRow();
@@ -431,24 +414,29 @@ class ActionsByEmail
 
                 $spool = new SpoolRun();
                 $spool->setConfig($aSetup);
+                $messageArray = AppMessage::buildMessageRow(
+                    '',
+                    $dataRes['APP_UID'],
+                    $dataRes['DEL_INDEX'],
+                    'TEST',
+                    $dataRes['ABE_REQ_SUBJECT'],
+                    $aSetup['MESS_ACCOUNT'],
+                    $dataRes['ABE_REQ_SENT_TO'],
+                    $dataRes['ABE_REQ_BODY'],
+                    '',
+                    '',
+                    '',
+                    '',
+                    'pending',
+                    '',
+                    '',
+                    false,
+                    isset($dataRes['APP_NUMBER']) ? $dataRes['APP_NUMBER'] : 0,
+                    $dataRes['PRO_ID'],
+                    $dataRes['TAS_ID']
+                );
 
-                $spool->create([
-                    'msg_uid' => '',
-                    'app_uid' => $dataRes['APP_UID'],
-                    'del_index' => $dataRes['DEL_INDEX'],
-                    'app_msg_type' => 'TEST',
-                    'app_msg_subject' => $dataRes['ABE_REQ_SUBJECT'],
-                    'app_msg_from' => $aSetup['MESS_ACCOUNT'],
-                    'app_msg_to' => $dataRes['ABE_REQ_SENT_TO'],
-                    'app_msg_body' => $dataRes['ABE_REQ_BODY'],
-                    'app_msg_cc' => '',
-                    'app_msg_bcc' => '',
-                    'app_msg_attach' => '',
-                    'app_msg_template' => '',
-                    'app_msg_status' => 'pending',
-                    "tas_id" => $dataRes['TAS_ID'],
-                    "app_number" => isset($dataRes['APP_NUMBER']) ? $dataRes['APP_NUMBER'] : ''
-                ]);
+                $spool->create($messageArray);
 
                 if ($spool->sendMail()) {
                     $dataRes['ABE_REQ_STATUS'] = 'SENT';

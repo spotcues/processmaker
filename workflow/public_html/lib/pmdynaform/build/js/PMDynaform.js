@@ -643,7 +643,10 @@ jQuery.fn.extend({
             }
         }
     },
-
+    /**
+     * Saves form's data
+     * @returns {jQuery}
+     */
     saveForm: function () {
         var form;
         form = getFormById(this.attr("id"));
@@ -735,7 +738,8 @@ jQuery.fn.extend({
         return this;
     },
     /**
-     * Clear Content File
+     * Clear Content File with params
+     * With out params clear all grid's rows
      * @param row
      * @param col
      * @returns {jQuery}
@@ -746,7 +750,11 @@ jQuery.fn.extend({
         if (field) {
             type = field.model.get("type");
             if (type === "grid") {
-                field.clearContent(row, col);
+                if (row === undefined && col === undefined) {
+                    field.clearAllRows();
+                } else {
+                    field.clearContent(row, col);
+                }
             } else {
                 field.clearContent();
             }
@@ -2104,6 +2112,9 @@ xCase.extendNamespace = function (path, newClass) {
         this.isRTL = false;
         this.isPreview = false;
         this.dynaformUid = null;
+        this.googleMaps = {
+            key: ""
+        };
         Project.prototype.init.call(this, options);
     };
 
@@ -2160,6 +2171,7 @@ xCase.extendNamespace = function (path, newClass) {
             that.setToken(defaults.token);
             that.setRenderTo(defaults.renderTo);
             that.setEndPointsPath(defaults.endPointsPath);
+            that.setGoogleMapsSettings(defaults.googleMaps);
             that.createWebServiceManager();
             PMDynaform.setActiveProject(that);
             that.checkMobileData();
@@ -2456,6 +2468,16 @@ xCase.extendNamespace = function (path, newClass) {
 
         return this;
     };
+    /**
+     * Sets the google maps keys and other settings
+     * @param {*} settings 
+     */
+    Project.prototype.setGoogleMapsSettings = function (settings) {
+        if (settings) {
+            this.googleMaps = settings;
+        }
+        return this;
+    };
     Project.prototype.checkGeoMapsLibraries = function (onload) {
         var i,
             libs = [],
@@ -2665,7 +2687,8 @@ xCase.extendNamespace = function (path, newClass) {
             var script = document.createElement('script');
             script.type = 'text/javascript';
             $(script).data("script", "google");
-            script.src = 'https://maps.googleapis.com/maps/api/js?v=3.exp&callback=pmd.load';
+            script.src = "https://maps.googleapis.com/maps/api/js?callback=pmd.load";
+            script.src += window.pmd.project.googleMaps.key ? "&key=" + window.pmd.project.googleMaps.key : "";
             document.body.appendChild(script);
         } else {
             this.loadProject(onload);
@@ -6802,24 +6825,34 @@ xCase.extendNamespace = function (path, newClass) {
             }
             return result;
         },
+        /**
+         * Saves form's data and validate connection (offline/online)
+         * @returns {boolean}
+         */
         saveForm: function () {
-            var webServiceManager,
+            var project = this.project,
+                panel = this.model.get("parent"),
+                formId = this.model.get("id"),
+                webServiceManager,
+                requestManager,
                 formData,
-                project = this.project,
-                resp = true,
-                panel = this.model.get("parent");
+                resp = true;
+
             if (project && panel) {
                 webServiceManager = project.webServiceManager;
                 formData = panel.getData2();
-                webServiceManager.saveData({
-                    formUID: this.model.get("id"),
-                    data: formData
-                }, function (err, data) {
-                    if (!err) {
-                        resp = true;
-                    } else {
-                        resp = false;
+                if (project.isMobile()) {
+                    requestManager = project.getRequestManager();
+                    if (requestManager && requestManager.isOffLine()) {
+                        app.saveFormDataOffLine();
+                        return resp;
                     }
+                }
+                webServiceManager.saveData({
+                    formUID: formId,
+                    data: formData
+                }, function (err) {
+                    resp = !err;
                 });
                 return resp;
             }
@@ -9105,6 +9138,10 @@ xCase.extendNamespace = function (path, newClass) {
                     case 'suggest':
                         cell.setData(fixedData);
                         break;
+                    case 'file':
+                        fixedData.value = fixedData.value === 'string'? [] : fixedData.value;
+                        cell.setData(fixedData);
+                        break;
                     default:
                         if (fixedData.value !== '') {
                             cell.setData(fixedData);
@@ -9906,6 +9943,19 @@ xCase.extendNamespace = function (path, newClass) {
                 }
             }
             return this;
+        },
+        /**
+         * Clear all grid's row.
+         */
+        clearAllRows: function () {
+            var totalItems = this.gridtable.length,
+                mode = this.model.get('mode');
+            if (mode === "edit") {
+                while (totalItems >= 0) {
+                    this.deleteRow(totalItems);
+                    totalItems -= 1;
+                }
+            }
         }
     });
     PMDynaform.extendNamespace("PMDynaform.view.GridPanel", GridView);
@@ -10470,6 +10520,7 @@ xCase.extendNamespace = function (path, newClass) {
             if (value !== undefined && value !== null) {
                 option = this.model.findOption(value, "value");
                 this.updateDom(option);
+                this.$el.find(".content-print").text(this.model.get("data")["label"]);
             } else {
                 option = $(event.target);
                 this.updateModel(option);
@@ -10995,6 +11046,7 @@ xCase.extendNamespace = function (path, newClass) {
                 this.updateValueInput();
             }
             this.onTextTransform(this.tagControl.val());
+            this.$el.find(".content-print").text(this.model.get("data")["label"]);
             this.validate(event);
             this.clicked = false;
             return this;
@@ -11888,7 +11940,7 @@ xCase.extendNamespace = function (path, newClass) {
                 label: label
             };
             this.model.set("data", data);
-            this.populateItemsPrintMode(data.label);
+            this.populateItemsPrintMode(this.getKeyLabels());
             return this;
         },
         getHTMLControl: function () {
@@ -11962,13 +12014,31 @@ xCase.extendNamespace = function (path, newClass) {
         populateItemsPrintMode: function (arrayItems) {
             var i,
                 max,
-                containerPrint = this.$el.find(".content-print"),
-                itemsCheckGroup = JSON.parse(arrayItems);
+                containerPrint = this.$el.find(".content-print");
             containerPrint.empty();
-            for (i = 0, max = itemsCheckGroup.length; i < max; i += 1) {
-                containerPrint.append("<li>" + itemsCheckGroup[i] + "</li>");
+            for (i = 0, max = arrayItems.length; i < max; i += 1) {
+                containerPrint.append("<li>" + arrayItems[i] + "</li>");
             }
 
+        },
+        /**
+         * Return an array with the items selected.
+         * @returns {Array}
+         */
+        getKeyLabels: function () {
+            var i,
+                j,
+                arrayItems = [],
+                values = this.model.getValue(),
+                options = this.model.get("options");
+            for (i = 0; i < options.length; i += 1) {
+                for (j = 0; j < values.length; j += 1) {
+                    if (values[j] === options[i].value) {
+                        arrayItems.push(options[i].label);
+                    }
+                }
+            }
+            return arrayItems;
         }
     });
     PMDynaform.extendNamespace("PMDynaform.view.CheckGroup", CheckGroupView);
@@ -15949,7 +16019,8 @@ xCase.extendNamespace = function (path, newClass) {
                 var script = document.createElement('script');
                 script.type = 'text/javascript';
                 $(script).data("script", "google");
-                script.src = 'https://maps.googleapis.com/maps/api/js?v=3.exp&callback=pmd.load';
+                script.src = "https://maps.googleapis.com/maps/api/js?callback=pmd.load";
+                script.src += window.pmd.project.googleMaps.key ? "&key=" + window.pmd.project.googleMaps.key : "";
                 document.body.appendChild(script);
             }
             if (this.model.get("hint")) {
@@ -23150,6 +23221,7 @@ xCase.extendNamespace = function (path, newClass) {
          */
         changeFileControl: function () {
             var that = this;
+            this.populateItemsPrintMode(this.model.getKeyLabel());
             return function (event, ui) {
                 var files;
                 event.preventDefault();
@@ -24762,12 +24834,14 @@ xCase.extendNamespace = function (path, newClass) {
          * @returns {boolean}
          */
         changeFileControl: function (event) {
-            var files;
+            var files,
+                parent = this.model.get("parent");
             event.preventDefault();
             event.stopPropagation();
             files = event.target.files;
             this.processFiles(files);
             event.target.value = "";
+            parent.get('view').populateItemsPrintMode(parent.getKeyLabel());
             return false;
         },
         /**
@@ -24815,6 +24889,7 @@ xCase.extendNamespace = function (path, newClass) {
             this.$hiddenFile.before(nInput).remove();
             this.$hiddenFile = nInput;
             this.eventsBinding();
+            parent.get('view').populateItemsPrintMode(parent.getKeyLabel());
             return this;
         },
         eventsBinding: function () {

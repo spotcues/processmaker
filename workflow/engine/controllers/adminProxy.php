@@ -152,7 +152,7 @@ class adminProxy extends HttpProxyController
             try {
                 $uRole = $oRoles->loadByCode($row['USR_ROLE']);
             } catch (exception $oError) {
-                $uRole['ROL_NAME'] = G::loadTranslation( 'ID_DELETED' );
+                $uRole['ROL_NAME'] = G::loadTranslation('ID_DELETED');
             }
             $row['USR_ROLE_ID'] = $row['USR_ROLE'];
             $row['USR_ROLE'] = isset($uRole['ROL_NAME']) ? ($uRole['ROL_NAME'] != '' ? $uRole['ROL_NAME'] : $uRole['USR_ROLE']) : $uRole['USR_ROLE'];
@@ -178,11 +178,11 @@ class adminProxy extends HttpProxyController
         $oldName = isset($_POST['oldName'])? $_POST['oldName']:'';
         $uid = isset($_POST['uid'])? $_POST['uid']:'';
 
-        switch ($_POST['action']){
+        switch ($_POST['action']) {
             case 'calendarName':
-                require_once ('classes/model/CalendarDefinition.php');
+                require_once('classes/model/CalendarDefinition.php');
                 $oCalendar  = new CalendarDefinition();
-                $aCalendars = $oCalendar->getCalendarList(false,true);
+                $aCalendars = $oCalendar->getCalendarList(false, true);
                 $aCalendarDefinitions = end($aCalendars);
                 
                 foreach ($aCalendarDefinitions as $aDefinitions) {
@@ -193,7 +193,6 @@ class adminProxy extends HttpProxyController
                     }
                     
                     if (isset($aDefinitions['CALENDAR_NAME'])) {
-                        
                         if ($aDefinitions['CALENDAR_UID'] != $uid) {
                             if ($aDefinitions['CALENDAR_NAME'] == $_POST['name']) {
                                 $validated = false;
@@ -312,7 +311,6 @@ class adminProxy extends HttpProxyController
         $data['success'] = true;
         $data['optionAuthS'] = htmlspecialchars($params->optionAuthS);
         return $data;
-
     }
 
     /**
@@ -415,7 +413,7 @@ class adminProxy extends HttpProxyController
             $passwdHide = '';
         }
 
-        $passwdDec = G::decrypt($passwd,'EMAILENCRYPT');
+        $passwdDec = G::decrypt($passwd, 'EMAILENCRYPT');
         $auxPass = explode('hash:', $passwdDec);
         if (count($auxPass) > 1) {
             if (count($auxPass) == 2) {
@@ -498,7 +496,7 @@ class adminProxy extends HttpProxyController
                             if (strtoupper($UseSecureCon) == 'TLS') {
                                 $smtp->Hello($hello);
                             }
-                            if ($smtp->Authenticate($user, $passwd) ) {
+                            if ($smtp->Authenticate($user, $passwd)) {
                                 $this->success = true;
                             } else {
                                 if (strtoupper($UseSecureCon) == 'TLS') {
@@ -582,7 +580,7 @@ class adminProxy extends HttpProxyController
     {
         global $G_PUBLISH;
 
-        $aConfiguration = array(
+        $configuration = [
             'MESS_ENGINE'    => $_POST['MESS_ENGINE'],
             'MESS_SERVER'    => $_POST['MESS_SERVER'],
             'MESS_PORT'      => $_POST['MESS_PORT'],
@@ -592,12 +590,11 @@ class adminProxy extends HttpProxyController
             'MESS_FROM_MAIL' => $_POST["FROM_EMAIL"],
             'MESS_RAUTH'     => $_POST['MESS_RAUTH'],
             'SMTPSecure'     => isset($_POST['SMTPSecure'])?$_POST['SMTPSecure']:'none'
-        );
+        ];
 
-        $sFrom = G::buildFrom($aConfiguration);
-
-        $sSubject = G::LoadTranslation('ID_MESS_TEST_SUBJECT');
-        $msg      = G::LoadTranslation('ID_MESS_TEST_BODY');
+        $from = G::buildFrom($configuration);
+        $subject = G::LoadTranslation('ID_MESS_TEST_SUBJECT');
+        $msg = G::LoadTranslation('ID_MESS_TEST_BODY');
 
         switch ($_POST['MESS_ENGINE']) {
             case 'MAIL':
@@ -611,50 +608,46 @@ class adminProxy extends HttpProxyController
                 break;
         }
 
-        $sBodyPre  = new TemplatePower(PATH_TPL . 'admin' . PATH_SEP . 'email.tpl');
+        $sBodyPre = new TemplatePower(PATH_TPL . 'admin' . PATH_SEP . 'email.tpl');
         $sBodyPre->prepare();
         $sBodyPre->assign('server', $_SERVER['SERVER_NAME']);
         $sBodyPre->assign('date', date('H:i:s'));
         $sBodyPre->assign('ver', System::getVersion());
         $sBodyPre->assign('engine', $engine);
         $sBodyPre->assign('msg', $msg);
-        $sBody = $sBodyPre->getOutputContent();
+        $body = $sBodyPre->getOutputContent();
 
-        $oSpool = new SpoolRun();
-
-        $oSpool->setConfig($aConfiguration);
-
-        $oSpool->create(
-            array(
-                'msg_uid'          => '',
-                'app_uid'          => '',
-                'del_index'        => 0,
-                'app_msg_type'     => 'TEST',
-                'app_msg_subject'  => $sSubject,
-                'app_msg_from'     => $sFrom,
-                'app_msg_to'       => $_POST['TO'],
-                'app_msg_body'     => $sBody,
-                'app_msg_cc'       => '',
-                'app_msg_bcc'      => '',
-                'app_msg_attach'   => '',
-                'app_msg_template' => '',
-                'app_msg_status'   => 'pending',
-                'app_msg_attach'=>'' // Added By Ankit
-            )
+        $spool = new SpoolRun();
+        $spool->setConfig($configuration);
+        $messageArray = AppMessage::buildMessageRow(
+            '',
+            '',
+            '',
+            'TEST',
+            $subject,
+            $from,
+            $_POST['TO'],
+            $body,
+            '',
+            '',
+            '',
+            '',
+            'pending'
         );
+        $spool->create($messageArray);
 
-        $oSpool->sendMail();
+        $spool->sendMail();
         $G_PUBLISH = new Publisher();
 
         $o = new stdclass();
-        if ($oSpool->status == 'sent') {
+        if ($spool->status == 'sent') {
             $o->status = true;
             $o->success = true;
             $o->msg = G::LoadTranslation('ID_MAIL_TEST_SUCCESS');
         } else {
             $o->status = false;
             $o->success = false;
-            $o->msg = $oSpool->error;
+            $o->msg = $spool->error;
         }
         return $o;
     }
@@ -676,7 +669,7 @@ class adminProxy extends HttpProxyController
 
             $aFields['MESS_PASSWORD_HIDDEN'] = '';
             $passwd = $aFields['MESS_PASSWORD'];
-            $passwdDec = G::decrypt($passwd,'EMAILENCRYPT');
+            $passwdDec = G::decrypt($passwd, 'EMAILENCRYPT');
             $auxPass = explode('hash:', $passwdDec);
             if (count($auxPass) > 1) {
                 if (count($auxPass) == 2) {
@@ -690,7 +683,7 @@ class adminProxy extends HttpProxyController
 
             if ($aFields['MESS_PASSWORD'] != '') {
                 $aFields['MESS_PASSWORD'] = 'hash:'.$aFields['MESS_PASSWORD'];
-                $aFields['MESS_PASSWORD'] = G::encrypt($aFields['MESS_PASSWORD'],'EMAILENCRYPT');
+                $aFields['MESS_PASSWORD'] = G::encrypt($aFields['MESS_PASSWORD'], 'EMAILENCRYPT');
             }
 
             $aFields['MESS_ENABLED']             = isset($_POST['EnableEmailNotifications']) ? $_POST['EnableEmailNotifications'] : '';
@@ -723,7 +716,7 @@ class adminProxy extends HttpProxyController
 
             if ($oConfiguration->exists($CfgUid, $ObjUid, $ProUid, $UsrUid, $AppUid)) {
                 $oConfiguration->update(
-                    array (
+                    array(
                       'CFG_UID'   => 'Emails',
                       'OBJ_UID'   => '',
                       'CFG_VALUE' => serialize($aFields),
@@ -763,12 +756,12 @@ class adminProxy extends HttpProxyController
     public function loadFields()
     {
         $oConfiguration = new Configurations();
-        $oConfiguration->loadConfig($x, 'Emails','','','','');
+        $oConfiguration->loadConfig($x, 'Emails', '', '', '', '');
         $fields = $oConfiguration->aConfig;
         if (count($fields) > 0) {
             $this->success = (count($fields) > 0);
             $passwd = $fields['MESS_PASSWORD'];
-            $passwdDec = G::decrypt($passwd,'EMAILENCRYPT');
+            $passwdDec = G::decrypt($passwd, 'EMAILENCRYPT');
             $auxPass = explode('hash:', $passwdDec);
             if (count($auxPass) > 1) {
                 if (count($auxPass) == 2) {
@@ -795,9 +788,9 @@ class adminProxy extends HttpProxyController
         $aPhotoSelect = $upload->getNameLogo($_SESSION['USER_LOGGED']);
         $sPhotoSelect = trim($aPhotoSelect['DEFAULT_LOGO_NAME']);
         $check        = '';
-        $ainfoSite    = explode("/",$_SERVER["REQUEST_URI"]);
+        $ainfoSite    = explode("/", $_SERVER["REQUEST_URI"]);
         $dir          = PATH_DATA . "sites" . PATH_SEP . str_replace("sys", "", $ainfoSite[1]) . PATH_SEP . "files/logos";
-        G::mk_dir ( $dir );
+        G::mk_dir($dir);
         $i      = 0;
         $images = array();
 
@@ -809,7 +802,7 @@ class adminProxy extends HttpProxyController
                         $extention      = explode(".", $file);
                         $aImageProp     = getimagesize($dir . '/' . $file, $info);
                         $sfileExtention = strtoupper($extention[count($extention)-1]);
-                        if ( in_array($sfileExtention, array('JPG', 'JPEG', 'PNG', 'GIF') ) ) {
+                        if (in_array($sfileExtention, array('JPG', 'JPEG', 'PNG', 'GIF'))) {
                             $check   = (!strcmp($file, $sPhotoSelect)) ? '/images/toadd.png' : '/images/delete.png';
                             $onclick = (strcmp($file, $sPhotoSelect)) ? "onclick ='deleteLogo(\" $file \");return false;'" : '';
                             if ($i == 0) {
@@ -910,8 +903,18 @@ class adminProxy extends HttpProxyController
             }
         }
         $img_new = imagecreatetruecolor($tmp_width, $tmp_height);
-        imagecopyresampled($img_new, $img_src, 0, 0, 0, 0,
-                           $tmp_width, $tmp_height, $img_width, $img_height);
+        imagecopyresampled(
+            $img_new,
+            $img_src,
+            0,
+            0,
+            0,
+            0,
+                           $tmp_width,
+            $tmp_height,
+            $img_width,
+            $img_height
+        );
 
         // create temporary thumbnail and locate on the server
         $thumb = $thumb_path."thumb_".$img_file;
@@ -958,19 +961,43 @@ class adminProxy extends HttpProxyController
             $x_src     = ($thumb_width - $square_size) / 2;
             $y_src     = 0;
             $img_final = imagecreatetruecolor($square_size, $square_size);
-            imagecopy($img_final, $img_thumb_square, 0, 0,
-                      $x_src, $y_src, $square_size, $square_size);
+            imagecopy(
+                $img_final,
+                $img_thumb_square,
+                0,
+                0,
+                      $x_src,
+                $y_src,
+                $square_size,
+                $square_size
+            );
         } elseif ($thumb_height > $thumb_width) {
             // landscape
             $x_src = 0;
             $y_src = ($thumb_height - $square_size) / 2;
             $img_final = imagecreatetruecolor($square_size, $square_size);
-            imagecopy($img_final, $img_thumb_square, 0, 0,
-                      $x_src, $y_src, $square_size, $square_size);
+            imagecopy(
+                $img_final,
+                $img_thumb_square,
+                0,
+                0,
+                      $x_src,
+                $y_src,
+                $square_size,
+                $square_size
+            );
         } else {
             $img_final = imagecreatetruecolor($square_size, $square_size);
-            imagecopy($img_final, $img_thumb_square, 0, 0,
-                    0, 0, $square_size, $square_size);
+            imagecopy(
+                $img_final,
+                $img_thumb_square,
+                0,
+                0,
+                    0,
+                0,
+                $square_size,
+                $square_size
+            );
         }
 
         switch ($img_type) {
@@ -1005,7 +1032,7 @@ class adminProxy extends HttpProxyController
         $_FILES = $filter->xssFilterHard($_FILES);
         
         $ainfoSite = explode("/", $_SERVER["REQUEST_URI"]);
-        $dir       = PATH_DATA."sites".PATH_SEP.str_replace("sys","",$ainfoSite[1]).PATH_SEP."files/logos";
+        $dir       = PATH_DATA."sites".PATH_SEP.str_replace("sys", "", $ainfoSite[1]).PATH_SEP."files/logos";
         global $_FILES;
 
         //| 0-> non fail
@@ -1034,7 +1061,7 @@ class adminProxy extends HttpProxyController
         $files_img_type = $_FILES['img']['type'];
 
         if (in_array($files_img_type, $allowedType)) {
-             // max upload file is 500 KB
+            // max upload file is 500 KB
             if ($_FILES['img']['size'] <= 500000) {
                 $formf     = $_FILES['img'];
                 $namefile  = $formf['name'];
@@ -1066,7 +1093,7 @@ class adminProxy extends HttpProxyController
                         $failed = "3";
                     }
                     $u = self::hashunlink;
-                    $u ($dir . '/tmp' . $fileName);
+                    $u($dir . '/tmp' . $fileName);
                 } catch (Exception $e) {
                     $failed = "3";
                 }
@@ -1076,9 +1103,9 @@ class adminProxy extends HttpProxyController
         } elseif ($files_img_type != '') {
             $failed = "1";
         }
-        $uploaded = $filter->validateInput($uploaded,'int');
+        $uploaded = $filter->validateInput($uploaded, 'int');
         $files_img_type = $filter->xssFilterHard($files_img_type);
-        $failed = $filter->validateInput($failed,'int');
+        $failed = $filter->validateInput($failed, 'int');
         $resp = array(
             'success'   => true,
             'failed'    => $failed,
@@ -1111,7 +1138,7 @@ class adminProxy extends HttpProxyController
         $arrayImg   = explode(";", $_POST['selectLogo']);
         foreach ($arrayImg as $imgname) {
             if ($imgname != "") {
-                if ( strcmp($imgname, self::getNameCurrentLogo()) == 0 ) {
+                if (strcmp($imgname, self::getNameCurrentLogo()) == 0) {
                     echo '{success: true}';
                     exit();
                 }
@@ -1141,12 +1168,12 @@ class adminProxy extends HttpProxyController
         $arrayImg   = explode(";", $_POST['images']);
         foreach ($arrayImg as $imgname) {
             if ($imgname != "") {
-                if ( strcmp($imgname, self::getNameCurrentLogo()) != 0 ) {
+                if (strcmp($imgname, self::getNameCurrentLogo()) != 0) {
                     if (file_exists($dir . '/' . $imgname)) {
-                        unlink ($dir . '/' . $imgname);
+                        unlink($dir . '/' . $imgname);
                     }
                     if (file_exists($dir . '/tmp' . $imgname)) {
-                        unlink ($dir . '/tmp' . $imgname);
+                        unlink($dir . '/tmp' . $imgname);
                     }
                     G::auditLog("DeleteLogo", "File Name: ".$imgname);
                 } else {
@@ -1206,7 +1233,7 @@ class adminProxy extends HttpProxyController
                 case 'restoreLogo':
                     $snameLogo = $_GET['NAMELOGO'];
                     $oConf = new Configurations;
-                    $aConf = Array(
+                    $aConf = array(
                       'WORKSPACE_LOGO_NAME' => '',
                       'DEFAULT_LOGO_NAME'   => ''
                     );
@@ -1220,7 +1247,7 @@ class adminProxy extends HttpProxyController
         } catch (Exception $oException) {
             $token = strtotime("now");
             PMException::registerErrorLog($oException, $token);
-            G::outRes( G::LoadTranslation("ID_EXCEPTION_LOG_INTERFAZ", array($token)) );
+            G::outRes(G::LoadTranslation("ID_EXCEPTION_LOG_INTERFAZ", array($token)));
             die;
         }
         exit();
@@ -1262,7 +1289,7 @@ class adminProxy extends HttpProxyController
                         $extention      = explode(".", $file);
                         $aImageProp     = getimagesize($dir . '/' . $file, $info);
                         $sfileExtention = strtoupper($extention[count($extention)-1]);
-                        if ( in_array($sfileExtention, array('JPG', 'JPEG', 'PNG', 'GIF') ) ) {
+                        if (in_array($sfileExtention, array('JPG', 'JPEG', 'PNG', 'GIF'))) {
                             $dir1 = $dir . PATH_SEP . $file;
                             $dir2 = $newDir . PATH_SEP . $file;
                             copy($dir1, $dir2);
@@ -1302,7 +1329,7 @@ class adminProxy extends HttpProxyController
             $filter = new InputFilter();
             $dir = $filter->validateInput($dir, "path");
         
-            copy($dir,$newDir);
+            copy($dir, $newDir);
             self::showLogo($newDir);
             die;
         }
@@ -1343,14 +1370,13 @@ class adminProxy extends HttpProxyController
         $result = array();
 
         try {
-
             $pmRestClient = OauthClientsPeer::retrieveByPK('x-pm-local-client');
             if (! empty($pmRestClient)) {
                 $pmRestClient->delete();
             }
 
             $http = G::is_https() ? 'https' : 'http';
-            $lang = defined( 'SYS_LANG' ) ? SYS_LANG : 'en';
+            $lang = defined('SYS_LANG') ? SYS_LANG : 'en';
             $host = $_SERVER['SERVER_NAME'] . ($_SERVER['SERVER_PORT'] != '80' ? ':' . $_SERVER['SERVER_PORT'] : '');
 
             $endpoint = sprintf(
@@ -1369,7 +1395,20 @@ class adminProxy extends HttpProxyController
             $oauthClients->setClientDescription('ProcessMaker Web Designer App');
             $oauthClients->setClientWebsite('www.processmaker.com');
             $oauthClients->setRedirectUri($endpoint);
+            $oauthClients->setUsrUid('00000000000000000000000000000001');
             $oauthClients->save();
+            
+            if (!empty(config('oauthClients.mobile.clientId'))) {
+                $oauthClients = new OauthClients();
+                $oauthClients->setClientId(config('oauthClients.mobile.clientId'));
+                $oauthClients->setClientSecret(config('oauthClients.mobile.clientSecret'));
+                $oauthClients->setClientName(config('oauthClients.mobile.clientName'));
+                $oauthClients->setClientDescription(config('oauthClients.mobile.clientDescription'));
+                $oauthClients->setClientWebsite(config('oauthClients.mobile.clientWebsite'));
+                $oauthClients->setRedirectUri($endpoint);
+                $oauthClients->setUsrUid('00000000000000000000000000000001');
+                $oauthClients->save();
+            }
 
             $result['success'] = true;
             $result['message'] = '';
@@ -1381,14 +1420,14 @@ class adminProxy extends HttpProxyController
         return $result;
     }
 
-    public function generateInfoSupport ()
+    public function generateInfoSupport()
     {
         require_once (PATH_CONTROLLERS . "InstallerModule.php");
         $params = array ();
 
-        $oServerConf = &ServerConf::getSingleton();
+        $oServerConf = ServerConf::getSingleton();
         $pluginRegistry = PluginRegistry::loadSingleton();
-        $licenseManager = &PmLicenseManager::getSingleton();
+        $licenseManager = PmLicenseManager::getSingleton();
 
         //License Information:
         $activeLicense = $licenseManager->getActiveLicense();
@@ -1404,11 +1443,11 @@ class adminProxy extends HttpProxyController
         //Operative System version (Linux, Windows)
         try {
             $os = '';
-            if (file_exists( '/etc/redhat-release' )) {
-                $fnewsize = filesize( '/etc/redhat-release' );
-                $fp = fopen( '/etc/redhat-release', 'r' );
-                $os = trim( fread( $fp, $fnewsize ) );
-                fclose( $fp );
+            if (file_exists('/etc/redhat-release')) {
+                $fnewsize = filesize('/etc/redhat-release');
+                $fp = fopen('/etc/redhat-release', 'r');
+                $os = trim(fread($fp, $fnewsize));
+                fclose($fp);
             }
             $os .= " (" . PHP_OS . ")";
         } catch (Exception $e) {
@@ -1431,7 +1470,12 @@ class adminProxy extends HttpProxyController
         $installer = new InstallerModule();
         $systemInfo = $installer->getSystemInfo();
         try {
-            $params['mysql'] = mysql_get_server_info();
+            $con = Propel::getConnection('workflow');
+            $con = $con->getResource();
+
+            $output = mysqli_get_server_info($con);
+            preg_match('@[0-9]+\.[0-9]+\.[0-9]+@', $output, $version);
+            $params['mysql'] = $version[0];
         } catch (Exception $e) {
             $params['mysql'] = '';
         }
@@ -1444,19 +1488,19 @@ class adminProxy extends HttpProxyController
         $params['serverSoftwareVersion'] = System::getServerVersion();
 
         //Installed Plugins (license info?)
-        $arrayAddon = array ();
+        $arrayAddon = array();
 
-        if (file_exists( PATH_DATA_SITE . "ee" )) {
-            $arrayAddon = unserialize( trim( file_get_contents( PATH_DATA_SITE . "ee" ) ) );
+        if (file_exists(PATH_DATA_SITE . "ee")) {
+            $arrayAddon = unserialize(trim(file_get_contents(PATH_DATA_SITE . "ee")));
         }
 
         $plugins = array();
         foreach ($arrayAddon as $addon) {
-            $sFileName = substr( $addon["sFilename"], 0, strpos( $addon["sFilename"], "-" ) );
+            $sFileName = substr($addon["sFilename"], 0, strpos($addon["sFilename"], "-"));
 
-            if (file_exists( PATH_PLUGINS . $sFileName . ".php" )) {
+            if (file_exists(PATH_PLUGINS . $sFileName . ".php")) {
                 $plugin = array();
-                $addonDetails = $pluginRegistry->getPluginDetails( $sFileName . ".php" );
+                $addonDetails = $pluginRegistry->getPluginDetails($sFileName . ".php");
                 $plugin['name'] = $addonDetails->getNamespace();
                 $plugin['description'] = $addonDetails->getDescription();
                 $plugin['version'] = $addonDetails->getVersion();
@@ -1467,14 +1511,14 @@ class adminProxy extends HttpProxyController
         $params['pl'] = $plugins;
 
         //Number of Users registered in PM. Including LDAP users and PM users.
-        require_once ("classes/model/RbacUsers.php");
-        $criteria = new Criteria( "rbac" );
-        $criteria->addSelectColumn( RbacUsersPeer::USR_AUTH_TYPE );
-        $criteria->addSelectColumn( "COUNT(".RbacUsersPeer::USR_UID . ") AS USERS_NUMBER" );
-        $criteria->add( RbacUsersPeer::USR_UID, null, Criteria::ISNOTNULL );
+        require_once("classes/model/RbacUsers.php");
+        $criteria = new Criteria("rbac");
+        $criteria->addSelectColumn(RbacUsersPeer::USR_AUTH_TYPE);
+        $criteria->addSelectColumn("COUNT(".RbacUsersPeer::USR_UID . ") AS USERS_NUMBER");
+        $criteria->add(RbacUsersPeer::USR_UID, null, Criteria::ISNOTNULL);
         $criteria->addGroupByColumn(RbacUsersPeer::USR_AUTH_TYPE);
-        $rs = RbacUsersPeer::doSelectRS( $criteria );
-        $rs->setFetchmode( ResultSet::FETCHMODE_ASSOC );
+        $rs = RbacUsersPeer::doSelectRS($criteria);
+        $rs->setFetchmode(ResultSet::FETCHMODE_ASSOC);
         $users = array('local' => 0);
         while ($rs->next()) {
             $row = $rs->getRow();
@@ -1492,12 +1536,12 @@ class adminProxy extends HttpProxyController
         $params['c'] = $maxNumber - 1;
 
         //Number of active processes.
-        $criteria = new Criteria( "workflow" );
-        $criteria->addSelectColumn( ProcessPeer::PRO_STATUS );
-        $criteria->addSelectColumn( "COUNT(PROCESS.PRO_UID) AS NUMBER_PROCESS" );
+        $criteria = new Criteria("workflow");
+        $criteria->addSelectColumn(ProcessPeer::PRO_STATUS);
+        $criteria->addSelectColumn("COUNT(PROCESS.PRO_UID) AS NUMBER_PROCESS");
         $criteria->addGroupByColumn(ProcessPeer::PRO_STATUS);
-        $rs = UsersPeer::doSelectRS( $criteria );
-        $rs->setFetchmode( ResultSet::FETCHMODE_ASSOC );
+        $rs = UsersPeer::doSelectRS($criteria);
+        $rs->setFetchmode(ResultSet::FETCHMODE_ASSOC);
         $process = array();
         while ($rs->next()) {
             $row = $rs->getRow();

@@ -25,7 +25,6 @@ use ProcessMaker\Core\System;
  */
 class Zimbra
 {
-
     public $debug = false;
     public $error;
     protected $_connected = false; // boolean to determine if the connect function has been called
@@ -119,7 +118,6 @@ class Zimbra
         $option_string = '';
 
         try {
-
             $soap = '<CreateAccountRequest xmlns="urn:zimbraAccount">
             <name>' . $name . '@' . $this->_server1 . '</name>
             <password>' . $password . '</password>' . $option_string . '
@@ -820,7 +818,6 @@ class Zimbra
     protected function message($message)
     {
         if ($this->debug) {
-
             $filter = new InputFilter();
             $message = $filter->xssFilterHard($message);
             echo $message;
@@ -843,7 +840,6 @@ class Zimbra
      */
     protected function soapRequest($body, $header = false, $connecting = false)
     {
-
         $filter = new InputFilter();
 
         if (!$connecting && !$this->_connected) {
@@ -865,7 +861,7 @@ class Zimbra
 
         curl_setopt($this->_curl, CURLOPT_POSTFIELDS, $soap_message);
 
-        $this->_curl = $filter->xssFilterHard($this->_curl,"url");
+        $this->_curl = $filter->xssFilterHard($this->_curl, "url");
         $response = curl_exec($this->_curl);
         if (!$response) {
             $this->error = 'ERROR: curl_exec - (' . curl_errno($this->_curl) . ') ' . curl_error($this->_curl);
@@ -928,7 +924,6 @@ class Zimbra
         // this is our target
         $ret = array();
         foreach ($values as $key => $val) {
-
             switch ($val['type']) {
                 case 'open':
                     array_push($hash_stack, $val['tag']);
@@ -983,7 +978,7 @@ class Zimbra
 
         // does the current element refer to a list
         if (sizeof($elements) > 0) {
-            $array[$element][sizeof($array[$element]) - 1] = &$this->composeArray($array[$element][sizeof($array[$element]) - 1], $elements, $value);
+            $array[$element][sizeof($array[$element]) - 1] = $this->composeArray($array[$element][sizeof($array[$element]) - 1], $elements, $value);
         } else {
             // if (is_array($value))
             $array[$element][sizeof($array[$element])] = $value;

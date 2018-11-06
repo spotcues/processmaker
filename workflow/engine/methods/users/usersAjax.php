@@ -2,11 +2,11 @@
 
 $filter = new InputFilter();
 $_POST = $filter->xssFilterHard($_POST);
-if(isset($_SESSION['USER_LOGGED'])) {
-	$_SESSION['USER_LOGGED'] = $filter->xssFilterHard($_SESSION['USER_LOGGED']);
+if (isset($_SESSION['USER_LOGGED'])) {
+    $_SESSION['USER_LOGGED'] = $filter->xssFilterHard($_SESSION['USER_LOGGED']);
 }
-if(isset($_SESSION['USR_USERNAME'])) {
-	$_SESSION['USR_USERNAME'] = $filter->xssFilterHard($_SESSION['USR_USERNAME']);
+if (isset($_SESSION['USR_USERNAME'])) {
+    $_SESSION['USR_USERNAME'] = $filter->xssFilterHard($_SESSION['USR_USERNAME']);
 }
 
 global $RBAC;
@@ -14,35 +14,35 @@ $result = new StdClass();
 
 switch ($_POST['action']) {
     case 'countryList':
-        require_once ("classes/model/IsoCountry.php");
+        require_once("classes/model/IsoCountry.php");
         $c = new Criteria();
         $c->add(IsoCountryPeer::IC_UID, null, Criteria::ISNOTNULL);
         $c->addAscendingOrderByColumn(IsoCountryPeer::IC_NAME);
 
         $countries = IsoCountryPeer::doSelect($c);
         foreach ($countries as $rowid => $row) {
-            $oData[] = Array('IC_UID' => $row->getICUid(), 'IC_NAME' => $row->getICName());
+            $oData[] = array('IC_UID' => $row->getICUid(), 'IC_NAME' => $row->getICName());
         }
-        print (G::json_encode($oData));
+        print(G::json_encode($oData));
         break;
     case 'stateList':
-        require_once ("classes/model/IsoSubdivision.php");
+        require_once("classes/model/IsoSubdivision.php");
         $c = new Criteria();
         $country = $_POST['IC_UID'];
         $c->add(IsoSubdivisionPeer::IC_UID, $country, Criteria::EQUAL);
         $c->addAscendingOrderByColumn(IsoSubdivisionPeer::IS_NAME);
         $locations = IsoSubdivisionPeer::doSelect($c);
 
-        $oData = Array();
+        $oData = array();
         foreach ($locations as $rowid => $row) {
             if (($row->getISUid() != '') && ($row->getISName() != '')) {
-                $oData[] = Array('IS_UID' => $row->getISUid(), 'IS_NAME' => $row->getISName());
+                $oData[] = array('IS_UID' => $row->getISUid(), 'IS_NAME' => $row->getISName());
             }
         }
-        print (G::json_encode($oData));
+        print(G::json_encode($oData));
         break;
     case 'locationList':
-        require_once ("classes/model/IsoLocation.php");
+        require_once("classes/model/IsoLocation.php");
         $c = new Criteria();
         $country = $_POST['IC_UID'];
         $state = $_POST['IS_UID'];
@@ -51,13 +51,13 @@ switch ($_POST['action']) {
         $c->addAscendingOrderByColumn(IsoLocationPeer::IL_NAME);
         $locations = IsoLocationPeer::doSelect($c);
 
-        $oData = Array();
+        $oData = array();
         foreach ($locations as $rowid => $row) {
             if (($row->getILUid() != '') && ($row->getILName() != '')) {
-                $oData[] = Array('IL_UID' => $row->getILUid(), 'IL_NAME' => $row->getILName());
+                $oData[] = array('IL_UID' => $row->getILUid(), 'IL_NAME' => $row->getILName());
             }
         }
-        print (G::json_encode($oData));
+        print(G::json_encode($oData));
         break;
     case 'usersList':
         $filter = (isset($_POST['filter']))? $_POST['filter'] : '';
@@ -95,7 +95,7 @@ switch ($_POST['action']) {
                 $oData[] = array('CALENDAR_UID' => $row['CALENDAR_UID'], 'CALENDAR_NAME' => $row['CALENDAR_NAME']);
             }
         }
-        print (G::json_encode($oData));
+        print(G::json_encode($oData));
         break;
     case 'rolesList':
         require_once PATH_RBAC . "model/Roles.php";
@@ -104,13 +104,13 @@ switch ($_POST['action']) {
         foreach ($rolesData as $rowid => $row) {
             $oData[] = array('ROL_UID' => $row['ROL_CODE'], 'ROL_CODE' => $row['ROL_NAME']);
         }
-        print (G::json_encode($oData));
+        print(G::json_encode($oData));
         break;
     case 'getUserLogedRole':
         require_once 'classes/model/Users.php';
         $oUser = new Users();
         $aUserLog = $oUser->loadDetailed($_SESSION['USER_LOGGED']);
-        print (G::json_encode(array(
+        print(G::json_encode(array(
             'USR_UID' => $aUserLog['USR_UID'],
             'USR_USERNAME' => $aUserLog['USR_USERNAME'],
             'USR_ROLE' => $aUserLog['USR_ROLE']
@@ -121,10 +121,10 @@ switch ($_POST['action']) {
         $langs = $Translations->getTranslationEnvironments();
         $oData[] = array('LAN_ID' => '', 'LAN_NAME' => '- ' . G::LoadTranslation('ID_NONE') . ' -');
         foreach ($langs as $lang) {
-            $oData[] = array ('LAN_ID' => $lang['LOCALE'],'LAN_NAME' => $lang['LANGUAGE']
+            $oData[] = array('LAN_ID' => $lang['LOCALE'],'LAN_NAME' => $lang['LANGUAGE']
             );
         }
-        print (G::json_encode($oData));
+        print(G::json_encode($oData));
         break;
     case 'saveUser':
     case 'savePersonalInfo':
@@ -136,7 +136,7 @@ switch ($_POST['action']) {
             $form = $user->checkPermissionForEdit($_SESSION['USER_LOGGED'], $permissionsToSaveData, $form);
 
             switch ($_POST['action']) {
-                case 'saveUser';
+                case 'saveUser':
                     if (!$user->checkPermission($_SESSION['USER_LOGGED'], 'PM_USERS')) {
                         throw new Exception(G::LoadTranslation('ID_USER_NOT_HAVE_PERMISSION', [$_SESSION['USER_LOGGED']]));
                     }
@@ -180,7 +180,7 @@ switch ($_POST['action']) {
             $def_menu = isset($form['PREF_DEFAULT_MENUSELECTED']) ? $form['PREF_DEFAULT_MENUSELECTED'] : '';
             $def_cases_menu = isset($form['PREF_DEFAULT_CASES_MENUSELECTED']) ? $form['PREF_DEFAULT_CASES_MENUSELECTED'] : '';
             $oConf = new Configurations();
-            $aConf = Array('DEFAULT_LANG' => $def_lang, 'DEFAULT_MENU' => $def_menu, 'DEFAULT_CASES_MENU' => $def_cases_menu);
+            $aConf = array('DEFAULT_LANG' => $def_lang, 'DEFAULT_MENU' => $def_menu, 'DEFAULT_CASES_MENU' => $def_cases_menu);
             $oConf->aConfig = $aConf;
             $oConf->saveConfig('USER_PREFERENCES', '', '', $userUid);
 
@@ -205,12 +205,12 @@ switch ($_POST['action']) {
 
             $result = new stdClass();
             $result->success = true;
-            print (G::json_encode($result));
+            print(G::json_encode($result));
         } catch (Exception $e) {
             $result = new stdClass();
             $result->success = false;
             $result->error = $e->getMessage();
-            print (G::json_encode($result));
+            print(G::json_encode($result));
         }
         break;
     case 'userData':
@@ -302,7 +302,6 @@ switch ($_POST['action']) {
 
         if ($aFields['PREF_DEFAULT_CASES_MENUSELECTED'] != '') {
             foreach ($oMenu->Id as $i => $item) {
-
                 if ($aFields['PREF_DEFAULT_CASES_MENUSELECTED'] == $item) {
                     $casesMenuSelected = $oMenu->Labels[$i];
                 }
@@ -333,32 +332,32 @@ switch ($_POST['action']) {
         $result->user = $aFields;
         $result->permission = $permissions;
 
-        print (G::json_encode($result));
+        print(G::json_encode($result));
         break;
     case 'defaultMainMenuOptionList':
         foreach ($RBAC->aUserInfo['PROCESSMAKER']['PERMISSIONS'] as $permission) {
             switch ($permission['PER_CODE']) {
                 case 'PM_USERS':
                 case 'PM_SETUP':
-                    $rows[] = Array('id' => 'PM_SETUP', 'name' => strtoupper(G::LoadTranslation('ID_SETUP'))
+                    $rows[] = array('id' => 'PM_SETUP', 'name' => strtoupper(G::LoadTranslation('ID_SETUP'))
                     );
                     break;
                 case 'PM_CASES':
-                    $rows[] = Array('id' => 'PM_CASES', 'name' => strtoupper(G::LoadTranslation('ID_CASES'))
+                    $rows[] = array('id' => 'PM_CASES', 'name' => strtoupper(G::LoadTranslation('ID_CASES'))
                     );
                     break;
                 case 'PM_FACTORY':
-                    $rows[] = Array('id' => 'PM_FACTORY', 'name' => strtoupper(G::LoadTranslation('ID_APPLICATIONS'))
+                    $rows[] = array('id' => 'PM_FACTORY', 'name' => strtoupper(G::LoadTranslation('ID_APPLICATIONS'))
                     );
                     break;
                 case 'PM_DASHBOARD':
-                    $rows[] = Array('id' => 'PM_DASHBOARD', 'name' => strtoupper(G::LoadTranslation('ID_DASHBOARD'))
+                    $rows[] = array('id' => 'PM_DASHBOARD', 'name' => strtoupper(G::LoadTranslation('ID_DASHBOARD'))
                     );
                     /*----------------------------------********---------------------------------*/
                     break;
             }
         }
-        print (G::json_encode($rows));
+        print(G::json_encode($rows));
         break;
     case 'defaultCasesMenuOptionList':
 
@@ -367,10 +366,10 @@ switch ($_POST['action']) {
 
         foreach ($oMenu->Id as $i => $item) {
             if ($oMenu->Types[$i] != 'blockHeader') {
-                $rowsCasesMenu[] = Array('id' => $item, 'name' => $oMenu->Labels[$i]);
+                $rowsCasesMenu[] = array('id' => $item, 'name' => $oMenu->Labels[$i]);
             }
         }
-        print (G::json_encode($rowsCasesMenu));
+        print(G::json_encode($rowsCasesMenu));
         break;
     case 'testPassword':
         require_once 'classes/model/UsersProperties.php';
@@ -423,7 +422,7 @@ switch ($_POST['action']) {
         $span = '<span style="color: ' . $color . '; font: 9px tahoma,arial,helvetica,sans-serif;">';
         $gif = '<img width="13" height="13" border="0" src="' . $img . '">';
         $aFields['DESCRIPTION'] = $span . $gif . $aFields['DESCRIPTION'];
-        print (G::json_encode($aFields));
+        print(G::json_encode($aFields));
         break;
     case 'testUsername':
         require_once 'classes/model/Users.php';
@@ -468,7 +467,7 @@ switch ($_POST['action']) {
         $password = $_POST["password"];
         $resultLogin = $RBAC->VerifyLogin($_SESSION["USR_USERNAME"], $password);
 
-        if($resultLogin ==  $_SESSION["USER_LOGGED"]) {
+        if ($resultLogin ==  $_SESSION["USER_LOGGED"]) {
             $messageResultLogin = "OK";
         } else {
             $messageResultLogin = "ERROR";

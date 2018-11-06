@@ -105,7 +105,7 @@ class ReportTable
 
                     $arrayAdditionalTableData = $additionalTable->loadByName($tableName);
 
-                    if ($arrayAdditionalTableData !== false) {
+                    if ($arrayAdditionalTableData) {
                         $flagIsPmTable = $arrayAdditionalTableData['PRO_UID'] == '';
 
                         if ($flagIsPmTable && !empty($contentData)) {
@@ -275,7 +275,7 @@ class ReportTable
 
                 if ($flagFromAdmin) {
                     if ($flagIsPmTable) {
-                        if ($arrayAdditionalTableData !== false && !$flagOverwrite) {
+                        if ($arrayAdditionalTableData && !$flagOverwrite) {
                             $arrayError[$i]['NAME_TABLE'] = $contentSchema['ADD_TAB_NAME'];
                             $arrayError[$i]['ERROR_TYPE'] = 1; //ERROR_PM_TABLES_OVERWRITE
                             $arrayError[$i]['ERROR_MESS'] = \G::LoadTranslation('ID_OVERWRITE_PMTABLE', [$contentSchema['ADD_TAB_NAME']]);
@@ -290,7 +290,7 @@ class ReportTable
                             $arrayError[$i]['IS_PMTABLE'] = $flagIsPmTable;
                             $arrayError[$i]['PRO_UID'] = $tableProUid;
                         } else {
-                            if ($arrayAdditionalTableData !== false && !$flagOverwrite) {
+                            if ($arrayAdditionalTableData && !$flagOverwrite) {
                                 $arrayError[$i]['NAME_TABLE'] = $contentSchema['ADD_TAB_NAME'];
                                 $arrayError[$i]['ERROR_TYPE'] = 3; //ERROR_RP_TABLES_OVERWRITE
                                 $arrayError[$i]['ERROR_MESS'] = \G::LoadTranslation('ID_OVERWRITE_RPTABLE', [$contentSchema['ADD_TAB_NAME']]);
@@ -307,14 +307,14 @@ class ReportTable
                         $arrayError[$i]['IS_PMTABLE'] = $flagIsPmTable;
                         $arrayError[$i]['PRO_UID'] = $tableProUid;
                     } else {
-                        if ($tableProUid != $processUid) {
+                        if ($tableProUid !== $processUid) {
                             $arrayError[$i]['NAME_TABLE'] = $contentSchema['ADD_TAB_NAME'];
                             $arrayError[$i]['ERROR_TYPE'] = 5; //ERROR_OVERWRITE_RELATED_PROCESS
                             $arrayError[$i]['ERROR_MESS'] = \G::LoadTranslation('ID_OVERWRITE_RELATED_PROCESS', [$contentSchema['ADD_TAB_NAME']]);
                             $arrayError[$i]['IS_PMTABLE'] = $flagIsPmTable;
                             $arrayError[$i]['PRO_UID'] = $tableProUid;
                         } else {
-                            if ($arrayAdditionalTableData !== false && !$flagOverwrite) {
+                            if ($arrayAdditionalTableData && !$flagOverwrite) {
                                 $arrayError[$i]['NAME_TABLE'] = $contentSchema['ADD_TAB_NAME'];
                                 $arrayError[$i]['ERROR_TYPE'] = 3; //ERROR_RP_TABLES_OVERWRITE
                                 $arrayError[$i]['ERROR_MESS'] = \G::LoadTranslation('ID_OVERWRITE_RPTABLE', [$contentSchema['ADD_TAB_NAME']]);
@@ -419,7 +419,7 @@ class ReportTable
                 }
 
                 //Validations
-                if (is_array($additionalTable->loadByName($arrayData['REP_TAB_NAME']))) {
+                if ($additionalTable->loadByName($arrayData['REP_TAB_NAME'])) {
                     throw new \Exception(\G::LoadTranslation('ID_PMTABLE_ALREADY_EXISTS', [$arrayData['REP_TAB_NAME']]));
                 }
 
@@ -664,11 +664,11 @@ class ReportTable
 
                     //Overwrite
                     if ($flagOverwrite2) {
-                        if ($arrayAdditionalTableData !== false) {
+                        if ($arrayAdditionalTableData) {
                             $additionalTable->deleteAll($arrayAdditionalTableData['ADD_TAB_UID']);
                         }
                     } else {
-                        if ($arrayAdditionalTableData !== false) {
+                        if ($arrayAdditionalTableData) {
                             //Some table exists with the same name
                             //renaming...
                             $tNameOld = $contentSchema['ADD_TAB_NAME'];

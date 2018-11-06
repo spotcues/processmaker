@@ -46,9 +46,11 @@ class Application extends BaseApplication
      * This value goes in the content table
      * @var        string
      */
+    const APP_STATUS_CANCELLED = 'CANCELLED';
+    const APP_STATUS_TODO = 'TO_DO';
+    public static $app_status_values = ['DRAFT' => 1, 'TO_DO' => 2, 'COMPLETED' => 3, 'CANCELLED' => 4];
     protected $app_title_content = '';
     protected $app_description_content = '';
-    public static $app_status_values = ['DRAFT' => 1, 'TO_DO' => 2, 'COMPLETED' => 3, 'CANCELLED' => 4];
 
     /**
      * Get the [app_title_content] column value.

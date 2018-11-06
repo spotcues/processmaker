@@ -6,7 +6,7 @@ ini_set("max_execution_time", 0);
 
 if (!defined("PM_VERSION")) {
     if (file_exists(PATH_METHODS . "login/version-pmos.php")) {
-        include (PATH_METHODS . "login/version-pmos.php");
+        include(PATH_METHODS . "login/version-pmos.php");
     } else {
         define("PM_VERSION", "2.0.0");
     }
@@ -19,8 +19,6 @@ if (!defined("BUFSIZE")) {
 
 function install($file)
 {
-
-
     $result = array();
     $status = 1;
 
@@ -119,7 +117,7 @@ switch ($option) {
             }
 
             ///////
-            $licenseManager = &PmLicenseManager::getSingleton();
+            $licenseManager = PmLicenseManager::getSingleton();
             $server = isset($licenseManager->server) ? $licenseManager->server : '';
             $workspace = (isset($licenseManager->workspace)) ? $licenseManager->workspace : 'pmLicenseSrv';
 
@@ -295,7 +293,7 @@ switch ($option) {
             }
 
             ///////
-            $licenseManager = &PmLicenseManager::getSingleton();
+            $licenseManager = PmLicenseManager::getSingleton();
             $server = (isset($licenseManager->server)) ? $licenseManager->server : '';
             $workspace = (isset($licenseManager->workspace)) ? $licenseManager->workspace : 'pmLicenseSrv';
 
@@ -371,4 +369,3 @@ switch ($option) {
         echo G::json_encode($response);
         break;
 }
-

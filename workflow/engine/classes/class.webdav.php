@@ -3,6 +3,8 @@
 /**
  * class.webdav.php
  *
+ * @deprecated
+ *
  * @package workflow.engine.classes
  */
 
@@ -399,7 +401,6 @@ class ProcessMakerWebDav extends HTTP_WebDAV_Server
      */
     public function GET(&$options)
     {
-
         $filter = new InputFilter();
         $options = $filter->xssFilterHard($options);
         $paths = $filter->xssFilterHard($this->paths);
@@ -743,13 +744,13 @@ class ProcessMakerWebDav extends HTTP_WebDAV_Server
 
         if (is_dir($path)) {
             $query = "DELETE FROM properties WHERE path LIKE '" . $this->_slashify($options["path"]) . "%'";
-            mysql_query($query);
+            mysqli_query($query);
             PearSystem::rm("-rf $path");
         } else {
             unlink($path);
         }
         $query = "DELETE FROM properties WHERE path = '$options[path]'";
-        mysql_query($query);
+        mysqli_query($query);
 
         return "204 No Content";
     }
@@ -838,13 +839,13 @@ class ProcessMakerWebDav extends HTTP_WebDAV_Server
                 $query = "UPDATE properties
                   SET path = REPLACE(path, '" . $options["path"] . "', '" . $destpath . "')
                   WHERE path LIKE '" . $this->_slashify($options["path"]) . "%'";
-                mysql_query($query);
+                mysqli_query($query);
             }
 
             $query = "UPDATE properties
                 SET path = '" . $destpath . "'
                 WHERE path = '" . $options["path"] . "'";
-            mysql_query($query);
+            mysqli_query($query);
         } else {
             if (is_dir($source)) {
                 $files = PearSystem::find($source);
@@ -898,9 +899,9 @@ class ProcessMakerWebDav extends HTTP_WebDAV_Server
         if (isset($options["update"])) {
             // Lock Update
             $query = "UPDATE locks SET expires = " . (time() + 300);
-            mysql_query($query);
+            mysqli_query($query);
 
-            if (mysql_affected_rows()) {
+            if (mysqli_affected_rows()) {
                 $options["timeout"] = 300; // 5min hardcoded
                 return true;
             } else {
@@ -917,9 +918,9 @@ class ProcessMakerWebDav extends HTTP_WebDAV_Server
                   , owner   = '$options[owner]'
                   , expires = '$options[timeout]'
                   , exclusivelock  = " . ($options['scope'] === "exclusive" ? "1" : "0");
-        mysql_query($query);
+        mysqli_query($query);
 
-        return mysql_affected_rows() ? "200 OK" : "409 Conflict";
+        return mysqli_affected_rows() ? "200 OK" : "409 Conflict";
     }
 
     /**
@@ -933,9 +934,9 @@ class ProcessMakerWebDav extends HTTP_WebDAV_Server
         $query = "DELETE FROM locks
               WHERE path = '$options[path]'
               AND token  = '$options[token]'";
-        mysql_query($query);
+        mysqli_query($query);
 
-        return mysql_affected_rows() ? "204 No Content" : "409 Conflict";
+        return mysqli_affected_rows() ? "204 No Content" : "409 Conflict";
     }
 
     /**
@@ -946,7 +947,6 @@ class ProcessMakerWebDav extends HTTP_WebDAV_Server
      */
     public function checkLock($path)
     {
-
         $filter = new InputFilter();
         $path = $filter->validateInput($path, 'nosql');
         $result = false;
@@ -955,11 +955,11 @@ class ProcessMakerWebDav extends HTTP_WebDAV_Server
               FROM locks
             WHERE path = '%s' ";
         $query = $filter->preventSqlInjection($query, array($path));
-        $res = mysql_query($query);
+        $res = mysqli_query($query);
 
         if ($res) {
-            $row = mysql_fetch_array($res);
-            mysql_free_result($res);
+            $row = mysqli_fetch_array($res);
+            mysqli_free_result($res);
 
             if ($row) {
                 $result = array("type" => "write", "scope" => $row["exclusivelock"] ? "exclusive" : "shared", "depth" => 0, "owner" => $row['owner'], "token" => $row['token'], "expires" => $row['expires']
@@ -982,4 +982,3 @@ class ProcessMakerWebDav extends HTTP_WebDAV_Server
         return false;
     }
 }
- 

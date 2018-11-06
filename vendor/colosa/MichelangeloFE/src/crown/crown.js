@@ -33,6 +33,11 @@ var Corona = function (options) {
      * @type {PMUI.util.ArrayList}
      */
     this.itemsCrown = new PMUI.util.ArrayList();
+    /**
+     * Event OnMouseOut
+     * @type {null}
+     */
+    this.eventOnMouseOut = null;
     this.init(options);
 };
 /**

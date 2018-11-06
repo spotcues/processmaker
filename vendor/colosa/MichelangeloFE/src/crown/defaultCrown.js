@@ -4,14 +4,16 @@ var defaultCrown = {
             id: "task",
             name: "Task".translate(),
             className: "mafe-corona-task",
-            eventOnClick: function (item) {
-                item.parent.hide();
-            },
             eventOnMouseDown: function (item) {
                 item.canvas.canCreateShape = true;
                 item.canvas.canCreateShapeType = 'TASK';
                 item.canvas.canCreateShapeClass = 'mafe-toolbar-task';
                 item.canvas.connectStartShape = item.parent.parent;
+            },
+            eventOnMouseOut: function (item) {
+                if (item.canvas.canCreateShape) {
+                    item.parent.hide();
+                }
             }
         },
         {
@@ -26,6 +28,11 @@ var defaultCrown = {
                 item.canvas.canCreateShapeType = 'EXCLUSIVE';
                 item.canvas.canCreateShapeClass = 'mafe-toolbar-gateway-exclusive';
                 item.canvas.connectStartShape = item.parent.parent;
+            },
+            eventOnMouseOut: function (item) {
+                if (item.canvas.canCreateShape) {
+                    item.parent.hide();
+                }
             }
         },
         {
@@ -40,6 +47,11 @@ var defaultCrown = {
                 item.canvas.canCreateShapeType = 'INTERMEDIATE_EMAIL';
                 item.canvas.canCreateShapeClass = 'mafe-toolbar-intermediate-send-mesage';
                 item.canvas.connectStartShape = item.parent.parent;
+            },
+            eventOnMouseOut: function (item) {
+                if (item.canvas.canCreateShape) {
+                    item.parent.hide();
+                }
             }
         },
         {
@@ -54,6 +66,11 @@ var defaultCrown = {
                 item.canvas.canCreateShapeType = 'END';
                 item.canvas.canCreateShapeClass = 'mafe-toolbar-end';
                 item.canvas.connectStartShape = item.parent.parent;
+            },
+            eventOnMouseOut: function (item) {
+                if (item.canvas.canCreateShape) {
+                    item.parent.hide();
+                }
             }
         },
         {

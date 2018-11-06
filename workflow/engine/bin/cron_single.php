@@ -39,19 +39,19 @@ try {
     //Set variables
     $osIsLinux = strtoupper(substr(PHP_OS, 0, 3)) != 'WIN';
 
-    $pathHome     = $argv[1];
-    $pathTrunk    = $argv[2];
+    $pathHome = $argv[1];
+    $pathTrunk = $argv[2];
     $pathOutTrunk = $argv[3];
-    $cronName     = $argv[4];
-    $workspace    = $argv[5];
-    $dateSystem   = $argv[6];
-    $sNow         = $argv[7]; //$date
+    $cronName = $argv[4];
+    $workspace = $argv[5];
+    $dateSystem = $argv[6];
+    $sNow = $argv[7]; //$date
 
     //Defines constants
-    define('PATH_SEP', ($osIsLinux)? '/' : '\\');
+    define('PATH_SEP', ($osIsLinux) ? '/' : '\\');
 
-    define('PATH_HOME',     $pathHome);
-    define('PATH_TRUNK',    $pathTrunk);
+    define('PATH_HOME', $pathHome);
+    define('PATH_TRUNK', $pathTrunk);
     define('PATH_OUTTRUNK', $pathOutTrunk);
 
     define('PATH_CLASSES', PATH_HOME . 'engine' . PATH_SEP . 'classes' . PATH_SEP);
@@ -70,33 +70,34 @@ try {
     //Add vendors to autoloader
     //$classLoader->add(PATH_TRUNK . 'vendor' . PATH_SEP . 'luracast' . PATH_SEP . 'restler' . PATH_SEP . 'vendor', 'Luracast');
     //$classLoader->add(PATH_TRUNK . 'vendor' . PATH_SEP . 'bshaffer' . PATH_SEP . 'oauth2-server-php' . PATH_SEP . 'src' . PATH_SEP, 'OAuth2');
-    $classLoader->addClass('Bootstrap', PATH_TRUNK . 'gulliver' . PATH_SEP . 'system' . PATH_SEP . 'class.bootstrap.php');
+    $classLoader->addClass('Bootstrap',
+        PATH_TRUNK . 'gulliver' . PATH_SEP . 'system' . PATH_SEP . 'class.bootstrap.php');
 
     $classLoader->addModelClassPath(PATH_TRUNK . 'workflow' . PATH_SEP . 'engine' . PATH_SEP . 'classes' . PATH_SEP . 'model' . PATH_SEP);
 
     $arraySystemConfiguration = System::getSystemConfiguration('', '', $workspace);
 
-    $e_all = (defined('E_DEPRECATED'))?            E_ALL  & ~E_DEPRECATED : E_ALL;
-    $e_all = (defined('E_STRICT'))?                $e_all & ~E_STRICT     : $e_all;
-    $e_all = ($arraySystemConfiguration['debug'])? $e_all                 : $e_all & ~E_NOTICE;
+    $e_all = (defined('E_DEPRECATED')) ? E_ALL & ~E_DEPRECATED : E_ALL;
+    $e_all = (defined('E_STRICT')) ? $e_all & ~E_STRICT : $e_all;
+    $e_all = ($arraySystemConfiguration['debug']) ? $e_all : $e_all & ~E_NOTICE;
 
     app()->useStoragePath(realpath(PATH_DATA));
     app()->make(Kernel::class)->bootstrap();
     restore_error_handler();
     //Do not change any of these settings directly, use env.ini instead
-    ini_set('display_errors',  $arraySystemConfiguration['debug']);
+    ini_set('display_errors', $arraySystemConfiguration['debug']);
     ini_set('error_reporting', $e_all);
-    ini_set('short_open_tag',  'On');
+    ini_set('short_open_tag', 'On');
     ini_set('default_charset', 'UTF-8');
     //ini_set('memory_limit',    $arraySystemConfiguration['memory_limit']);
     ini_set('soap.wsdl_cache_enabled', $arraySystemConfiguration['wsdl_cache']);
     ini_set('date.timezone', $arraySystemConfiguration['time_zone']);
 
-    define('DEBUG_SQL_LOG',  $arraySystemConfiguration['debug_sql']);
+    define('DEBUG_SQL_LOG', $arraySystemConfiguration['debug_sql']);
     define('DEBUG_TIME_LOG', $arraySystemConfiguration['debug_time']);
     define('DEBUG_CALENDAR_LOG', $arraySystemConfiguration['debug_calendar']);
-    define('MEMCACHED_ENABLED',  $arraySystemConfiguration['memcached']);
-    define('MEMCACHED_SERVER',   $arraySystemConfiguration['memcached_server']);
+    define('MEMCACHED_ENABLED', $arraySystemConfiguration['memcached']);
+    define('MEMCACHED_SERVER', $arraySystemConfiguration['memcached_server']);
 
     //require_once(PATH_GULLIVER . PATH_SEP . 'class.bootstrap.php');
     //define('PATH_GULLIVER_HOME', PATH_TRUNK . 'gulliver' . PATH_SEP);
@@ -109,8 +110,8 @@ try {
     $argvx = '';
 
     for ($i = 8; $i <= count($argv) - 1; $i++) {
-        /*----------------------------------********---------------------------------*/
-            $argvx = $argvx . (($argvx != '')? ' ' : '') . $argv[$i];
+            /*----------------------------------********---------------------------------*/
+            $argvx = $argvx . (($argvx != '') ? ' ' : '') . $argv[$i];
         /*----------------------------------********---------------------------------*/
     }
     global $sObject;
@@ -127,12 +128,12 @@ try {
         include_once(PATH_HOME . 'engine' . PATH_SEP . 'config' . PATH_SEP . 'paths.php');
 
         //PM Paths DATA
-        define('PATH_DATA_SITE',                PATH_DATA      . 'sites/' . config("system.workspace") . '/');
-        define('PATH_DOCUMENT',                 PATH_DATA_SITE . 'files/');
-        define('PATH_DATA_MAILTEMPLATES',       PATH_DATA_SITE . 'mailTemplates/');
-        define('PATH_DATA_PUBLIC',              PATH_DATA_SITE . 'public/');
-        define('PATH_DATA_REPORTS',             PATH_DATA_SITE . 'reports/');
-        define('PATH_DYNAFORM',                 PATH_DATA_SITE . 'xmlForms/');
+        define('PATH_DATA_SITE', PATH_DATA . 'sites/' . config("system.workspace") . '/');
+        define('PATH_DOCUMENT', PATH_DATA_SITE . 'files/');
+        define('PATH_DATA_MAILTEMPLATES', PATH_DATA_SITE . 'mailTemplates/');
+        define('PATH_DATA_PUBLIC', PATH_DATA_SITE . 'public/');
+        define('PATH_DATA_REPORTS', PATH_DATA_SITE . 'reports/');
+        define('PATH_DYNAFORM', PATH_DATA_SITE . 'xmlForms/');
         define('PATH_IMAGES_ENVIRONMENT_FILES', PATH_DATA_SITE . 'usersFiles' . PATH_SEP);
         define('PATH_IMAGES_ENVIRONMENT_USERS', PATH_DATA_SITE . 'usersPhotographies' . PATH_SEP);
 
@@ -156,7 +157,8 @@ try {
             while (!feof($fileDb)) {
                 $buffer = fgets($fileDb, 4096); //Read a line
 
-                $phpCode .= preg_replace('/define\s*\(\s*[\x22\x27](.*)[\x22\x27]\s*,\s*(\x22.*\x22|\x27.*\x27)\s*\)\s*;/i', '$$1 = $2;', $buffer);
+                $phpCode .= preg_replace('/define\s*\(\s*[\x22\x27](.*)[\x22\x27]\s*,\s*(\x22.*\x22|\x27.*\x27)\s*\)\s*;/i',
+                    '$$1 = $2;', $buffer);
             }
 
             fclose($fileDb);
@@ -166,9 +168,9 @@ try {
 
         eval($phpCode);
 
-        $dsn     = $DB_ADAPTER . '://' . $DB_USER . ':' . $DB_PASS . '@' . $DB_HOST . '/' . $DB_NAME;
+        $dsn = $DB_ADAPTER . '://' . $DB_USER . ':' . $DB_PASS . '@' . $DB_HOST . '/' . $DB_NAME;
         $dsnRbac = $DB_ADAPTER . '://' . $DB_RBAC_USER . ':' . $DB_RBAC_PASS . '@' . $DB_RBAC_HOST . '/' . $DB_RBAC_NAME;
-        $dsnRp   = $DB_ADAPTER . '://' . $DB_REPORT_USER . ':' . $DB_REPORT_PASS . '@' . $DB_REPORT_HOST . '/' . $DB_REPORT_NAME;
+        $dsnRp = $DB_ADAPTER . '://' . $DB_REPORT_USER . ':' . $DB_REPORT_PASS . '@' . $DB_REPORT_HOST . '/' . $DB_REPORT_NAME;
 
         switch ($DB_ADAPTER) {
             case 'mysql':
@@ -201,7 +203,7 @@ try {
         //Creole::registerDriver('dbarray', 'creole.contrib.DBArrayConnection');
 
         //Enable RBAC
-        $rbac = &RBAC::getSingleton(PATH_DATA, session_id());
+        $rbac = RBAC::getSingleton(PATH_DATA, session_id());
         $rbac->sSystem = 'PROCESSMAKER';
 
         if (!defined('DB_ADAPTER')) {
@@ -213,7 +215,7 @@ try {
 
         /*----------------------------------********---------------------------------*/
 
-        ini_set('date.timezone', ($systemUtcTimeZone)? 'UTC' : $arraySystemConfiguration['time_zone']); //Set Time Zone
+        ini_set('date.timezone', ($systemUtcTimeZone) ? 'UTC' : $arraySystemConfiguration['time_zone']); //Set Time Zone
 
         define('TIME_ZONE', ini_get('date.timezone'));
 
@@ -253,7 +255,7 @@ try {
         } catch (Exception $e) {
             $token = strtotime("now");
             PMException::registerErrorLog($e, $token);
-            G::outRes( G::LoadTranslation("ID_EXCEPTION_LOG_INTERFAZ", array($token)) . "\n" );
+            G::outRes(G::LoadTranslation("ID_EXCEPTION_LOG_INTERFAZ", array($token)) . "\n");
 
             eprintln('Problem in workspace: ' . $workspace . ' it was omitted.', 'red');
         }
@@ -267,7 +269,7 @@ try {
 } catch (Exception $e) {
     $token = strtotime("now");
     PMException::registerErrorLog($e, $token);
-    G::outRes( G::LoadTranslation("ID_EXCEPTION_LOG_INTERFAZ", array($token)) . "\n" );
+    G::outRes(G::LoadTranslation("ID_EXCEPTION_LOG_INTERFAZ", array($token)) . "\n");
 }
 
 //Functions
@@ -331,7 +333,7 @@ function resendEmails()
 
         if ($aSpoolWarnings !== false) {
             foreach ($aSpoolWarnings as $sWarning) {
-                print("MAIL SPOOL WARNING: " . $sWarning."\n");
+                print("MAIL SPOOL WARNING: " . $sWarning . "\n");
                 saveLog("resendEmails", "warning", "MAIL SPOOL WARNING: " . $sWarning);
             }
         }
@@ -344,7 +346,7 @@ function resendEmails()
         $c->add(ConfigurationPeer::CFG_UID, "Emails");
         $result = ConfigurationPeer::doSelectRS($c);
         $result->setFetchmode(ResultSet::FETCHMODE_ASSOC);
-        if($result->next()) {
+        if ($result->next()) {
             setExecutionResultMessage("WARNING", "warning");
             $message = "Emails won't be sent, but the cron will continue its execution";
             eprintln("  '-" . $message, "yellow");
@@ -376,7 +378,7 @@ function unpauseApplications()
         saveLog('unpauseApplications', 'action', 'Unpausing Applications');
     } catch (Exception $oError) {
         setExecutionResultMessage('WITH ERRORS', 'error');
-        eprintln("  '-".$oError->getMessage(), 'red');
+        eprintln("  '-" . $oError->getMessage(), 'red');
         saveLog('unpauseApplications', 'error', 'Error Unpausing Applications: ' . $oError->getMessage());
     }
 }
@@ -399,8 +401,8 @@ function executePlugins()
     if ($handle = opendir($pathCronPlugins)) {
         setExecutionMessage('Executing cron files in bin/plugins directory in Workspace: ' . config("system.workspace"));
         while (false !== ($file = readdir($handle))) {
-            if (strpos($file, '.php',1) && is_file($pathCronPlugins . $file)) {
-                $filename  = str_replace('.php' , '', $file);
+            if (strpos($file, '.php', 1) && is_file($pathCronPlugins . $file)) {
+                $filename = str_replace('.php', '', $file);
                 $className = $filename . 'ClassCron';
 
                 // Execute custom cron function
@@ -417,7 +419,7 @@ function executePlugins()
 
     // -> Execute functions
     if (!empty($cronFiles)) {
-        setExecutionMessage('Executing registered cron files for Workspace: ' . config("system.workspace"));
+        setExecutionMessage('Executing registered cron files for Workspace: ' . config('system.workspace'));
         /**
          * @var \ProcessMaker\Plugins\Interfaces\CronFile $cronFile
          */
@@ -430,8 +432,8 @@ function executePlugins()
             }
         }
     }
-
 }
+
 function executeCustomCronFunction($pathFile, $className)
 {
     include_once $pathFile;
@@ -441,7 +443,7 @@ function executeCustomCronFunction($pathFile, $className)
     if (method_exists($oPlugin, 'executeCron')) {
         $arrayCron = unserialize(trim(@file_get_contents(PATH_DATA . "cron")));
         $arrayCron["processcTimeProcess"] = 60; //Minutes
-        $arrayCron["processcTimeStart"]   = time();
+        $arrayCron["processcTimeStart"] = time();
         @file_put_contents(PATH_DATA . "cron", serialize($arrayCron));
 
         //Try to execute Plugin Cron. If there is an error then continue with the next file
@@ -451,7 +453,7 @@ function executeCustomCronFunction($pathFile, $className)
             setExecutionResultMessage('DONE');
         } catch (Exception $e) {
             setExecutionResultMessage('FAILED', 'error');
-            eprintln("  '-".$e->getMessage(), 'red');
+            eprintln("  '-" . $e->getMessage(), 'red');
             saveLog('executePlugins', 'error', 'Error executing cron file: ' . $pathFile . ' - ' . $e->getMessage());
         }
     }
@@ -475,14 +477,14 @@ function calculateDuration()
         saveLog('calculateDuration', 'action', 'Calculating Duration');
     } catch (Exception $oError) {
         setExecutionResultMessage('WITH ERRORS', 'error');
-        eprintln("  '-".$oError->getMessage(), 'red');
+        eprintln("  '-" . $oError->getMessage(), 'red');
         saveLog('calculateDuration', 'error', 'Error Calculating Duration: ' . $oError->getMessage());
     }
 }
 
 /*----------------------------------********---------------------------------*/
 
-function executeEvents($sLastExecution, $sNow=null)
+function executeEvents($sLastExecution, $sNow = null)
 {
     global $argvx;
     global $sNow;
@@ -514,12 +516,12 @@ function executeEvents($sLastExecution, $sNow=null)
         //saveLog('executeEvents', 'action', $res );
     } catch (Exception $oError) {
         setExecutionResultMessage('WITH ERRORS', 'error');
-        eprintln("  '-".$oError->getMessage(), 'red');
+        eprintln("  '-" . $oError->getMessage(), 'red');
         saveLog('calculateAlertsDueDate', 'Error', 'Error Executing Events: ' . $oError->getMessage());
     }
 }
 
-function executeScheduledCases($sNow=null)
+function executeScheduledCases($sNow = null)
 {
     try {
         global $argvx;
@@ -549,14 +551,15 @@ function executeScheduledCases($sNow=null)
         setExecutionResultMessage('DONE');
     } catch (Exception $oError) {
         setExecutionResultMessage('WITH ERRORS', 'error');
-        eprintln("  '-".$oError->getMessage(), 'red');
+        eprintln("  '-" . $oError->getMessage(), 'red');
     }
 }
 
-function runDateForScheduledCases($sNow) {
+function runDateForScheduledCases($sNow)
+{
     global $arraySystemConfiguration;
 
-    $runDate = isset($sNow)? $sNow : date('Y-m-d H:i:s');
+    $runDate = isset($sNow) ? $sNow : date('Y-m-d H:i:s');
 
     $systemUtcTimeZone = false;
     /*----------------------------------********---------------------------------*/
@@ -568,11 +571,10 @@ function runDateForScheduledCases($sNow) {
             //function to convert it
             $currentTimeZone = date_default_timezone_get();
             date_default_timezone_set($arraySystemConfiguration['time_zone']);
-            $runDate =  gmdate('Y-m-d H:i:s', strtotime($sNow));
+            $runDate = gmdate('Y-m-d H:i:s', strtotime($sNow));
             date_default_timezone_set($currentTimeZone);
-        }
-        else {
-            $runDate =  gmdate('Y-m-d H:i:s');
+        } else {
+            $runDate = gmdate('Y-m-d H:i:s');
         }
     }
     return $runDate;
@@ -603,7 +605,7 @@ function executeUpdateAppTitle()
             $row = $rsCriteriaConf->getRow();
 
             $taskUid = $row["OBJ_UID"];
-            $lang    = $row["CFG_VALUE"];
+            $lang = $row["CFG_VALUE"];
 
             //Update case labels
             $appcv = new AppCacheView();
@@ -672,15 +674,14 @@ function executeCaseSelfService()
         $calendar = new Calendar();
 
         while ($rsCriteria->next()) {
-
             $row = $rsCriteria->getRow();
-			$flag = false;
+            $flag = false;
 
-            $appcacheAppUid   = $row["APP_UID"];
+            $appcacheAppUid = $row["APP_UID"];
             $appcacheDelIndex = $row["DEL_INDEX"];
             $appcacheDelDelegateDate = $row["DEL_DELEGATE_DATE"];
             $appcacheAppNumber = $row["APP_NUMBER"];
-            $appcacheProUid    = $row["PRO_UID"];
+            $appcacheProUid = $row["PRO_UID"];
             $taskUid = $row["TAS_UID"];
             $taskSelfServiceTime = intval($row["TAS_SELFSERVICE_TIME"]);
             $taskSelfServiceTimeUnit = $row["TAS_SELFSERVICE_TIME_UNIT"];
@@ -688,15 +689,15 @@ function executeCaseSelfService()
             /*----------------------------------********---------------------------------*/
 
             if ($calendar->pmCalendarUid == '') {
-            	$calendar->getCalendar(null, $appcacheProUid, $taskUid);
-            	$calendar->getCalendarData();
+                $calendar->getCalendar(null, $appcacheProUid, $taskUid);
+                $calendar->getCalendarData();
             }
 
             $dueDate = $calendar->calculateDate(
                 $appcacheDelDelegateDate,
                 $taskSelfServiceTime,
                 $taskSelfServiceTimeUnit //HOURS|DAYS|MINUTES
-                //1
+            //1
             );
 
             if (time() > $dueDate["DUE_DATE_SECONDS"] && $flag == false) {
@@ -727,10 +728,9 @@ function executeCaseSelfService()
                     $row = $rsCriteriaTgr->getRow();
 
                     if (is_array($row) && $row["TRI_TYPE"] == "SCRIPT") {
-
                         $arrayCron = unserialize(trim(@file_get_contents(PATH_DATA . "cron")));
                         $arrayCron["processcTimeProcess"] = 60; //Minutes
-                        $arrayCron["processcTimeStart"]   = time();
+                        $arrayCron["processcTimeStart"] = time();
                         @file_put_contents(PATH_DATA . "cron", serialize($arrayCron));
 
                         //Trigger
@@ -790,9 +790,9 @@ function saveLog($sSource, $sType, $sDescription)
 
 function setExecutionMessage($m)
 {
-    $len      = strlen($m);
+    $len = strlen($m);
     $linesize = 60;
-    $rOffset  = $linesize - $len;
+    $rOffset = $linesize - $len;
 
     eprint("* $m");
 
@@ -801,7 +801,7 @@ function setExecutionMessage($m)
     }
 }
 
-function setExecutionResultMessage($m, $t='')
+function setExecutionResultMessage($m, $t = '')
 {
     $c = 'green';
 
@@ -849,7 +849,7 @@ function sendNotifications()
             setExecutionResultMessage("Processed $n");
         }
         $notificationsApple = $notQueue->loadStatusDeviceType('pending', 'apple');
-        if($notificationsApple) {
+        if ($notificationsApple) {
             setExecutionMessage("|-- Send Apple Notifications");
             $n = 0;
             foreach ($notificationsApple as $key => $item) {

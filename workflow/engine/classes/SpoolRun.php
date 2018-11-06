@@ -239,7 +239,8 @@ class SpoolRun
             $attachment = implode(",", $this->fileData['attachments']);
             $oAppMessage->setappMsgAttach($attachment);
         }
-        $oAppMessage->setappMsgstatus($this->status);
+        $oAppMessage->setAppMsgStatus($this->status);
+        $oAppMessage->setAppMsgStatusId(isset(AppMessage::$app_msg_status_values[$this->status]) ? AppMessage::$app_msg_status_values[$this->status] : 0);
         $oAppMessage->setappMsgsenddate(date('Y-m-d H:i:s'));
         $oAppMessage->save();
     }
@@ -410,6 +411,8 @@ class SpoolRun
                                 }
                                 break;
                         }
+                        $systemConfiguration = System::getSystemConfiguration();
+                        $oPHPMailer->Timeout = is_numeric($systemConfiguration['smtp_timeout']) ? $systemConfiguration['smtp_timeout'] : 20;
                         $oPHPMailer->CharSet = "UTF-8";
                         $oPHPMailer->Encoding = "8bit";
                         $oPHPMailer->Host = $this->config['MESS_SERVER'];
@@ -543,26 +546,28 @@ class SpoolRun
     }
 
     /**
-     * try resend the emails from spool
+     * Try to resend the emails from spool
      *
      * @param string $dateResend
+     * @param integer $cron
+     *
      * @return none or exception
      */
     public function resendEmails($dateResend = null, $cron = 0)
     {
-        $aConfiguration = System::getEmailConfiguration();
+        $configuration = System::getEmailConfiguration();
 
-        if (!isset($aConfiguration["MESS_ENABLED"])) {
-            $aConfiguration["MESS_ENABLED"] = '0';
+        if (!isset($configuration["MESS_ENABLED"])) {
+            $configuration["MESS_ENABLED"] = '0';
         }
 
-        if ($aConfiguration["MESS_ENABLED"] == "1") {
+        if ($configuration["MESS_ENABLED"] == "1") {
             require_once("classes/model/AppMessage.php");
 
-            $this->setConfig($aConfiguration);
+            $this->setConfig($configuration);
 
             $criteria = new Criteria("workflow");
-            $criteria->add(AppMessagePeer::APP_MSG_STATUS, "sent", Criteria::NOT_EQUAL);
+            $criteria->add(AppMessagePeer::APP_MSG_STATUS_ID, AppMessage::MESSAGE_STATUS_PENDING, Criteria::EQUAL);
 
             if ($dateResend != null) {
                 $criteria->add(AppMessagePeer::APP_MSG_DATE, $dateResend, Criteria::GREATER_EQUAL);
@@ -581,13 +586,24 @@ class SpoolRun
                 $row = $rsCriteria->getRow();
 
                 try {
-                    $sFrom = G::buildFrom($aConfiguration, $row["APP_MSG_FROM"]);
+                    $from = G::buildFrom($configuration, $row["APP_MSG_FROM"]);
 
-                    $this->setData($row["APP_MSG_UID"], $row["APP_MSG_SUBJECT"], $sFrom, $row["APP_MSG_TO"], $row["APP_MSG_BODY"], date("Y-m-d H:i:s"), $row["APP_MSG_CC"], $row["APP_MSG_BCC"], $row["APP_MSG_TEMPLATE"], $row["APP_MSG_ATTACH"]);
+                    $this->setData(
+                        $row["APP_MSG_UID"],
+                        $row["APP_MSG_SUBJECT"],
+                        $from,
+                        $row["APP_MSG_TO"],
+                        $row["APP_MSG_BODY"],
+                        date("Y-m-d H:i:s"),
+                        $row["APP_MSG_CC"],
+                        $row["APP_MSG_BCC"],
+                        $row["APP_MSG_TEMPLATE"],
+                        $row["APP_MSG_ATTACH"]
+                    );
 
                     $this->sendMail();
                 } catch (Exception $e) {
-                    $strAux = "Spool::resendEmails(): Using " . $aConfiguration["MESS_ENGINE"] . " for APP_MGS_UID=" . $row["APP_MSG_UID"] . " -> With message: " . $e->getMessage();
+                    $strAux = "Spool::resendEmails(): Using " . $configuration["MESS_ENGINE"] . " for APP_MGS_UID=" . $row["APP_MSG_UID"] . " -> With message: " . $e->getMessage();
 
                     if ($e->getCode() == $this->ExceptionCode["WARNING"]) {
                         array_push($this->aWarnings, $strAux);
@@ -631,6 +647,7 @@ class SpoolRun
         $spool->setAppUid($db_spool['app_uid']);
         $spool->setDelIndex($db_spool['del_index']);
         $spool->setAppMsgType($db_spool['app_msg_type']);
+        $spool->setAppMsgTypeId(isset(AppMessage::$app_msg_type_values[$db_spool['app_msg_type']]) ? AppMessage::$app_msg_type_values[$db_spool['app_msg_type']] : 0);
         $spool->setAppMsgSubject($db_spool['app_msg_subject']);
         $spool->setAppMsgFrom($db_spool['app_msg_from']);
         $spool->setAppMsgTo($db_spool['app_msg_to']);
@@ -641,12 +658,13 @@ class SpoolRun
         $spool->setappMsgAttach($db_spool['app_msg_attach']);
         $spool->setAppMsgTemplate($db_spool['app_msg_template']);
         $spool->setAppMsgStatus($db_spool['app_msg_status']);
-        $spool->setAppMsgSendDate(date('Y-m-d H:i:s')); // Add by Ankit
-        $spool->setAppMsgShowMessage($db_spool['app_msg_show_message']); // Add by Ankit
+        $spool->setAppMsgStatusId(isset(AppMessage::$app_msg_status_values[$db_spool['app_msg_status']]) ? AppMessage::$app_msg_status_values[$db_spool['app_msg_status']] : 0);
+        $spool->setAppMsgSendDate(date('Y-m-d H:i:s'));
+        $spool->setAppMsgShowMessage($db_spool['app_msg_show_message']);
         $spool->setAppMsgError($db_spool['app_msg_error']);
 
+        $appDelegation = new AppDelegation();
         if (empty($db_spool['app_number'])) {
-            $appDelegation = new AppDelegation();
             $delegationIds = $appDelegation->getColumnIds($db_spool['app_uid'], $db_spool['del_index']);
             if (is_array($delegationIds) && count($delegationIds) > 0) {
                 $delegationIds = array_change_key_case($delegationIds);
@@ -665,8 +683,15 @@ class SpoolRun
             $tasId = $db_spool['tas_id'];
         }
 
+        if (empty($db_spool['pro_id'])) {
+            $proId = isset($delegationIds['pro_id']) ? $delegationIds['pro_id'] : $appDelegation->getProcessId($appNumber);
+        } else {
+            $proId = $db_spool['pro_id'];
+        }
+
         $spool->setAppNumber($appNumber);
         $spool->setTasId($tasId);
+        $spool->setProId($proId);
 
         if (!$spool->validate()) {
             $errors = $spool->getValidationFailures();

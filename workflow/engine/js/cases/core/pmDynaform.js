@@ -91,6 +91,7 @@ $(window).load(function () {
         },
         token: credentials,
         submitRest: false,
+        googleMaps: googleMaps,
         onLoad: function () {
             var dynaformname = document.createElement("input"),
                 appuid,

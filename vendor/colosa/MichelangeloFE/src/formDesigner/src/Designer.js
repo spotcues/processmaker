@@ -311,10 +311,7 @@
         var listControls = new FormDesigner.main.ListControls();
         var listMobileControls = new FormDesigner.main.ListMobileControls();
         var listProperties = new FormDesigner.main.ListProperties();
-        var listHistory = new FormDesigner.main.ListHistory(this.dynaform);
         this.form1 = new FormDesigner.main.Form();
-        //this.form2 = new FormDesigner.main.Form();
-        //
         this.title = $("<div style='float:left;font-family:Montserrat,sans-serif;font-size:20px;color:white;margin:5px;white-space:nowrap;'>Titulo</div>");
         this.areaButtons = new FormDesigner.main.AreaButtons();
         this.areaToolBox = new FormDesigner.main.AreaToolBox();
@@ -322,38 +319,14 @@
         if (window.distribution === "1")
             this.areaToolBox.addItem("Mobile controls".translate(), listMobileControls);
         this.areaToolBox.addItem("Properties".translate(), listProperties);
-        this.areaToolBox.addItem("History of use".translate(), listHistory);
         this.areaTabs = new FormDesigner.main.TabsForm();
         this.areaTabs.addItem("Master", this.form1);
-        //this.areaTabs.addItem("Subform", form2);
         this.north.append(this.title);
         this.north.append(this.areaButtons.body);
         this.west.append(this.areaToolBox.body);
         this.center.append(this.areaTabs.body);
         //events
         var confirmRecovery = false;
-        listHistory.onSelect = function (dynaform, history) {
-            if (dynaform === null) {
-                new FormDesigner.main.DialogMessage(null, "alert", "This content is empty.".translate());
-                return;
-            }
-            var a = new FormDesigner.main.DialogConfirm(null, "warning", "Do you want to import? All your changes will be lost if you import it.".translate());
-            a.onAccept = function () {
-                listProperties.clear();
-                $.recovered.data = [];
-                that.form1.recovery = history.current === false ? true : false;
-                that.form1.setData({
-                    dyn_content: JSON.stringify(dynaform),
-                    dyn_description: dynaform.items[0].description,
-                    dyn_title: dynaform.items[0].name,
-                    dyn_type: "xmlform",
-                    dyn_uid: dynaform.items[0].id,
-                    dyn_version: 2,
-                    history_date: history.history_date
-                });
-                that.form1.recovery = false;
-            };
-        };
         this.areaButtons.save[0].onclick = function () {
             //save lost dynaforms
             if ($.recovered.data.length > 0) {
@@ -407,8 +380,6 @@
                             dyn_version: 2
                         };
                         that.form1.setData(dynaform);
-                        listHistory.setDynaform(dynaform);
-                        listHistory.reload();
                     },
                     error: function (responses) {
                     }
@@ -449,8 +420,6 @@
                 typeRequest: 'update',
                 data: that.dynaform,
                 functionSuccess: function (xhr, response) {
-                    listHistory.setDynaform(that.dynaform);
-                    listHistory.reload();
                     that.form1.setDirty();
                     that.onSave();
                 },

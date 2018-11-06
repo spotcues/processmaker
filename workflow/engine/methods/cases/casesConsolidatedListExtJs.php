@@ -9,7 +9,7 @@ $oCriteria = new Criteria("workflow");
 $oCriteria->add(CaseConsolidatedCorePeer::CON_STATUS, 'ACTIVE');
 $activeNumRows = CaseConsolidatedCorePeer::doCount($oCriteria);
 
-$headPublisher = &headPublisher::getSingleton();
+$headPublisher = headPublisher::getSingleton();
 $usrUid = $_SESSION["USER_LOGGED"];
 $conf = new Configurations();
 
@@ -115,7 +115,7 @@ if (count($arrayTabItem) > 0) {
     $headPublisher->assign("varSkin", SYS_SKIN);            //Sending the current Skin
     $headPublisher->assign("FORMATS", $conf->getFormats());
     $headPublisher->assign("urlProxy", $urlProxy);
-    $headPublisher->assign('credentials', $clientToken );
+    $headPublisher->assign('credentials', $clientToken);
 
     $oHeadPublisher->assign('isIE', Bootstrap::isIE());
 
@@ -177,7 +177,7 @@ function getProcessArray($action, $userUid)
 
 function getConsolidated()
 {
-    $caseColumns = array ();
+    $caseColumns = array();
     $caseColumns[] = array("header" =>"#",           "dataIndex" => "APP_NUMBER",            "width" => 45, "align" => "center");
     $caseColumns[] = array("header" =>"Case",        "dataIndex" => "APP_TITLE",             "width" => 150);
     $caseColumns[] = array("header" =>"UserUid",     "dataIndex" => "USR_UID",               "width" => 50, "hidden" => true, "hideable" => false);

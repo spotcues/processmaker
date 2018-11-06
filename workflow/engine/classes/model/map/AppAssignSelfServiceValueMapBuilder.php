@@ -69,11 +69,15 @@ class AppAssignSelfServiceValueMapBuilder
 
         $tMap->addColumn('APP_UID', 'AppUid', 'string', CreoleTypes::VARCHAR, true, 32);
 
+        $tMap->addColumn('APP_NUMBER', 'AppNumber', 'int', CreoleTypes::INTEGER, false, null);
+
         $tMap->addColumn('DEL_INDEX', 'DelIndex', 'int', CreoleTypes::INTEGER, true, null);
 
         $tMap->addColumn('PRO_UID', 'ProUid', 'string', CreoleTypes::VARCHAR, true, 32);
 
         $tMap->addColumn('TAS_UID', 'TasUid', 'string', CreoleTypes::VARCHAR, true, 32);
+
+        $tMap->addColumn('TAS_ID', 'TasId', 'int', CreoleTypes::INTEGER, false, null);
 
         $tMap->addColumn('GRP_UID', 'GrpUid', 'string', CreoleTypes::LONGVARCHAR, true, null);
 

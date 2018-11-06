@@ -2,29 +2,17 @@
 
 require_once 'classes/model/om/BaseListCanceled.php';
 
-
-/**
- * Skeleton subclass for representing a row from the 'LIST_CANCELED' table.
- *
- *
- *
- * You should add additional methods to this class to meet the
- * application requirements.  This class will only be generated as
- * long as it does not already exist in the output directory.
- *
- * @package    classes.model
- */
-// @codingStandardsIgnoreStart
 class ListCanceled extends BaseListCanceled implements ListInterface
 {
     use ListBaseTrait;
 
-    // @codingStandardsIgnoreEnd
     /**
      * Create List Canceled Table
      *
-     * @param type $data
-     * @return type
+     * @param array $data
+     *
+     * @return void
+     * @throws Exception
      *
      */
     public function create($data)
@@ -182,22 +170,42 @@ class ListCanceled extends BaseListCanceled implements ListInterface
     /**
      * Remove List Canceled
      *
-     * @param type $seqName
-     * @return type
-     * @throws type
+     * @param string $appUid
+     *
+     * @return void
+     * @throws Exception
      *
      */
-    public function remove($app_uid)
+    public function remove($appUid)
     {
         $con = Propel::getConnection(ListCanceledPeer::DATABASE_NAME);
         try {
-            $this->setAppUid($app_uid);
+            $this->setAppUid($appUid);
             $con->begin();
             $this->delete();
             $con->commit();
         } catch (Exception $e) {
             $con->rollback();
             throw ($e);
+        }
+    }
+
+    /**
+     * Remove all records related to the APP_UID
+     *
+     * @param string $appUid
+     *
+     * @return void
+     * @throws Exception
+     */
+    public function removeAll($appUid)
+    {
+        try {
+            $criteria = new Criteria("workflow");
+            $criteria->add(ListCanceledPeer::APP_UID, $appUid);
+            ListCanceledPeer::doDelete($criteria);
+        } catch (Exception $e) {
+            throw $e;
         }
     }
 
@@ -351,4 +359,5 @@ class ListCanceled extends BaseListCanceled implements ListInterface
         return $this->getCountListFromPeer
                 (ListCanceledPeer::class, $usrUid, $filters);
     }
+
 } // ListCanceled

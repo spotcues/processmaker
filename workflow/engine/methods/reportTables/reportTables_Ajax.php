@@ -189,7 +189,7 @@ switch ($action) {
                 /**
                  * validations *
                  */
-                if (is_array( $aNameTable )) {
+                if ($aNameTable) {
                     throw new Exception( 'The table "' . $data['REP_TAB_NAME'] . '" already exits.' );
                 }
 

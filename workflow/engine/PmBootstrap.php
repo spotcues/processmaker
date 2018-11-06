@@ -1,5 +1,5 @@
 <?php
-//test
+
 use ProcessMaker\Core\System;
 
 class PmBootstrap extends Bootstrap
@@ -17,9 +17,7 @@ class PmBootstrap extends Bootstrap
 
         require_once PATH_HOME . 'engine/config/paths.php';
 
-        //if (php_sapi_name() !== 'cli') {
-            session_start(); // starting session
-        //}
+        session_start(); // starting session
     }
 
     //wrapped

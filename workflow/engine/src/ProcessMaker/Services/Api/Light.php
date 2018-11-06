@@ -2,6 +2,7 @@
 
 namespace ProcessMaker\Services\Api;
 
+use Bootstrap;
 use G;
 use ProcessMaker\Project\Adapter;
 use ProcessMaker\Services\Api;
@@ -1219,8 +1220,19 @@ class Light extends Api
             $oMobile = new BusinessModelLight();
 
             $url = "http://maps.googleapis.com/maps/api/staticmap?center=" . $latitude . ',' . $longitude . "&format=jpg&size=600x600&zoom=15&markers=color:blue%7Clabel:S%7C" . $latitude . ',' . $longitude;
+            
+            $config = Bootstrap::getSystemConfiguration();
+            $googleMapApiKey = $config['google_map_api_key'];
+            $googleMapSignature = $config['google_map_signature'];
+            if(!empty($googleMapApiKey)){
+                $url .= "&key=" . $googleMapApiKey;
+            }
+            if(!empty($googleMapSignature)){
+                $url .= "&signature=" . $googleMapSignature;
+            }
+            
             $imageLocation = imagecreatefromjpeg($url);
-            $tmpfname = tempnam("php://temp", "pmm");
+            $tmpfname = tempnam(sys_get_temp_dir(), "pmm");
             imagejpeg($imageLocation, $tmpfname);
 
             $_FILES["form"]["type"] = "image/jpeg";
@@ -1708,13 +1720,13 @@ class Light extends Api
      *
      * @url POST /cases/:app_uid/cancel
      * 
-     * @param string $cas_uid {@min 1}{@max 32}
+     * @param string $app_uid {@min 1}{@max 32}
      * 
      * @return array
      * @throws RestException 
      * 
      * @access protected
-     * @class AccessControl {@permission PM_CASES}
+     * @class AccessControl {@permission PM_CANCELCASE}
      */
     public function doPutCancelCase($app_uid)
     {

@@ -22,22 +22,22 @@
  * Coral Gables, FL, 33134, USA, or email info@colosa.com.
  */
 global $RBAC;
-$access = $RBAC->userCanAccess( 'PM_FACTORY' );
+$access = $RBAC->userCanAccess('PM_FACTORY');
 if ($access != 1) {
     switch ($access) {
         case - 1:
-            G::SendTemporalMessage( 'ID_USER_HAVENT_RIGHTS_PAGE', 'error', 'labels' );
-            G::header( 'location: ../login/login' );
+            G::SendTemporalMessage('ID_USER_HAVENT_RIGHTS_PAGE', 'error', 'labels');
+            G::header('location: ../login/login');
             die();
             break;
         case - 2:
-            G::SendTemporalMessage( 'ID_USER_HAVENT_RIGHTS_SYSTEM', 'error', 'labels' );
-            G::header( 'location: ../login/login' );
+            G::SendTemporalMessage('ID_USER_HAVENT_RIGHTS_SYSTEM', 'error', 'labels');
+            G::header('location: ../login/login');
             die();
             break;
         default:
-            G::SendTemporalMessage( 'ID_USER_HAVENT_RIGHTS_PAGE', 'error', 'labels' );
-            G::header( 'location: ../login/login' );
+            G::SendTemporalMessage('ID_USER_HAVENT_RIGHTS_PAGE', 'error', 'labels');
+            G::header('location: ../login/login');
             die();
             break;
     }
@@ -50,7 +50,8 @@ $criteria->add(ProcessPeer::PRO_UID, $_GET["PRO_UID"], Criteria::EQUAL);
 
 $criteria->add(
     $criteria->getNewCriterion(ProcessPeer::PRO_CREATE_USER, $_SESSION["USER_LOGGED"], Criteria::EQUAL)->addOr(
-    $criteria->getNewCriterion(ProcessPeer::PRO_TYPE_PROCESS, "PUBLIC", Criteria::EQUAL))
+    $criteria->getNewCriterion(ProcessPeer::PRO_TYPE_PROCESS, "PUBLIC", Criteria::EQUAL)
+    )
 );
 
 $rsCriteria = ProcessPeer::doSelectRS($criteria);
@@ -66,7 +67,7 @@ $processUID = $_GET['PRO_UID'];
 $_SESSION['PROCESS'] = $processUID;
 $_SESSION['PROCESSMAP'] = 'LEIMNUD';
 
-$oTemplatePower = new TemplatePower( PATH_TPL . 'processes/processes_Map.html' );
+$oTemplatePower = new TemplatePower(PATH_TPL . 'processes/processes_Map.html');
 $oTemplatePower->prepare();
 
 $G_MAIN_MENU = 'processmaker';
@@ -75,15 +76,15 @@ $G_SUB_MENU = 'processes';
 $G_ID_SUB_MENU_SELECTED = '_';
 
 $G_PUBLISH = new Publisher();
-$G_PUBLISH->AddContent( 'template', '', '', '', $oTemplatePower );
+$G_PUBLISH->AddContent('template', '', '', '', $oTemplatePower);
 
 $consolidated = 0;
 /*----------------------------------********---------------------------------*/
 
-$oHeadPublisher = & headPublisher::getSingleton();
-$oHeadPublisher->addScriptFile( '/jscore/dbConnections/main.js' );
-$oHeadPublisher->addScriptCode( '
-    var maximunX = ' . ProcessMap::getMaximunTaskX( $processUID ) . ';
+$oHeadPublisher = headPublisher::getSingleton();
+$oHeadPublisher->addScriptFile('/jscore/dbConnections/main.js');
+$oHeadPublisher->addScriptCode('
+    var maximunX = ' . ProcessMap::getMaximunTaskX($processUID) . ';
 	var leimnud = new maborak();
 	leimnud.make();
 	leimnud.Package.Load("rpc,drag,drop,panel,app,validator,fx,dom,abbr",{Instance:leimnud,Type:"module"});
@@ -106,9 +107,10 @@ $oHeadPublisher->addScriptCode( '
 		}
 		Pm.make();
 	});
-	var changesSavedLabel = "' . addslashes( G::LoadTranslation( 'ID_SAVED_SUCCESSFULLY' ) ) . '";' );
+	var changesSavedLabel = "' . addslashes(G::LoadTranslation('ID_SAVED_SUCCESSFULLY')) . '";');
 
-if (! isset( $_GET['raw'] ))
-    G::RenderPage( 'publish', 'green-submenu' );
-else
-    G::RenderPage( 'publish', 'raw' );
+if (! isset($_GET['raw'])) {
+    G::RenderPage('publish', 'green-submenu');
+} else {
+    G::RenderPage('publish', 'raw');
+}

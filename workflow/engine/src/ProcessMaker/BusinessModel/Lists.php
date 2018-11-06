@@ -1,14 +1,18 @@
 <?php
+
 namespace ProcessMaker\BusinessModel;
+
 use \G;
 use \Criteria;
 use \UsersPeer;
+use \PMLicensedFeatures;
 
 /**
  * @author Brayan Pereyra (Cochalo) <brayan@colosa.com>
  * @copyright Colosa - Bolivia
  */
-class Lists {
+class Lists
+{
 
     /**
      * @var array
@@ -78,17 +82,17 @@ class Lists {
      * Get list for Cases
      *
      * @access public
-     * @param array $dataList, Data for list
+     * @param array $dataList , Data for list
      * @return array
      *
      * @author Brayan Pereyra (Cochalo) <brayan@colosa.com>
      * @copyright Colosa - Bolivia
-    */
+     */
     public function getList($listName = 'inbox', $dataList = array(), $total = false)
     {
         Validator::isArray($dataList, '$dataList');
         if (!isset($dataList["userId"])) {
-            throw (new \Exception(\G::LoadTranslation("ID_USER_NOT_EXIST", array('userId',''))));
+            throw (new \Exception(\G::LoadTranslation("ID_USER_NOT_EXIST", array('userId', ''))));
         } else {
             Validator::usrUid($dataList["userId"], "userId");
         }
@@ -152,7 +156,7 @@ class Lists {
         $filters["start"] = (int)$filters["start"];
         $filters["start"] = abs($filters["start"]);
         if ($filters["start"] != 0) {
-            $filters["start"]+1;
+            $filters["start"] + 1;
         }
 
         $filters["limit"] = (int)$filters["limit"];
@@ -201,25 +205,25 @@ class Lists {
         if (!empty($result)) {
             foreach ($result as &$value) {
                 if (isset($value['DEL_PREVIOUS_USR_UID'])) {
-                    $value['PREVIOUS_USR_UID']       = $value['DEL_PREVIOUS_USR_UID'];
-                    $value['PREVIOUS_USR_USERNAME']  = $value['DEL_PREVIOUS_USR_USERNAME'];
+                    $value['PREVIOUS_USR_UID'] = $value['DEL_PREVIOUS_USR_UID'];
+                    $value['PREVIOUS_USR_USERNAME'] = $value['DEL_PREVIOUS_USR_USERNAME'];
                     $value['PREVIOUS_USR_FIRSTNAME'] = $value['DEL_PREVIOUS_USR_FIRSTNAME'];
-                    $value['PREVIOUS_USR_LASTNAME']  = $value['DEL_PREVIOUS_USR_LASTNAME'];
+                    $value['PREVIOUS_USR_LASTNAME'] = $value['DEL_PREVIOUS_USR_LASTNAME'];
                 }
                 if (isset($value['DEL_DUE_DATE'])) {
                     $value['DEL_TASK_DUE_DATE'] = $value['DEL_DUE_DATE'];
                 }
                 if (isset($value['APP_PAUSED_DATE'])) {
-                    $value['APP_UPDATE_DATE']   = $value['APP_PAUSED_DATE'];
+                    $value['APP_UPDATE_DATE'] = $value['APP_PAUSED_DATE'];
                 }
                 if (isset($value['DEL_CURRENT_USR_USERNAME'])) {
-                    $value['USR_USERNAME']      = $value['DEL_CURRENT_USR_USERNAME'];
-                    $value['USR_FIRSTNAME']     = $value['DEL_CURRENT_USR_FIRSTNAME'];
-                    $value['USR_LASTNAME']      = $value['DEL_CURRENT_USR_LASTNAME'];
-                    $value['APP_UPDATE_DATE']   = $value['DEL_DELEGATE_DATE'];
+                    $value['USR_USERNAME'] = $value['DEL_CURRENT_USR_USERNAME'];
+                    $value['USR_FIRSTNAME'] = $value['DEL_CURRENT_USR_FIRSTNAME'];
+                    $value['USR_LASTNAME'] = $value['DEL_CURRENT_USR_LASTNAME'];
+                    $value['APP_UPDATE_DATE'] = $value['DEL_DELEGATE_DATE'];
                 }
                 if (isset($value['APP_STATUS'])) {
-                    $value['APP_STATUS_LABEL']  = G::LoadTranslation( "ID_{$value['APP_STATUS']}" );
+                    $value['APP_STATUS_LABEL'] = G::LoadTranslation("ID_{$value['APP_STATUS']}");
                 }
 
 
@@ -229,19 +233,19 @@ class Lists {
         $response = array();
         if ($filters["paged"]) {
             $filtersData = array();
-            $filtersData['start']       = $filters["start"];
-            $filtersData['limit']       = $filters["limit"];
-            $filtersData['sort']        = G::toLower($filters["sort"]);
-            $filtersData['dir']         = G::toLower($filters["dir"]);
-            $filtersData['cat_uid']     = $filters["category"];
-            $filtersData['pro_uid']     = $filters["process"];
-            $filtersData['search']      = $filters["search"];
-            $filtersData['date_from']   = $filters["dateFrom"];
-            $filtersData['date_to']     = $filters["dateTo"];
-            $response['filters']        = $filtersData;
-            $response['data']           = $result;
-            $filtersData['action']      = $filters["action"];
-            $response['totalCount']     = $list->getCountList($userUid, $filtersData);
+            $filtersData['start'] = $filters["start"];
+            $filtersData['limit'] = $filters["limit"];
+            $filtersData['sort'] = G::toLower($filters["sort"]);
+            $filtersData['dir'] = G::toLower($filters["dir"]);
+            $filtersData['cat_uid'] = $filters["category"];
+            $filtersData['pro_uid'] = $filters["process"];
+            $filtersData['search'] = $filters["search"];
+            $filtersData['date_from'] = $filters["dateFrom"];
+            $filtersData['date_to'] = $filters["dateTo"];
+            $response['filters'] = $filtersData;
+            $response['data'] = $result;
+            $filtersData['action'] = $filters["action"];
+            $response['totalCount'] = $list->getCountList($userUid, $filtersData);
         } else {
             $response = $result;
         }
@@ -260,7 +264,7 @@ class Lists {
         foreach ($list as $listObject => $item) {
             switch ($listObject) {
                 case 'ListDraft':
-                    $total = $this->$listObject->getCountList($userId, array('action'=>'draft'));
+                    $total = $this->$listObject->getCountList($userId, array('action' => 'draft'));
                     array_push($response, (array('count' => $total, 'item' => $item)));
                     break;
                 /*----------------------------------********---------------------------------*/

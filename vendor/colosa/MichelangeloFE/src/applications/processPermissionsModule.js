@@ -430,6 +430,9 @@
                 cboPermission.removeOption("RESEND");
 
                 cboPermission.reset();
+                cboOriginTask.setVisible(true);
+                cboParticipationRequired.setVisible(true);
+                cboStatusCase.setVisible(true);
                 cboDynaForm.setVisible(false);
                 cboInputDocument.setVisible(false);
                 cboOutputDocument.setVisible(false);
@@ -465,6 +468,11 @@
                         break;
                     case "ANY":
                         cboPermission.setVisible(true);
+                        break;
+                    case "REASSIGN_MY_CASES":
+                        cboOriginTask.setVisible(false);
+                        cboParticipationRequired.setVisible(false);
+                        cboStatusCase.setVisible(false);
                         break;
                 }
             };
@@ -699,12 +707,20 @@
                 {
                     value: "MSGS_HISTORY",
                     label: "Messages History".translate()
+                },
+                {
+                    value: "REASSIGN_MY_CASES",
+                    label: "Reassign my cases".translate()
                 }
             ];
 
             if (enterprise == "1") {
                 optionsType.push({value: "SUMMARY_FORM", label: "Summary Form".translate()});
             }
+            // sorting the optionsType 
+            optionsType.sort(function(a, b) {
+                return (a.label > b.label) ? 1 : ((b.label > a.label) ? -1 : 0);
+            });
 
             cboType = new PMUI.field.DropDownListField({
                 id: "cboType",
@@ -723,7 +739,7 @@
                 name: "cboDynaForm",
                 controlsWidth: "300px",
                 label: "DynaForm".translate(),
-                options: null,
+                options: [],
                 visible: false
             });
 
@@ -732,7 +748,7 @@
                 name: "cboInputDocument",
                 controlsWidth: "300px",
                 label: "Input Document".translate(),
-                options: null,
+                options: [],
                 visible: false
             });
 
@@ -741,7 +757,7 @@
                 name: "cboOutputDocument",
                 controlsWidth: "300px",
                 label: "Output Document".translate(),
-                options: null,
+                options: [],
                 visible: false
             });
 
@@ -770,11 +786,11 @@
                 title: "",
                 width: "890px",
                 items: [
+                    cboType,
                     cboStatusCase,
                     cboTargetTask,
                     cboOriginTask,
                     cboParticipationRequired,
-                    cboType,
                     cboDynaForm,
                     cboInputDocument,
                     cboOutputDocument,
@@ -836,17 +852,17 @@
                         sortable: true
                     },
                     {
-                        columnData: "participated",
-                        title: "Participation".translate(),
-                        alignmentCell: 'left',
-                        width: "115px",
-                        sortable: true
-                    },
-                    {
                         columnData: "op_obj_type",
                         title: "Type".translate(),
                         alignmentCell: 'left',
                         width: "100px",
+                        sortable: true
+                    },
+                    {
+                        columnData: "participated",
+                        title: "Participation".translate(),
+                        alignmentCell: 'left',
+                        width: "115px",
                         sortable: true
                     },
                     {
@@ -1009,6 +1025,13 @@
                                         data["op_obj_type"] = cboType.getValue();
                                         data["op_action"] = cboPermission.getValue();
                                         break;
+                                    case "REASSIGN_MY_CASES":
+                                        data = {};
+                                        data["op_user_relation"] =  groupOrUser[0];
+                                        data["usr_uid"] = groupOrUser[1];
+                                        data["tas_uid"] = cboTargetTask.getValue() === '0' ? '' : cboTargetTask.getValue();
+                                        data["op_obj_type"] = cboType.getValue();
+                                        break;
                                     default:
                                         data["op_obj_type"] = cboType.getValue();
                                         data["op_action"] = cboPermission.getValue();
@@ -1039,8 +1062,7 @@
             refreshGridPanelInMainWindow();
             if (typeof listProcessPermissions !== "undefined") {
                 winGrdpnlProcessPermissions.open();
-
-                $(cboGroupOrUser.createHTML()).insertAfter(cboTargetTask.html);
+                $(cboGroupOrUser.createHTML()).insertBefore(cboType.html);
 
 
                 cboGroupOrUser.html.find("input").val("");
