@@ -4,50 +4,54 @@ namespace ProcessMaker\BusinessModel;
 
 use AppCacheView;
 use AppCacheViewPeer;
-use Applications;
-use ApplicationPeer;
-use AppSolr;
-use AppDelegation;
-use AppDelegationPeer;
 use AppDelay;
 use AppDelayPeer;
+use AppDelegation;
+use AppDelegationPeer;
 use AppDocument;
 use AppDocumentPeer;
 use AppHistoryPeer;
-use AppThreadPeer;
+use ApplicationPeer;
+use Applications;
 use AppNotesPeer;
+use AppSolr;
 use BasePeer;
+use Bootstrap;
 use BpmnEngineServicesSearchIndex;
 use Cases as ClassesCases;
 use CasesPeer;
-use Criteria;
 use Configurations;
+use Criteria;
 use DBAdapter;
-use Exception;
 use EntitySolrRequestData;
+use Exception;
 use G;
 use Groups;
 use GroupUserPeer;
+use InputDocument;
 use InvalidIndexSearchTextException;
 use ListParticipatedLast;
 use PmDynaform;
+use ProcessMaker\BusinessModel\ProcessSupervisor as BmProcessSupervisor;
 use ProcessMaker\BusinessModel\Task as BmTask;
 use ProcessMaker\BusinessModel\User as BmUser;
-use ProcessMaker\BusinessModel\ProcessSupervisor as BmProcessSupervisor;
 use ProcessMaker\Core\System;
+use ProcessMaker\Exception\UploadException;
 use ProcessMaker\Plugins\PluginRegistry;
 use ProcessMaker\Services\OAuth2\Server;
+use ProcessMaker\Validation\ExceptionRestApi;
+use ProcessMaker\Validation\Validator as FileValidator;
+use ProcessPeer;
 use ProcessUser;
 use ProcessUserPeer;
-use ProcessPeer;
 use RBAC;
 use ResultSet;
 use RoutePeer;
 use SubApplication;
 use SubProcessPeer;
 use Task as ModelTask;
-use Tasks as ClassesTasks;
 use TaskPeer;
+use Tasks as ClassesTasks;
 use TaskUserPeer;
 use Users as ModelUsers;
 use UsersPeer;
@@ -57,6 +61,8 @@ class Cases
 {
     private $formatFieldNameInUppercase = true;
     private $messageResponse = [];
+    const MB_IN_KB = 1024;
+    const UNIT_MB = 'MB';
 
     /**
      * Set the format of the fields name (uppercase, lowercase)
@@ -3733,5 +3739,143 @@ class Cases
         }
 
         return $isSupervisor;
+    }
+
+    /**
+     * Upload file in the corresponding folder
+     *
+     * @param string $userUid
+     * @param string $appUid
+     * @param string $varName
+     * @param mixed $inpDocUid
+     * @param string $appDocUid
+     *
+     * @return array
+     * @throws Exception
+     */
+    public function uploadFiles($userUid, $appUid, $varName, $inpDocUid = -1, $appDocUid = null)
+    {
+        $response = [];
+        if (isset($_FILES["form"]["name"]) && count($_FILES["form"]["name"]) > 0) {
+            // Get the delIndex related to the case
+            $cases = new ClassesCases();
+            $delIndex = $cases->getCurrentDelegation($appUid, $userUid);
+            // Get information about the user
+            $user = new ModelUsers();
+            $userCreator = $user->loadDetailed($userUid)['USR_FULLNAME'];
+            $i = 0;
+            foreach ($_FILES["form"]["name"] as $fieldIndex => $fieldValue) {
+                if (!is_array($fieldValue)) {
+                    $arrayFileName = [
+                        'name' => $_FILES["form"]["name"][$fieldIndex],
+                        'tmp_name' => $_FILES["form"]["tmp_name"][$fieldIndex],
+                        'error' => $_FILES["form"]["error"][$fieldIndex]
+                    ];
+
+                    // We will to review the validation related to the Input document
+                    $file = [
+                        'filename' => $arrayFileName["name"],
+                        'path' => $arrayFileName["tmp_name"]
+                    ];
+                    $this->canUploadFileRelatedToInput($inpDocUid, $file);
+
+                    // There is no error, the file uploaded with success
+                    if ($arrayFileName["error"] === UPLOAD_ERR_OK) {
+                        $appDocument = new AppDocument();
+                        $objCreated = $appDocument->uploadAppDocument(
+                            $appUid,
+                            $userUid,
+                            $delIndex,
+                            $inpDocUid ,
+                            $arrayFileName,
+                            $varName,
+                            $appDocUid
+                        );
+                        $response[$i] = [
+                            'appDocUid' => $objCreated->getAppDocUid(),
+                            'docVersion' => $objCreated->getDocVersion(),
+                            'appDocFilename' => $objCreated->getAppDocFilename(),
+                            'appDocCreateDate' => $objCreated->getAppDocCreateDate(),
+                            'appDocType' => $objCreated->getAppDocType(),
+                            'appDocIndex' => $objCreated->getAppDocIndex(),
+                            'appDocCreateUser' => $userCreator
+                        ];
+
+                        $i++;
+                    } else {
+                        throw new UploadException($arrayFileName['error']);
+                    }
+                }
+            }
+        } else {
+            throw new Exception(G::LoadTranslation('ID_ERROR_UPLOAD_FILE_CONTACT_ADMINISTRATOR'));
+        }
+
+        return $response;
+    }
+
+    /**
+     * Run the validations related to an Input Document
+     *
+     * @param array $file
+     * @param mixed $inpDocUid
+     *
+     * @return boolean
+     * @throws ExceptionRestApi
+    */
+    private function canUploadFileRelatedToInput($file, $inpDocUid = -1)
+    {
+        if ($inpDocUid !== -1) {
+            $inputDocument = new InputDocument();
+            $inputExist = $inputDocument->InputExists($inpDocUid);
+            if ($inputExist) {
+                $inputProperties = $inputDocument->load($inpDocUid);
+                $inpDocTypeFile = $inputProperties['INP_DOC_TYPE_FILE'];
+                $inpDocMaxFileSize = (int)$inputProperties["INP_DOC_MAX_FILESIZE"];
+                $inpDocMaxFileSizeUnit = $inputProperties["INP_DOC_MAX_FILESIZE_UNIT"];
+
+                $validator = new FileValidator();
+                // Rule: extension
+                $validator->addRule()
+                    ->validate($file, function ($file) use ($inpDocTypeFile) {
+                        $result = G::verifyInputDocExtension($inpDocTypeFile, $file->filename, $file->path);
+
+                        return $result->status === false;
+                    })
+                    ->status(415)
+                    ->message(G::LoadTranslation('ID_UPLOAD_INVALID_DOC_TYPE_FILE', [$inpDocTypeFile]))
+                    ->log(function ($rule) {
+                        Bootstrap::registerMonologPhpUploadExecution('phpUpload', 250, $rule->getMessage(),
+                            $rule->getData()->filename);
+                    });
+                // Rule: maximum file size
+                $validator->addRule()
+                    ->validate($file, function ($file) use ($inpDocMaxFileSize, $inpDocMaxFileSizeUnit) {
+                        if ($inpDocMaxFileSize > 0) {
+                            $totalMaxFileSize = $inpDocMaxFileSize * ($inpDocMaxFileSizeUnit == self::UNIT_MB ? self::MB_TO_KB * self::MB_TO_KB : self::MB_TO_KB);
+                            $fileSize = filesize($file->path);
+                            if ($fileSize > $totalMaxFileSize) {
+                                return true;
+                            }
+                        }
+
+                        return false;
+                    })
+                    ->status(413)
+                    ->message(G::LoadTranslation("ID_UPLOAD_INVALID_DOC_MAX_FILESIZE",
+                        [$inpDocMaxFileSize . $inpDocMaxFileSizeUnit]))
+                    ->log(function ($rule) {
+                        Bootstrap::registerMonologPhpUploadExecution('phpUpload', 250, $rule->getMessage(),
+                            $rule->getData()->filename);
+                    });
+                $validator->validate();
+                // We will to review if the validator has some error
+                if ($validator->fails()) {
+                    throw new ExceptionRestApi($validator->getMessage(), $validator->getStatus());
+                }
+            }
+        }
+
+        return true;
     }
 }

@@ -246,7 +246,7 @@ try {
     $aLog['LOG_SID']            = session_id();
     $aLog['LOG_INIT_DATE']      = date('Y-m-d H:i:s');
     //$aLog['LOG_END_DATE']       = '0000-00-00 00:00:00';
-    $aLog['LOG_CLIENT_HOSTNAME']= $_SERVER['HTTP_HOST'];
+    $aLog['LOG_CLIENT_HOSTNAME']= System::getServerHost();
     $aLog['USR_UID']            = $_SESSION['USER_LOGGED'];
     $weblog->create($aLog);
     /**end log**/
@@ -269,7 +269,7 @@ try {
 
     /* Check password using policy - Start */
     require_once 'classes/model/UsersProperties.php';
-    $oUserProperty = new UsersProperties();
+    $userProperty = new UsersProperties();
 
     // getting default user location
     if (isset($_REQUEST['form']['URL']) && $_REQUEST['form']['URL'] != '') {
@@ -286,7 +286,7 @@ try {
         if (isset($_REQUEST['u']) && $_REQUEST['u'] != '') {
             $sLocation = G::sanitizeInput($_REQUEST['u']);
         } else {
-            $sLocation = $oUserProperty->redirectTo($_SESSION['USER_LOGGED'], $lang);
+            $sLocation = $userProperty->redirectTo($_SESSION['USER_LOGGED'], $lang);
         }
     }
 
@@ -295,50 +295,40 @@ try {
         die();
     }
 
-    $aUserProperty = $oUserProperty->loadOrCreateIfNotExists($_SESSION['USER_LOGGED'], array('USR_PASSWORD_HISTORY' => serialize(array(G::encryptOld($pwd)))));
-    $aErrors       = $oUserProperty->validatePassword($_POST['form']['USR_PASSWORD'], $aUserProperty['USR_LAST_UPDATE_DATE'], $aUserProperty['USR_LOGGED_NEXT_TIME'], true);
-
+    $userPropertyInfo = $userProperty->loadOrCreateIfNotExists($_SESSION['USER_LOGGED'], array('USR_PASSWORD_HISTORY' => serialize(array(G::encryptOld($pwd)))));
+    //Get the errors in the password
+    $errorInPassword = $userProperty->validatePassword(
+        $_POST['form']['USR_PASSWORD'],
+        $userPropertyInfo['USR_LAST_UPDATE_DATE'],
+        $userPropertyInfo['USR_LOGGED_NEXT_TIME']
+    );
+    //Get the policies enabled
+    $policiesInPassword = $userProperty->validatePassword('', date('Y-m-d'), $userPropertyInfo['USR_LOGGED_NEXT_TIME'], true);
+    //Enable change password from GAP
     if (!isset($enableChangePasswordAfterNextLogin)) {
         $enableChangePasswordAfterNextLogin = true;
     }
 
-    if ($enableChangePasswordAfterNextLogin && !empty($aErrors) && in_array("ID_PPP_CHANGE_PASSWORD_AFTER_NEXT_LOGIN", $aErrors)) {
+    if ($enableChangePasswordAfterNextLogin && !empty($errorInPassword)) {
         if (!defined('NO_DISPLAY_USERNAME')) {
             define('NO_DISPLAY_USERNAME', 1);
         }
-        $aFields = array();
-        $aFields['DESCRIPTION']  = '<span style="font-weight:normal;">';
-        $aFields['DESCRIPTION'] .= G::LoadTranslation('ID_POLICY_ALERT').':<br /><br />';
-        foreach ($aErrors as $sError) {
-            switch ($sError) {
-                case 'ID_PPP_MINIMUM_LENGTH':
-                    $aFields['DESCRIPTION'] .= ' - ' . G::LoadTranslation($sError).': ' . PPP_MINIMUM_LENGTH . '<br />';
-                    $aFields[substr($sError, 3)] = PPP_MINIMUM_LENGTH;
-                    $aFields['PPP_MINIMUN_LENGTH'] = PPP_MINIMUM_LENGTH;
-                    break;
-                case 'ID_PPP_MAXIMUM_LENGTH':
-                    $aFields['DESCRIPTION'] .= ' - ' . G::LoadTranslation($sError).': ' . PPP_MAXIMUM_LENGTH . '<br />';
-                    $aFields[substr($sError, 3)] = PPP_MAXIMUM_LENGTH;
-                    $aFields['PPP_MAXIMUN_LENGTH'] = PPP_MAXIMUM_LENGTH;
-                    break;
-                case 'ID_PPP_EXPIRATION_IN':
-                    $aFields['DESCRIPTION'] .= ' - ' . G::LoadTranslation($sError).' ' . PPP_EXPIRATION_IN . ' ' . G::LoadTranslation('ID_DAYS') . '<br />';
-                    $aFields[substr($sError, 3)] = PPP_EXPIRATION_IN;
-                    break;
-                default:
-                    $aFields['DESCRIPTION'] .= ' - ' . G::LoadTranslation($sError).'<br />';
-                    $aFields[substr($sError, 3)] = 1;
-                    break;
-            }
+        //We will to get the message for the login
+        $messPassword = $policySection = $userProperty->getMessageValidatePassword($policiesInPassword, false);
+        $changePassword = '<span style="font-weight:normal;">';
+        if (array_search('ID_PPP_CHANGE_PASSWORD_AFTER_NEXT_LOGIN', $errorInPassword)) {
+            $changePassword .= G::LoadTranslation('ID_PPP_CHANGE_PASSWORD_AFTER_NEXT_LOGIN') . '<br/><br/>';
         }
-        $aFields['DESCRIPTION'] .= '<br />' . G::LoadTranslation('ID_PLEASE_CHANGE_PASSWORD_POLICY') . '<br /><br /></span>';
+
+        $messPassword['DESCRIPTION'] = $changePassword . $policySection['DESCRIPTION'] . '</span>';
         $G_PUBLISH = new Publisher;
         $version = explode('.', trim(file_get_contents(PATH_GULLIVER . 'VERSION')));
         $version = isset($version[0]) ? intval($version[0]) : 0;
         if ($version >= 3) {
-            $G_PUBLISH->AddContent('xmlform', 'xmlform', 'login/changePasswordpm3', '', $aFields, 'changePassword');
-        }else{
-            $G_PUBLISH->AddContent('xmlform', 'xmlform', 'login/changePassword', '', $aFields, 'changePassword');
+            $G_PUBLISH->AddContent('xmlform', 'xmlform', 'login/changePasswordpm3', '', $messPassword,
+                'changePassword');
+        } else {
+            $G_PUBLISH->AddContent('xmlform', 'xmlform', 'login/changePassword', '', $messPassword, 'changePassword');
         }
         G::RenderPage('publish');
         die;

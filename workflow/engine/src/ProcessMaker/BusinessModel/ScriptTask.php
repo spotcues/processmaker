@@ -1,6 +1,16 @@
 <?php
 namespace ProcessMaker\BusinessModel;
+
+use BasePeer;
+use Cases as ClassesCases;
+use Criteria;
+use Exception;
 use G;
+use PMScript;
+use ResultSet;
+use ScriptTaskPeer;
+use TaskPeer;
+use TriggersPeer;
 
 class ScriptTask
 {
@@ -594,50 +604,48 @@ class ScriptTask
     /**
      * Execute Script
      *
-     * @param string $activityUid          Unique id of Event
-     * @param array  $arrayApplicationData Case data
+     * @param string $activityUid Unique id of task
+     * @param array $arrayApplicationData Case data
      *
      * @return array
+     * @throws Exception
      */
     public function execScriptByActivityUid($activityUid, array $arrayApplicationData)
     {
         try {
-            $task = \TaskPeer::retrieveByPK($activityUid);
+            $task = TaskPeer::retrieveByPK($activityUid);
 
             if (!is_null($task) && $task->getTasType() == "SCRIPT-TASK") {
-                $criteria = new \Criteria("workflow");
-
-                $criteria->addSelectColumn(\ScriptTaskPeer::SCRTAS_OBJ_UID);
-
-                $criteria->add(\ScriptTaskPeer::ACT_UID, $activityUid, \Criteria::EQUAL);
-
-                $rsCriteria = \ScriptTaskPeer::doSelectRS($criteria);
-                $rsCriteria->setFetchmode(\ResultSet::FETCHMODE_ASSOC);
+                $criteria = new Criteria("workflow");
+                $criteria->addSelectColumn(ScriptTaskPeer::SCRTAS_OBJ_UID);
+                $criteria->add(ScriptTaskPeer::ACT_UID, $activityUid, Criteria::EQUAL);
+                $rsCriteria = ScriptTaskPeer::doSelectRS($criteria);
+                $rsCriteria->setFetchmode(ResultSet::FETCHMODE_ASSOC);
 
                 if ($rsCriteria->next()) {
                     $row = $rsCriteria->getRow();
-
                     $scriptTasObjUid = $row["SCRTAS_OBJ_UID"];
-
-                    $trigger = \TriggersPeer::retrieveByPK($scriptTasObjUid);
+                    $trigger = TriggersPeer::retrieveByPK($scriptTasObjUid);
 
                     if (!is_null($trigger)) {
+                        //We will be update the status before execute the trigger related to the script task
+                        $case = new ClassesCases();
+                        $result = $case->updateCase($arrayApplicationData["APP_UID"], $arrayApplicationData);
+
                         //Some Pmf functions uses this global variable $oPMScript for review the aFields defined
                         global $oPMScript;
-                        $oPMScript = new \PMScript();
-                        $oPMScript->setDataTrigger($trigger->toArray(\BasePeer::TYPE_FIELDNAME));
+                        $oPMScript = new PMScript();
+                        $oPMScript->setDataTrigger($trigger->toArray(BasePeer::TYPE_FIELDNAME));
                         $oPMScript->setFields($arrayApplicationData["APP_DATA"]);
                         $oPMScript->setScript($trigger->getTriWebbot());
+                        $oPMScript->setExecutedOn(PMScript::SCRIPT_TASK);
                         $oPMScript->execute();
 
-                        if (isset($oPMScript->aFields["__ERROR__"]))  {
-                            G::log("Case Uid: " . $arrayApplicationData["APP_UID"] . ", Error: " . $oPMScript->aFields["__ERROR__"], PATH_DATA, "ScriptTask.log");
+                        if (isset($oPMScript->aFields["__ERROR__"])) {
+                            G::log("Case Uid: " . $arrayApplicationData["APP_UID"] . ", Error: " . $oPMScript->aFields["__ERROR__"],
+                                PATH_DATA, "ScriptTask.log");
                         }
-
                         $arrayApplicationData["APP_DATA"] = $oPMScript->aFields;
-
-                        $case = new \Cases();
-
                         $result = $case->updateCase($arrayApplicationData["APP_UID"], $arrayApplicationData);
                     }
                 }
@@ -645,7 +653,7 @@ class ScriptTask
 
             //Return
             return $arrayApplicationData["APP_DATA"];
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             throw $e;
         }
     }

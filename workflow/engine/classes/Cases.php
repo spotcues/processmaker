@@ -6,7 +6,6 @@ use ProcessMaker\BusinessModel\WebEntryEvent;
 use ProcessMaker\Core\System;
 use ProcessMaker\Plugins\PluginRegistry;
 
-
 /**
  * A Cases object where you can do start, load, update, refresh about cases
  * This object is applied to Task
@@ -18,6 +17,7 @@ class Cases
     public $dir = 'ASC';
     public $sort = 'APP_MSG_DATE';
     public $arrayTriggerExecutionTime = [];
+    private $triggerMessageExecution = '';
 
     public function __construct()
     {
@@ -25,6 +25,28 @@ class Cases
         if (($solrConf = System::solrEnv()) !== false) {
             $this->appSolr = new AppSolr($solrConf['solr_enabled'], $solrConf['solr_host'], $solrConf['solr_instance']);
         }
+    }
+
+    /**
+     * Get the triggerMessageExecution
+     *
+     * @return string
+     */
+    public function getTriggerMessageExecution()
+    {
+        return $this->triggerMessageExecution;
+    }
+
+    /**
+     * Add messages related to the trigger execution
+     *
+     * @param string $v
+     *
+     * @return void
+     */
+    public function addTriggerMessageExecution($v)
+    {
+        $this->triggerMessageExecution .= $v;
     }
 
     /**
@@ -910,7 +932,7 @@ class Cases
                     $appDataWithoutDynContentHistory = serialize($FieldsDifference);
                     $aFieldsHistory['APP_DATA'] = serialize($FieldsDifference);
                     $appHistory->insertHistory($aFieldsHistory);
-                    
+
                     /*----------------------------------********---------------------------------*/
                 }
             }
@@ -1105,12 +1127,13 @@ class Cases
                     $nameFiles .= $node['file'] . ":" . $node['function'] . "(" . $node['line'] . ")\n";
                 }
             }
-            $dataLog = \Bootstrap::getDefaultContextLog();
-            $dataLog['usrUid'] = isset($_SESSION['USER_LOGGED']) ? $_SESSION['USER_LOGGED'] : G::LoadTranslation('UID_UNDEFINED_USER');
-            $dataLog['appUid'] = $sAppUid;
-            $dataLog['request'] = $nameFiles;
-            $dataLog['action'] = 'DeleteCases';
-            Bootstrap::registerMonolog('DeleteCases', 200, 'Delete Case', $dataLog, $dataLog['workspace'], 'processmaker.log');
+
+            /** ProcessMaker log*/
+            $context = Bootstrap::getDefaultContextLog();
+            $context['appUid'] = $sAppUid;
+            $context['request'] = $nameFiles;
+            Bootstrap::registerMonolog('DeleteCases', 200, 'Delete Case', $context);
+
             return $result;
         } catch (exception $e) {
             throw ($e);
@@ -2243,6 +2266,7 @@ class Cases
                     if ($oStep) {
                         if (trim($oStep->getStepCondition()) !== '') {
                             $oPMScript->setScript($oStep->getStepCondition());
+                            $oPMScript->setExecutedOn(PMScript::CONDITION);
                             $bAccessStep = $oPMScript->evaluate();
                         } else {
                             $bAccessStep = true;
@@ -2373,6 +2397,7 @@ class Cases
                     if ($oStep) {
                         if (trim($oStep->getStepCondition()) !== '') {
                             $oPMScript->setScript($oStep->getStepCondition());
+                            $oPMScript->setExecutedOn(PMScript::CONDITION);
                             $bAccessStep = $oPMScript->evaluate();
                         } else {
                             $bAccessStep = true;
@@ -3325,53 +3350,144 @@ class Cases
     /**
      * Execute trigger in task
      * @name executeTriggers
-     * @param string $sTasUid
-     * @param string $sStepType
-     * @param array $sStepUidObj
-     * @param string $sTriggerType
-     * @param array $aFields
+     * @param string $tasUid
+     * @param string $stepType
+     * @param array $stepUidObj
+     * @param string $triggerType
+     * @param array $fieldsCase
+     *
      * @return integer
      */
-    public function executeTriggers($sTasUid, $sStepType, $sStepUidObj, $sTriggerType, $aFields = array())
+    public function executeTriggers($tasUid, $stepType, $stepUidObj, $triggerType, $fieldsCase = [])
     {
+        //Load the triggers assigned in the step
+        $triggersList = $this->loadTriggers($tasUid, $stepType, $stepUidObj, $triggerType);
+
+        //Execute the trigger defined in the step
+        $lastFields = $this->executeTriggerFromList($triggersList, $fieldsCase, $stepType, $stepUidObj, $triggerType);
+
         /*----------------------------------********---------------------------------*/
 
-        $aTriggers = $this->loadTriggers($sTasUid, $sStepType, $sStepUidObj, $sTriggerType);
+        return $lastFields;
+    }
 
-        if (count($aTriggers) > 0) {
+    /**
+     * This method executes the triggers send in an array
+     *
+     * @param array $triggersList
+     * @param array $fieldsCase
+     * @param string $stepType
+     * @param string $stepUidObj
+     * @param string $triggerType
+     * @param string $labelAssignment
+     *
+     * @return array
+    */
+    public function executeTriggerFromList(
+        array $triggersList,
+        array $fieldsCase,
+        $stepType,
+        $stepUidObj,
+        $triggerType,
+        $labelAssignment = ''
+    )
+    {
+        if (count($triggersList) > 0) {
             global $oPMScript;
 
-            $oPMScript = new PMScript();
-            $oPMScript->setFields($aFields);
+            $this->addTriggerMessageExecution("<br /><b>" . $labelAssignment . "</b><br />");
+            if (!isset($oPMScript)) {
+                $oPMScript = new PMScript();
+            }
+            $oPMScript->setFields($fieldsCase);
 
             /*----------------------------------********---------------------------------*/
 
-            foreach ($aTriggers as $aTrigger) {
+            $fieldsTrigger = [];
+            foreach ($triggersList as $trigger) {
                 /*----------------------------------********---------------------------------*/
 
-                //Execute
-                $bExecute = true;
-
-                if ($aTrigger['ST_CONDITION'] !== '') {
-                    $oPMScript->setDataTrigger($aTrigger);
-                    $oPMScript->setScript($aTrigger['ST_CONDITION']);
-                    $bExecute = $oPMScript->evaluate();
+                $execute = true;
+                //Check if the trigger has conditions for the execution
+                if (!empty($trigger['ST_CONDITION'])) {
+                    $oPMScript->setDataTrigger($trigger);
+                    $oPMScript->setScript($trigger['ST_CONDITION']);
+                    $oPMScript->setExecutedOn(PMScript::CONDITION);
+                    $execute = $oPMScript->evaluate();
                 }
 
-                if ($bExecute) {
-                    $oPMScript->setDataTrigger($aTrigger);
-                    $oPMScript->setScript($aTrigger['TRI_WEBBOT']);
+                //Execute the trigger
+                if ($execute) {
+                    $oPMScript->setDataTrigger($trigger);
+                    $oPMScript->setScript($trigger['TRI_WEBBOT']);
+                    $executedOn = $oPMScript->getExecutionOriginForAStep($stepType, $stepUidObj, $triggerType);
+                    $oPMScript->setExecutedOn($executedOn);
                     $oPMScript->execute();
+                    $varsChanged = $oPMScript->getVarsChanged();
+                    $appDataAfterTrigger = $oPMScript->aFields;
 
-                    $this->arrayTriggerExecutionTime[$aTrigger['TRI_UID']] = $oPMScript->scriptExecutionTime;
+                    //Get the key and values changed
+                    $fieldsTrigger = $this->findKeysAndValues($appDataAfterTrigger, $varsChanged);
+
+                    //We will be load the last appData
+                    if ($oPMScript->executedOn() === $oPMScript::AFTER_ROUTING) {
+                        $appUid = !empty($fieldsCase['APPLICATION']) ? $fieldsCase['APPLICATION'] : '';
+                        if (!empty($appUid)) {
+                            //Update $fieldsCase with the last appData
+                            $fieldsCase = $this->loadCase($appUid)['APP_DATA'];
+                        }
+                    }
+                    //Merge the current appData with variables changed
+                    $fieldsCase = array_merge($fieldsCase, $fieldsTrigger);
+
+                    //Register the time execution
+                    $this->arrayTriggerExecutionTime[$trigger['TRI_UID']] = $oPMScript->scriptExecutionTime;
+                    //Register the message of execution
+                    $varTriggers = "&nbsp;- " . nl2br(htmlentities($trigger["TRI_TITLE"], ENT_QUOTES)) . "<br/>";
+                    $this->addTriggerMessageExecution($varTriggers);
                 }
             }
-            /*----------------------------------********---------------------------------*/
 
-            return $oPMScript->aFields;
-        } else {
-            return $aFields;
+            /*----------------------------------********---------------------------------*/
         }
+
+        return $fieldsCase;
+    }
+
+    /**
+     * Find keys and values into the appData
+     *
+     * @param array $appData
+     * @param array $keyToSearch
+     *
+     * @return array
+    */
+    private function findKeysAndValues(array $appData, array $keyToSearch)
+    {
+        $keysAndValues = [];
+        foreach ($keyToSearch as $key) {
+            $keysAndValues[$key] = $appData[$key];
+        }
+
+        return $keysAndValues;
+    }
+
+    /**
+     * Review the code in the trigger if the feature is enable
+     *
+     * @param CodeScanner $cs
+     * @param string $code
+     * @param string $triTitle
+     *
+     * @return string
+     *
+    */
+    private function codeScannerReview(CodeScanner $cs, $code, $triTitle)
+    {
+        $foundDisabledCode = "";
+        /*----------------------------------********---------------------------------*/
+
+        return $foundDisabledCode;
     }
 
     /**
@@ -4385,13 +4501,15 @@ class Cases
         $appDelay = new AppDelay();
         $appDelay->create($newData);
 
-        //update searchindex
+        //Update searchindex
         if ($this->appSolr != null) {
             $this->appSolr->updateApplicationSearchIndex($appUid);
         }
 
-        /*----------------------------------********---------------------------------*/
+        //Execute trigger
         $this->getExecuteTriggerProcess($appUid, 'REASSIGNED');
+
+        /*----------------------------------********---------------------------------*/
 
         //Delete record of the table LIST_UNASSIGNED
         $unassigned = new ListUnassigned();
@@ -6948,6 +7066,7 @@ class Cases
             $oPMScript->setDataTrigger($arrayWebBotTrigger);
             $oPMScript->setFields($aFields['APP_DATA']);
             $oPMScript->setScript($arrayWebBotTrigger['TRI_WEBBOT']);
+            $oPMScript->setExecutedOn(PMScript::PROCESS_ACTION);
             $oPMScript->execute();
 
             $aFields['APP_DATA'] = array_merge($aFields['APP_DATA'], $oPMScript->aFields);
@@ -6962,57 +7081,38 @@ class Cases
         return false;
     }
 
+    /**
+     * When the case is deleted will be removed the case from the report tables related
+     *
+     * @param string $applicationUid
+     *
+     * @return void
+     * @throws Exception
+    */
     public function reportTableDeleteRecord($applicationUid)
     {
-        $criteria1 = new Criteria("workflow");
-
-        //SELECT
-        $criteria1->addSelectColumn(ApplicationPeer::PRO_UID);
-
-        //FROM
-        //WHERE
-        $criteria1->add(ApplicationPeer::APP_UID, $applicationUid);
-
-        //QUERY
-        $rsCriteria1 = ApplicationPeer::doSelectRS($criteria1);
-        $rsCriteria1->setFetchmode(ResultSet::FETCHMODE_ASSOC);
-
-        $rsCriteria1->next();
-        $row1 = $rsCriteria1->getRow();
-
-        $processUid = $row1["PRO_UID"];
-
-        $criteria2 = new Criteria("workflow");
-
-        //SELECT
-        $criteria2->addSelectColumn(AdditionalTablesPeer::ADD_TAB_NAME);
-
-        //FROM
-        //WHERE
-
-        $criteria2->add(AdditionalTablesPeer::PRO_UID, $processUid);
-
-        //QUERY
-        $rsCriteria2 = AdditionalTablesPeer::doSelectRS($criteria2);
-        $rsCriteria2->setFetchmode(ResultSet::FETCHMODE_ASSOC);
-
-        $pmTable = new PmTable();
-
-        while ($rsCriteria2->next()) {
-            try {
-                $row2 = $rsCriteria2->getRow();
-                $tableName = $row2["ADD_TAB_NAME"];
-                $pmTableName = $pmTable->toCamelCase($tableName);
-
-                //DELETE
-                require_once(PATH_WORKSPACE . "classes" . PATH_SEP . "$pmTableName.php");
-
-                $criteria3 = new Criteria("workflow");
-
-                eval("\$criteria3->add(" . $pmTableName . "Peer::APP_UID, \$applicationUid);");
-                eval($pmTableName . "Peer::doDelete(\$criteria3);");
-            } catch (Exception $e) {
-                throw $e;
+        $app = new Application();
+        $applicationFields = $app->Load($applicationUid);
+        if (!empty($applicationFields["PRO_UID"])) {
+            $additionalTables = new AdditionalTables();
+            $listTables = $additionalTables->getReportTables($applicationFields["PRO_UID"]);
+            $pmTable = new PmTable();
+            foreach ($listTables as $row) {
+                try {
+                    $tableName = $row["ADD_TAB_NAME"];
+                    $pmTableName = $pmTable->toCamelCase($tableName);
+                    require_once(PATH_WORKSPACE . 'classes' . PATH_SEP . $pmTableName . '.php');
+                    $criteria = new Criteria("workflow");
+                    $pmTablePeer = $pmTableName . 'Peer';
+                    $criteria->add($pmTablePeer::APP_UID, $applicationUid);
+                    $pmTablePeer::doDelete($criteria);
+                } catch (Exception $e) {
+                    $context = Bootstrap::getDefaultContextLog();
+                    $context['appUid'] = $applicationUid;
+                    $context['proUid'] = $applicationFields["PRO_UID"];
+                    $context['reportTable'] = $tableName;
+                    Bootstrap::registerMonolog('DeleteCases', 400, $e->getMessage(), $context);
+                }
             }
         }
     }

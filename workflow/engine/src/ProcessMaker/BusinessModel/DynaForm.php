@@ -2,7 +2,11 @@
 
 namespace ProcessMaker\BusinessModel;
 
+use AdditionalTables;
 use DynaformHandler;
+use Exception;
+use G;
+use PmDynaform;
 
 class DynaForm
 {
@@ -407,6 +411,8 @@ class DynaForm
 
             $this->throwExceptionIfExistsTitle($processUid, $arrayData["DYN_TITLE"], $this->arrayFieldNameForException["dynaFormTitle"]);
 
+            $this->throwExceptionIfTheColumnIdentifierIsNotValid($arrayData);
+
             //Create
             $dynaForm = new \Dynaform();
 
@@ -460,6 +466,8 @@ class DynaForm
             if (isset($arrayData["DYN_TITLE"])) {
                 $this->throwExceptionIfExistsTitle($processUid, $arrayData["DYN_TITLE"], $this->arrayFieldNameForException["dynaFormTitle"], $dynaFormUid);
             }
+
+            $this->throwExceptionIfTheColumnIdentifierIsNotValid($arrayData);
 
             //Update
             $arrayData["DYN_UID"] = $dynaFormUid;
@@ -1130,5 +1138,75 @@ class DynaForm
         } catch (\Exception $e) {
             throw $e;
         }
+    }
+
+    /**
+     * Validates if the grid columns tha will be stored have valid names, otherwise 
+     * it throws an exception.
+     *
+     * @param array $arrayData, form data that will be saved
+     * 
+     * @throws Exception
+     */
+    public function throwExceptionIfTheColumnIdentifierIsNotValid($arrayData)
+    {
+        if (isset($arrayData['DYN_CONTENT'])) {
+            $oldDynaform = $this->getDynaFormRecordByPk($arrayData['DYN_UID'], []);
+            $oldGrids = PmDynaform::getGridsAndFields($oldDynaform['DYN_CONTENT']);
+            $oldColumns = $this->getColumnsOfArrayGrids($oldGrids);
+
+            $grids = PmDynaform::getGridsAndFields($arrayData['DYN_CONTENT']);
+            $columns = $this->getColumnsOfArrayGrids($grids);
+
+            foreach ($oldColumns as $oldField) {
+                foreach ($columns as $key => $field) {
+                    if ($oldField->id === $field->id) {
+                        unset($columns[$key]);
+                        break;
+                    }
+                }
+            }
+
+            $invalids = [];
+            $identicals = [];
+            foreach ($columns as $column) {
+                try {
+                    Validator::isValidVariableName($column->id);
+                } catch (Exception $e) {
+                    $invalids[] = $column->id;
+                }
+                foreach ($oldColumns as $oldColumn) {
+                    if (strtolower(AdditionalTables::getPHPName($column->id)) === strtolower(AdditionalTables::getPHPName($oldColumn->id))) {
+                        $identicals[] = "'" . $column->id . "' - '" . $oldColumn->id . "'";
+                    }
+                }
+            }
+
+            if (count($invalids) > 0) {
+                throw (new Exception(G::LoadTranslation("ID_GRID_VARIABLE_NAME_ERROR", [implode(', ', $invalids)])));
+            }
+
+            if (count($identicals) > 0) {
+                throw (new Exception(G::LoadTranslation("DYNAFIELD_PHPNAME_ALREADY_EXIST", [implode(', ', $identicals)])));
+            }
+        }
+    }
+
+    /**
+     * Gets a list of all columns of the grid array.
+     * 
+     * @param array $grids
+     * 
+     * @return array
+     */
+    private function getColumnsOfArrayGrids($grids)
+    {
+        $columns = [];
+        foreach ($grids as $grid) {
+            if (isset($grid->columns)) {
+                $columns = array_merge($columns, $grid->columns);
+            }
+        }
+        return $columns;
     }
 }

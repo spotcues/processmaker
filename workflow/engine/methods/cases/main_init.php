@@ -16,7 +16,6 @@ if (($arrayConfig = $memcache->get($keyMem)) === false) {
 }
 
 $confDefaultOption = "";
-
 if (isset($arrayConfig["DEFAULT_CASES_MENU"])) {
     //this user has a configuration record
     $confDefaultOption = $arrayConfig["DEFAULT_CASES_MENU"];
@@ -47,10 +46,11 @@ if (isset($_SESSION['__OPEN_APPLICATION_UID__'])) {
 
     $confDefaultOption = 'CASES_SEARCH';
     $action = 'search';
-    $arrayResult = $case->getStatusInfo($openAppUid, 0, $_SESSION['USER_LOGGED']);
+    $participation = $case->getStatusInfo($openAppUid, 0, $_SESSION['USER_LOGGED']);
     $arrayDelIndex = [];
 
-    if (!empty($arrayResult)) {
+    if (!empty($participation)) {
+        /** If the user does have participation */
         $arrayDefaultOption = [
             'TO_DO' => ['CASES_INBOX', 'todo'],
             'DRAFT' => ['CASES_DRAFT', 'draft'],
@@ -61,34 +61,35 @@ if (isset($_SESSION['__OPEN_APPLICATION_UID__'])) {
             'PAUSED' => ['CASES_PAUSED', 'paused']
         ];
 
-        $confDefaultOption = $arrayDefaultOption[$arrayResult['APP_STATUS']][0];
-        $action = $arrayDefaultOption[$arrayResult['APP_STATUS']][1];
-
-        $arrayDelIndex = $arrayResult['DEL_INDEX'];
+        $confDefaultOption = $arrayDefaultOption[$participation['APP_STATUS']][0];
+        $action = $arrayDefaultOption[$participation['APP_STATUS']][1];
+        $arrayDelIndex = $participation['DEL_INDEX'];
     } else {
-        $arrayResultData = $case->getStatusInfo($openAppUid);
+        /** If the user does not have participation */
+        $action = 'jump';
+        $caseInformation = $case->getStatusInfo($openAppUid);
+        //We will check if is supervisor
         $supervisor = new \ProcessMaker\BusinessModel\ProcessSupervisor();
-        $isSupervisor = $supervisor->isUserProcessSupervisor($arrayResultData['PRO_UID'], $_SESSION['USER_LOGGED']);
+        $isSupervisor = $supervisor->isUserProcessSupervisor($caseInformation['PRO_UID'], $_SESSION['USER_LOGGED']);
         if ($isSupervisor) {
-            $arrayResult = $arrayResultData;
-            $arrayDelIndex = $arrayResultData['DEL_INDEX'];
+            $arrayDelIndex = $caseInformation['DEL_INDEX'];
         } else {
-            $_SESSION['PROCESS'] = $arrayResultData['PRO_UID'];
+            $_SESSION['PROCESS'] = $caseInformation['PRO_UID'];
             $_GET['APP_UID'] = $openAppUid;
-            $_SESSION['ACTION'] = 'jump';
+            $_SESSION['ACTION'] = $action;
             $_SESSION['APPLICATION'] = $openAppUid;
-            $_SESSION['INDEX'] = $arrayResultData['DEL_INDEX'][0];
+            $_SESSION['INDEX'] = $caseInformation['DEL_INDEX'][0];
             require_once(PATH_METHODS . 'cases' . PATH_SEP . 'cases_Resume.php');
             exit();
         }
     }
 
-    if (count($arrayDelIndex) == 1) {
-        $defaultOption = '../cases/open?APP_UID=' . $openAppUid .
-            '&DEL_INDEX=' . $arrayDelIndex[0] . '&action=' . $action;
+    if (count($arrayDelIndex) === 1) {
+        //We will to open the case: one thread
+        $defaultOption = '../cases/open?APP_UID=' . $openAppUid . '&DEL_INDEX=' . $arrayDelIndex[0] . '&action=' . $action;
     } else {
-        $defaultOption = '../cases/casesListExtJs?action=' . $action .
-            '&openApplicationUid=' . $openAppUid;
+        //We will to show the list: more than one thread
+        $defaultOption = '../cases/casesListExtJs?action=' . $action . '&openApplicationUid=' . $openAppUid;
     }
 } else {
     if (isset($_GET['id'])) {

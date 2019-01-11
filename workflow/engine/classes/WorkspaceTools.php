@@ -3,6 +3,7 @@
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 /*----------------------------------********---------------------------------*/
+use ProcessMaker\BusinessModel\Process as BmProcess;
 use ProcessMaker\Core\Installer;
 use ProcessMaker\Core\System;
 use ProcessMaker\Plugins\Adapters\PluginAdapter;
@@ -230,6 +231,12 @@ class WorkspaceTools
         if (is_null($arrayOptTranslation)) {
             $arrayOptTranslation = ['updateXml' => true, 'updateMafe' => true];
         }
+
+        $start = microtime(true);
+        CLI::logging("> Remove deprecated files...\n");
+        $this->removeDeprecatedFiles();
+        $stop = microtime(true);
+        CLI::logging("<*>   Remove deprecated files took " . ($stop - $start) . " seconds.\n");
 
         $start = microtime(true);
         CLI::logging("> Updating database...\n");
@@ -1976,6 +1983,12 @@ class WorkspaceTools
                     $workspace->createDBUser($dbUser, ($workspace->dbGrantUserPassword != '' ? $workspace->dbGrantUserPassword : $db->pass), "%", $dbName, $connection);
                 }
             }
+
+            $start = microtime(true);
+            CLI::logging("> Remove deprecated files...\n");
+            $workspace->removeDeprecatedFiles();
+            $stop = microtime(true);
+            CLI::logging("<*>   Remove deprecated files took " . ($stop - $start) . " seconds.\n");
 
             if (($pmVersionWorkspaceToRestore != '') && (version_compare(
                         $pmVersionWorkspaceToRestore . "",
@@ -4318,5 +4331,51 @@ class WorkspaceTools
                 . "ASSIGNEE_TYPE=-1 "
                 . "WHERE ASSIGNEE_ID = 0");
         $con->commit();
+    }
+    
+    /**
+     * Remove deprecated files and directory.
+     */
+    public function removeDeprecatedFiles()
+    {
+        $deprecatedFiles = PATH_TRUNK . PATH_SEP . 'config' . PATH_SEP . 'deprecatedFiles.lst';
+        if (file_exists($deprecatedFiles)) {
+            $handle = fopen($deprecatedFiles, 'r');
+            if ($handle) {
+                while (($line = fgets($handle)) !== false) {
+                    $line = trim($line, "\n");
+                    CLI::logging("> Remove file/folder " . $line . " ");
+                    if (file_exists($line)) {
+                        G::rm_dir($line);
+                        CLI::logging("[OK]\n");
+                    } else {
+                        CLI::logging("[Already removed]\n");
+                    }
+                }
+                fclose($handle);
+            }
+        }
+    }
+
+    /**
+     * Sync JSON definition of the Forms with Input Documents information
+     */
+    public function syncFormsWithInputDocumentInfo() {
+        // Initialize Propel and instance the required classes
+        $this->initPropel(true);
+        $processInstance = new Process();
+        $bmProcessInstance = new BmProcess();
+        $pmDynaform = new PmDynaform();
+
+        // Get all active processes
+        $processes = $processInstance->getAllProcesses(0, '');
+        foreach ($processes as $process) {
+            // Get all Input Documents from a process
+            $inputDocuments = $bmProcessInstance->getInputDocuments($process['PRO_UID']);
+            foreach ($inputDocuments as $inputDocument) {
+                // Sync JSON definition of the Forms
+                $pmDynaform->synchronizeInputDocument($process['PRO_UID'], $inputDocument);
+            }
+        }
     }
 }

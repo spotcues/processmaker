@@ -555,7 +555,7 @@ class InstallerModule extends Controller
     public function forceTogenerateTranslationsFiles($url)
     {
         $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, G::browserCacheFilesUrl((G::is_https() ? "https://" : "http://") . $_SERVER["HTTP_HOST"] . "/js/ext/translation.en.js?r=" . rand(1, 10000)));
+        curl_setopt($ch, CURLOPT_URL, G::browserCacheFilesUrl(System::getServerProtocolHost() . "/js/ext/translation.en.js?r=" . rand(1, 10000)));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_FRESH_CONNECT, 1);
         curl_setopt($ch, CURLOPT_TIMEOUT, 60);

@@ -1,6 +1,7 @@
 <?php
 namespace ProcessMaker\BusinessModel\Cases;
 
+use ProcessMaker\Core\System;
 use ProcessMaker\Plugins\PluginRegistry;
 
 class OutputDocument
@@ -932,7 +933,7 @@ class OutputDocument
         }
         copy($sPath . $sFilename . '.html', PATH_OUTPUT_FILE_DIRECTORY . $sFilename . '.html');
         try {
-            $status = $pipeline->process((\G::is_https() ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . '/files/' . $sApplication . '/outdocs/' . $sFilename . '.html', $g_media);
+            $status = $pipeline->process(System::getServerProtocolHost() . '/files/' . $sApplication . '/outdocs/' . $sFilename . '.html', $g_media);
             copy(PATH_OUTPUT_FILE_DIRECTORY . $sFilename . '.pdf', $sPath . $sFilename . '.pdf');
             unlink(PATH_OUTPUT_FILE_DIRECTORY . $sFilename . '.pdf');
             unlink(PATH_OUTPUT_FILE_DIRECTORY . $sFilename . '.html');

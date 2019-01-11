@@ -458,8 +458,21 @@ PMDesigner.hideAllTinyEditorControls = function () {
 
 
 jQuery(document).ready(function ($) {
-    var setSaveButtonDisabled, s, sidebarCanvas, project, d, downloadLink, handlerExportNormal, handlerExportGranular,
-        handler, validatosr, help, option, menu, elem;
+    var setSaveButtonDisabled,
+        s,
+        sidebarCanvas,
+        project,
+        d,
+        downloadLink,
+        handlerExportNormal,
+        handlerExportGranular,
+        handler,
+        validatosr,
+        help,
+        option,
+        menu,
+        elem,
+        validatorLabel = "Validator".translate();
     /***************************************************
      * Defines the Process
      ***************************************************/
@@ -695,6 +708,7 @@ jQuery(document).ready(function ($) {
     //the action to generate a .bpmn file with the export option.
     downloadLink = $('.mafe-button-export-bpmn-process');
     downloadLink.click(function (e) {
+        PMDesigner.businessObject = PMDesigner.recursiveXMLEscapeCharacters(PMDesigner.businessObject, "name");
         PMDesigner.moddle.toXML(PMDesigner.businessObject, function (err, xmlStrUpdated) {
 
             setEncoded(downloadLink, PMDesigner.project.projectName + '.bpmn', xmlStrUpdated);
@@ -708,7 +722,7 @@ jQuery(document).ready(function ($) {
      * Add data tables
      */
     $('body').append('<div class="bpmn_validator"><div class="validator_header"></div><div class="validator_body"></div></div>')
-    $('.validator_header').append('<h2> Validator</h2>');
+    $('.validator_header').append('<h2> ' + validatorLabel + ' </h2>');
     $('.validator_header').append('<a class="validator-close" href="#"><span class="mafe-validator-close" title=""></span></a>');
     $('.validator_body').html('<table cellpadding="0" cellspacing="0" border="0" class="display" id="validator-table" width="100%"></table>');
     PMDesigner.validTable = $('#validator-table').DataTable({
@@ -1465,6 +1479,40 @@ PMDesigner.modeReadOnly = function () {
 
 PMDesigner.reloadDataTable = function () {
     $('.bpmn_validator').css('visibility', 'visible');
+};
+
+/**
+ * XML escape characters, recursively.
+ * There are only five:
+ * "   &quot;
+ * '   &apos;
+ * <   &lt;
+ * >   &gt;
+ * &   &amp;
+ * 
+ * @param {string} item
+ * @param {string} property
+ * @param {array|mixed} elements
+ * @returns {undefined}
+ */
+PMDesigner.recursiveXMLEscapeCharacters = function (item, property, elements) {
+    if (!(elements instanceof Array)) {
+        elements = [];
+    }
+    for (var i in item) {
+        if (item[i] instanceof Array || item[i] instanceof Object) {
+            item[i] = PMDesigner.recursiveXMLEscapeCharacters(item[i], property, elements);
+        }
+        if (i === property && elements.indexOf(item) === -1) {
+            item[property] = item[property].replace(/&/g, "&amp;");
+            item[property] = item[property].replace(/"/g, "&quot;");
+            item[property] = item[property].replace(/'/g, "&apos;");
+            item[property] = item[property].replace(/</g, "&lt;");
+            item[property] = item[property].replace(/>/g, "&gt;");
+            elements.push(item);
+        }
+    }
+    return item;
 };
 
 DataDictionary = function () {
@@ -14430,7 +14478,10 @@ stepsTask.prototype.notItemConfig = function () {
                 cboOutputDocument,
                 cboPermission,
                 cboParticipationRequired,
-                processPermissionsDataIni = {};
+                processPermissionsDataIni = {},
+                notification,
+                notificationText = "Fields marked with an asterisk (%%ASTERISK%%) are required.".translate()
+                    .replace(/%%ASTERISK%%/g, '<span style="color: #e84c3d">*</span>');
 
             loadDataFromServerToFields = function () {
                 var restClient = new PMRestClient({
@@ -14886,9 +14937,10 @@ stepsTask.prototype.notItemConfig = function () {
             };
 
             processPermissionsSetForm = function (option, data) {
-                processPermissionsData = data
+                cboGroupOrUser.hideMessageRequired();
+                processPermissionsData = data;
                 PROCESS_PERMISSIONS_OPTION = option;
-                PROCESS_PERMISSIONS_UID = (typeof(processPermissionsData.op_uid) != "undefined") ? processPermissionsData.op_uid : "";
+                PROCESS_PERMISSIONS_UID = (typeof(processPermissionsData.op_uid) !== "undefined") ? processPermissionsData.op_uid : "";
 
                 disableAllItems();
                 winGrdpnlProcessPermissions.showFooter();
@@ -15015,6 +15067,7 @@ stepsTask.prototype.notItemConfig = function () {
             cboGroupOrUser = new SuggestField({
                 label: "Group or User".translate(),
                 id: "cboGroupOrUser",
+                name: "cboGroupOrUser",
                 placeholder: "suggest users and groups",
                 width: 500,
                 required: true,
@@ -15071,6 +15124,13 @@ stepsTask.prototype.notItemConfig = function () {
                     }
                 ]
             });
+            notification = new PMUI.field.TextAnnotationField({
+                id: "requiredMessage",
+                name: "Message",
+                textType: PMUI.field.TextAnnotationField.TEXT_TYPES.HTML,
+                text: notificationText,
+                text_Align: "center"
+            });
             optionsType = [
                 {
                     value: "ANY",
@@ -15109,7 +15169,7 @@ stepsTask.prototype.notItemConfig = function () {
             if (enterprise == "1") {
                 optionsType.push({value: "SUMMARY_FORM", label: "Summary Form".translate()});
             }
-            // sorting the optionsType 
+            // sorting the optionsType
             optionsType.sort(function(a, b) {
                 return (a.label > b.label) ? 1 : ((b.label > a.label) ? -1 : 0);
             });
@@ -15439,6 +15499,7 @@ stepsTask.prototype.notItemConfig = function () {
                                 }
                             } else {
                                 cboGroupOrUser.showMessageRequired();
+                                frmProcessPermissions.addItem(notification)
                             }
 
                             cboGroupOrUser.html.find("input").val("");
@@ -19028,7 +19089,7 @@ PMDesigner.ProcessFilesManager = function (processFileManagerOptionPath, optionC
                 prf_content: null
             },
             functionSuccess: function (xhr, response) {
-                var win = window, fd = new FormData(), xhr, val = 'prf_file';
+                var win = window, fd = new FormData(), xhr, val = 'prf_file', resp = null;
                 fd.append(val, fileSelector.files[0]);
                 if (win.XMLHttpRequest)
                     xhr = new XMLHttpRequest();
@@ -19037,7 +19098,8 @@ PMDesigner.ProcessFilesManager = function (processFileManagerOptionPath, optionC
                 xhr.open('POST', '/api/1.0/' + WORKSPACE + '/project/' + PMDesigner.project.id + '/file-manager/' + response.prf_uid + '/upload', true);
                 xhr.setRequestHeader('Authorization', 'Bearer ' + PMDesigner.project.keys.access_token);
                 xhr.onload = function () {
-                    if (this.status === 200) {
+                    switch (this.status) {
+                        case 200:
                         formUploadField.reset();
                         windowUpload.close();
                         if (processFileManagerOptionPath == "templates") {
@@ -19048,6 +19110,15 @@ PMDesigner.ProcessFilesManager = function (processFileManagerOptionPath, optionC
                             PMDesigner.msgFlash('File uploaded successfully'.translate(), gridPublic);
                             loadPublic();
                         }
+                            break;
+                        case 403:
+                        case 415:
+                        case 429:
+                            if (this.response) {
+                                resp = JSON.parse(this.response);
+                                PMDesigner.msgWinError(resp.message ? resp.message : resp.error.message);
+                            }
+                            break;
                     }
                 };
                 xhr.send(fd);
@@ -24557,10 +24628,9 @@ PMDesigner.RoutingRule = function (shape) {
      * @param connection
      */
     function removeConnection(connection) {
-
         PMUI.getActiveCanvas().emptyCurrentSelection();
         PMUI.getActiveCanvas().setCurrentConnection(connection);
-        PMUI.getActiveCanvas().removeElements();
+        PMUI.getActiveCanvas().executeCommandDelete();
         connection.saveAndDestroy();
         PMUI.getActiveCanvas().removeConnection(connection);
     }
@@ -31765,13 +31835,11 @@ PMMessageType.prototype.init = function () {
     var that = this;
 
     that.buttonCreate.defineEvents();
-
-    that.winMessageType.open();
     that.winMessageType.addItem(that.gridMessages);
     that.winMessageType.addItem(that.frmMessageType);
-
     that.winMessageType.addItem(that.gridAcceptedValues);
     that.winMessageType.hideFooter();
+    that.winMessageType.open();
     that.requiredMessage = $(document.getElementById("requiredMessage"));
 
     this.buttonFieldAdd.controls[0].button.setStyle({cssProperties: {padding: "6px 15px"}});
@@ -32019,7 +32087,7 @@ PMMessageType.prototype.addAcceptedValue = function () {
     var that = this,
         value = $.trim(that.frmAcceptedValues.getField('txtMessageTypeVariableName').getValue()),
         message;
-        
+
     // if the form (form field's RegEx) is invalid, add a Message Field will not be allowed.
     if (!that.frmAcceptedValues.isValid()) {
         return;
@@ -34674,6 +34742,7 @@ IntroHelper.prototype.startIntro = function () {
                 skin_variant: 'silver',
                 relative_urls : false,
                 remove_script_host : false,
+                convert_urls: false,
                 plugins: 'advhr,advimage,advlink,advlist,autolink,autoresize,contextmenu,directionality,emotions,example,example_dependency,fullpage,fullscreen,iespell,inlinepopups,insertdatetime,layer,legacyoutput,lists,media,nonbreaking,noneditable,pagebreak,paste,preview,print,save,searchreplace,style,tabfocus,table,template,visualblocks,visualchars,wordcount,xhtmlxtras,pmSimpleUploader,pmVariablePicker,style',
                 theme_advanced_buttons1: 'pmSimpleUploader,|,pmVariablePicker,|,bold,italic,underline,|,justifyleft,justifycenter,justifyright,justifyfull,|,fontselect,fontsizeselect,|,cut,copy,paste',
                 theme_advanced_buttons2: 'bullist,numlist,|,outdent,indent,blockquote,|,tablecontrols,|,undo,redo,|,link,unlink,image,|,forecolor,backcolor,styleprops',

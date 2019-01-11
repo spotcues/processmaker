@@ -3,14 +3,16 @@
 namespace Maveriks;
 
 use Bootstrap;
+use G;
+use Illuminate\Foundation\Http\Kernel;
+use Luracast\Restler\Format\UploadFormat;
+use Luracast\Restler\RestException;
 use Maveriks\Util;
 use ProcessMaker\Core\System;
 use ProcessMaker\Plugins\PluginRegistry;
 use ProcessMaker\Services;
 use ProcessMaker\Services\Api;
-use Luracast\Restler\RestException;
-use Illuminate\Foundation\Http\Kernel;
-use G;
+use ProcessMaker\Validation\ValidationUploadedFiles;
 
 /**
  * Web application bootstrap
@@ -252,8 +254,6 @@ class WebApplication
      */
     protected function initRest($uri, $version, $multipart = false)
     {
-        require_once $this->rootDir . "/framework/src/Maveriks/Extension/Restler/UploadFormat.php";
-
         // $servicesDir contains directory where Services Classes are allocated
         $servicesDir = $this->workflowDir . 'engine' . DS . 'src' . DS . 'ProcessMaker' . DS . 'Services' . DS;
         // $apiDir - contains directory to scan classes and add them to Restler
@@ -330,6 +330,17 @@ class WebApplication
         Services\OAuth2\Server::setPmClientId($pmOauthClientId);
 
         $this->rest->setOverridingFormats('JsonFormat', 'UploadFormat');
+
+        UploadFormat::$customValidationFunction = function($target) {
+            $validator = ValidationUploadedFiles::getValidationUploadedFiles()->runRules([
+                'filename' => $target['name'],
+                'path' => $target['tmp_name']
+            ]);
+            if ($validator->fails()) {
+                throw new RestException($validator->getStatus(), $validator->getMessage());
+            }
+            return true;
+        };
 
         // scan all api directory to find api classes
         $classesList = Util\Common::rglob($apiDir . "/*");

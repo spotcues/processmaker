@@ -4,6 +4,7 @@ use ProcessMaker\Core\System;
 use ProcessMaker\AuditLog\AuditLog;
 use ProcessMaker\Plugins\PluginRegistry;
 use ProcessMaker\Services\OAuth2\Server;
+use ProcessMaker\Validation\ValidationUploadedFiles;
 
 class G
 {
@@ -1183,7 +1184,7 @@ class G
                             \Bootstrap::registerMonologPhpUploadExecution('phpExecution', 200, 'Php Execution', $filename);
                             require_once($filename);
                         } else {
-                            $message = G::LoadTranslation('THE_PHP_FILES_EXECUTION_WAS_DISABLED');
+                            $message = G::LoadTranslation('ID_THE_PHP_FILES_EXECUTION_WAS_DISABLED');
                             \Bootstrap::registerMonologPhpUploadExecution('phpExecution', 550, $message, $filename);
                             echo $message;
                         }
@@ -5429,7 +5430,7 @@ class G
                 } elseif ($configuration['MESS_ENGINE'] == 'PHPMAILER' && preg_match('/(.+)@(.+)\.(.+)/', $configuration['MESS_ACCOUNT'], $match)) {
                     $from .= ' <' . $configuration['MESS_ACCOUNT'] . '>';
                 } else {
-                    $from .= ' <info@' . ((isset($_SERVER['HTTP_HOST']) && $_SERVER['HTTP_HOST'] != '') ? $_SERVER['HTTP_HOST'] : 'processmaker.com') . '>';
+                    $from .= ' <info@' . System::getDefaultMailDomain() . '>';
                 }
             }
         } else {
@@ -5438,15 +5439,15 @@ class G
             } elseif ($configuration['MESS_FROM_NAME'] != '' && $configuration['MESS_ENGINE'] == 'PHPMAILER' && preg_match('/(.+)@(.+)\.(.+)/', $configuration['MESS_ACCOUNT'], $match)) {
                 $from = $configuration['MESS_FROM_NAME'] . ' <' . $configuration['MESS_ACCOUNT'] . '>';
             } elseif ($configuration['MESS_FROM_NAME'] != '') {
-                $from = $configuration['MESS_FROM_NAME'] . ' <info@' . ((isset($_SERVER['HTTP_HOST']) && $_SERVER['HTTP_HOST'] != '') ? $_SERVER['HTTP_HOST'] : 'processmaker.com') . '>';
+                $from = $configuration['MESS_FROM_NAME'] . ' <info@' . System::getDefaultMailDomain() . '>';
             } elseif ($configuration['MESS_FROM_MAIL'] != '') {
                 $from = $configuration['MESS_FROM_MAIL'];
             } elseif ($configuration['MESS_ENGINE'] == 'PHPMAILER' && preg_match('/(.+)@(.+)\.(.+)/', $configuration['MESS_ACCOUNT'], $match)) {
                 $from = $configuration['MESS_ACCOUNT'];
             } elseif ($configuration['MESS_ENGINE'] == 'PHPMAILER' && $configuration['MESS_ACCOUNT'] != '' && !preg_match('/(.+)@(.+)\.(.+)/', $configuration['MESS_ACCOUNT'], $match)) {
-                $from = $configuration['MESS_ACCOUNT'] . ' <info@' . ((isset($_SERVER['HTTP_HOST']) && $_SERVER['HTTP_HOST'] != '') ? $_SERVER['HTTP_HOST'] : 'processmaker.com') . '>';
+                $from = $configuration['MESS_ACCOUNT'] . ' <info@' . System::getDefaultMailDomain() . '>';
             } else {
-                $from = 'info@' . ((isset($_SERVER['HTTP_HOST']) && $_SERVER['HTTP_HOST'] != '') ? $_SERVER['HTTP_HOST'] : 'processmaker.com');
+                $from = 'info@' . System::getDefaultMailDomain();
             }
         }
         return $from;
@@ -5466,6 +5467,16 @@ class G
      */
     public static function verifyInputDocExtension($InpDocAllowedFiles, $fileName, $filesTmpName)
     {
+        $error = null;
+        ValidationUploadedFiles::getValidationUploadedFiles()->dispatch(function($validator) use(&$error) {
+            $error = new stdclass();
+            $error->status = false;
+            $error->message = $validator->getMessage();
+        });
+        if (!is_null($error)) {
+            return $error;
+        }
+
         // Initialize variables
         $res = new stdclass();
         $res->status = false;
@@ -5474,14 +5485,6 @@ class G
         // Get the file extension
         $aux = pathinfo($fileName);
         $fileExtension = isset($aux['extension']) ? strtolower($aux['extension']) : '';
-
-        if (\Bootstrap::getDisablePhpUploadExecution() === 1 && $fileExtension === 'php') {
-            $message = \G::LoadTranslation('THE_UPLOAD_OF_PHP_FILES_WAS_DISABLED');
-            \Bootstrap::registerMonologPhpUploadExecution('phpUpload', 550, $message, $fileName);
-            $res->status = false;
-            $res->message = $message;
-            return $res;
-        }
 
         // If required extension is *.* don't validate
         if (in_array('*', $allowedTypes)) {

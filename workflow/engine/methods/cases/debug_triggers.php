@@ -29,7 +29,7 @@ foreach ($aTriggers as $aTrigger) {
             $triggersList[$i]['code'] = $geshi->parse_code(); //$aTrigger['TRIGGERS_VALUES'][$index]['TRI_WEBBOT'];
 
             $triggerUid = $aTrigger['TRIGGERS_VALUES'][$index]['TRI_UID'];
-            $triggersList[$i]['script_execution_time'] = $aTrigger['TRIGGERS_EXECUTION_TIME'][$triggerUid];
+            $triggersList[$i]['script_execution_time'] = isset($aTrigger['TRIGGERS_EXECUTION_TIME'][$triggerUid]) ? $aTrigger['TRIGGERS_EXECUTION_TIME'][$triggerUid] : '';
 
             $i ++;
         }
@@ -58,14 +58,6 @@ foreach ($DEBUG_ERRORS as $error) {
         $i ++;
     }
 }
-
-/*echo '{total:5, data:[
-      {name:"trigger1", execution_time:"after"},
-      {name:"trigger2", execution_time:"before"},
-      {name:"trigger13", execution_time:"before"},
-      ]}';
-
- */
 $triggersRet = new StdClass();
 $triggersRet->total = count( $triggersList );
 $triggersRet->data = $triggersList;

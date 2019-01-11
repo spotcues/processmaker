@@ -21,6 +21,7 @@ use IsoCountryPeer;
 use IsoLocationPeer;
 use IsoSubdivisionPeer;
 use ListParticipatedLast;
+use OauthClients;
 use PMmemcached;
 use ProcessMaker\BusinessModel\ProcessSupervisor as BmProcessSupervisor;
 use ProcessMaker\Plugins\PluginRegistry;
@@ -986,6 +987,9 @@ class User
 
                 //Update in workflow
                 $result = $user->update($arrayData);
+                if (isset($arrayData['USR_STATUS'])) {
+                    $arrayData['USR_STATUS'] == 'INACTIVE' ? RBAC::destroySessionUser($userUid) : null;
+                }
 
                 //Save Calendar assigment
                 if (isset($arrayData["USR_CALENDAR"])) {
@@ -1114,43 +1118,23 @@ class User
      */
     public function testPassword($sPassword = '')
     {
-        $oUserProperty = new UsersProperties();
-        $aFields = array();
+        $userProperty = new UsersProperties();
+        $fields = [];
         $dateNow = date('Y-m-d H:i:s');
-        $aErrors = $oUserProperty->validatePassword($sPassword, $dateNow, 0);
-        if (!empty($aErrors)) {
+        $errorInPassword = $userProperty->validatePassword($sPassword, $dateNow, 0);
+        if (!empty($errorInPassword)) {
             if (!defined('NO_DISPLAY_USERNAME')) {
                 define('NO_DISPLAY_USERNAME', 1);
             }
-            $aFields = array();
-            $aFields['DESCRIPTION'] = G::LoadTranslation('ID_POLICY_ALERT');
-            foreach ($aErrors as $sError) {
-                switch ($sError) {
-                    case 'ID_PPP_MINIMUM_LENGTH':
-                        $aFields['DESCRIPTION'] .= ' - ' . G::LoadTranslation($sError) . ': ' . PPP_MINIMUM_LENGTH . '. ';
-                        $aFields[substr($sError, 3)] = PPP_MINIMUM_LENGTH;
-                        break;
-                    case 'ID_PPP_MAXIMUM_LENGTH':
-                        $aFields['DESCRIPTION'] .= ' - ' . G::LoadTranslation($sError) . ': ' . PPP_MAXIMUM_LENGTH . '. ';
-                        $aFields[substr($sError, 3)] = PPP_MAXIMUM_LENGTH;
-                        break;
-                    case 'ID_PPP_EXPIRATION_IN':
-                        $aFields['DESCRIPTION'] .= ' - ' . G::LoadTranslation($sError) . ' ' . PPP_EXPIRATION_IN . ' ' . G::LoadTranslation('ID_DAYS') . '. ';
-                        $aFields[substr($sError, 3)] = PPP_EXPIRATION_IN;
-                        break;
-                    default:
-                        $aFields['DESCRIPTION'] .= ' - ' . G::LoadTranslation($sError);
-                        $aFields[substr($sError, 3)] = 1;
-                        break;
-                }
-            }
-            $aFields['DESCRIPTION'] .= G::LoadTranslation('ID_PLEASE_CHANGE_PASSWORD_POLICY');
-            $aFields['STATUS'] = false;
+            //We will to get the message for test the password
+            $fields = $userProperty->getMessageValidatePassword($errorInPassword, true, true);
+            $fields['STATUS'] = false;
         } else {
-            $aFields['DESCRIPTION'] = G::LoadTranslation('ID_PASSWORD_COMPLIES_POLICIES');
-            $aFields['STATUS'] = true;
+            $fields['DESCRIPTION'] = G::LoadTranslation('ID_PASSWORD_COMPLIES_POLICIES');
+            $fields['STATUS'] = true;
         }
-        return $aFields;
+
+        return $fields;
     }
 
     /**
@@ -1313,6 +1297,9 @@ class User
                 $criteria->add(DashletInstancePeer::DAS_INS_OWNER_UID, $UID);
                 $criteria->add(DashletInstancePeer::DAS_INS_OWNER_TYPE, 'USER');
                 DashletInstancePeer::doDelete($criteria);
+                //Destroy session after delete user
+                RBAC::destroySessionUser($usrUid);
+                (new OauthClients())->removeByUser($usrUid);
             }
         } catch (Exception $e) {
             throw $e;

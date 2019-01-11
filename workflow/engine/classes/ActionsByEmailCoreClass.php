@@ -1,6 +1,6 @@
 <?php
 
-
+use ProcessMaker\Core\System;
 
 class ActionsByEmailCoreClass extends PMPlugin
 {
@@ -131,21 +131,8 @@ class ActionsByEmailCoreClass extends PMPlugin
                             $_SESSION['CURRENT_DYN_UID'] = $configuration['DYN_UID'];
 
                             $__ABE__ = '';
-                            $conf = new Configurations();
-                            $envSkin = defined("SYS_SKIN") ? SYS_SKIN : $conf->getConfiguration('SKIN_CRON', '');
-                            $envHost = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : SERVER_NAME;
-                            $envProtocol = defined("REQUEST_SCHEME") && REQUEST_SCHEME === "https";
-                            if (isset($_SERVER['SERVER_PORT'])) {
-                                $envPort = ($_SERVER['SERVER_PORT'] != "80") ? ":" . $_SERVER['SERVER_PORT'] : "";
-                            } else if (defined('SERVER_PORT')) {
-                                $envPort = (SERVER_PORT . "" != "80") ? ":" . SERVER_PORT : "";
-                            } else {
-                                $envPort = ""; // Empty by default
-                            }
-                            if (!empty($envPort) && strpos($envHost, $envPort) === false) {
-                                $envHost = $envHost . $envPort;
-                            }
-                            $link = (G::is_https() || $envProtocol ? 'https://' : 'http://') . $envHost . '/sys' . config("system.workspace") . '/' . SYS_LANG . '/' . $envSkin . '/services/ActionsByEmail';
+                            
+                            $link = System::getServerMainPath() . '/services/ActionsByEmail';
 
                             switch ($configuration['ABE_TYPE']) {
                                 case 'CUSTOM':

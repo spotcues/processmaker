@@ -2,6 +2,7 @@
 
 use ProcessMaker\Core\System;
 use ProcessMaker\Plugins\PluginRegistry;
+use ProcessMaker\Validation\ValidationUploadedFiles;
 
 /**
  * adminProxy.php
@@ -1025,7 +1026,14 @@ class adminProxy extends HttpProxyController
      */
     public function uploadImage()
     {
-        //!dataSystem
+        ValidationUploadedFiles::getValidationUploadedFiles()->dispatch(function($validator) {
+            echo G::json_encode([
+                'success' => true,
+                'failed' => true,
+                'message' => $validator->getMessage()
+            ]);
+            exit();
+        });
 
         $filter = new InputFilter();
         $_SERVER["REQUEST_URI"] = $filter->xssFilterHard($_SERVER["REQUEST_URI"]);

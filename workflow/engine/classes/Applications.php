@@ -148,36 +148,13 @@ class Applications
         }
 
         if (!empty($search)) {
-            //If the filter is related to the APPLICATION table: APP_NUMBER or APP_TITLE
-            if ($columnSearch === 'APP_NUMBER' || $columnSearch === 'APP_TITLE') {
-                $sqlSearch = "SELECT APPLICATION.APP_NUMBER FROM APPLICATION";
-                $sqlSearch .= " WHERE APPLICATION.{$columnSearch} LIKE '%{$search}%'";
-                switch ($columnSearch) {
-                    case 'APP_TITLE':
-                        break;
-                    case 'APP_NUMBER':
-                        //Cast the search criteria to string
-                        if (!is_string($search)) {
-                            $search = (string)$search;
-                        }
-                        //Only if is integer we will to add to greater equal in the query
-                        if (substr($search, 0, 1) != '0' && ctype_digit($search)) {
-                            $sqlSearch .= " AND APPLICATION.{$columnSearch} >= {$search}";
-                        }
-                        break;
-                }
-                if (!empty($start)) {
-                    $sqlSearch .= " LIMIT $start, " . $limit;
-                } else {
-                    $sqlSearch .= " LIMIT " . $limit;
-                }
-                $dataset = $stmt->executeQuery($sqlSearch);
-                $appNumbers = [-1];
-                while ($dataset->next()) {
-                    $newRow = $dataset->getRow();
-                    array_push($appNumbers, $newRow['APP_NUMBER']);
-                }
-                $sqlData .= " AND APP_DELEGATION.APP_NUMBER IN (" . implode(",", $appNumbers) . ")";
+            //If the filter is related to the APP_DELEGATION table: APP_NUMBER
+            if ($columnSearch === 'APP_NUMBER') {
+                $sqlData .= " AND APP_DELEGATION.APP_NUMBER LIKE '%{$search}%' ";
+            }
+            //If the filter is related to the APPLICATION table: APP_TITLE
+            if ($columnSearch === 'APP_TITLE') {
+                $sqlData .= " AND APPLICATION.APP_TITLE LIKE '%{$search}%' ";
             }
             //If the filter is related to the TASK table: TAS_TITLE
             if ($columnSearch === 'TAS_TITLE') {
@@ -194,7 +171,6 @@ class Applications
             $sqlData .= " AND APP_DELEGATION.DEL_DELEGATE_DATE <= '{$dateTo}'";
         }
 
-        //Add the additional filters
         //Sorts the records in descending order by default
         if (!empty($sort)) {
             switch ($sort) {
@@ -216,12 +192,12 @@ class Applications
         if (empty($limit)) {
             $limit = 25;
         }
-        if (!empty($start) && empty($search)) {
+        if (!empty($start)) {
             $sqlData .= " LIMIT $start, " . $limit;
         } else {
             $sqlData .= " LIMIT " . $limit;
         }
-        
+
         $dataset = $stmt->executeQuery($sqlData);
         $result = [];
         //By performance enable always the pagination
@@ -1162,6 +1138,7 @@ class Applications
             // if it has a condition
             if (trim($caseStep->getStepCondition()) != '') {
                 $pmScript->setScript($caseStep->getStepCondition());
+                $pmScript->setExecutedOn(PMScript::CONDITION);
 
                 if (! $pmScript->evaluate()) {
                     //evaluated false, jump & continue with the others steps

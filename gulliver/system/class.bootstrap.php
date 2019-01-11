@@ -1,6 +1,7 @@
 <?php
 
 use ProcessMaker\Core\System;
+use ProcessMaker\Util\DateTime;
 
 /**
  * class.bootstrap.php
@@ -2658,7 +2659,7 @@ class Bootstrap
      * @param int $level The logging level
      * @param string $message The log message
      * @param array $context The log context
-     * @param string $workspace name workspace
+     * @param string $workspace @todo we need to remove this parameter this is not necessary
      * @param string $file name file
      * @param boolean $readLoggingLevel
      *
@@ -2669,8 +2670,8 @@ class Bootstrap
         $level,
         $message,
         $context,
-        $workspace,
-        $file = 'cron.log',
+        $workspace = '',
+        $file = 'processmaker.log',
         $readLoggingLevel = true
     )
     {
@@ -2681,17 +2682,34 @@ class Bootstrap
     /**
      * Get the default information from the context
      *
-     * @return array $aContext void
+     * @return array
      */
-    public static function getDefaultContextLog(){
-        $sysSys = (!empty(config("system.workspace")))? config("system.workspace") : "Undefined";
-        $date = \ProcessMaker\Util\DateTime::convertUtcToTimeZone(date('Y-m-d H:m:s'));
-        $aContext = array(
-            'ip'           => \G::getIpAddress()
-            ,'timeZone'    => $date
-            ,'workspace'   => $sysSys
-        );
-        return $aContext;
+    public static function getDefaultContextLog()
+    {
+
+        global $RBAC;
+        $info = [
+            'ip' => G::getIpAddress(),
+            'workspace' => !empty(config('system.workspace')) ? config('system.workspace') : 'Undefined Workspace',
+            'timeZone' => DateTime::convertUtcToTimeZone(date('Y-m-d H:m:s'))
+        ];
+
+        if ($RBAC !== null) {
+            $userInfo = [
+                'usrUid' => $RBAC->aUserInfo['USER_INFO']['USR_UID']
+            ];
+            $info = array_merge($info, $userInfo);
+        }
+        //Some endpoints can defined the USER_LOGGED
+        if (empty($info['usrUid'])) {
+            $user = !empty($_SESSION['USER_LOGGED']) ? $_SESSION['USER_LOGGED'] : G::LoadTranslation('UID_UNDEFINED_USER');
+            $userInfo = [
+                'usrUid' => $user
+            ];
+            $info = array_merge($info, $userInfo);
+        }
+
+        return $info;
     }
 
     /**

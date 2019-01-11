@@ -302,6 +302,17 @@ CLI::taskArg('workspace');
 CLI::taskRun("run_clear_dyn_content_history_data");
 
 /**
+ * Sync JSON definition of the Forms with Input Documents information
+ */
+CLI::taskName('sync-forms-with-info-from-input-documents');
+CLI::taskDescription(<<<EOT
+    Sync JSON definition of the Forms with Input Documents information
+EOT
+);
+CLI::taskArg('workspace');
+CLI::taskRun("run_sync_forms_with_info_from_input_documents");
+
+/**
  * Function run_info
  * 
  * @param array $args
@@ -1089,4 +1100,35 @@ function run_clear_dyn_content_history_data($args, $opts)
     }
     $stop = microtime(true);
     CLI::logging("<*>   Cleaning history data from APP_HISTORY process took " . ($stop - $start) . " seconds.\n");
+}
+
+/**
+ * Sync JSON definition of the Forms with Input Documents information
+ *
+ * @param array $args
+ * @param array $opts
+ *
+ * @return void
+ */
+
+function run_sync_forms_with_info_from_input_documents($args, $opts) {
+    if (count($args) === 1) {
+        //This variable is not defined and does not involve its value in this
+        //task, it is removed at the end of the method.
+        $_SERVER['REQUEST_URI'] = '';
+        if (!defined('SYS_SKIN')) {
+            $conf = new Configurations();
+            define('SYS_SKIN', $conf->getConfiguration('SKIN_CRON', ''));
+        }
+        CLI::logging('Sync JSON definition of the Forms with Input Documents information from workspace: ' . pakeColor::colorize($args[0], 'INFO') . "\n");
+        $workspaceTools = new WorkspaceTools($args[0]);
+        $workspaceTools->syncFormsWithInputDocumentInfo();
+        unset($_SERVER['REQUEST_URI']);
+    } else {
+        $workspaces = get_workspaces_from_args($args);
+        foreach ($workspaces as $workspace) {
+            passthru(PHP_BINARY . ' processmaker sync-forms-with-info-from-input-documents ' .
+                $workspace->name);
+        }
+    }
 }

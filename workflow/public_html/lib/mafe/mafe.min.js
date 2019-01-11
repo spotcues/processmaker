@@ -22120,14 +22120,31 @@ PMCanvas.prototype.hideFlowRecursively = function (shape) {
  * @chainable
  */
 PMCanvas.prototype.removeElements = function () {
-    // destroy the shapes (also destroy all the references to them)
-    var shape,
-        command;
-    if (!this.canCreateShape && !this.isDragging) {
-        command = new PMCommandDelete(this);
-        this.commandStack.add(command);
-        command.execute();
+    var that = this,
+        dialogConfirm;
+    if (!that.canCreateShape && !that.isDragging) {
+        // Delete shape with a modal Dialog Confirm.
+        dialogConfirm = new FormDesigner.main.DialogConfirm(null, "warning", "Are you sure you want to delete this element?".translate());
+        dialogConfirm.onAccept = function () {
+            that.executeCommandDelete();
+        };
+        dialogConfirm.onClose = function () {
+            PMUI.isDelete = false;
+            return that;
+        };
     }
+    return that;
+};
+
+/**
+ * Calls to Delete command and executes the action
+ * @param {PMCanvas} canvas
+ */
+PMCanvas.prototype.executeCommandDelete = function () {
+    // destroy the shapes (also destroy all the references to them)
+    var command = new PMCommandDelete(this);
+    this.commandStack.add(command);
+    command.execute();
     return this;
 };
 
@@ -24997,15 +25014,17 @@ PMGateway.prototype.setGatewayType = function (type) {
  * @return {*}
  */
 PMGateway.prototype.setDirection = function (direction) {
-    direction = direction.toLowerCase();
-    var defaultDir = {
-        unspecified: 'UNSPECIFIED',
-        diverging: 'DIVERGING',
-        converging: 'CONVERGING',
-        mixed: 'MIXED'
-    };
-    if (defaultDir[direction]) {
-        this.gat_direction = defaultDir[direction];
+    if (typeof direction !== 'undefined') {
+        direction = direction.toLowerCase();
+        var defaultDir = {
+            unspecified: 'UNSPECIFIED',
+            diverging: 'DIVERGING',
+            converging: 'CONVERGING',
+            mixed: 'MIXED'
+        };
+        if (defaultDir[direction]) {
+            this.gat_direction = defaultDir[direction];
+        }
     }
     return this;
 };
@@ -25159,8 +25178,16 @@ PMGateway.prototype.manualCreateMenu = function (e) {
 };
 
 PMGateway.prototype.beforeContextMenu = function () {
-    var i, port, connection, shape, defaultflowItems = [], items, item, name,
-        target, menuItem, hasMarker;
+    var i,
+        port,
+        connection,
+        shape,
+        defaultflowItems = [],
+        items,
+        name,
+        target,
+        menuItem,
+        hasMarker;
     this.canvas.hideAllCoronas();
     if (this.canvas.readOnly) {
         return;
@@ -25176,7 +25203,6 @@ PMGateway.prototype.beforeContextMenu = function () {
             menuItem.enable();
         }
     }
-
 
     defaultflowItems.push({
         text: 'None'.translate(),
@@ -25213,8 +25239,7 @@ PMGateway.prototype.beforeContextMenu = function () {
                 {
                     text: name,
                     id: connection.getID(),
-                    disabled: (connection.getID() === this.gat_default_flow)
-                        ? true : false,
+                    disabled: (connection.getID() === this.gat_default_flow),
                     onClick: function (menuOption) {
                         target = menuOption.getMenuTargetElement();
                         //target.setDefaultFlow(menuOption.id);
@@ -25228,7 +25253,7 @@ PMGateway.prototype.beforeContextMenu = function () {
     if (this.defaltFlowMenuItem) {
         this.menu.removeItem('defaultflowMenu');
     }
-    if ((defaultflowItems.length > 0) && (this.gat_type != "PARALLEL")) {
+    if ((defaultflowItems.length > 0) && (this.gat_type !== "PARALLEL")) {
         this.defaltFlowMenuItem = {
             id: 'defaultflowMenu',
             text: "Default Flow".translate(),
@@ -25264,19 +25289,20 @@ PMGateway.prototype.isSupported = function () {
     return isSupported;
 };
 /**
- * evaluates the gateway address, according to the amount of input and output connections
+ * Evaluates the gateway address, according to the amount of input and output connections, by default use Diverging.
+ * Converging multiples inputs and only an output.
+ * Diverging an input and an output.
+ * Diverging multiples inputs output and multiples outputs.
  * @returns {PMGateway}
  */
-PMGateway.prototype.evaluateGatewayDirection = function(){
+PMGateway.prototype.evaluateGatewayDirection = function () {
     var incomings = this.getIncomingConnections('SEQUENCE', 'DEFAULT') || [],
         outgoings = this.getOutgoingConnections('SEQUENCE', 'DEFAULT') || [],
+        direction;
+    if (incomings.length > 1 && outgoings.length === 1) {
+        direction = "CONVERGING";
+    } else {
         direction = "DIVERGING";
-    if (outgoings.length < incomings.length) {
-        if (incomings.length === 1 && outgoings.length === 0){
-            direction = "DIVERGING";
-        }else{
-            direction = "CONVERGING";
-        }
     }
     this.setDirection(direction);
     return this;
@@ -25324,6 +25350,7 @@ PMGateway.prototype.removeOutgoingConnection = function() {
     PMShape.prototype.removeOutgoingConnection.apply(this, arguments);
     return this.evaluateGatewayDirection();
 };
+
 var PMLine = function (options) {
     PMUI.draw.RegularShape.call(this, options);
     /**
@@ -33638,6 +33665,7 @@ PMCommandDelete.prototype.redo = function () {
     this.execute();
     return this;
 };
+
 var PMCommandResize = function (receiver) {
     PMCommandResize.superclass.call(this, receiver);
     this._boundExceed = null;
@@ -35831,7 +35859,7 @@ importBpmnDiagram.prototype.completeImportFlows = function () {
             flo_element_dest: dest,
             flo_element_origin: origin,
             flo_is_inmediate: "1",
-            flo_name: null,
+            flo_name: element.name || null,
             flo_state: state,
             flo_type: conectionMap[element.$type],
             flo_x1: state[0].x,
@@ -37642,8 +37670,8 @@ FormDesigner.leftPad = function (string, length, fill) {
             value: "",
             type: "text",
             on: "change",
-            regExp: /^[a-zA-Z0-9-_]+$/,
-            regExpInv: /[^a-zA-Z0-9-_]/gi,
+            regExp: new RegExp(__env.pmVariable.regEx.substr(1, __env.pmVariable.regEx.length - 2)),
+            regExpInv: new RegExp(__env.pmVariable.regEx.substr(1, __env.pmVariable.regEx.length - 2), "gi"),
             required: true
         };
         this.name = {label: "name".translate(), value: "", type: "hidden", labelButton: "...", required: true};
@@ -38653,6 +38681,9 @@ FormDesigner.leftPad = function (string, length, fill) {
                     that.form1.setDirty();
                     that.onSave();
                 },
+                functionFailure: function (xhr, response) {
+                    PMDesigner.msgWinError(response.error.message);
+                },
                 messageError: 'There are problems creating the DynaForm, please try again.'.translate(),
                 messageSuccess: 'DynaForm saved successfully'.translate(),
                 flashContainer: ''
@@ -38804,7 +38835,8 @@ FormDesigner.leftPad = function (string, length, fill) {
                 duplicated,
                 regExp,
                 type,
-                existRegExp;
+                existRegExp,
+                dateLimit;
             switch (prop) {
                 case "name":
                     if (target.properties[prop].node && target instanceof FormDesigner.main.Form) {
@@ -38997,39 +39029,70 @@ FormDesigner.leftPad = function (string, length, fill) {
                     break;
                 case "defaultDate":
                     if (target.properties.type.value === FormDesigner.main.TypesControl.datetime) {
-                        if (value === "today") {
-                            target.properties.defaultDate.disabledTodayOption = true;
-                            listProperties.clear();
-                            listProperties.load(target.properties);
+                        if (target.properties[prop].node) {
+                            if (target.properties.type.value === FormDesigner.main.TypesControl.datetime) {
+                                if (value === "today") {
+                                    target.properties.defaultDate.disabledTodayOption = true;
+                                    listProperties.clear();
+                                    listProperties.load(target.properties);
+                                } else if (value === "") {
+                                    target.properties.defaultDate.disabledTodayOption = false;
+                                    listProperties.clear();
+                                    listProperties.load(target.properties);
+                                } else {
+                                    dateLimit = that.thereIsDefaultDateLimit(
+                                        target.properties.minDate.value,
+                                        target.properties.maxDate.value,
+                                        target.properties.defaultDate.value
+                                    );
+                                    if (dateLimit) {
+                                        dialogMessage = new FormDesigner.main.DialogMessage(null, "success", "Default date is out of range.".translate());
+                                        dialogMessage.onClose = function () {
+                                            target.properties.set("defaultDate", dateLimit);
+                                            target.properties.defaultDate.node.value = dateLimit;
+                                        };
+                                    }
+                                }
+                            }
                         }
-                        if (value === "") {
-                            target.properties.defaultDate.disabledTodayOption = false;
-                            listProperties.clear();
-                            listProperties.load(target.properties);
-                        }
+                       
                     }
                     break;
                 case "maxDate":
-                    if (target.properties.type.value === FormDesigner.main.TypesControl.datetime) {
-                        if (target.properties.maxDate.value < target.properties.defaultDate.value &&
-                            target.properties.defaultDate.value !== "" && target.properties.maxDate.value !== "") {
-                            dialogMessage = new FormDesigner.main.DialogMessage(null, "success", "Default date is out of range.".translate());
-                            dialogMessage.onClose = function () {
-                                target.properties.set("defaultDate", target.properties.maxDate.value);
-                                target.properties.defaultDate.node.value = target.properties.maxDate.value;
-                            };
+                    if (target.properties[prop].node) {
+                        if (target.properties.type.value === FormDesigner.main.TypesControl.datetime) {
+                            if (target.properties.type.value === FormDesigner.main.TypesControl.datetime) {
+                                dateLimit = that.thereIsMaxDateLimit(
+                                    target.properties.minDate.value,
+                                    target.properties.maxDate.value,
+                                    target.properties.defaultDate.value
+                                );
+                                if (dateLimit) {
+                                    dialogMessage = new FormDesigner.main.DialogMessage(null, "success", "Max date must be greater than the min and default date".translate());
+                                    dialogMessage.onClose = function () {
+                                        target.properties.set("maxDate", dateLimit);
+                                        target.properties.maxDate.node.value = dateLimit;
+                                    };
+                                }
+                            }
                         }
                     }
                     break;
                 case "minDate":
-                    if (target.properties.type.value === FormDesigner.main.TypesControl.datetime) {
-                        if (target.properties.minDate.value > target.properties.defaultDate.value &&
-                            target.properties.defaultDate.value !== "" && target.properties.minDate.value !== "") {
-                            dialogMessage = new FormDesigner.main.DialogMessage(null, "success", "Default date is out of range.".translate());
-                            dialogMessage.onClose = function () {
-                                target.properties.set("defaultDate", target.properties.minDate.value);
-                                target.properties.defaultDate.node.value = target.properties.minDate.value;
-                            };
+                    if (target.properties[prop].node) {
+                        if (target.properties.type.value === FormDesigner.main.TypesControl.datetime) {
+                            dateLimit = that.thereIsMinDateLimit(
+                                target.properties.minDate.value,
+                                target.properties.maxDate.value,
+                                target.properties.defaultDate.value
+                            );
+                            if (dateLimit) {
+                                dialogMessage = new FormDesigner.main.DialogMessage(null, "success", "Min date must be lesser than the max and default date.".translate());
+                                dialogMessage.onClose = function () {
+                                    target.properties.set("minDate", dateLimit);
+                                    target.properties.minDate.node.value = dateLimit;
+                                };
+                            }
                         }
                     }
                     break;
@@ -39081,11 +39144,6 @@ FormDesigner.leftPad = function (string, length, fill) {
         this.form1.properties.protectedValue.type = "hidden";
         this.form1.setData(this.dynaform);
         this.form1.setDirty();
-        //this.form2.onSelect = function (properties) {
-        //    listProperties.clear();
-        //    listProperties.load(properties);
-        //};
-        //methods
         that.title.text(this.dynaform.dyn_title).attr("title", this.dynaform.dyn_title).tooltip({
             tooltipClass: "fd-tooltip",
             position: {my: "left top+1"}
@@ -39146,6 +39204,106 @@ FormDesigner.leftPad = function (string, length, fill) {
                 $.remoteDynaforms = data;
             }
         });
+    };
+    /**
+     * Validate the date
+     * @param date
+     * 
+     */
+    Designer.prototype.parseDate = function (stringDate) {
+        var parts;
+        if (typeof stringDate !== "undefined" && stringDate !== null) {
+            parts = stringDate.split("-");
+            // new Date(year, month [, day [, hours[, minutes[, seconds[, ms]]]]])
+            return new Date(parts[0], parts[1] - 1, parts[2]); // Note: months are 0-based
+        }
+        return null;
+    };
+    /**
+     * Verifies if a date is valid
+     * @param date
+     * @returns {boolean}
+     */
+    Designer.prototype.isValidDate = function (date) {
+        return date instanceof Date && !isNaN(date);
+    };
+    /**
+     * Search if there is a limit lower than minDate property.
+     * @param minDateString
+     * @param maxDateString
+     * @param defaultDateString
+     * @returns {Object}
+     */
+    Designer.prototype.thereIsMinDateLimit = function (minDateString, maxDateString, defaultDateString) {
+        var minDate = this.parseDate(minDateString),
+            maxDate = this.parseDate(maxDateString),
+            defaultDate = this.parseDate(defaultDateString),
+            result = null;
+        if (this.isValidDate(minDate)) {
+            if (this.isValidDate(defaultDate)) {
+                if (minDate > defaultDate) {
+                    result = defaultDateString;
+                }
+            }
+            if (!result && this.isValidDate(maxDate)) {
+                if (minDate > maxDate) {
+                    result = maxDateString;
+                }
+            }
+        }
+        return result;
+    };
+    /**
+     * Search if there is a limit highest than maxDate property.
+     * @param minDateString
+     * @param maxDateString
+     * @param defaultDateString
+     * @returns {Object}
+     */
+    Designer.prototype.thereIsMaxDateLimit = function (minDateString, maxDateString, defaultDateString) {
+        var minDate = this.parseDate(minDateString),
+            maxDate = this.parseDate(maxDateString),
+            defaultDate = this.parseDate(defaultDateString),
+            result = null;
+        if (this.isValidDate(maxDate)) {
+            if (this.isValidDate(defaultDate)) {
+                if (maxDate < defaultDate) {
+                    result = defaultDateString;
+                }
+            } 
+            if (!result && this.isValidDate(minDate)) {
+                if (maxDate < minDate) {
+                    result = minDateString;
+                }
+          }
+        }
+        return result;
+    };
+    /**
+     * Search if defaultDate property is in range of min date and max date.
+     * @param minDateString
+     * @param maxDateString
+     * @param defaultDateString
+     * @returns {Object}
+     */
+    Designer.prototype.thereIsDefaultDateLimit = function (minDateString, maxDateString, defaultDateString) {
+        var minDate = this.parseDate(minDateString),
+            maxDate = this.parseDate(maxDateString),
+            defaultDate = this.parseDate(defaultDateString),
+            result = null;
+        if (this.isValidDate(defaultDate)) {
+            if (this.isValidDate(minDate)) {
+                if (defaultDate < minDate) {
+                    result = minDateString;
+                } 
+            }
+            if (!result && this.isValidDate(maxDate)) {
+              if (defaultDate > maxDate) {
+                result = maxDateString;
+              }
+            }
+        }
+        return result;
     };
     FormDesigner.extendNamespace('FormDesigner.main.Designer', Designer);
 }());
@@ -40485,7 +40643,8 @@ FormDesigner.leftPad = function (string, length, fill) {
             defaultDate = '',
             dialogMessage = '',
             width = "width:100%;border:1px solid gray;box-sizing:border-box;",
-            id = FormDesigner.generateUniqueId();
+            id = FormDesigner.generateUniqueId(),
+            that = this;
         switch (propertiesGot[property].type) {
             case "label":
                 //improvement changes in value
@@ -40578,7 +40737,7 @@ FormDesigner.leftPad = function (string, length, fill) {
                 break;
             case "datepicker":
                 input = $("<input type='text' style='" + width + "' id='" + id + "'/>").val(propertiesGot[property].value);
-                input.on(propertiesGot[property].on ? propertiesGot[property].on : "keyup", function () {
+                input.on(propertiesGot[property].on ? propertiesGot[property].on : "change", function () {
                     properties.set(property, this.value);
                 });
                 input.attr("placeholder", propertiesGot[property].placeholder ? propertiesGot[property].placeholder : "");
@@ -40657,56 +40816,30 @@ FormDesigner.leftPad = function (string, length, fill) {
                         return;
                     switch (property) {
                         case "defaultDate":
-                            minDate = $(cellValue.parent().parent()[0].rows["minDate"]).find("input").val();
-                            maxDate = $(cellValue.parent().parent()[0].rows["maxDate"]).find("input").val();
+                            minDate = that.getDateByParam(cellValue, "minDate");
+                            maxDate = that.getDateByParam(cellValue, "maxDate");
                             break;
                         case "minDate":
-                            maxDate = $(cellValue.parent().parent()[0].rows["maxDate"]).find("input").val();
+                            maxDate = that.getDateByParam(cellValue, "maxDate");
                             break;
                         case "maxDate":
-                            minDate = $(cellValue.parent().parent()[0].rows["minDate"]).find("input").val();
+                            minDate = that.getDateByParam(cellValue, "minDate");
                             break;
                     }
-                    var dp = cellValue.find("input[type='text']").datepicker({
-                        showOtherMonths: true,
-                        selectOtherMonths: true,
-                        dateFormat: "yy-mm-dd",
-                        showOn: "button",
-                        changeMonth: true,
-                        changeYear: true,
-                        yearRange: "-100:+100",
+                    
+                    that.datepicker = that.dateComponentFactory(cellValue, {
                         minDate: minDate,
                         maxDate: maxDate,
                         onSelect: function (dateText, inst) {
                             properties.set(property, dateText, cellValue.find("input[type='text']")[0]);
                         },
                         onClose: function (dateText, inst) {
-                            dp.datepicker("destroy");
+                            that.datepicker.datepicker("destroy");
                             $("#ui-datepicker-div").remove();
                         }
                     });
-                    dp.datepicker("show");
                     cellValue.find(".ui-datepicker-trigger").hide();
                 });
-                if (property === "defaultDate") {
-                    minDate = $(cellValue.parent().parent()[0].rows["minDate"]).find("input").val();
-                    maxDate = $(cellValue.parent().parent()[0].rows["maxDate"]).find("input").val();
-                    defaultDate = $(cellValue.parent().parent()[0].rows["defaultDate"]).find("input").val();
-                    if (minDate > defaultDate && minDate !== "") {
-                        dialogMessage = new FormDesigner.main.DialogMessage(null, "success", "Default date is out of range.".translate());
-                        dialogMessage.onClose = function () {
-                            properties.set(property, minDate);
-                            properties[property].node.value = minDate;
-                        };
-                    }
-                    if (maxDate < defaultDate && maxDate !== "") {
-                        dialogMessage = new FormDesigner.main.DialogMessage(null, "success", "Default date is out of range.".translate());
-                        dialogMessage.onClose = function () {
-                            properties.set(property, maxDate);
-                            properties[property].node.value = maxDate;
-                        };
-                    }
-                }
                 cellValue.append(button);
                 n = n + 16;
                 cellValue[0].style.paddingRight = n + "px";
@@ -40757,8 +40890,68 @@ FormDesigner.leftPad = function (string, length, fill) {
     ListProperties.prototype.clear = function () {
         this.tbody.find("tr").remove();
     };
+    /**
+     * Creates the date picker component.
+     * @param control the form control to set de datepicker.
+     * @param options dynamic params to set the properties.
+     * @returns {*}
+     */
+    ListProperties.prototype.dateComponentFactory = function (control, options) {
+        var defaults = {
+                showOtherMonths: true,
+                selectOtherMonths: true,
+                dateFormat: "yy-mm-dd",
+                changeMonth: true,
+                changeYear: true,
+                yearRange: "-100:+100",
+                minDate: '',
+                maxDate: '',
+                onSelect: function() {},
+                onClose: function() {}
+            },
+            datePicker;
+        $.extend(true, defaults, options);
+        // append the date picker to the control component
+            datePicker = control
+                .find("input[type='text']")
+                .datepicker({
+                    showOtherMonths: defaults.showOtherMonths,
+                    selectOtherMonths: defaults.selectOtherMonths,
+                    dateFormat: defaults.dateFormat,
+                    showOn: defaults.showOn,
+                    changeMonth: defaults.changeMonth,
+                    changeYear: defaults.changeYear,
+                    yearRange: defaults.yearRange,
+                    minDate: defaults.minDate,
+                    maxDate: defaults.maxDate,
+                    onSelect: defaults.onSelect,
+                    onClose: defaults.onClose
+          });
+        datePicker.datepicker("show");
+        return datePicker;
+    };
+    /**
+     * Gets the date according to the passed param
+     */
+    ListProperties.prototype.getDateByParam = function(control, param) {
+        var varRegex = /\@(?:([\@\%\#\?\$\=\&Qq\!])([a-zA-Z\_]\w*)|([a-zA-Z\_][\w\-\>\:]*)\(((?:[^\\\\\)]*(?:[\\\\][\w\W])?)*)\))((?:\s*\[['"]?\w+['"]?\])+|\-\>([a-zA-Z\_]\w*))?/,
+            value = '';
+        if (control && param) {
+            value = $(control.parent().parent()[0].rows[param])
+                .find("input")
+                .val();
+            if (!varRegex.test(value)) {
+                return value;
+            } else {
+                return '';
+            }
+        } else {
+            return '';
+        }
+    };
     FormDesigner.extendNamespace('FormDesigner.main.ListProperties', ListProperties);
 }());
+
 (function () {
     var TabsForm = function () {
         TabsForm.prototype.init.call(this);
@@ -44744,4 +44937,4 @@ ModelCrown.prototype.removeItemFromCrown = function (idItem) {
     }
     return this;
 };
-var __env = __env || {};__env.USER_GUEST = {"uid":"00000000000000000000000000000002","firstname":"Guest","lastname":"Guest","username":"guest"};
+var __env = __env || {};__env.USER_GUEST = {"uid":"00000000000000000000000000000002","firstname":"Guest","lastname":"Guest","username":"guest"}; __env.pmVariable = {"regEx":"/^[a-zA-Z\\_]{1}\\w+$/"};

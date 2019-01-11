@@ -1,30 +1,30 @@
-[26 hours ago] b5ea7a8  (origin/bugfix/HOR-4924) HOR-4924 <Roly Rudy Gutierrez Pinto>
-[2 days ago] 646a71f  (origin/bugfix/HOR-4911) HOR-4911 <Paula Quispe>
-[3 days ago] d62c891  (origin/feature/FBI-2511) FBI-2511 [GeoMap mobile field] Google Maps shows "For development purposes only" <Roly Rudy Gutierrez Pinto>
-[3 days ago] 156ee4b  (origin/bugfix/HOR-4909) HOR-4909 <Roly Rudy Gutierrez Pinto>
-[3 days ago] 3f4e3dc  fix Cr notes <Rodrigo Quelca>
-[3 days ago] 406ef19  FBI-2511 [GeoMap mobile field] Google Maps shows “For development purposes only” <Rodrigo Quelca>
-[6 days ago] e2c480b  (origin/bugfix/HOR-4903) HOR-4903 <Roly Rudy Gutierrez Pinto>
-[6 days ago] 8e7cb35  HOR-4908 <Julio Cesar Laura Avendaño>
-[7 days ago] 5f4d99b  (origin/bugfix/HOR-4901) HOR-4901 <Roly Rudy Gutierrez Pinto>
-[10 days ago] be8f6b6  (origin/bugfix/HOR-4900) HOR-4900 <Paula Quispe>
-[13 days ago] f4966b5  (origin/bugfix/HOR-4899) HOR-4899 <Paula Quispe>
-[3 weeks ago] 87ad01c  (origin/feature/HOR-4894) HOR-4894 <Roly Rudy Gutierrez Pinto>
-[3 weeks ago] 3a207b3  (origin/bugfix/GAP-9) GAP-9 <Roly Rudy Gutierrez Pinto>
-[4 weeks ago] f791823  (origin/feature/HOR-4884) HOR-4884 <Paula Quispe>
-[4 weeks ago] a03142c  (origin/bugfix/GAP-10) GAP-10 <Roly Rudy Gutierrez Pinto>
-[4 weeks ago] 9ba28f9  (origin/bugfix/HOR-4879) HOR-4879 <Roly Rudy Gutierrez Pinto>
-[5 weeks ago] 3fc5f21  (origin/feature/HOR-4878) HOR-4878 <Paula Quispe>
-[5 weeks ago] 2699833  (origin/bugfix/HOR-4873) HOR-4873 <Paula Quispe>
-[5 weeks ago] 1b6c6f6  (origin/bugfix/HOR-4872) HOR-4872 <Paula Quispe>
-[5 weeks ago] 81d4d8f  (origin/bugfix/HOR-4865) HOR-4865 <Roly Rudy Gutierrez Pinto>
-[5 weeks ago] 26abb66  (origin/bugfix/HOR-4866) HOR-4866 <Roly Rudy Gutierrez Pinto>
-[6 weeks ago] f22a949  (origin/bugfix/HOR-4859) HOR-4859 <Paula Quispe>
-[6 weeks ago] 6e9ee0c  (origin/bugfix/HOR-4862) HOR-4862 <Paula Quispe>
-[7 weeks ago] ec2a3ef  (origin/bugfix/GAP-4) GAP-4 <Roly Rudy Gutierrez Pinto>
-[7 weeks ago] 5297cac  (origin/bugfix/HOR-4840) HOR-4840 <Paula Quispe>
-[8 weeks ago] 46b6c4c  (origin/bugfix/HOR-4834) HOR-4834 <Julio Cesar Laura Avendaño>
-[8 weeks ago] 1a5c0ca  (origin/feature/HOR-4825) HOR-4825 <Paula Quispe>
-[8 weeks ago] d4c97b8  HOR-4750 <Julio Cesar Laura Avendaño>
-[8 weeks ago] 153d261  (origin/bugfix/HOR-4818) HOR-4397 Cannot get case summary via REST from Unassigned folder <Marco Antonio Nina Mena>
-[9 weeks ago] 8c7fe41  (origin/bugfix/HOR-4815) HOR-4815 <Roly Rudy Gutierrez Pinto>
+[19 hours ago] 6939bb3  (origin/bugfix/PMC-383) PMC-383 <Paula Quispe>
+[2 days ago] 5bd0db7  (origin/bugfix/PMC-342) PMC-342 <Paula Quispe>
+[6 days ago] cf6293b  (origin/bugfix/PMC-122) PMC-122 <Roly Rudy Gutierrez Pinto>
+[3 weeks ago] 5a84455  (origin/bugfix/PMC-200) PMC-200 <Paula Quispe>
+[3 weeks ago] 166c103  (origin/bugfix/PMC-176) PMC-176 <Paula Quispe>
+[3 weeks ago] cb6bdf2  (origin/bugfix/PMC-124) PMC-124 <Ronald Quenta>
+[3 weeks ago] 900af5f  (origin/bugfix/PMC-323) PMC-323 <Paula Quispe>
+[3 weeks ago] 1a47884  (origin/bugfix/PMC-319) PMC-319 <Paula Quispe>
+[4 weeks ago] 8ba87f8  (origin/bugfix/PMC-318) PMC-318 <Paula Quispe>
+[4 weeks ago] 76c2609  (origin/bugfix/PMC-201) PMC-201 <Paula Quispe>
+[4 weeks ago] 336312a  (origin/bugfix/PMC-314) PMC-314 <Paula Quispe>
+[4 weeks ago] 504f38c  (origin/bugfix/PMC-235) PMC-235 <Roly Rudy Gutierrez Pinto>
+[4 weeks ago] eede5db  (origin/bugfix/PMC-183) PMC-183 <Paula Quispe>
+[4 weeks ago] 3689901  PMC-191 <Julio Cesar Laura Avendaño>
+[5 weeks ago] ef26041  PMC-107:Unable to import processes with extension pmx2 (granular) <Fabio Guachalla>
+[6 weeks ago] dd739b8  (origin/bugfix/PMC-71) PMC-71 <Roly Rudy Gutierrez Pinto>
+[6 weeks ago] 4f750a7  (origin/bugfix/PMC-75) PMC-75 <Paula Quispe>
+[6 weeks ago] 25b2480  (origin/bugfix/PMC-65) PMC-65 <Paula Quispe>
+[7 weeks ago] 7627dae  (origin/bugfix/PMC-2) PMC-2 <Paula Quispe>
+[7 weeks ago] 7cfae69  (origin/feature/PMC-10) PMC-10 <Paula Quispe>
+[7 weeks ago] a173c8e  (origin/feature/PMC-50) PMC-50 <Paula Quispe>
+[7 weeks ago] b8686ae  (origin/bugfix/PMC-56) PMC-56 <Julio Cesar Laura Avendaño>
+[9 weeks ago] b099d90  (origin/bugfix/PMC-21) PMC-21 <Roly Rudy Gutierrez Pinto>
+[9 weeks ago] 0b99143  (origin/bugfix/PMC-17) PMC-17 <Julio Cesar Laura Avendaño>
+[9 weeks ago] 8197452  (origin/bugfix/HOR-4944) HOR-4944 <Paula Quispe>
+[9 weeks ago] 805063b  (origin/bugfix/HOR-4432) HOR-4432 <Paula Quispe>
+[10 weeks ago] 7873e84  (origin/bugfix/HOR-4602) HOR-4602 <Paula Quispe>
+[10 weeks ago] 60d32a5  (origin/bugfix/HOR-4829) HOR-4829 <Roly Rudy Gutierrez Pinto>
+[10 weeks ago] f00bfb7  (origin/bugfix/HOR-4525) HOR-4525 <Julio Cesar Laura Avendaño>
+[2 months ago] 5e078b8  (origin/bugfix/HOR-4526) HOR-4526 <Paula Quispe>

@@ -423,6 +423,9 @@
                     that.form1.setDirty();
                     that.onSave();
                 },
+                functionFailure: function (xhr, response) {
+                    PMDesigner.msgWinError(response.error.message);
+                },
                 messageError: 'There are problems creating the DynaForm, please try again.'.translate(),
                 messageSuccess: 'DynaForm saved successfully'.translate(),
                 flashContainer: ''
@@ -574,7 +577,8 @@
                 duplicated,
                 regExp,
                 type,
-                existRegExp;
+                existRegExp,
+                dateLimit;
             switch (prop) {
                 case "name":
                     if (target.properties[prop].node && target instanceof FormDesigner.main.Form) {
@@ -767,39 +771,70 @@
                     break;
                 case "defaultDate":
                     if (target.properties.type.value === FormDesigner.main.TypesControl.datetime) {
-                        if (value === "today") {
-                            target.properties.defaultDate.disabledTodayOption = true;
-                            listProperties.clear();
-                            listProperties.load(target.properties);
+                        if (target.properties[prop].node) {
+                            if (target.properties.type.value === FormDesigner.main.TypesControl.datetime) {
+                                if (value === "today") {
+                                    target.properties.defaultDate.disabledTodayOption = true;
+                                    listProperties.clear();
+                                    listProperties.load(target.properties);
+                                } else if (value === "") {
+                                    target.properties.defaultDate.disabledTodayOption = false;
+                                    listProperties.clear();
+                                    listProperties.load(target.properties);
+                                } else {
+                                    dateLimit = that.thereIsDefaultDateLimit(
+                                        target.properties.minDate.value,
+                                        target.properties.maxDate.value,
+                                        target.properties.defaultDate.value
+                                    );
+                                    if (dateLimit) {
+                                        dialogMessage = new FormDesigner.main.DialogMessage(null, "success", "Default date is out of range.".translate());
+                                        dialogMessage.onClose = function () {
+                                            target.properties.set("defaultDate", dateLimit);
+                                            target.properties.defaultDate.node.value = dateLimit;
+                                        };
+                                    }
+                                }
+                            }
                         }
-                        if (value === "") {
-                            target.properties.defaultDate.disabledTodayOption = false;
-                            listProperties.clear();
-                            listProperties.load(target.properties);
-                        }
+                       
                     }
                     break;
                 case "maxDate":
-                    if (target.properties.type.value === FormDesigner.main.TypesControl.datetime) {
-                        if (target.properties.maxDate.value < target.properties.defaultDate.value &&
-                            target.properties.defaultDate.value !== "" && target.properties.maxDate.value !== "") {
-                            dialogMessage = new FormDesigner.main.DialogMessage(null, "success", "Default date is out of range.".translate());
-                            dialogMessage.onClose = function () {
-                                target.properties.set("defaultDate", target.properties.maxDate.value);
-                                target.properties.defaultDate.node.value = target.properties.maxDate.value;
-                            };
+                    if (target.properties[prop].node) {
+                        if (target.properties.type.value === FormDesigner.main.TypesControl.datetime) {
+                            if (target.properties.type.value === FormDesigner.main.TypesControl.datetime) {
+                                dateLimit = that.thereIsMaxDateLimit(
+                                    target.properties.minDate.value,
+                                    target.properties.maxDate.value,
+                                    target.properties.defaultDate.value
+                                );
+                                if (dateLimit) {
+                                    dialogMessage = new FormDesigner.main.DialogMessage(null, "success", "Max date must be greater than the min and default date".translate());
+                                    dialogMessage.onClose = function () {
+                                        target.properties.set("maxDate", dateLimit);
+                                        target.properties.maxDate.node.value = dateLimit;
+                                    };
+                                }
+                            }
                         }
                     }
                     break;
                 case "minDate":
-                    if (target.properties.type.value === FormDesigner.main.TypesControl.datetime) {
-                        if (target.properties.minDate.value > target.properties.defaultDate.value &&
-                            target.properties.defaultDate.value !== "" && target.properties.minDate.value !== "") {
-                            dialogMessage = new FormDesigner.main.DialogMessage(null, "success", "Default date is out of range.".translate());
-                            dialogMessage.onClose = function () {
-                                target.properties.set("defaultDate", target.properties.minDate.value);
-                                target.properties.defaultDate.node.value = target.properties.minDate.value;
-                            };
+                    if (target.properties[prop].node) {
+                        if (target.properties.type.value === FormDesigner.main.TypesControl.datetime) {
+                            dateLimit = that.thereIsMinDateLimit(
+                                target.properties.minDate.value,
+                                target.properties.maxDate.value,
+                                target.properties.defaultDate.value
+                            );
+                            if (dateLimit) {
+                                dialogMessage = new FormDesigner.main.DialogMessage(null, "success", "Min date must be lesser than the max and default date.".translate());
+                                dialogMessage.onClose = function () {
+                                    target.properties.set("minDate", dateLimit);
+                                    target.properties.minDate.node.value = dateLimit;
+                                };
+                            }
                         }
                     }
                     break;
@@ -851,11 +886,6 @@
         this.form1.properties.protectedValue.type = "hidden";
         this.form1.setData(this.dynaform);
         this.form1.setDirty();
-        //this.form2.onSelect = function (properties) {
-        //    listProperties.clear();
-        //    listProperties.load(properties);
-        //};
-        //methods
         that.title.text(this.dynaform.dyn_title).attr("title", this.dynaform.dyn_title).tooltip({
             tooltipClass: "fd-tooltip",
             position: {my: "left top+1"}
@@ -916,6 +946,106 @@
                 $.remoteDynaforms = data;
             }
         });
+    };
+    /**
+     * Validate the date
+     * @param date
+     * 
+     */
+    Designer.prototype.parseDate = function (stringDate) {
+        var parts;
+        if (typeof stringDate !== "undefined" && stringDate !== null) {
+            parts = stringDate.split("-");
+            // new Date(year, month [, day [, hours[, minutes[, seconds[, ms]]]]])
+            return new Date(parts[0], parts[1] - 1, parts[2]); // Note: months are 0-based
+        }
+        return null;
+    };
+    /**
+     * Verifies if a date is valid
+     * @param date
+     * @returns {boolean}
+     */
+    Designer.prototype.isValidDate = function (date) {
+        return date instanceof Date && !isNaN(date);
+    };
+    /**
+     * Search if there is a limit lower than minDate property.
+     * @param minDateString
+     * @param maxDateString
+     * @param defaultDateString
+     * @returns {Object}
+     */
+    Designer.prototype.thereIsMinDateLimit = function (minDateString, maxDateString, defaultDateString) {
+        var minDate = this.parseDate(minDateString),
+            maxDate = this.parseDate(maxDateString),
+            defaultDate = this.parseDate(defaultDateString),
+            result = null;
+        if (this.isValidDate(minDate)) {
+            if (this.isValidDate(defaultDate)) {
+                if (minDate > defaultDate) {
+                    result = defaultDateString;
+                }
+            }
+            if (!result && this.isValidDate(maxDate)) {
+                if (minDate > maxDate) {
+                    result = maxDateString;
+                }
+            }
+        }
+        return result;
+    };
+    /**
+     * Search if there is a limit highest than maxDate property.
+     * @param minDateString
+     * @param maxDateString
+     * @param defaultDateString
+     * @returns {Object}
+     */
+    Designer.prototype.thereIsMaxDateLimit = function (minDateString, maxDateString, defaultDateString) {
+        var minDate = this.parseDate(minDateString),
+            maxDate = this.parseDate(maxDateString),
+            defaultDate = this.parseDate(defaultDateString),
+            result = null;
+        if (this.isValidDate(maxDate)) {
+            if (this.isValidDate(defaultDate)) {
+                if (maxDate < defaultDate) {
+                    result = defaultDateString;
+                }
+            } 
+            if (!result && this.isValidDate(minDate)) {
+                if (maxDate < minDate) {
+                    result = minDateString;
+                }
+          }
+        }
+        return result;
+    };
+    /**
+     * Search if defaultDate property is in range of min date and max date.
+     * @param minDateString
+     * @param maxDateString
+     * @param defaultDateString
+     * @returns {Object}
+     */
+    Designer.prototype.thereIsDefaultDateLimit = function (minDateString, maxDateString, defaultDateString) {
+        var minDate = this.parseDate(minDateString),
+            maxDate = this.parseDate(maxDateString),
+            defaultDate = this.parseDate(defaultDateString),
+            result = null;
+        if (this.isValidDate(defaultDate)) {
+            if (this.isValidDate(minDate)) {
+                if (defaultDate < minDate) {
+                    result = minDateString;
+                } 
+            }
+            if (!result && this.isValidDate(maxDate)) {
+              if (defaultDate > maxDate) {
+                result = maxDateString;
+              }
+            }
+        }
+        return result;
     };
     FormDesigner.extendNamespace('FormDesigner.main.Designer', Designer);
 }());

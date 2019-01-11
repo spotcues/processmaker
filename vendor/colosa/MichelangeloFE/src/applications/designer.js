@@ -182,8 +182,21 @@ PMDesigner.hideAllTinyEditorControls = function () {
 
 
 jQuery(document).ready(function ($) {
-    var setSaveButtonDisabled, s, sidebarCanvas, project, d, downloadLink, handlerExportNormal, handlerExportGranular,
-        handler, validatosr, help, option, menu, elem;
+    var setSaveButtonDisabled,
+        s,
+        sidebarCanvas,
+        project,
+        d,
+        downloadLink,
+        handlerExportNormal,
+        handlerExportGranular,
+        handler,
+        validatosr,
+        help,
+        option,
+        menu,
+        elem,
+        validatorLabel = "Validator".translate();
     /***************************************************
      * Defines the Process
      ***************************************************/
@@ -419,6 +432,7 @@ jQuery(document).ready(function ($) {
     //the action to generate a .bpmn file with the export option.
     downloadLink = $('.mafe-button-export-bpmn-process');
     downloadLink.click(function (e) {
+        PMDesigner.businessObject = PMDesigner.recursiveXMLEscapeCharacters(PMDesigner.businessObject, "name");
         PMDesigner.moddle.toXML(PMDesigner.businessObject, function (err, xmlStrUpdated) {
 
             setEncoded(downloadLink, PMDesigner.project.projectName + '.bpmn', xmlStrUpdated);
@@ -432,7 +446,7 @@ jQuery(document).ready(function ($) {
      * Add data tables
      */
     $('body').append('<div class="bpmn_validator"><div class="validator_header"></div><div class="validator_body"></div></div>')
-    $('.validator_header').append('<h2> Validator</h2>');
+    $('.validator_header').append('<h2> ' + validatorLabel + ' </h2>');
     $('.validator_header').append('<a class="validator-close" href="#"><span class="mafe-validator-close" title=""></span></a>');
     $('.validator_body').html('<table cellpadding="0" cellspacing="0" border="0" class="display" id="validator-table" width="100%"></table>');
     PMDesigner.validTable = $('#validator-table').DataTable({
@@ -1189,6 +1203,40 @@ PMDesigner.modeReadOnly = function () {
 
 PMDesigner.reloadDataTable = function () {
     $('.bpmn_validator').css('visibility', 'visible');
+};
+
+/**
+ * XML escape characters, recursively.
+ * There are only five:
+ * "   &quot;
+ * '   &apos;
+ * <   &lt;
+ * >   &gt;
+ * &   &amp;
+ * 
+ * @param {string} item
+ * @param {string} property
+ * @param {array|mixed} elements
+ * @returns {undefined}
+ */
+PMDesigner.recursiveXMLEscapeCharacters = function (item, property, elements) {
+    if (!(elements instanceof Array)) {
+        elements = [];
+    }
+    for (var i in item) {
+        if (item[i] instanceof Array || item[i] instanceof Object) {
+            item[i] = PMDesigner.recursiveXMLEscapeCharacters(item[i], property, elements);
+        }
+        if (i === property && elements.indexOf(item) === -1) {
+            item[property] = item[property].replace(/&/g, "&amp;");
+            item[property] = item[property].replace(/"/g, "&quot;");
+            item[property] = item[property].replace(/'/g, "&apos;");
+            item[property] = item[property].replace(/</g, "&lt;");
+            item[property] = item[property].replace(/>/g, "&gt;");
+            elements.push(item);
+        }
+    }
+    return item;
 };
 
 DataDictionary = function () {

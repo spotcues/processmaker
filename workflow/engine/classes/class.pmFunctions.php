@@ -418,18 +418,19 @@ function orderGrid ($dataM, $field, $ord = 'ASC')
  * @return array | $aGrid | Grid | Grid with executed operation
  *
  */
-function evaluateFunction ($aGrid, $sExpresion)
+function evaluateFunction($aGrid, $sExpresion)
 {
-    $sExpresion = str_replace( 'Array', '$this->aFields', $sExpresion );
+    $sExpresion = str_replace('Array', '$this->aFields', $sExpresion);
     $sExpresion .= ';';
 
     $pmScript = new PMScript();
-    $pmScript->setScript( $sExpresion );
+    $pmScript->setScript($sExpresion);
+    $pmScript->setExecutedOn(PMScript::EVALUATE_FUNCTION);
 
-    for ($i = 1; $i <= count( $aGrid ); $i ++) {
+    for ($i = 1; $i <= count($aGrid); $i ++) {
         $aFields = $aGrid[$i];
 
-        $pmScript->setFields( $aFields );
+        $pmScript->setFields($aFields);
 
         $pmScript->execute();
 
@@ -2030,13 +2031,19 @@ function PMFProcessList () //its test was successfull
  */
 function PMFSendVariables ($caseId, $variables)
 {
-    $ws = new WsBase();
+    global $oPMScript;
 
-    $result = $ws->sendVariables( $caseId, $variables );
+    if (!isset($oPMScript)) {
+        $oPMScript = new PMScript();
+    }
+
+    $ws = new WsBase();
+    $result = $ws->sendVariables($caseId, $variables,
+        $oPMScript->executedOn() === PMScript::AFTER_ROUTING);
+
     if ($result->status_code == 0) {
         if (isset($_SESSION['APPLICATION'])) {
             if ($caseId == $_SESSION['APPLICATION']) {
-                global $oPMScript;
                 if (isset($oPMScript->aFields) && is_array($oPMScript->aFields)) {
                     if (is_array($variables)) {
                         $oPMScript->aFields = array_merge($oPMScript->aFields, $variables);
@@ -2432,7 +2439,7 @@ function PMFgetLabelOption ($PROCESS, $DYNAFORM_UID, $FIELD_NAME, $FIELD_SELECTE
  * @return none | $none | None | None
  *
  */
-function PMFRedirectToStep ($sApplicationUID, $iDelegation, $sStepType, $sStepUid)
+function PMFRedirectToStep($sApplicationUID, $iDelegation, $sStepType, $sStepUid)
 {
     $g = new G();
 
@@ -2444,26 +2451,27 @@ function PMFRedirectToStep ($sApplicationUID, $iDelegation, $sStepType, $sStepUi
     $_SESSION["INDEX"] = $iDelegation;
 
     require_once 'classes/model/AppDelegation.php';
-    $oCriteria = new Criteria( 'workflow' );
-    $oCriteria->addSelectColumn( AppDelegationPeer::TAS_UID );
-    $oCriteria->add( AppDelegationPeer::APP_UID, $sApplicationUID );
-    $oCriteria->add( AppDelegationPeer::DEL_INDEX, $iDelegation );
-    $oDataset = AppDelegationPeer::doSelectRS( $oCriteria );
-    $oDataset->setFetchmode( ResultSet::FETCHMODE_ASSOC );
+    $oCriteria = new Criteria('workflow');
+    $oCriteria->addSelectColumn(AppDelegationPeer::TAS_UID);
+    $oCriteria->add(AppDelegationPeer::APP_UID, $sApplicationUID);
+    $oCriteria->add(AppDelegationPeer::DEL_INDEX, $iDelegation);
+    $oDataset = AppDelegationPeer::doSelectRS($oCriteria);
+    $oDataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
     $oDataset->next();
     global $oPMScript;
     $aRow = $oDataset->getRow();
     if ($aRow) {
         require_once 'classes/model/Step.php';
         $oStep = new Step();
-        $oTheStep = $oStep->loadByType( $aRow['TAS_UID'], $sStepType, $sStepUid );
+        $oTheStep = $oStep->loadByType($aRow['TAS_UID'], $sStepType, $sStepUid);
         $bContinue = true;
         $oCase = new Cases();
-        $aFields = $oCase->loadCase( $sApplicationUID );
+        $aFields = $oCase->loadCase($sApplicationUID);
         if ($oTheStep->getStepCondition() != '') {
             $pmScript = new PMScript();
-            $pmScript->setFields( $aFields['APP_DATA'] );
-            $pmScript->setScript( $oTheStep->getStepCondition() );
+            $pmScript->setFields($aFields['APP_DATA']);
+            $pmScript->setScript($oTheStep->getStepCondition());
+            $pmScript->setExecutedOn(PMScript::CONDITION);
             $bContinue = $pmScript->evaluate();
         }
         if ($bContinue) {
@@ -2485,18 +2493,18 @@ function PMFRedirectToStep ($sApplicationUID, $iDelegation, $sStepType, $sStepUi
                     break;
             }
             // save data
-            if (! is_null( $oPMScript )) {
+            if (!is_null($oPMScript)) {
                 $aFields['APP_DATA'] = $oPMScript->aFields;
                 unset($aFields['APP_STATUS']);
                 unset($aFields['APP_PROC_STATUS']);
                 unset($aFields['APP_PROC_CODE']);
                 unset($aFields['APP_PIN']);
-                $oCase->updateCase( $sApplicationUID, $aFields );
+                $oCase->updateCase($sApplicationUID, $aFields);
             }
 
             $g->sessionVarRestore();
 
-            G::header( 'Location: ' . 'cases_Step?TYPE=' . $sStepType . '&UID=' . $sStepUid . '&POSITION=' . $oTheStep->getStepPosition() . '&ACTION=' . $sAction );
+            G::header('Location: ' . 'cases_Step?TYPE=' . $sStepType . '&UID=' . $sStepUid . '&POSITION=' . $oTheStep->getStepPosition() . '&ACTION=' . $sAction);
             die();
         }
     }
@@ -2980,11 +2988,17 @@ function PMFRemoveMask ($field, $separator = '.', $currency = '')
 function PMFSaveCurrentData ()
 {
     global $oPMScript;
+
+    if (!isset($oPMScript)) {
+        $oPMScript = new PMScript();
+    }
+
     $response = 0;
 
     if (isset($_SESSION['APPLICATION']) && isset($oPMScript->aFields)) {
         $ws = new WsBase();
-        $result = $ws->sendVariables($_SESSION['APPLICATION'], $oPMScript->aFields);
+        $result = $ws->sendVariables($_SESSION['APPLICATION'], $oPMScript->aFields,
+            $oPMScript->executedOn() === PMScript::AFTER_ROUTING);
         $response = $result->status_code == 0 ? 1 : 0;
     }
     return $response;
@@ -3215,7 +3229,7 @@ function PMFGetGroupName($grpUid, $lang = SYS_LANG) {
  * @param string | $text | Text
  * @param string | $category | Category
  * @param string | $proUid | ProcessUid
- * @param string | $lang | Languaje
+ * @param string | $lang | Language
  * @return array
  */
 function PMFGetUidFromText($text, $category, $proUid = null, $lang = SYS_LANG)
@@ -3467,14 +3481,28 @@ function PMFCaseLink($caseUid, $workspace = null, $language = null, $skin = null
         if ($arrayApplicationData === false) {
             return false;
         }
+        $conf = new Configurations();
+        $envSkin = defined("SYS_SKIN") ? SYS_SKIN : $conf->getConfiguration('SKIN_CRON', '');
         $workspace = (!empty($workspace)) ? $workspace : config("system.workspace");
         $language = (!empty($language)) ? $language : SYS_LANG;
-        $skin = (!empty($skin)) ? $skin : SYS_SKIN;
+        $skin = (!empty($skin)) ? $skin : $envSkin;
 
         $uri = '/sys' . $workspace . '/' . $language . '/' . $skin . '/cases/opencase/' . $caseUid;
 
-        //Return
-        return ((G::is_https()) ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . $uri;
+        $envHost = isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : SERVER_NAME;
+        $envProtocol = defined("REQUEST_SCHEME") && REQUEST_SCHEME === "https";
+        if (isset($_SERVER['SERVER_PORT'])) {
+            $envPort = ($_SERVER['SERVER_PORT'] != "80") ? ":" . $_SERVER['SERVER_PORT'] : "";
+        } else if (defined('SERVER_PORT')) {
+            $envPort = (SERVER_PORT . "" != "80") ? ":" . SERVER_PORT : "";
+        } else {
+            $envPort = "";
+        }
+        if (!empty($envPort) && strpos($envHost, $envPort) === false) {
+            $envHost = $envHost . $envPort;
+        }
+        $link = (G::is_https() || $envProtocol ? 'https://' : 'http://') . $envHost . $uri;
+        return $link;
     } catch (Exception $e) {
         throw $e;
     }

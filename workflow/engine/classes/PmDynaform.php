@@ -1039,7 +1039,7 @@ class PmDynaform
                         },
                         token: credentials,
                         submitRest: false,
-                        googleMaps: googleMaps
+                        googleMaps: typeof googleMaps !== 'undefined' ? googleMaps : null
                     });
                     $(document).find(\"form\").submit(function (e) {
                         e.preventDefault();
@@ -1101,7 +1101,7 @@ class PmDynaform
                 "        },\n" .
                 "        token: credentials,\n" .
                 "        submitRest: false,\n" .
-                "        googleMaps: googleMaps\n" .
+                "        googleMaps: typeof googleMaps !== 'undefined' ? googleMaps : null\n" .
                 "    });\n" .
                 "    $(document).find('form').find('button').on('click', function (e) {\n" .
                 "        e.preventDefault();\n" .
@@ -1507,12 +1507,21 @@ class PmDynaform
         }
     }
 
+    /**
+     * Sync JSON definition of the Forms with Input Document information
+     * in all forms from a process
+     *
+     * @param string $processUid
+     * @param array $inputDocument
+     */
     public function synchronizeInputDocument($processUid, $inputDocument)
     {
-        $criteria = new Criteria("workflow");
+        $criteria = new Criteria('workflow');
         $criteria->addSelectColumn(DynaformPeer::DYN_UID);
         $criteria->addSelectColumn(DynaformPeer::DYN_CONTENT);
         $criteria->add(DynaformPeer::PRO_UID, $processUid, Criteria::EQUAL);
+        // Only select the forms with an input document related to a field
+        $criteria->add(DynaformPeer::DYN_CONTENT, '%"sizeUnity":%', Criteria::LIKE);
         $rsCriteria = DynaformPeer::doSelectRS($criteria);
         $rsCriteria->setFetchmode(ResultSet::FETCHMODE_ASSOC);
         while ($rsCriteria->next()) {
@@ -1524,7 +1533,7 @@ class PmDynaform
             if ($json2 !== $aRow['DYN_CONTENT']) {
                 $con = Propel::getConnection(DynaformPeer::DATABASE_NAME);
                 $con->begin();
-                $oPro = DynaformPeer::retrieveByPk($aRow["DYN_UID"]);
+                $oPro = DynaformPeer::retrieveByPk($aRow['DYN_UID']);
                 $oPro->setDynContent($json2);
                 $oPro->save();
                 $con->commit();
@@ -1532,6 +1541,13 @@ class PmDynaform
         }
     }
 
+    /**
+     * Replace values from an Input Document related to the form,
+     * for fields of type "file" and "multipleFile"
+     *
+     * @param object $json
+     * @param array $inputDocument
+     */
     private function jsonsid(&$json, $inputDocument)
     {
         foreach ($json as $key => $value) {
@@ -1541,15 +1557,8 @@ class PmDynaform
                 $this->jsonsid($value, $inputDocument);
             }
             if (!$sw1 && !$sw2) {
-                if ($key === "type" && $json->type === "file" && $json->variable !== "") {
-                    $a = new Criteria("workflow");
-                    $a->addSelectColumn(ProcessVariablesPeer::INP_DOC_UID);
-                    $a->add(ProcessVariablesPeer::VAR_NAME, $json->variable, Criteria::EQUAL);
-                    $ds = DynaformPeer::doSelectRS($a);
-                    $ds->setFetchmode(ResultSet::FETCHMODE_ASSOC);
-                    $ds->next();
-                    $row = $ds->getRow();
-                    if (isset($row) && $row["INP_DOC_UID"] === $inputDocument["INP_DOC_UID"]) {
+                if ($key === "type" && ($json->type === "file" || $json->type === "multipleFile") && isset($json->inp_doc_uid)) {
+                    if ($json->inp_doc_uid === $inputDocument["INP_DOC_UID"]) {
                         if (isset($json->size)) {
                             $json->size = $inputDocument["INP_DOC_MAX_FILESIZE"];
                         }
@@ -1560,6 +1569,8 @@ class PmDynaform
                             $json->extensions = $inputDocument["INP_DOC_TYPE_FILE"];
                         }
                     }
+                } else if ($key === "type" && $json->type === "grid" && !empty($json->columns)) {
+                    $this->jsonsid($json->columns, $inputDocument);
                 }
             }
         }
