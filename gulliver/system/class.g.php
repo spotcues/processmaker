@@ -5871,4 +5871,25 @@ class G
         $class = isset(self::$adapters[$key]) ? self::$adapters[$key] : $name;
         return class_exists($class);
     }
+
+    /**
+     * Fix string corrupted related to PMC-336.
+     * To do, this method should be removed. Related to PMC-336.
+     * 
+     * @param string $string
+     * @return string
+     */
+    public static function fixStringCorrupted($string)
+    {
+        $string = preg_replace_callback("/iconv\\(\\'UCS\\-4LE\\',\\'UTF\\-8\\',pack\\(\\'V\\', hexdec\\(\\'U[a-f0-9]{4}\\'\\)\\)\\)/", function($result) {
+            //This looks for the following pattern:
+            //iconv('UCS-4LE','UTF-8',pack('V', hexdec('U062f')))iconv('UCS-4LE','UTF-8',pack('V', hexdec('U0631')))
+            //So making this replacement is safe.
+            $portion = $result[0];
+            $portion = str_replace("iconv('UCS-4LE','UTF-8',pack('V', hexdec('U", "\u", $portion);
+            $portion = str_replace("')))", "", $portion);
+            return $portion;
+        }, $string);
+        return $string;
+    }
 }

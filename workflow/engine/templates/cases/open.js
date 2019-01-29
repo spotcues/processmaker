@@ -32,13 +32,14 @@ function formatAMPM(date, initVal) {
   return strTime;
 };
 
-function isBrowserIE(){
-  if ( (navigator.userAgent.indexOf("MSIE")!=-1) || (navigator.userAgent.indexOf("Trident")!=-1) ){
-   return true;
-   } else {
-     return false;
-   }
-};
+/**
+ * Verify if the browser is Internet Explorer
+ * @return {boolean}
+ */
+function isBrowserIE() {
+    var browserAgent = navigator.userAgent.toLowerCase();
+    return (browserAgent.indexOf("msie") !== -1) || (browserAgent.indexOf("trident") !== -1);
+}
 
 Ext.onReady(function(){
   openToRevisePanel = function() {
@@ -157,7 +158,7 @@ Ext.onReady(function(){
               tb.add(menu);
           }
         }
-        
+
         var olink = document.location.href;
         if(olink.search("gmail") != -1){
       	  Ext.getCmp('stepsMenu').hide();
@@ -229,7 +230,7 @@ Ext.onReady(function(){
 
             if (node.attributes.url) {
                 //Set load event
-                if (navigator.userAgent.toLowerCase().indexOf("msie") != -1) {
+                if (navigator.userAgent.toLowerCase().indexOf("msie") !== -1 || navigator.userAgent.toLowerCase().indexOf("trident") !== -1) {
                     document.getElementById("openCaseFrame").onreadystatechange = function ()
                     {
                         if (document.getElementById("openCaseFrame").readyState == "complete") {

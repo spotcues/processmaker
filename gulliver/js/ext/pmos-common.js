@@ -69,29 +69,24 @@ PMExtJSCommon = function() {
     Ext.msgBoxSlider.msg(title, msg, type, time);
   }
 
-  this.getBrowser = function()
-  {
-    var browsersList = new Array("opera", "msie", "firefox", "chrome", "safari");
-    var browserMeta = navigator.userAgent.toLowerCase();
-    var name = 'Unknown';
-    var version = '';
-    var screen = {
-      width  : Ext.getBody().getViewSize().width,
-      height : Ext.getBody().getViewSize().height
+    this.getBrowser = function () {
+        var browsersList = ["opera", "msie", "firefox", "chrome", "safari", "trident"],
+            browserMeta = navigator.userAgent.toLowerCase(),
+            name = 'Unknown',
+            version = '',
+            screen = {
+                width: Ext.getBody().getViewSize().width,
+                height: Ext.getBody().getViewSize().height
+            };
+        for (var i = 0; i < browsersList.length; i++) {
+            if ((name === "") && (browserMeta.indexOf(browsersList[i]) !== -1)) {
+                name = browsersList[i];
+                version = String(parseFloat(browserMeta.substr(browserMeta.indexOf(browsersList[i]) + browsersList[i].length + 1)));
+                break;
+            }
+        }
+        return {name: name, version: version, screen: screen}
     };
-
-    var so = Ext.isLinux ? 'Linux' : ( Ext.isWindows ? 'Windows' :  (Ext.isMac ? 'Mac OS' : 'Unknown') );
-
-    for (var i = 0; i < browsersList.length; i++){
-      if ((name == "") && (browserMeta.indexOf(browsersList[i]) != -1)){
-        name = browsersList[i];
-        version = String(parseFloat(browserMeta.substr(browserMeta.indexOf(browsersList[i]) + browsersList[i].length + 1)));
-        break;
-      }
-    }
-
-    return {name:name, version:version, screen: screen}
-  }
 
   this.createInfoPanel = function (url, params, columnsSize) {
     var labelColumnWidth = 170;
@@ -562,11 +557,11 @@ function getBrowserTimeZoneOffset()
 }
 
 /**
- * This is the global state manager. By default all components that are 
- * "state aware" check this class for state information if you don't pass them a 
- * custom state provider. In order for this class to be useful, it must be 
+ * This is the global state manager. By default all components that are
+ * "state aware" check this class for state information if you don't pass them a
+ * custom state provider. In order for this class to be useful, it must be
  * initialized with a provider when your application initializes.
- * 
+ *
  * @param {string} cache
  * @param {string} additionalPrefix
  * @returns {undefined}

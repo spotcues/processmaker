@@ -11,4 +11,4 @@ require_once __DIR__ . '/composer/autoload_real.php';
 
 require_once __DIR__ . '/composer/autoload_alias_loader_real.php';
 
-return ClassAliasLoaderInit24ed09618d55e1199df1db6044af5d61::initializeClassAliasLoader(ComposerAutoloaderInit24ed09618d55e1199df1db6044af5d61::getLoader());
+return ClassAliasLoaderInit83f810dcd3de7ca7cb56862c63e36f44::initializeClassAliasLoader(ComposerAutoloaderInit83f810dcd3de7ca7cb56862c63e36f44::getLoader());

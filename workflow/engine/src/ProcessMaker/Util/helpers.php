@@ -401,6 +401,37 @@ function verifyCsrfToken($request)
 }
 
 /**
+ * Get the difference between to multidimensional array
+ *
+ * @param array $array1
+ * @param array $array2
+ *
+ * @return array
+*/
+function arrayDiffRecursive(array $array1, array $array2)
+{
+    $difference = [];
+    foreach ($array1 as $key => $value) {
+        if (is_array($value)) {
+            if (!isset($array2[$key])) {
+                $difference[$key] = $value;
+            } elseif (!is_array($array2[$key])) {
+                $difference[$key] = $value;
+            } else {
+                $new_diff = arrayDiffRecursive($value, $array2[$key]);
+                if (!empty($new_diff)) {
+                    $difference[$key] = $new_diff;
+                }
+            }
+        } elseif (!isset($array2[$key]) || $array2[$key] != $value) {
+            $difference[$key] = $value;
+        }
+    }
+
+    return $difference;
+}
+
+/**
  * Get the current user CSRF token.
  *
  * @return string

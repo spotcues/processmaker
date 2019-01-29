@@ -304,7 +304,7 @@ class PMScript
     public function executeAndCatchErrors($sScript, $sCode)
     {
         ob_start('handleFatalErrors');
-        set_error_handler('handleErrors');
+        set_error_handler('handleErrors', ini_get('error_reporting'));
         $_SESSION['_CODE_'] = $sCode;
         $_SESSION['_DATA_TRIGGER_'] = $this->dataTrigger;
         $_SESSION['_DATA_TRIGGER_']['_EXECUTION_TIME_'] = microtime(true);
@@ -464,6 +464,8 @@ class PMScript
         $sScript = "try {\n" . $sScript . "\n} catch (Exception \$oException) {\n " . " \$this->aFields['__ERROR__'] = utf8_encode(\$oException->getMessage());\n}";
 
         $this->executeAndCatchErrors($sScript, $this->sScript);
+        //We get the affected_fields only if has the prefix
+        //@see https://wiki.processmaker.com/3.2/Triggers#Typing_rules_for_Case_Variables
         $this->setVarsChanged($this->affected_fields);
         $this->aFields["__VAR_CHANGED__"] = implode(",", $this->affected_fields);
         for ($i = 0; $i < count($this->affected_fields); $i ++) {

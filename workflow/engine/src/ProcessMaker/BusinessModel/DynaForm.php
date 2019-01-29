@@ -966,9 +966,10 @@ class DynaForm
             if ($record['DYN_VERSION'] === 0) {
                 $record['DYN_VERSION'] = 1;
             }
-
+            //to do, this line should be removed. Related to PMC-196.
+            $record['DYN_CONTENT'] = G::fixStringCorrupted($record['DYN_CONTENT']);
             $record['DYN_CONTENT'] = preg_replace_callback("/\\\\u([a-f0-9]{4})/", function ($m) {
-                return "iconv('UCS-4LE','UTF-8',pack('V', hexdec('U$m[1]')))";
+                return iconv('UCS-4LE', 'UTF-8', pack('V', hexdec('U' . $m[1])));
             }, $record['DYN_CONTENT']);
 
             return array(
@@ -977,7 +978,7 @@ class DynaForm
                 $this->getFieldNameByFormatFieldName('DYN_DESCRIPTION') => $record['DYN_DESCRIPTION'] . '',
                 $this->getFieldNameByFormatFieldName('DYN_TYPE') => $record['DYN_TYPE'] . '',
                 $this->getFieldNameByFormatFieldName('DYN_CONTENT') => $record['DYN_CONTENT'] . '',
-                $this->getFieldNameByFormatFieldName('DYN_VERSION') => (int)$record['DYN_VERSION'],
+                $this->getFieldNameByFormatFieldName('DYN_VERSION') => (int) $record['DYN_VERSION'],
                 $this->getFieldNameByFormatFieldName('DYN_UPDATE_DATE') => $record['DYN_UPDATE_DATE']
             );
         } catch (\Exception $e) {

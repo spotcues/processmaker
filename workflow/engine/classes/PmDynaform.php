@@ -64,6 +64,9 @@ class PmDynaform
                 $this->jsonReplace($json, $field->id, "id", $field);
             }
             $this->record["DYN_CONTENT"] = G::json_encode($json);
+
+            //to do, this line should be removed. Related to PMC-196.
+            $this->record['DYN_CONTENT'] = G::fixStringCorrupted($this->record['DYN_CONTENT']);
         }
     }
 

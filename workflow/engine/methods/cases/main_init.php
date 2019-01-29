@@ -9,6 +9,8 @@ $oHeadPublisher->addContent("cases/main"); //Adding a html file  .html.
 $keyMem = "USER_PREFERENCES" . $_SESSION["USER_LOGGED"];
 $memcache = PMmemcached::getSingleton(config("system.workspace"));
 
+$openCaseIE = false;
+
 if (($arrayConfig = $memcache->get($keyMem)) === false) {
     $conf->loadConfig($x, "USER_PREFERENCES", "", "", $_SESSION["USER_LOGGED"], "");
     $arrayConfig = $conf->aConfig;
@@ -86,6 +88,7 @@ if (isset($_SESSION['__OPEN_APPLICATION_UID__'])) {
 
     if (count($arrayDelIndex) === 1) {
         //We will to open the case: one thread
+        $openCaseIE = true;
         $defaultOption = '../cases/open?APP_UID=' . $openAppUid . '&DEL_INDEX=' . $arrayDelIndex[0] . '&action=' . $action;
     } else {
         //We will to show the list: more than one thread
@@ -115,6 +118,7 @@ $urlProxy = 'casesMenuLoader?action=getAllCounters&r=';
 
 $oHeadPublisher->assign('regionTreePanel', $regionTreePanel);
 $oHeadPublisher->assign('regionDebug', $regionDebug);
+$oHeadPublisher->assign('openCaseIE', $openCaseIE);
 $oHeadPublisher->assign("defaultOption", $defaultOption); //User menu permissions
 $oHeadPublisher->assign('urlProxy', $urlProxy); //sending the urlProxy to make
 $oHeadPublisher->assign("_nodeId", isset($confDefaultOption) ? $confDefaultOption : "PM_USERS"); //User menu permissions
