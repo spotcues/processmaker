@@ -2825,7 +2825,7 @@ function PMFPauseCase ($caseUid, $delIndex, $userUid, $unpauseDate = null)
 {
     $ws = new WsBase();
     $result = $ws->pauseCase($caseUid, $delIndex, $userUid, $unpauseDate);
-
+    $result = (object) $result;
     if ($result->status_code == 0) {
         if (isset($_SESSION['APPLICATION']) && isset($_SESSION['INDEX'])) {
             if ($_SESSION['APPLICATION'] == $caseUid && $_SESSION['INDEX'] == $delIndex) {

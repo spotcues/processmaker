@@ -1427,4 +1427,31 @@ class Cases extends Api
         return $response;
     }
 
+    /**
+     * Return information for sub process cases
+     *
+     * @url GET /:app_uid/sub-process-cases
+     *
+     * @param string $app_uid {@min 32}{@max 32}
+     *
+     * @return array
+     * @throws Exception
+     *
+     * @access protected
+     * @class AccessControl {@permission PM_CASES}
+     */
+    public function doGetCaseSubProcess($app_uid)
+    {
+        try {
+            $case = new BmCases();
+            $case->setFormatFieldNameInUppercase(false);
+
+            $caseInfo = $case->getCaseInfoSubProcess($app_uid, $this->getUserId());
+            $caseInfo = DateTime::convertUtcToIso8601($caseInfo, $this->arrayFieldIso8601);
+
+            return $caseInfo;
+        } catch (Exception $e) {
+            throw new RestException(Api::STAT_APP_EXCEPTION, $e->getMessage());
+        }
+    }
 }

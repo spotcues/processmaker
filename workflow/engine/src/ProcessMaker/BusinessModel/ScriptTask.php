@@ -10,6 +10,7 @@ use PMScript;
 use ResultSet;
 use ScriptTaskPeer;
 use TaskPeer;
+use Triggers as ModelTriggers;
 use TriggersPeer;
 
 class ScriptTask
@@ -602,13 +603,16 @@ class ScriptTask
     }
 
     /**
-     * Execute Script
+     * Execute the trigger related to the script task
      *
      * @param string $activityUid Unique id of task
      * @param array $arrayApplicationData Case data
      *
      * @return array
      * @throws Exception
+     *
+     * @see Derivation::derivate()
+     * @link https://wiki.processmaker.com/3.1/Tasks#ScriptTask
      */
     public function execScriptByActivityUid($activityUid, array $arrayApplicationData)
     {
@@ -625,34 +629,35 @@ class ScriptTask
                 if ($rsCriteria->next()) {
                     $row = $rsCriteria->getRow();
                     $scriptTasObjUid = $row["SCRTAS_OBJ_UID"];
-                    $trigger = TriggersPeer::retrieveByPK($scriptTasObjUid);
+                    $trigger = new ModelTriggers();
+                    $triggersList[] = $trigger->load($scriptTasObjUid);
 
-                    if (!is_null($trigger)) {
-                        //We will be update the status before execute the trigger related to the script task
+                    if (!empty($triggersList)){
                         $case = new ClassesCases();
-                        $result = $case->updateCase($arrayApplicationData["APP_UID"], $arrayApplicationData);
+                        //We will be update the status before execute the trigger related to the script task
+                        $case->updateCase($arrayApplicationData["APP_UID"], $arrayApplicationData);
 
-                        //Some Pmf functions uses this global variable $oPMScript for review the aFields defined
-                        global $oPMScript;
-                        $oPMScript = new PMScript();
-                        $oPMScript->setDataTrigger($trigger->toArray(BasePeer::TYPE_FIELDNAME));
-                        $oPMScript->setFields($arrayApplicationData["APP_DATA"]);
-                        $oPMScript->setScript($trigger->getTriWebbot());
-                        $oPMScript->setExecutedOn(PMScript::SCRIPT_TASK);
-                        $oPMScript->execute();
+                        //Execute the trigger defined in the script task
+                        $arrayApplicationData['APP_DATA'] = $case->executeTriggerFromList(
+                            $triggersList,
+                            $arrayApplicationData['APP_DATA'],
+                            'SCRIPT_TASK',
+                            '',
+                            ''
+                        );
 
-                        if (isset($oPMScript->aFields["__ERROR__"])) {
-                            G::log("Case Uid: " . $arrayApplicationData["APP_UID"] . ", Error: " . $oPMScript->aFields["__ERROR__"],
+                        $case->updateCase($arrayApplicationData['APP_UID'], $arrayApplicationData);
+
+                        if (isset($arrayApplicationData['APP_DATA']['__ERROR__'])) {
+                            G::log("Case Uid: " . $arrayApplicationData["APP_UID"] . ", Error: " . $arrayApplicationData['APP_DATA']['__ERROR__'],
                                 PATH_DATA, "ScriptTask.log");
                         }
-                        $arrayApplicationData["APP_DATA"] = $oPMScript->aFields;
-                        $result = $case->updateCase($arrayApplicationData["APP_UID"], $arrayApplicationData);
                     }
                 }
             }
 
             //Return
-            return $arrayApplicationData["APP_DATA"];
+            return $arrayApplicationData['APP_DATA'];
         } catch (Exception $e) {
             throw $e;
         }

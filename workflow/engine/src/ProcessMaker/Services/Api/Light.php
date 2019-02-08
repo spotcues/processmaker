@@ -984,6 +984,7 @@ class Light extends Api
             }
 
             $userUid = $this->getUserId();
+            //@todo Find a better way to define session variables
             $_SESSION["APPLICATION"] = $app_uid;
             $_SESSION["PROCESS"] = $pro_uid;
             //$_SESSION["TASK"]         = "";
@@ -1955,6 +1956,7 @@ class Light extends Api
         if ($alreadyRouted) {
             throw (new RestException(Api::STAT_APP_EXCEPTION, G::LoadTranslation('ID_CASE_DELEGATION_ALREADY_CLOSED')));
         }
+        //@todo Find a better way to define session variables
         $_SESSION["APPLICATION"] = $app_uid;
         $_SESSION["PROCESS"] = $pro_uid;
         $_SESSION["INDEX"] = $app_index;

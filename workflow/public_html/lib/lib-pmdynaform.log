@@ -1,30 +1,30 @@
-[4 weeks ago] 10f3865  PMC-52:[Mantis - 26217] .setOnchange() does not correctly handle grids when rows are deleted <Fabio Guachalla>
-[8 weeks ago] 5e30339  PMC-108:case Summary -> more information (Print) Appear the "Error: error" message after of a reassign <Fabio Guachalla>
-[8 weeks ago] 48cd693  (origin/bugfix/PMC-101) PMC-101:Issue in Datetime Picker while using png Image Control in Dynaform <Fabio Guachalla>
-[9 weeks ago] dfb7028  (origin/bugfix/PMC-76) PMC-76 <Roly Rudy Gutierrez Pinto>
-[10 weeks ago] 22d2509  PMC-18:Use the new API for upload documents: POST /:app_uid/upload/:var_name/:doc_uid <Fabio Guachalla>
+[3 weeks ago] 9b54b92  (origin/bugfix/PMC-170) PMC-170:[Mantis - 25509] There is an extra space in the html "class" property of all labels, which makes code from a client innefective after upgrading from v3.0.1.8 to v.3.2.2 <Rodrigo Quelca>
+[5 weeks ago] 10f3865  PMC-52:[Mantis - 26217] .setOnchange() does not correctly handle grids when rows are deleted <Fabio Guachalla>
+[9 weeks ago] 5e30339  PMC-108:case Summary -> more information (Print) Appear the "Error: error" message after of a reassign <Fabio Guachalla>
+[9 weeks ago] 48cd693  (origin/bugfix/PMC-101) PMC-101:Issue in Datetime Picker while using png Image Control in Dynaform <Fabio Guachalla>
+[2 months ago] dfb7028  (origin/bugfix/PMC-76) PMC-76 <Roly Rudy Gutierrez Pinto>
+[3 months ago] 22d2509  PMC-18:Use the new API for upload documents: POST /:app_uid/upload/:var_name/:doc_uid <Fabio Guachalla>
 [3 months ago] ae57590  FBI-2379:Multiple file control doesnt wait for files to be uploaded <Fabio Guachalla>
 [3 months ago] a1603c9  FBI-2386:Upload files: We need to show the message error sent by backend <Fabio Guachalla>
-[3 months ago] 7a1948e  FBI-2516:[Mantis 25900] Add the labels for some English fields in the English .po file <Fabio Guachalla>
-[3 months ago] ce7bd5a  FBI-2494: (Print Button) The controls of the dynaforms are overlapped with the footer and the header <Rodrigo Quelca>
-[3 months ago] 5284fa9  FBI-2493:(Print Button) The data in the Mobile controls are not preserved in the next step <Fabio Guachalla>
-[3 months ago] 911f498  FBI-2495: (Print Button) In disabled mode the dynaforms displays the Title and Number of the Case <Rodrigo Quelca>
+[4 months ago] 7a1948e  FBI-2516:[Mantis 25900] Add the labels for some English fields in the English .po file <Fabio Guachalla>
+[4 months ago] ce7bd5a  FBI-2494: (Print Button) The controls of the dynaforms are overlapped with the footer and the header <Rodrigo Quelca>
+[4 months ago] 5284fa9  FBI-2493:(Print Button) The data in the Mobile controls are not preserved in the next step <Fabio Guachalla>
+[4 months ago] 911f498  FBI-2495: (Print Button) In disabled mode the dynaforms displays the Title and Number of the Case <Rodrigo Quelca>
 [4 months ago] 0c8e6dd  (origin/feature/FBI-2511) FBI-2511: [GeoMap mobile field] Google Maps shows "For development purposes only" <Rodrigo Quelca>
 [5 months ago] 01f73f3  FBI-2405:[ZenDesk 6049] Flash Message is hide behind the date field <Fabio Guachalla>
 [5 months ago] 31637c6  FBI-2477:Print button aligns the controls to the right if the dynaform is in Edit, View or Disabled mode <Fabio Guachalla>
-[5 months ago] ad19181  (Dynaform) The Hint icon haven't the same position for all controls <Fabio Guachalla>
-[5 months ago] 9cbbfa3  FBI-2465: Saveform offline <Alex Santos>
-[5 months ago] b7ef250  FBI-2463:Print Dynaform >> The alignment, footer and header is not correct when printing through an external link. <Fabio Guachalla>
+[6 months ago] ad19181  (Dynaform) The Hint icon haven't the same position for all controls <Fabio Guachalla>
+[6 months ago] 9cbbfa3  FBI-2465: Saveform offline <Alex Santos>
+[6 months ago] b7ef250  FBI-2463:Print Dynaform >> The alignment, footer and header is not correct when printing through an external link. <Fabio Guachalla>
 [6 months ago] b279f59  FBI-2453:The value of the textBox control does not works using the print button <Fabio Guachalla>
 [6 months ago] 597a4c4  (origin/bugfix/FBI-2445) FBI-2445: [Zendesk - 6042]Attachments disappeared if there is no actor assigned in the next step <Rodrigo Quelca>
-[6 months ago] 1febb0a  (origin/feature/FBI-2443) FBI-2443: Save form offline for iOS <Alex Santos>
-[6 months ago] 632bcb9  (origin/bugfix/FBI-2446) FBI-2446: [checkgroup - setOnChange helper] The helper must return an array in the newValue parameter instead of an string. <Rodrigo Quelca>
+[7 months ago] 1febb0a  (origin/feature/FBI-2443) FBI-2443: Save form offline for iOS <Alex Santos>
+[7 months ago] 632bcb9  (origin/bugfix/FBI-2446) FBI-2446: [checkgroup - setOnChange helper] The helper must return an array in the newValue parameter instead of an string. <Rodrigo Quelca>
 [7 months ago] ff551a3  FBI-2437: saveForm helper must save data in offline mode <Alex Santos>
 [8 months ago] df0c10f  FBI-2418:CLONE - [Zendesk - 5417]Dynaform not printed properly when accessed through link externally <Fabio Guachalla>
-[8 months ago] dc65c1d  CR <Fabio Guachalla>
-[8 months ago] 3a0b3f1  FBI-2366: Create a function to delete all the information of grid <Fabio Guachalla>
+[9 months ago] dc65c1d  CR <Fabio Guachalla>
+[9 months ago] 3a0b3f1  FBI-2366: Create a function to delete all the information of grid <Fabio Guachalla>
 [10 months ago] 392200a  (origin/bugfix/FBI-2376) FBI-2376: Error is displayed when the protected value property is activated in a Grid control in view mode <Rodrigo Quelca>
 [10 months ago] e827743  FBI-1869:When grid columns are populated previously the file fields are being shown always as required. <Fabio Guachalla>
 [11 months ago] b2d54e6  FBI-2352: Grid in view mode does not work if some column has formula associated <Alex Santos>
 [11 months ago] a7870ae  FBI-2112: Remove library added for download file and create a similar method <alex>
-[11 months ago] e38f92d  Tag not translated into Spanish <Fabio Guachalla>

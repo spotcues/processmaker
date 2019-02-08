@@ -4,6 +4,7 @@ namespace ProcessMaker\BusinessModel;
 
 use AdditionalTables;
 use AdditionalTablesPeer;
+use Configurations;
 use G;
 use Exception;
 
@@ -328,6 +329,11 @@ class ReportTable
      *
      * @param array $arrayData
      * @param bool  $flagAlterTable
+     * 
+     * @see pmTablesProxy->save()
+     * @see ProcessMaker\BusinessModel\ReportTable->createStructureOfTables()
+     * @see Table->validateTableBeforeUpdate()
+     * @link https://wiki.processmaker.com/3.1/Report_Tables
      *
      * @return object
      */
@@ -560,6 +566,7 @@ class ReportTable
                 //Delete Report Table
                 $resultDeleteReportTable = $pmTablesProxy->delete($obj);
             }
+            $this->updateConfigurationCaseList($additionalTableUid, $columns);
         } catch (Exception $e) {
             $buildResult = ob_get_contents();
 
@@ -578,9 +585,124 @@ class ReportTable
 
             $result->trace = $e->getTraceAsString();
         }
-
         //Return
         return $result;
+    }
+
+    /**
+     * Update the Custom Case List fields configuration.
+     * 
+     * @param array $columns
+     * 
+     * @see ProcessMaker\BusinessModel\ReportTable->saveStructureOfTable()
+     * @link https://wiki.processmaker.com/3.1/Report_Tables
+     * @link https://wiki.processmaker.com/3.2/Cases_List_Builder#Installation_and_Configuration
+     */
+    public function updateConfigurationCaseList($addTabUid, $columns)
+    {
+        $actions = [
+            "todo", "draft", "sent", "unassigned", "paused", "completed", "cancelled"
+        ];
+        $conf = new Configurations();
+        foreach ($actions as $action) {
+            $confCasesList = $conf->loadObject("casesList", $action, "", "", "");
+            $sw = is_array($confCasesList) && !empty($confCasesList) && !empty($confCasesList['PMTable']) && $confCasesList['PMTable'] === $addTabUid;
+            if ($sw) {
+                $this->addFieldsToCustomCaseList($confCasesList['first']['data'], $confCasesList['second']['data'], $columns);
+                $this->removeFieldsFromCustomCaseList($confCasesList['first']['data'], $columns);
+                $this->removeFieldsFromCustomCaseList($confCasesList['second']['data'], $columns);
+                $conf->saveObject($confCasesList, "casesList", $action);
+            }
+        }
+    }
+    
+    /**
+     * Add fields to Custom Case List.
+     * @param array $data1
+     * @param array $data2
+     * @param array $columns
+     * 
+     * @see ProcessMaker\BusinessModel\ReportTable->saveStructureOfTable()
+     * @link https://wiki.processmaker.com/3.1/Report_Tables
+     * @link https://wiki.processmaker.com/3.2/Cases_List_Builder#Installation_and_Configuration
+     */
+    public function addFieldsToCustomCaseList(&$data1, $data2, $columns)
+    {
+        $all = [];
+        $type = 'PM Table';
+        $this->loadFieldTypeValues($data1, $all, $type);
+        $this->loadFieldTypeValues($data2, $all, $type);
+        foreach ($all as $value) {
+            foreach ($columns as $index => $column) {
+                if ($value['name'] === $column->field_name) {
+                    unset($columns[$index]);
+                    break;
+                }
+            }
+        }
+        $defaults = ["APP_UID", "APP_NUMBER", "APP_STATUS"];
+        foreach ($defaults as $value) {
+            foreach ($columns as $index => $column) {
+                if ($value === $column->field_name) {
+                    unset($columns[$index]);
+                    break;
+                }
+            }
+        }
+        foreach ($columns as $value) {
+            $data1[] = [
+                "name" => $column->field_name,
+                "fieldType" => $type
+            ];
+        }
+    }
+
+    /**
+     * Load field type values.
+     * 
+     * @param array $fields
+     * @param array $all
+     * @param string $type
+     */
+    private function loadFieldTypeValues($fields, array &$all, $type)
+    {
+        foreach ($fields as $value) {
+            if ($value['fieldType'] === $type) {
+                $all[] = $value;
+            }
+        }
+    }
+
+    /**
+     * Remove fields from Custom Cases List.
+     * 
+     * @param array $data
+     * @param array $columns
+     * 
+     * @see ProcessMaker\BusinessModel\ReportTable->saveStructureOfTable()
+     * @link https://wiki.processmaker.com/3.1/Report_Tables
+     * @link https://wiki.processmaker.com/3.2/Cases_List_Builder#Installation_and_Configuration
+     */
+    public function removeFieldsFromCustomCaseList(&$data, $columns)
+    {
+        $n = count($data);
+        for ($key = 0; $key < $n; $key++) {
+            if ($data[$key]['fieldType'] === 'PM Table') {
+                $remove = true;
+                foreach ($columns as $column) {
+                    if ($data[$key]['name'] === $column->field_name) {
+                        $remove = false;
+                        break;
+                    }
+                }
+                if ($remove === true) {
+                    unset($data[$key]);
+                    $data = array_values($data);
+                    $key = 0;
+                    $n = count($data);
+                }
+            }
+        }
     }
 
     /**

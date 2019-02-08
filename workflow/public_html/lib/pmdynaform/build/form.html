@@ -73,7 +73,7 @@
 <script type="text/template" id="tpl-text">
 	<div id="<%-id%>" class="<%-namespace%>-field-<%-type%> <%-namespace%>-<%-mode%>-<%-type%> <%if (group === 'form'){%> form-group col-sm-<%-colSpan%> col-md-<%-colSpan%> col-lg-<%-colSpan%>  pmdynaform-field<%}%>">
         <% if(group === "form") {%>
-        	<div class="col-sm-<%-colSpanLabel%>  col-md-<%-colSpanLabel%> col-lg-<%-colSpanLabel%>">
+        	<div class="col-sm-<%-colSpanLabel%> col-md-<%-colSpanLabel%> col-lg-<%-colSpanLabel%>">
 	            <label for="form[<%-id%>]" class="control-label pmdynaform-label">
 	            	<span data-toggle="tooltip" data-placement="bottom" title="<%-tooltipLabel%>" class="textlabel"><%=label%></span>
 		            <%if(required){%>
@@ -155,7 +155,7 @@
 <script type="text/template" id="tpl-textarea">
 	<div id="<%-id%>" class="<%-namespace%>-field-<%-type%> <%if (group === 'form'){%> form-group col-sm-<%-colSpan%> col-md-<%-colSpan%> col-lg-<%-colSpan%> <%}%> <%-namespace%>-<%-mode%>-<%-type%> pmdynaform-field">
 		<% if(group === "form") {%>
-        	<div class="col-sm-<%-colSpanLabel%>  col-md-<%-colSpanLabel%> col-lg-<%-colSpanLabel%>">
+        	<div class="col-sm-<%-colSpanLabel%> col-md-<%-colSpanLabel%> col-lg-<%-colSpanLabel%>">
 				<label for="form[<%-id%>]" class="control-label pmdynaform-label">
 					<span class="textlabel"><%=label%></span>
 					<%if(required){%>
@@ -214,7 +214,7 @@
 <script type="text/template" id="tpl-checkgroup">
 	<div id="<%-id%>" class="<%-namespace%>-field-<%-type%> <%if (group === 'form'){%> form-group col-sm-<%-colSpan%> col-md-<%-colSpan%> col-lg-<%-colSpan%> <%}%> <%-namespace%>-<%-mode%>-<%-type%> pmdynaform-field">
     	<% if(group === "form") {%>
-			<div class="col-sm-<%-colSpanLabel%>  col-md-<%-colSpanLabel%> col-lg-<%-colSpanLabel%>">
+			<div class="col-sm-<%-colSpanLabel%> col-md-<%-colSpanLabel%> col-lg-<%-colSpanLabel%>">
 		    	<label for="form[<%-id%>]" class="control-label pmdynaform-label">
 		    		<span class="textlabel"><%= label %></span>
 		    		<%if(required){%>
@@ -287,7 +287,7 @@
 <script type="text/template" id="tpl-checkbox_yes_no">
 	<div id="<%-id%>" class="<%-namespace%>-field-<%-type%> <%if (group === 'form'){%> form-group col-sm-<%-colSpan%> col-md-<%-colSpan%> col-lg-<%-colSpan%> <%}%> <%-namespace%>-<%-mode%>-<%-type%> pmdynaform-field">
 		<% if(group === "form") {%>
-		<div class="col-sm-<%-colSpanLabel%>  col-md-<%-colSpanLabel%> col-lg-<%-colSpanLabel%>">
+		<div class="col-sm-<%-colSpanLabel%> col-md-<%-colSpanLabel%> col-lg-<%-colSpanLabel%>">
 			<label for="form[<%-id%>]" class="control-label pmdynaform-label">
 				<span class="textlabel"><%= label %></span>
 				<%if(required){%>
@@ -354,7 +354,7 @@
 <script type="text/template" id="tpl-radio">
 	<div id="<%-id%>" class="<%-namespace%>-field-<%-type%> <%if (group === 'form'){%> form-group col-sm-<%-colSpan%> col-md-<%-colSpan%> col-lg-<%-colSpan%> <%}%> <%-namespace%>-<%-mode%>-<%-type%> pmdynaform-field">
 		<% if(group === "form") {%>
-		<div class="col-sm-<%-colSpanLabel%>  col-md-<%-colSpanLabel%> col-lg-<%-colSpanLabel%>">
+		<div class="col-sm-<%-colSpanLabel%> col-md-<%-colSpanLabel%> col-lg-<%-colSpanLabel%>">
 			<label for="form[<%-name%>]" class="control-label pmdynaform-label">
 				<span class="textlabel"><%= label %></span>
 				<%if(required){%>
@@ -417,7 +417,7 @@
 <script type="text/template" id="tpl-dropdown">
 	<div id="<%-id%>" class="<%-namespace%>-field-<%-type%> <%if (group === 'form'){%> form-group col-sm-<%-colSpan%> col-md-<%-colSpan%> col-lg-<%-colSpan%> <%}%> <%-namespace%>-<%-mode%>-<%-type%> pmdynaform-field">
 		<% if(group === "form") {%>
-		<div class="col-sm-<%-colSpanLabel%>  col-md-<%-colSpanLabel%> col-lg-<%-colSpanLabel%>">
+		<div class="col-sm-<%-colSpanLabel%> col-md-<%-colSpanLabel%> col-lg-<%-colSpanLabel%>">
 			<label for="form[<%-id%>]" class="control-label pmdynaform-label">
 				<span class="textlabel"><%=label%></span>
 				<%if(required && enableValidate){%>
@@ -631,7 +631,7 @@
 <script type="text/template" id="tpl-label">
 	<div id="<%-id%>" name="field-<%-name%>" class="<%-namespace%>-field-<%-originalType%> <%if (group === 'form'){%> form-group col-sm-<%-colSpan%> col-md-<%-colSpan%> col-lg-<%-colSpan%> <%}%> <%-namespace%>-<%-mode%>-<%-type%> pmdynaform-field">
 		<% if(group === "form") {%>
-			<div class="col-sm-<%-colSpanLabel%>  col-md-<%-colSpanLabel%> col-lg-<%-colSpanLabel%>">
+			<div class="col-sm-<%-colSpanLabel%> col-md-<%-colSpanLabel%> col-lg-<%-colSpanLabel%>">
 				<label class="control-label pmdynaform-label">
 					<span class="textlabel"><%=label %></span>
 					<%if(required){%>

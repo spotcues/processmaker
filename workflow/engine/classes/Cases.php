@@ -3380,8 +3380,19 @@ class Cases
      * @param string $stepUidObj
      * @param string $triggerType
      * @param string $labelAssignment
+     * @param bool $useGlobal, needs to have the value true if the same case in execution is affected with this trigger
      *
      * @return array
+     *
+     * @see Cases::executeTriggers()
+     * @see Cases::getExecuteTriggerProcess()
+     * @see WsBase::executeTriggerFromDerivate()
+     * @see ScriptTask::execScriptByActivityUid()
+     *
+     * @link https://wiki.processmaker.com/3.2/Triggers#Custom_Trigger
+     * @link https://wiki.processmaker.com/3.2/Triggers#When_action_cases
+     * @link https://wiki.processmaker.com/3.1/Triggers
+     * @link https://wiki.processmaker.com/3.1/Tasks#ScriptTask
     */
     public function executeTriggerFromList(
         array $triggersList,
@@ -3389,17 +3400,23 @@ class Cases
         $stepType,
         $stepUidObj,
         $triggerType,
-        $labelAssignment = ''
+        $labelAssignment = '',
+        $useGlobal = true
     )
     {
         if (count($triggersList) > 0) {
-            global $oPMScript;
+            if ($useGlobal) {
+                /**
+                 * The global $oPMScript is necessary when the trigger can be update the appData related to the case
+                 * in execution
+                 */
+                global $oPMScript;
+            }
 
             $this->addTriggerMessageExecution("<br /><b>" . $labelAssignment . "</b><br />");
             if (!isset($oPMScript)) {
                 $oPMScript = new PMScript();
             }
-            $oPMScript->setFields($fieldsCase);
 
             /*----------------------------------********---------------------------------*/
 
@@ -3407,6 +3424,7 @@ class Cases
             foreach ($triggersList as $trigger) {
                 /*----------------------------------********---------------------------------*/
 
+                $oPMScript->setFields($fieldsCase);
                 $execute = true;
                 //Check if the trigger has conditions for the execution
                 if (!empty($trigger['ST_CONDITION'])) {
@@ -3437,9 +3455,19 @@ class Cases
                         //Other thread execution can be changed the variables
                         $appUid = !empty($fieldsCase['APPLICATION']) ? $fieldsCase['APPLICATION'] : '';
                         if (!empty($appUid)) {
+                            $lastFieldsCase = $this->loadCase($appUid)['APP_DATA'];
                             //Update $fieldsCase with the last appData
-                            $fieldsCase = $this->loadCase($appUid)['APP_DATA'];
+                            $fieldsCase = array_merge($fieldsCase, $lastFieldsCase);
                         }
+
+                        //Update the case with the fields changed in the trigger
+                        if (!empty($fieldsTrigger)) {
+                            $appFieldsTrigger = [];
+                            $appFieldsTrigger['APP_DATA'] = $fieldsTrigger;
+                            //Update the case
+                            $this->updateCase($appUid, $appFieldsTrigger);
+                        }
+
                         //Merge the appData with variables changed
                         $fieldsCase = array_merge($fieldsCase, $fieldsTrigger);
                     } else {
@@ -4188,14 +4216,15 @@ class Cases
      * @param string $appUid
      * @param integer $delIndex
      * @param string $usrUid
+     * @param bool $executeSameCase
      *
-     * @return boolean|string
+     * @see Ajax::cancelCase()
+     * @see cases_Ajax
+     * @see WsBase::cancelCase()
+     *
     */
-    public function cancelCase($appUid, $delIndex = null, $usrUid = null)
+    public function cancelCase($appUid, $delIndex = null, $usrUid = null, $executeSameCase = true)
     {
-        /** Execute a trigger when a case is cancelled */
-        $this->getExecuteTriggerProcess($appUid, 'CANCELED');
-
         $caseFields = $this->loadCase($appUid);
         $appStatusCurrent = $caseFields['APP_STATUS'];
 
@@ -4223,6 +4252,9 @@ class Cases
                 is_null($usrUid) ? '' : $usrUid
             );
             $delay->create($rowDelay);
+
+            /** Execute a trigger when a case is cancelled */
+            $this->getExecuteTriggerProcess($appUid, 'CANCELED', $executeSameCase);
 
             /*----------------------------------********---------------------------------*/
         }
@@ -7051,40 +7083,56 @@ class Cases
         return $response;
     }
 
-    public function getExecuteTriggerProcess($appUid, $action)
+    /**
+     * Execute triggers when committing an action in cases
+     *
+     * @param string $appUid
+     * @param string $action, can be [OPEN, CANCELED, PAUSED, REASSIGNED, DELETED, CREATE, UNPAUSE]
+     * @param bool $executeSameCase
+     *
+     * @return bool
+     *
+     * @see cases_Open.php
+     * @see cancelCase/Cases.php pauseCase/Cases.php reassignCase/Cases.php removeCase/Cases.php unpauseCase/Cases.php on
+     * @link https://wiki.processmaker.com/3.2/Triggers#When_action_cases
+     */
+    public function getExecuteTriggerProcess($appUid, $action, $executeSameCase = true)
     {
-        if ((!isset($appUid) && $appUid == '') || (!isset($action) && $action == '')) {
+        if (empty($appUid) || empty($action)) {
             return false;
         }
 
-        $aFields = $this->loadCase($appUid);
-        $proUid = $aFields['PRO_UID'];
-
         require_once("classes/model/Process.php");
+        $fieldsCase = $this->loadCase($appUid);
+        $proUid = $fieldsCase['PRO_UID'];
+
+        //Set some global system variables
+        $fieldsCase['APP_DATA']['APPLICATION'] = $appUid;
+        $fieldsCase['APP_DATA']['PROCESS'] = $proUid;
+
+        //Get the trigger configured in the process action
         $appProcess = new Process();
-        $arrayWebBotTrigger = $appProcess->getTriggerWebBotProcess($proUid, $action);
+        $triggersList = $appProcess->getTriggerWebBotProcess($proUid, $action);
 
-        if ($arrayWebBotTrigger['TRI_WEBBOT'] != false && $arrayWebBotTrigger['TRI_WEBBOT'] != '') {
-            global $oPMScript;
-            $aFields['APP_DATA']['APPLICATION'] = $appUid;
-            $aFields['APP_DATA']['PROCESS'] = $proUid;
-            $oPMScript = new PMScript();
-            $oPMScript->setDataTrigger($arrayWebBotTrigger);
-            $oPMScript->setFields($aFields['APP_DATA']);
-            $oPMScript->setScript($arrayWebBotTrigger['TRI_WEBBOT']);
-            $oPMScript->setExecutedOn(PMScript::PROCESS_ACTION);
-            $oPMScript->execute();
+        if (!empty($triggersList)){
+            //Execute the trigger defined in the process action
+            $fieldsCase['APP_DATA'] = $this->executeTriggerFromList(
+                $triggersList,
+                $fieldsCase['APP_DATA'],
+                'PROCESS_ACTION',
+                '',
+                '',
+                '',
+                $executeSameCase
+            );
 
-            $aFields['APP_DATA'] = array_merge($aFields['APP_DATA'], $oPMScript->aFields);
-            unset($aFields['APP_STATUS']);
-            unset($aFields['APP_PROC_STATUS']);
-            unset($aFields['APP_PROC_CODE']);
-            unset($aFields['APP_PIN']);
-            $this->updateCase($aFields['APP_UID'], $aFields);
+            //Update the case
+            $this->updateCase($appUid, $fieldsCase);
 
             return true;
+        } else {
+            return false;
         }
-        return false;
     }
 
     /**

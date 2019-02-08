@@ -4204,21 +4204,37 @@ class ProcessMap
         }
     }
 
-    public function downloadFile($sProcessUID, $sMainDirectory, $sCurrentDirectory, $sFile)
+    /**
+     * Stream a file from "mailTemplates" or "public" directory thats belongs to a process
+     *
+     * @param string $processUid
+     * @param string $mainDirectory
+     * @param string $currentDirectory
+     * @param string $file
+     */
+    public function downloadFile($processUid, $mainDirectory, $currentDirectory, $file)
     {
-        switch ($sMainDirectory) {
+        // Validate directory and file requested
+        $filter = new InputFilter();
+        $currentDirectory = $filter->validatePath($currentDirectory);
+        $file = $filter->validatePath($file);
+
+        // Validate the main directory
+        switch ($mainDirectory) {
             case 'mailTemplates':
-                $sDirectory = PATH_DATA_MAILTEMPLATES . $sProcessUID . PATH_SEP . ($sCurrentDirectory != '' ? $sCurrentDirectory . PATH_SEP : '');
+                $sDirectory = PATH_DATA_MAILTEMPLATES . $processUid . PATH_SEP . ($currentDirectory != '' ? $currentDirectory . PATH_SEP : '');
                 break;
             case 'public':
-                $sDirectory = PATH_DATA_PUBLIC . $sProcessUID . PATH_SEP . ($sCurrentDirectory != '' ? $sCurrentDirectory . PATH_SEP : '');
+                $sDirectory = PATH_DATA_PUBLIC . $processUid . PATH_SEP . ($currentDirectory != '' ? $currentDirectory . PATH_SEP : '');
                 break;
             default:
                 die();
                 break;
         }
-        if (file_exists($sDirectory . $sFile)) {
-            G::streamFile($sDirectory . $sFile, true);
+
+        // Stream the file if path exists
+        if (file_exists($sDirectory . $file)) {
+            G::streamFile($sDirectory . $file, true);
         }
     }
 

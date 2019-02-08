@@ -281,14 +281,21 @@ class PMScript
                     self::AFTER_EXTERNAL_STEP : self::UNDEFINED_ORIGIN;
                 break;
             case 'ASSIGN_TASK':
+                $stepUidObj = (int)$stepUidObj;
                 if ($stepUidObj === -1) {
                     $executedOn = $triggerType === 'BEFORE' ? self::BEFORE_ASSIGNMENT : self::UNDEFINED_ORIGIN;
                 } elseif ($stepUidObj === -2) {
-                    $executedOn = $triggerType === 'BEFORE' ? self::BEFORE_ROUTING : $triggerType === 'AFTER' ?
-                        self::AFTER_ROUTING : self::UNDEFINED_ORIGIN;
+                    $executedOn = $triggerType === 'BEFORE' ? self::BEFORE_ROUTING : ($triggerType === 'AFTER' ?
+                        self::AFTER_ROUTING : self::UNDEFINED_ORIGIN);
                 } else {
                     $executedOn = self::UNDEFINED_ORIGIN;
                 }
+                break;
+            case 'PROCESS_ACTION':
+                $executedOn = self::PROCESS_ACTION;
+                break;
+            case 'SCRIPT_TASK':
+                $executedOn = self::SCRIPT_TASK;
                 break;
             default:
                 $executedOn = self::UNDEFINED_ORIGIN;

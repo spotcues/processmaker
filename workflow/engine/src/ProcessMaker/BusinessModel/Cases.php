@@ -61,6 +61,8 @@ class Cases
 {
     private $formatFieldNameInUppercase = true;
     private $messageResponse = [];
+    private $solr = null;
+    private $solrEnv = null;
     const MB_IN_KB = 1024;
     const UNIT_MB = 'MB';
 
@@ -237,26 +239,11 @@ class Cases
     public function getListCounters($userUid, array $arrayType)
     {
         try {
-            $solrEnabled = false;
-            $solrConf = System::solrEnv();
-
-            if ($solrConf !== false) {
-                $ApplicationSolrIndex = new AppSolr(
-                    $solrConf['solr_enabled'],
-                    $solrConf['solr_host'],
-                    $solrConf['solr_instance']
-                );
-
-                if ($ApplicationSolrIndex->isSolrEnabled() && $solrConf['solr_enabled'] == true) {
-                    $solrEnabled = true;
-                }
-            }
-
             $appCacheView = new AppCacheView();
 
-            if ($solrEnabled) {
+            if ($this->isSolrEnabled()) {
                 $arrayListCounter = array_merge(
-                    $ApplicationSolrIndex->getCasesCount($userUid),
+                    $this->solr->getCasesCount($userUid),
                     $appCacheView->getAllCounters(['completed', 'cancelled'], $userUid)
                 );
             } else {
@@ -423,6 +410,28 @@ class Cases
     }
 
     /**
+     * Verify if Solr is Enabled
+     *
+     * @return bool
+     */
+    private function isSolrEnabled()
+    {
+        $solrEnabled = false;
+        $this->solrEnv = !empty($this->solrEnv) ? $this->solrEnv : System::solrEnv();
+        if ($this->solrEnv !== false) {
+            $this->solr = !empty($this->solr) ? $this->solr : new AppSolr(
+                $this->solrEnv['solr_enabled'],
+                $this->solrEnv['solr_host'],
+                $this->solrEnv['solr_instance']
+            );
+            if ($this->solr->isSolrEnabled() && $this->solrEnv["solr_enabled"] == true) {
+                $solrEnabled = true;
+            }
+        }
+        return $solrEnabled;
+    }
+
+    /**
      * Get data of a Case
      *
      * @param string $applicationUid Unique id of Case
@@ -434,21 +443,11 @@ class Cases
     public function getCaseInfo($applicationUid, $userUid)
     {
         try {
-            $solrEnabled = 0;
-            if (($solrEnv = System::solrEnv()) !== false) {
-                $appSolr = new AppSolr(
-                    $solrEnv["solr_enabled"],
-                    $solrEnv["solr_host"],
-                    $solrEnv["solr_instance"]
-                );
-                if ($appSolr->isSolrEnabled() && $solrEnv["solr_enabled"] == true) {
-                    //Check if there are missing records to reindex and reindex them
-                    $appSolr->synchronizePendingApplications();
-                    $solrEnabled = 1;
-                }
-            }
-            if ($solrEnabled == 1) {
+            if ($this->isSolrEnabled()) {
                 try {
+                    //Check if there are missing records to reindex and reindex them
+                    $this->solr->synchronizePendingApplications();
+
                     $arrayData = array();
                     $delegationIndexes = array();
                     $columsToInclude = array("APP_UID");
@@ -464,7 +463,7 @@ class Cases
                     $columsToIncludeFinal = array_merge($columsToInclude, $delegationIndexes);
                     $solrRequestData = EntitySolrRequestData::createForRequestPagination(
                         array(
-                            "workspace" => $solrEnv["solr_instance"],
+                            "workspace" => $this->solrEnv["solr_instance"],
                             "startAfter" => 0,
                             "pageSize" => 1000,
                             "searchText" => $solrSearchText,
@@ -476,7 +475,7 @@ class Cases
                         )
                     );
                     //Use search index to return list of cases
-                    $searchIndex = new BpmnEngineServicesSearchIndex($appSolr->isSolrEnabled(), $solrEnv["solr_host"]);
+                    $searchIndex = new BpmnEngineServicesSearchIndex($this->solr->isSolrEnabled(), $this->solrEnv["solr_host"]);
                     //Execute query
                     $solrQueryResult = $searchIndex->getDataTablePaginatedList($solrRequestData);
                     //Get the missing data from database
@@ -484,7 +483,7 @@ class Cases
                     foreach ($solrQueryResult->aaData as $i => $data) {
                         $arrayApplicationUid[] = $data["APP_UID"];
                     }
-                    $aaappsDBData = $appSolr->getListApplicationDelegationData($arrayApplicationUid);
+                    $aaappsDBData = $this->solr->getListApplicationDelegationData($arrayApplicationUid);
                     foreach ($solrQueryResult->aaData as $i => $data) {
                         //Initialize array
                         $delIndexes = array(); //Store all the delegation indexes
@@ -513,7 +512,7 @@ class Cases
                             $aRow["APP_UID"] = $data["APP_UID"];
                             //Get delegation data from DB
                             //Filter data from db
-                            $indexes = $appSolr->aaSearchRecords($aaappsDBData, array(
+                            $indexes = $this->solr->aaSearchRecords($aaappsDBData, array(
                                 "APP_UID" => $applicationUid,
                                 "DEL_INDEX" => $delIndex
                             ));
@@ -657,6 +656,31 @@ class Cases
                 //Return
                 return $oResponse;
             }
+        } catch (Exception $e) {
+            throw $e;
+        }
+    }
+
+    /**
+     * Get data of a sub-process case
+     *
+     * @param string $applicationUid Unique Case Id
+     * @param string $userUid Unique User Id
+     * 
+     * @return array Return an array with information of Cases
+     * @throws Exception
+     */
+    public function getCaseInfoSubProcess($applicationUid, $userUid)
+    {
+
+        try {
+            $response = [];
+            $subApplication = new SubApplication();
+            $data = $subApplication->loadByAppUidParent($applicationUid);
+            foreach ($data as $item) {
+                $response[] = $this->getCaseInfo($item['APP_UID'], $userUid);
+            }
+            return $response;
         } catch (Exception $e) {
             throw $e;
         }
