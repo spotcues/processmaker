@@ -2683,30 +2683,54 @@ class Bootstrap
      * Get the default information from the context
      *
      * @return array
+     *      
+     * @see AdditionalTables->populateReportTable
+     * @see AppAssignSelfServiceValueGroup->createRow
+     * @see Bootstrap->registerMonologPhpUploadExecution()
+     * @see Cases->loadDataSendEmail()
+     * @see Cases->removeCase()
+     * @see Cases->reportTableDeleteRecord()
+     * @see Derivation->derivate
+     * @see G->logTriggerExecution()
+     * @see LdapAdvanced->VerifyLogin
+     * @see ldapadvancedClassCron->executeCron
+     * @see PmDynaform->__construct
+     * @see pmTablesProxy->genDataReport
+     * @see Processes->createFiles
+     * @see ProcessMaker\AuditLog\AuditLog->register
+     * @see ProcessMaker\Util\ParseSoapVariableName->buildVariableName
+     * @see RBAC->checkAutomaticRegister()
+     * @see workflow/engine/classes/class.pmFunctions.php::executeQuery
+
+     * @link https://wiki.processmaker.com/3.3/Actions_by_Email
+     * @link https://wiki.processmaker.com/3.2/ProcessMaker_Functions
+     * @link https://wiki.processmaker.com/3.1/Report_Tables
+     * @link https://wiki.processmaker.com/3.2/Cases/Running_Cases
+     * @link https://wiki.processmaker.com/3.3/login
+     * @link https://wiki.processmaker.com/3.2/Executing_cron.php
+     * @link https://wiki.processmaker.com/3.2/HTML5_Responsive_DynaForm_Designer
+     * @link https://wiki.processmaker.com/3.2/Audit_Log
+     * @link https://wiki.processmaker.com/3.0/ProcessMaker_WSDL_Web_Services
      */
     public static function getDefaultContextLog()
     {
-
-        global $RBAC;
         $info = [
             'ip' => G::getIpAddress(),
             'workspace' => !empty(config('system.workspace')) ? config('system.workspace') : 'Undefined Workspace',
-            'timeZone' => DateTime::convertUtcToTimeZone(date('Y-m-d H:m:s'))
+            'timeZone' => DateTime::convertUtcToTimeZone(date('Y-m-d H:m:s')),
+            'usrUid' => G::LoadTranslation('UID_UNDEFINED_USER')
         ];
 
-        if ($RBAC !== null) {
-            $userInfo = [
-                'usrUid' => $RBAC->aUserInfo['USER_INFO']['USR_UID']
-            ];
-            $info = array_merge($info, $userInfo);
+        global $RBAC;
+        if (!empty($RBAC) && !empty($RBAC->aUserInfo['USER_INFO']) && !empty($RBAC->aUserInfo['USER_INFO']['USR_UID'])) {
+            $info['usrUid'] = $RBAC->aUserInfo['USER_INFO']['USR_UID'];
+            return $info;
         }
-        //Some endpoints can defined the USER_LOGGED
-        if (empty($info['usrUid'])) {
-            $user = !empty($_SESSION['USER_LOGGED']) ? $_SESSION['USER_LOGGED'] : G::LoadTranslation('UID_UNDEFINED_USER');
-            $userInfo = [
-                'usrUid' => $user
-            ];
-            $info = array_merge($info, $userInfo);
+
+        //if default session exists
+        if (!empty($_SESSION['USER_LOGGED'])) {
+            $info['usrUid'] = $_SESSION['USER_LOGGED'];
+            return $info;
         }
 
         return $info;

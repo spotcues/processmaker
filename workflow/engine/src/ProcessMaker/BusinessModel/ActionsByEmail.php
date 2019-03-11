@@ -265,12 +265,15 @@ class ActionsByEmail
     }
 
     /**
-     * Get the information for the log
-     *
+     * Get the information for the log.
+     * 
      * @param array $arrayData
-     *
      * @return array
-    */
+     * 
+     * @see ProcessMaker\Services\Api\ActionsByEmail->loadActionByEmail()
+     * @see workflow/engine/methods/actionsByEmail/actionsByEmailAjax.php
+     * @link https://wiki.processmaker.com/3.3/Actions_by_Email
+     */
     public function loadActionByEmail(array $arrayData)
     {
         //Get the total
@@ -331,10 +334,15 @@ class ActionsByEmail
             //Get the previous user
             $appDelegation = new AppDelegation();
             $usrUid = $appDelegation->getUserAssignedInThread($data[$index]['APP_UID'], $data[$index]['DEL_PREVIOUS']);
-            $users = new ClassUsers();
-            $dataRes = $users->load($usrUid);
-            if (!empty($dataRes)) {
-                $data[$index]['USER'] = $dataRes['USR_FIRSTNAME'] . ' ' . $dataRes['USR_LASTNAME'];
+            //This value can be empty when the previous task is: 'Script Task', 'Timer Event' or other without user.
+            if (!empty($usrUid)) {
+                $users = new ClassUsers();
+                $dataRes = $users->load($usrUid);
+                if (!empty($dataRes)) {
+                    $data[$index]['USER'] = $dataRes['USR_FIRSTNAME'] . ' ' . $dataRes['USR_LASTNAME'];
+                } else {
+                    $data[$index]['USER'] = '';
+                }
             } else {
                 $data[$index]['USER'] = '';
             }
@@ -435,10 +443,14 @@ class ActionsByEmail
     }
 
     /**
-     * Get the decision from Actions By Email and check if is Bpmn Process
+     * Get the decision from Actions By Email and check if is Bpmn Process.
      * @param array $arrayData
      *
      * @return string $message
+     * 
+     * @see workflow/engine/methods/actionsByEmail/actionsByEmailAjax.php
+     * @see ProcessMaker\Services\Api\ActionsByEmail->viewForm()
+     * @link https://wiki.processmaker.com/3.3/Actions_by_Email#Actions_by_Email_Log
      */
     public function viewForm(array $arrayData)
     {
@@ -453,6 +465,7 @@ class ActionsByEmail
         $criteria->addSelectColumn(AbeConfigurationPeer::TAS_UID);
         $criteria->addSelectColumn(AbeConfigurationPeer::DYN_UID);
         $criteria->addSelectColumn(AbeConfigurationPeer::ABE_ACTION_FIELD);
+        $criteria->addSelectColumn(AbeConfigurationPeer::ABE_TYPE);
 
         $criteria->addSelectColumn(AbeRequestsPeer::ABE_REQ_UID);
         $criteria->addSelectColumn(AbeRequestsPeer::APP_UID);
@@ -468,17 +481,21 @@ class ActionsByEmail
         $resultRes->setFetchmode(ResultSet::FETCHMODE_ASSOC);
 
         $resultRes->next();
-        $dataRes = Array();
+        $dataRes = [];
         $message = G::LoadTranslation('ID_USER_NOT_RESPONDED_REQUEST');
         if ($dataRes = $resultRes->getRow()) {
             $_SESSION['CURRENT_DYN_UID'] = trim($dataRes['DYN_UID']);
 
             $process = new \Process();
             $isBpmn = $process->isBpmnProcess($dataRes['PRO_UID']);
-            if($isBpmn) {
-                $message = $this->viewFormBpmn($dataRes);
+            if ($isBpmn) {
+                if ($dataRes['ABE_TYPE'] === 'FIELD') {
+                    $message = $this->viewFormBpmn($dataRes);
+                } else {
+                    $message = G::LoadTranslation('ID_CASE_RESPONSE_NOT_AVAILABLE');
+                }
             } else {
-                $message = $this->viewFormClassic($dataRes);
+                $message = $this->viewFormClassic($dataRes); //to do, review this function
             }
         }
 
@@ -538,11 +555,13 @@ class ActionsByEmail
     }
 
     /**
-     * Get the decision from Actions By Email by BPMN dynaform
-     *
+     * Get the decision from Actions By Email by BPMN dynaform.
+     * 
      * @param array $dataRes
-     *
-     * @return string $message
+     * @return string
+     * 
+     * @see ActionsByEmail->viewForm()
+     * @link https://wiki.processmaker.com/3.3/Actions_by_Email
      */
     public function viewFormBpmn(array $dataRes)
     {
@@ -599,9 +618,15 @@ class ActionsByEmail
                     case 'dropdown':
                     case 'radiogroup':
                     case 'radio':
-                        $message = $field->label . ': ';
-                        $message .= $field->options[$value];
+                        if (!empty($field->options[$value])) {
+                            $message = $field->label . ': ';
+                            $message .= $field->options[$value];
+                        }
                         break;
+                    /**
+                     * 'yesno' is deprecated in version ProcessMaker 3.x.x.
+                     * @deprecated
+                     */
                     case 'yesno':
                         $message = $field->label . ': ';
                         $message .= $value == 1 ? G::LoadTranslation('ID_YES') : G::LoadTranslation('ID_NO');
@@ -609,13 +634,18 @@ class ActionsByEmail
                     case 'checkgroup':
                     case 'checkbox':
                         $message = $field->label . ': ';
-                        $message .= $value == 'On' ? G::LoadTranslation('ID_CHECK') : G::LoadTranslation('ID_UNCHECK');
+                        if (!empty($value)) {
+                            /**
+                             * Value 'On' is deprecated in version ProcessMaker 3.x.x. 
+                             * now return '1'.
+                             * @deprecated
+                             */
+                            $message .= ($value == 'On' || $value == '1') ? G::LoadTranslation('ID_CHECK') : G::LoadTranslation('ID_UNCHECK');
+                        }
                         break;
                 }
             }
         }
-
-        //Return
         return $message;
     }
 

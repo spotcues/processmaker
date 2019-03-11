@@ -169,9 +169,14 @@ class AppNotes extends BaseAppNotes
                 $configuration['MESS_ENGINE'] = '';
             }
 
-            $users = new Users();
-            $userInfo = $users->load($usrUid);
-            $authorName = ((($userInfo['USR_FIRSTNAME'] != '') || ($userInfo['USR_LASTNAME'] != '')) ? $userInfo['USR_FIRSTNAME'] . ' ' . $userInfo['USR_LASTNAME'] . ' ' : '') . '<' . $userInfo['USR_EMAIL'] . '>';
+            //This value can be empty when the previous task is: 'Script Task', 'Timer Event' or other without user.
+            if (!empty($usrUid)) {
+                $users = new Users();
+                $userInfo = $users->load($usrUid);
+                $authorName = ((($userInfo['USR_FIRSTNAME'] != '') || ($userInfo['USR_LASTNAME'] != '')) ? $userInfo['USR_FIRSTNAME'] . ' ' . $userInfo['USR_LASTNAME'] . ' ' : '') . '<' . $userInfo['USR_EMAIL'] . '>';
+            } else {
+                $authorName = G::LoadTranslation('UID_UNDEFINED_USER');
+            }
 
             $cases = new Cases();
             $fieldCase = $cases->loadCase($appUid, $delIndex);

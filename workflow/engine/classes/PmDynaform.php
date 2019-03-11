@@ -1359,9 +1359,20 @@ class PmDynaform
         exit();
     }
 
+    /**
+     * Print PmDynaform for Action by Email.
+     * 
+     * @param array $record
+     * @return string
+     * 
+     * @see ActionsByEmailCoreClass->sendActionsByEmail()
+     * @link https://wiki.processmaker.com/3.3/Actions_by_Email
+     */
     public function printPmDynaformAbe($record)
     {
-        ob_clean();
+        if (ob_get_length() > 0) {
+            ob_clean();
+        }
         $this->record = $record;
         $json = G::json_decode($this->record["DYN_CONTENT"]);
         $this->jsonr($json);

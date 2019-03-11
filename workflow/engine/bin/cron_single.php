@@ -1,5 +1,16 @@
 <?php
 
+/**
+ * @see workflow/engine/bin/cron.php
+ * @see workflow/engine/bin/messageeventcron.php
+ * @see workflow/engine/bin/timereventcron.php
+ * @see workflow/engine/bin/ldapcron.php
+ * @see workflow/engine/bin/sendnotificationscron.php
+ * @see workflow/engine/methods/setup/cron.php
+ * 
+ * @link https://wiki.processmaker.com/3.2/Executing_cron.php
+ */
+
 use Illuminate\Foundation\Http\Kernel;
 
 require_once __DIR__ . '/../../../gulliver/system/class.g.php';
@@ -190,6 +201,22 @@ try {
 
         if (!defined('DB_ADAPTER')) {
             define('DB_ADAPTER', $DB_ADAPTER);
+        }
+        if (!defined('DB_HOST')) {
+            define('DB_HOST', $DB_HOST);
+        }
+        if (!defined('DB_NAME')) {
+            define('DB_NAME', $DB_NAME);
+        }
+        if (!defined('DB_USER')) {
+            define('DB_USER', $DB_USER);
+        }
+        if (!defined('DB_PASS')) {
+            define('DB_PASS', $DB_PASS);
+        }
+        if (!defined('SYS_SKIN')) {
+            $conf = new Configurations();
+            define('SYS_SKIN', $conf->getConfiguration('SKIN_CRON', ''));
         }
 
         //Set Time Zone

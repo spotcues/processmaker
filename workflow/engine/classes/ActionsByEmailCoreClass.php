@@ -23,9 +23,16 @@ class ActionsByEmailCoreClass extends PMPlugin
     }
 
     /**
-     * @param $data
-     * @param $dataAbe
+     * Send Actions By Email.
+     * 
+     * @global object $RBAC
+     * @param object $data
+     * @param array $dataAbe
+     * @return type
      * @throws Exception
+     * 
+     * @see AppDelegation->createAppDelegation()
+     * @link https://wiki.processmaker.com/3.3/Actions_by_Email
      */
     public function sendActionsByEmail($data, $dataAbe)
     {
@@ -246,14 +253,22 @@ class ActionsByEmailCoreClass extends PMPlugin
 
                             $user = new Users();
 
+                            $emailFrom = '';
                             if (!$configuration['ABE_MAILSERVER_OR_MAILCURRENT'] && $configuration['ABE_TYPE'] !== '') {
                                 if ($data->PREVIOUS_USR_UID !== '') {
                                     $userDetails = $user->loadDetails($data->PREVIOUS_USR_UID);
                                     $emailFrom = ($userDetails["USR_FULLNAME"] . ' <' . $userDetails["USR_EMAIL"] . '>');
                                 } else {
                                     global $RBAC;
-                                    $currentUser = $RBAC->aUserInfo['USER_INFO'];
-                                    $emailFrom = ($currentUser["USR_FIRSTNAME"] . ' ' . $currentUser["USR_LASTNAME"] . ' <' . $currentUser["USR_EMAIL"] . '>');
+                                    if ($RBAC != null && is_array($RBAC->aUserInfo['USER_INFO'])) {
+                                        $currentUser = $RBAC->aUserInfo['USER_INFO'];
+                                        $emailFrom = ($currentUser["USR_FIRSTNAME"] . ' ' . $currentUser["USR_LASTNAME"] . ' <' . $currentUser["USR_EMAIL"] . '>');
+                                    } else {
+                                        $usersPeer = UsersPeer::retrieveByPK($data->USR_UID);
+                                        if (!empty($usersPeer)) {
+                                            $emailFrom = ($usersPeer->getUsrFirstname() . ' ' . $usersPeer->getUsrLastname() . ' <' . $usersPeer->getUsrEmail() . '>');
+                                        }
+                                    }
                                 }
                             } else {
                                 if (isset($emailSetup["MESS_FROM_NAME"]) && isset($emailSetup["MESS_FROM_MAIL"])) {

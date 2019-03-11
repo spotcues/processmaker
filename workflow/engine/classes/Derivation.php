@@ -817,7 +817,8 @@ class Derivation
         return $arrayDerivationResult;
     }
 
-    /** Route the case
+    /**
+     * Route the case
      * If need to create another thread we can execute the doDerivate
      *
      * @param array $currentDelegation
@@ -825,7 +826,11 @@ class Derivation
      * @param bool $removeList
      *
      * @return void
-     * @throws /Exception
+     * @throws Exception
+     *
+     * @see beforeDerivate()
+     * @see doDerivation()
+     * @see verifyIsCaseChild()
      */
     function derivate(array $currentDelegation, array $nextDelegations, $removeList = true)
     {
@@ -1021,6 +1026,9 @@ class Derivation
                                  break;
                             default:
                                 $iNewDelIndex = $this->doDerivation($currentDelegation, $nextDel, $appFields, $aSP);
+                                //Load Case Data again because the information could be change in method "doDerivation"
+                                $verifyApplication = $this->case->loadCase($currentDelegation['APP_UID']);
+                                $appFields['APP_DATA'] = $verifyApplication['APP_DATA'];
                                 //When the users route the case in the same time
                                 if($iNewDelIndex !== 0){
                                     $arrayDerivationResult[] = [
