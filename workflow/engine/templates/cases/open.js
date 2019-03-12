@@ -562,7 +562,8 @@ Ext.onReady(function(){
         return key === false ? result : null;
     }
 
-    if (this.showCustomForm && this.showCustomForm === true && getParameterURL('action') === 'unassigned') {
+    var urlAction = getParameterURL('action');
+    if (this.showCustomForm && this.showCustomForm === true && (urlAction === 'unassigned' || this.canClaimCase === true)) {
         navPanel.items[navPanel.items.length] = navPanelBottom;
     }
 

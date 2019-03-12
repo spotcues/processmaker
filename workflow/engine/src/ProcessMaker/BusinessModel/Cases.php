@@ -2128,6 +2128,11 @@ class Cases
      *
      * @param string $applicationUid Unique id of Case
      *
+     * @see workflow/engine/src/ProcessMaker/Services/Api/Cases.php
+     * @see workflow/engine/src/ProcessMaker/Services/Api/Light.php
+     *
+     * @link https://wiki.processmaker.com/3.3/REST_API_Cases/Cases#Get_Case.27s_Tasks:_GET_.2Fcases.2F.7Bapp_uid.7D.2Ftasks
+     *
      * @return array Return an array with all Tasks of Case
      * @throws Exception
      */
@@ -2151,33 +2156,20 @@ class Cases
 
             $taskUid = "";
 
-            //Get data
-            //SQL
-            $delimiter = DBAdapter::getStringDelimiter();
+            //Obtain the list of tasks and their respectives users assigned to each one for an specific case
+            $case = new ClassesCases();
+            $rsTasks = $case->getTasksInfoForACase($applicationUid, $processUid);
 
-            $criteria = new Criteria("workflow");
+            while ($rsTasks->next()) {
+                $row = $rsTasks->getRow();
 
-            $criteria->addSelectColumn(TaskPeer::TAS_UID);
-            $criteria->addSelectColumn(TaskPeer::TAS_TITLE);
-            $criteria->addSelectColumn(TaskPeer::TAS_DESCRIPTION);
-            $criteria->addSelectColumn(TaskPeer::TAS_START);
-            $criteria->addSelectColumn(TaskPeer::TAS_TYPE);
-            $criteria->addSelectColumn(TaskPeer::TAS_DERIVATION);
-            $criteria->addSelectColumn(TaskPeer::TAS_ASSIGN_TYPE);
-            $criteria->addSelectColumn(UsersPeer::USR_UID);
-            $criteria->addSelectColumn(UsersPeer::USR_USERNAME);
-            $criteria->addSelectColumn(UsersPeer::USR_FIRSTNAME);
-            $criteria->addSelectColumn(UsersPeer::USR_LASTNAME);
-
-            $criteria->addJoin(TaskPeer::TAS_LAST_ASSIGNED, UsersPeer::USR_UID, Criteria::LEFT_JOIN);
-
-            $criteria->add(TaskPeer::PRO_UID, $processUid, Criteria::EQUAL);
-
-            $rsCriteria = TaskPeer::doSelectRS($criteria);
-            $rsCriteria->setFetchmode(ResultSet::FETCHMODE_ASSOC);
-
-            while ($rsCriteria->next()) {
-                $row = $rsCriteria->getRow();
+                //If the task is a multiple task
+                if ($row["TAS_ASSIGN_TYPE"] == 'MULTIPLE_INSTANCE' || $row["TAS_ASSIGN_TYPE"] == 'MULTIPLE_INSTANCE_VALUE_BASED') {
+                    $row["USR_UID"] = "";
+                    $row["USR_USERNAME"] = "";
+                    $row["USR_FIRSTNAME"] = "";
+                    $row["USR_LASTNAME"] = "";
+                }
 
                 //Task
                 if ($row["TAS_TYPE"] == "NORMAL") {
@@ -2189,17 +2181,9 @@ class Cases
                         $row["TAS_TITLE"] = $task->getTasTitle();
                     }
                 } else {
-                    $criteria2 = new Criteria("workflow");
 
-                    $criteria2->addSelectColumn(SubProcessPeer::PRO_UID);
-                    $criteria2->addSelectColumn(TaskPeer::TAS_TITLE);
-                    $criteria2->addSelectColumn(TaskPeer::TAS_DESCRIPTION);
-                    $criteria2->addJoin(SubProcessPeer::TAS_PARENT, TaskPeer::TAS_UID, Criteria::LEFT_JOIN);
-                    $criteria2->add(SubProcessPeer::PRO_PARENT, $processUid);
-                    $criteria2->add(SubProcessPeer::TAS_PARENT, $row["TAS_UID"]);
-
-                    $rsCriteria2 = SubProcessPeer::doSelectRS($criteria2);
-                    $rsCriteria2->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+                    //Get the task information when the task type is different from normal
+                    $rsCriteria2 = $case->getTaskInfoForSubProcess($processUid, $row["TAS_UID"]);
 
                     $rsCriteria2->next();
 
@@ -2215,18 +2199,8 @@ class Cases
                 $routeType = "";
                 $arrayRoute = array();
 
-                $criteria2 = new Criteria("workflow");
-
-                $criteria2->addAsColumn("ROU_NUMBER", RoutePeer::ROU_CASE);
-                $criteria2->addSelectColumn(RoutePeer::ROU_TYPE);
-                $criteria2->addSelectColumn(RoutePeer::ROU_CONDITION);
-                $criteria2->addAsColumn("TAS_UID", RoutePeer::ROU_NEXT_TASK);
-                $criteria2->add(RoutePeer::PRO_UID, $processUid, Criteria::EQUAL);
-                $criteria2->add(RoutePeer::TAS_UID, $row["TAS_UID"], Criteria::EQUAL);
-                $criteria2->addAscendingOrderByColumn("ROU_NUMBER");
-
-                $rsCriteria2 = RoutePeer::doSelectRS($criteria2);
-                $rsCriteria2->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+                //Get the routes of a task
+                $rsCriteria2 = $case->getTaskRoutes($processUid, $row["TAS_UID"]);
 
                 while ($rsCriteria2->next()) {
                     $row2 = $rsCriteria2->getRow();
@@ -2243,25 +2217,7 @@ class Cases
                 //Delegations
                 $arrayAppDelegation = array();
 
-                $criteria2 = new Criteria("workflow");
-
-                $criteria2->addSelectColumn(AppDelegationPeer::DEL_INDEX);
-                $criteria2->addSelectColumn(AppDelegationPeer::DEL_INIT_DATE);
-                $criteria2->addSelectColumn(AppDelegationPeer::DEL_TASK_DUE_DATE);
-                $criteria2->addSelectColumn(AppDelegationPeer::DEL_FINISH_DATE);
-                $criteria2->addSelectColumn(UsersPeer::USR_UID);
-                $criteria2->addSelectColumn(UsersPeer::USR_USERNAME);
-                $criteria2->addSelectColumn(UsersPeer::USR_FIRSTNAME);
-                $criteria2->addSelectColumn(UsersPeer::USR_LASTNAME);
-
-                $criteria2->addJoin(AppDelegationPeer::USR_UID, UsersPeer::USR_UID, Criteria::LEFT_JOIN);
-
-                $criteria2->add(AppDelegationPeer::APP_UID, $applicationUid, Criteria::EQUAL);
-                $criteria2->add(AppDelegationPeer::TAS_UID, $row["TAS_UID"], Criteria::EQUAL);
-                $criteria2->addAscendingOrderByColumn(AppDelegationPeer::DEL_INDEX);
-
-                $rsCriteria2 = AppDelegationPeer::doSelectRS($criteria2);
-                $rsCriteria2->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+                $rsCriteria2 = $case->getCaseDelegations($applicationUid, $row["TAS_UID"]);
 
                 while ($rsCriteria2->next()) {
                     $row2 = $rsCriteria2->getRow();
@@ -2292,8 +2248,10 @@ class Cases
 
                     $appDelegationDuration = G::LoadTranslation("ID_NOT_FINISHED");
 
-                    if (!empty($row2["DEL_FINISH_DATE"]) && !empty($row2["DEL_INIT_DATE"])) {
-                        $t = strtotime($row2["DEL_FINISH_DATE"]) - strtotime($row2["DEL_INIT_DATE"]);
+                    $date = empty($row2["DEL_INIT_DATE"]) ? $row2["DEL_DELEGATE_DATE"] : $row2["DEL_INIT_DATE"];
+
+                    if (!empty($row2["DEL_FINISH_DATE"]) && !empty($date)) {
+                        $t = strtotime($row2["DEL_FINISH_DATE"]) - strtotime($date);
 
                         $h = $t * (1 / 60) * (1 / 60);
                         $m = ($h - (int)($h)) * (60 / 1);
@@ -2314,40 +2272,22 @@ class Cases
                         $this->getFieldNameByFormatFieldName("DEL_FINISH_DATE") => $arrayAppDelegationDate["DEL_FINISH_DATE"]["dateFormated"],
                         $this->getFieldNameByFormatFieldName("DEL_DURATION") => $appDelegationDuration,
                         $this->getFieldNameByFormatFieldName("USR_UID") => $row2["USR_UID"],
-                        $this->getFieldNameByFormatFieldName("USR_USERNAME") => $row2["USR_USERNAME"] . "",
-                        $this->getFieldNameByFormatFieldName("USR_FIRSTNAME") => $row2["USR_FIRSTNAME"] . "",
-                        $this->getFieldNameByFormatFieldName("USR_LASTNAME") => $row2["USR_LASTNAME"] . ""
+                        $this->getFieldNameByFormatFieldName("USR_USERNAME") => $row2["USR_USERNAME"],
+                        $this->getFieldNameByFormatFieldName("USR_FIRSTNAME") => $row2["USR_FIRSTNAME"],
+                        $this->getFieldNameByFormatFieldName("USR_LASTNAME") => $row2["USR_LASTNAME"]
                     );
                 }
 
                 //Status
                 $status = "";
 
-                //$criteria2
-                $criteria2 = new Criteria("workflow");
-
-                $criteria2->addAsColumn("CANT", "COUNT(" . AppDelegationPeer::APP_UID . ")");
-                $criteria2->addAsColumn("FINISH", "MIN(" . AppDelegationPeer::DEL_FINISH_DATE . ")");
-                $criteria2->add(AppDelegationPeer::APP_UID, $applicationUid, Criteria::EQUAL);
-                $criteria2->add(AppDelegationPeer::TAS_UID, $row["TAS_UID"], Criteria::EQUAL);
-
-                $rsCriteria2 = AppDelegationPeer::doSelectRS($criteria2);
-                $rsCriteria2->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+                $rsCriteria2 = $case->getTotalAndMinDateForACase($applicationUid, $row["TAS_UID"]);
 
                 $rsCriteria2->next();
 
                 $row2 = $rsCriteria2->getRow();
 
-                //$criteria3
-                $criteria3 = new Criteria("workflow");
-
-                $criteria3->addSelectColumn(AppDelegationPeer::DEL_FINISH_DATE);
-                $criteria3->add(AppDelegationPeer::APP_UID, $applicationUid, Criteria::EQUAL);
-                $criteria3->add(AppDelegationPeer::TAS_UID, $row["TAS_UID"], Criteria::EQUAL);
-                $criteria3->add(AppDelegationPeer::DEL_FINISH_DATE, null, Criteria::ISNULL);
-
-                $rsCriteria3 = AppDelegationPeer::doSelectRS($criteria3);
-                $rsCriteria3->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+                $rsCriteria3 = $case->getDelegationFinishDate($applicationUid, $row["TAS_UID"]);
 
                 $rsCriteria3->next();
 

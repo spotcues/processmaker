@@ -8,6 +8,7 @@ use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Cache;
 use ProcessMaker\Core\System;
 use ProcessMaker\Services\OAuth2\Server;
+use ProcessMaker\Util\PhpShorthandByte;
 use Symfony\Component\HttpFoundation\File\File;
 
 class ValidationUploadedFiles
@@ -169,6 +170,8 @@ class ValidationUploadedFiles
      * File upload validation.
      * 
      * @return $this
+     * 
+     * @see workflow/public_html/sysGeneric.php
      */
     public function runRulesToAllUploadedFiles()
     {
@@ -177,6 +180,12 @@ class ValidationUploadedFiles
             return;
         }
         $this->fails = [];
+
+        $validator = $this->runRulesForFileEmpty();
+        if ($validator->fails()) {
+            $this->fails[] = $validator;
+        }
+
         foreach ($files as $file) {
             $data = (object) $file;
             if (!is_array($data->name) || !is_array($data->tmp_name)) {
@@ -207,7 +216,68 @@ class ValidationUploadedFiles
                 }
             }
         }
+
         return $this;
+    }
+
+    /**
+     * Run rules if files is empty.
+     * 
+     * @see ProcessMaker\Validation\ValidationUploadedFiles->runRulesToAllUploadedFiles()
+     * @see Luracast\Restler\Format\UploadFormat->decode()
+     */
+    public function runRulesForFileEmpty()
+    {
+        $validator = new Validator();
+
+        //rule: validate $_SERVER['CONTENT_LENGTH']
+        $rule = $validator->addRule();
+        $rule->validate(null, function($file) use ($rule) {
+                    //according to the acceptance criteria the information is always shown in MBytes
+                    $phpShorthandByte = new PhpShorthandByte();
+                    $postMaxSize = ini_get("post_max_size");
+                    $postMaxSizeBytes = $phpShorthandByte->valueToBytes($postMaxSize);
+                    $uploadMaxFileSize = ini_get("upload_max_filesize");
+                    $uploadMaxFileSizeBytes = $phpShorthandByte->valueToBytes($uploadMaxFileSize);
+
+                    if ($postMaxSizeBytes < $uploadMaxFileSizeBytes) {
+                        $uploadMaxFileSize = $postMaxSize;
+                        $uploadMaxFileSizeBytes = $postMaxSizeBytes;
+                    }
+                    //according to the acceptance criteria the information is always shown in MBytes
+                    $uploadMaxFileSizeMBytes = $uploadMaxFileSizeBytes / (1024 ** 2); //conversion constant
+
+                    $message = G::LoadTranslation('ID_THE_FILE_SIZE_IS_BIGGER_THAN_THE_MAXIMUM_ALLOWED', [$uploadMaxFileSizeMBytes]);
+                    $rule->message($message);
+                    /**
+                     * If you can, you may want to set post_max_size to a low value (say 1M) to make
+                     * testing easier. First test to see how your script behaves. Try uploading a file
+                     * that is larger than post_max_size. If you do you will get a message like this
+                     * in your error log:
+                     *
+                     * [09-Jun-2010 19:28:01] PHP Warning:  POST Content-Length of 30980857 bytes exceeds
+                     * the limit of 2097152 bytes in Unknown on line 0
+                     *
+                     * This makes the script is not completed.
+                     *
+                     * Solving the problem:
+                     * The PHP documentation http://php.net/manual/en/ini.core.php#ini.post-max-size
+                     * provides a hack to solve this problem:
+                     *
+                     * If the size of post data is greater than post_max_size, the $_POST and $_FILES
+                     * superglobals are empty.
+                     */
+                    if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($_POST) && empty($_FILES) && $_SERVER['CONTENT_LENGTH'] > 0) {
+                        return true;
+                    }
+                    return false;
+                })
+                ->status(400)
+                ->log(function($rule) {
+                    Bootstrap::registerMonologPhpUploadExecution('phpUpload', 400, $rule->getMessage(), "");
+                });
+
+        return $validator->validate();
     }
 
     /**

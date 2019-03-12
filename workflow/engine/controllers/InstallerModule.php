@@ -857,13 +857,6 @@ class InstallerModule extends Controller
             file_put_contents($db_file, $dbText);
 
             /*----------------------------------********---------------------------------*/
-            //Generate the env.ini file
-            $envIniFile = $path_site . 'env.ini';
-            $content = 'system_utc_time_zone = 1' . "\n";
-
-            $this->installLog(G::LoadTranslation('ID_CREATING', SYS_LANG, [$envIniFile]));
-            file_put_contents($envIniFile, $content);
-            /*----------------------------------********---------------------------------*/
 
             //Generate the databases.php file
             $databases_file = $path_site . 'databases.php';

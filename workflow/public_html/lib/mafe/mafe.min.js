@@ -39101,6 +39101,27 @@ FormDesigner.leftPad = function (string, length, fill) {
                         target.properties.requiredFieldErrorMessage.node.disabled = !value;
                     }
                     break;
+                case "size":
+                case "sizeUnity":
+                    //the "maxFileSizeInformation" variable, comes from backend.
+                    that.validateMaxFileSize(
+                        target,
+                        maxFileSizeInformation,
+                        function (target, message) {
+                            var dialogMessage,
+                                value,
+                                oldValue;
+                            value = target.properties[prop].value;
+                            oldValue = target.properties[prop].oldValue;
+                            if (target.properties[prop].node && value !== oldValue) {
+                                dialogMessage = new FormDesigner.main.DialogMessage(null, "alert", message);
+                                dialogMessage.onClose = function () {
+                                    that.setMinimalFileSize(target, maxFileSizeInformation);
+                                };
+                            }
+                        }
+                    );
+                    break;
             }
         };
         this.form1.onSynchronizeVariables = function (variables) {
@@ -39304,6 +39325,86 @@ FormDesigner.leftPad = function (string, length, fill) {
             }
         }
         return result;
+    };
+    /**
+     * Validate Max File Size, if the value exceeds the allowed limit, an alert message 
+     * is displayed.
+     * 
+     * @param object target
+     * @param object maxFileSizeInformation
+     * @param function callback
+     */
+    Designer.prototype.validateMaxFileSize = function (target, maxFileSizeInformation, callback) {
+        var isTypeValid,
+            message;
+
+        if (target.properties === null) {
+            return;
+        }
+
+        isTypeValid = target.properties.type.value === FormDesigner.main.TypesControl.file ||
+                target.properties.type.value === FormDesigner.main.TypesControl.multipleFile;
+        if (!isTypeValid) {
+            return;
+        }
+        if (this.isValidMaxFileSizeFromProperties(maxFileSizeInformation, target.properties) === false) {
+            message = "The maximum value of this field is ".translate() + maxFileSizeInformation.uploadMaxFileSize;
+            callback(target, message);
+        }
+    };
+    /**
+     * Returns true if the value of Max files Size, satisfies the configuration of 
+     * the php ini directives, false otherwise.
+     * 
+     * @param {object} maxFileSizeInformation
+     * @param {object} properties
+     * @returns {Boolean}
+     */
+    Designer.prototype.isValidMaxFileSizeFromProperties = function (maxFileSizeInformation, properties) {
+        var value,
+            unit,
+            items,
+            i;
+        value = parseInt(properties.size.value, 10);
+        unit = properties.sizeUnity.value;
+        items = properties.sizeUnity.items;
+
+        if (Array.isArray(items)) {
+            for (i = 0; i < items.length; i += 1) {
+                if (unit === items[i].value) {
+                    value = value * Math.pow(1024, i + 1);
+                }
+            }
+        }
+
+        if (maxFileSizeInformation.uploadMaxFileSizeBytes < value) {
+            return false;
+        }
+        return true;
+    };
+    /**
+     * Set Minimal File Size.
+     * 
+     * @param object target
+     * @param object maxFileSizeInformation
+     */
+    Designer.prototype.setMinimalFileSize = function (target, maxFileSizeInformation) {
+        var size,
+            sizeValue,
+            sizeUnity,
+            sizeUnityValue;
+
+        sizeValue = maxFileSizeInformation.uploadMaxFileSizeMBytes;
+        size = target.properties.set("size", sizeValue);
+        if (size && size.node) {
+            size.node.value = sizeValue;
+        }
+
+        sizeUnityValue = maxFileSizeInformation.uploadMaxFileSizeUnit;
+        sizeUnity = target.properties.set("sizeUnity", sizeUnityValue);
+        if (sizeUnity.node) {
+            sizeUnity.node.value = sizeUnityValue;
+        }
     };
     FormDesigner.extendNamespace('FormDesigner.main.Designer', Designer);
 }());

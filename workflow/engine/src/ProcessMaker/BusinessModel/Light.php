@@ -1467,6 +1467,7 @@ class Light
         }
         $response['listLanguage'] = $languagesList;
         if (isset($params['fileLimit']) && $params['fileLimit']) {
+            //to do: ProcessMaker\BusinessModel\InputDocument->getMaxFileSize()
             $postMaxSize = $this->return_bytes(ini_get('post_max_size'));
             $uploadMaxFileSize = $this->return_bytes(ini_get('upload_max_filesize'));
             if ($postMaxSize < $uploadMaxFileSize) {

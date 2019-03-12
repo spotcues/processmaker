@@ -90,6 +90,9 @@ try {
     $e_all = (defined('E_STRICT'))?                $e_all & ~E_STRICT     : $e_all;
     $e_all = ($arraySystemConfiguration['debug'])? $e_all                 : $e_all & ~E_NOTICE;
 
+    //In community version the default value is 0
+    $systemUtcTimeZone = (int)($arraySystemConfiguration['system_utc_time_zone']) == 1;
+
     app()->useStoragePath(realpath(PATH_DATA));
     app()->make(Kernel::class)->bootstrap();
     restore_error_handler();
@@ -100,14 +103,18 @@ try {
     ini_set('default_charset', 'UTF-8');
     ini_set('memory_limit',    $arraySystemConfiguration['memory_limit']);
     ini_set('soap.wsdl_cache_enabled', $arraySystemConfiguration['wsdl_cache']);
-    ini_set('date.timezone', $arraySystemConfiguration['time_zone']);
+    ini_set('date.timezone', $systemUtcTimeZone ? 'UTC' : $arraySystemConfiguration['time_zone']);
 
-    define('DEBUG_SQL_LOG',  $arraySystemConfiguration['debug_sql']);
+    define('DEBUG_SQL_LOG', $arraySystemConfiguration['debug_sql']);
     define('DEBUG_TIME_LOG', $arraySystemConfiguration['debug_time']);
     define('DEBUG_CALENDAR_LOG', $arraySystemConfiguration['debug_calendar']);
-    define('MEMCACHED_ENABLED',  $arraySystemConfiguration['memcached']);
-    define('MEMCACHED_SERVER',   $arraySystemConfiguration['memcached_server']);
-    define('TIME_ZONE',          ini_get('date.timezone'));
+    define('MEMCACHED_ENABLED', $arraySystemConfiguration['memcached']);
+    define('MEMCACHED_SERVER', $arraySystemConfiguration['memcached_server']);
+    define('TIME_ZONE', ini_get('date.timezone'));
+
+    date_default_timezone_set(TIME_ZONE);
+
+    config(['app.timezone' => TIME_ZONE]);
 
     //CRON command options
     $arrayCommandOption = [
@@ -162,9 +169,7 @@ try {
 
         try {
             $cronSinglePath = PATH_CORE . 'bin' . PATH_SEP . 'cron_single.php';
-
             $workspace  = '';
-            $dateSystem = date('Y-m-d H:i:s');
             $date       = '';
             $argvx      = '';
 
@@ -192,8 +197,6 @@ try {
 
             if (!empty($date) && preg_match('/^' . '[1-9]\d{3}\-(?:0[1-9]|1[0-2])\-(?:0[1-9]|[12][0-9]|3[01])' . '(?:\s' . '(?:[0-1]\d|2[0-3])\:[0-5]\d\:[0-5]\d' . ')?$/', $date)) {
                 eprintln('[Applying date filter: ' . $date . ']');
-            } else {
-                $date = $dateSystem;
             }
 
             $counterw = 0;
@@ -207,7 +210,7 @@ try {
                             if (file_exists(PATH_DB . $entry . PATH_SEP . 'db.php')) {
                                 $counterw++;
 
-                                passthru('php -f "' . $cronSinglePath . '" "' . base64_encode(PATH_HOME) . '" "' . base64_encode(PATH_TRUNK) . '" "' . base64_encode(PATH_OUTTRUNK) . '" ' . $cronName . ' ' . $entry . ' "' . $dateSystem . '" "' . $date . '" ' . $argvx);
+                                passthru('php -f "' . $cronSinglePath . '" "' . base64_encode(PATH_HOME) . '" "' . base64_encode(PATH_TRUNK) . '" "' . base64_encode(PATH_OUTTRUNK) . '" ' . $cronName . ' ' . $entry . ' "' . $date . '" ' . $argvx);
                             }
                         }
                     }
@@ -219,7 +222,7 @@ try {
 
                 $counterw++;
 
-                passthru('php -f "' . $cronSinglePath . '" "' . base64_encode(PATH_HOME) . '" "' . base64_encode(PATH_TRUNK) . '" "' . base64_encode(PATH_OUTTRUNK) . '" ' . $cronName . ' ' . $workspace . ' "' . $dateSystem . '" "' . $date . '" ' . $argvx);
+                passthru('php -f "' . $cronSinglePath . '" "' . base64_encode(PATH_HOME) . '" "' . base64_encode(PATH_TRUNK) . '" "' . base64_encode(PATH_OUTTRUNK) . '" ' . $cronName . ' ' . $workspace . ' "' . $date . '" ' . $argvx);
             }
 
             eprintln('Finished ' . $counterw . ' workspaces processed');

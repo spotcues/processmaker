@@ -15180,6 +15180,12 @@ msgid "The input document is required, please select the value."
 msgstr "The input document is required, please select the value."
 
 # TRANSLATION
+# LABEL/ID_MAFE_99567b953da8beace4e3e7296bf1fc23
+#: LABEL/ID_MAFE_99567b953da8beace4e3e7296bf1fc23
+msgid "Assign type"
+msgstr "Assign type"
+
+# TRANSLATION
 # LABEL/ID_MAFE_99b2439e63f73ad515f7ab2447a80673
 #: LABEL/ID_MAFE_99b2439e63f73ad515f7ab2447a80673
 msgid "PAUSED"
@@ -15556,6 +15562,12 @@ msgstr "Ok"
 #: LABEL/ID_MAFE_a60cf2ece5b3e294aa794916477ac6a8
 msgid "Notify the assigned user to this task"
 msgstr "Notify the assigned user to this task"
+
+# TRANSLATION
+# LABEL/ID_MAFE_a6122a65eaa676f700ae68d393054a37
+#: LABEL/ID_MAFE_a6122a65eaa676f700ae68d393054a37
+msgid "Start"
+msgstr "Start"
 
 # TRANSLATION
 # LABEL/ID_MAFE_a6527af0da63377b07a3effae750a485
@@ -16378,6 +16390,12 @@ msgstr "Invalid Connection between elements"
 #: LABEL/ID_MAFE_c5d84b6c19cb058b7b5471b30e926823
 msgid "Invalid operation: Delete message flow before converting it to"
 msgstr "Invalid operation: Delete message flow before converting it to"
+
+# TRANSLATION
+# LABEL/ID_MAFE_c5e54f7804fa817826dfa5ecc13cd92f
+#: LABEL/ID_MAFE_c5e54f7804fa817826dfa5ecc13cd92f
+msgid "Last User Name"
+msgstr "Last User Name"
 
 # TRANSLATION
 # LABEL/ID_MAFE_c5f93fd19468533ea5c9114801c2958d
@@ -17232,6 +17250,12 @@ msgid "Please configure script to wait for a signal."
 msgstr "Please configure script to wait for a signal."
 
 # TRANSLATION
+# LABEL/ID_MAFE_e2ac1703ae8a4bb8b146f7337a7e4cab
+#: LABEL/ID_MAFE_e2ac1703ae8a4bb8b146f7337a7e4cab
+msgid "Last User"
+msgstr "Last User"
+
+# TRANSLATION
 # LABEL/ID_MAFE_e2b9d6eb9f3ec7d4e6089274a4481fab
 #: LABEL/ID_MAFE_e2b9d6eb9f3ec7d4e6089274a4481fab
 msgid "There are problems getting the list of DynaForms, please try again."
@@ -17710,6 +17734,12 @@ msgstr "Assignment"
 #: LABEL/ID_MAFE_f45c3a0bb3687ed8e221253b3fd4a2ce
 msgid "EXCLUSIVE"
 msgstr "EXCLUSIVE"
+
+# TRANSLATION
+# LABEL/ID_MAFE_f45fabda0c6a595f709b3996398132f5
+#: LABEL/ID_MAFE_f45fabda0c6a595f709b3996398132f5
+msgid "Diverging gateways expect to receive only one incoming flow."
+msgstr "Diverging gateways expect to receive only one incoming flow."
 
 # TRANSLATION
 # LABEL/ID_MAFE_f4636507ca93332f92f92fb219a43b02
@@ -24856,6 +24886,18 @@ msgstr "Error: The application {0} is not canceled."
 #: LABEL/ID_THE_DEFAULT_CONFIGURATION
 msgid "The default configuration was not defined"
 msgstr "The default configuration was not defined"
+
+# TRANSLATION
+# LABEL/ID_THE_FILE_SIZE_IS_BIGGER_THAN_THE_MAXIMUM_ALLOWED
+#: LABEL/ID_THE_FILE_SIZE_IS_BIGGER_THAN_THE_MAXIMUM_ALLOWED
+msgid "The file size is bigger than the maximum allowed, the maximum size allowed is {0} Mbytes."
+msgstr "The file size is bigger than the maximum allowed, the maximum size allowed is {0} Mbytes."
+
+# TRANSLATION
+# LABEL/ID_THE_MAXIMUM_VALUE_OF_THIS_FIELD_IS
+#: LABEL/ID_THE_MAXIMUM_VALUE_OF_THIS_FIELD_IS
+msgid "The maximum value of this field is {0}."
+msgstr "The maximum value of this field is {0}."
 
 # TRANSLATION
 # LABEL/ID_THE_MIMETYPE_EXTENSION_ERROR

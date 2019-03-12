@@ -1678,16 +1678,16 @@ ViewTaskInformation.prototype.clearRows = function () {
 ViewTaskInformation.prototype.showInformation = function () {
     var that = this;
     that.clearRows();
-    that.addRow('Title', that.shapeData.tas_title);
-    that.addRow('Description', that.shapeData.tas_description);
-    that.addRow('Status', that.dataDictionary.getStatus(that.shapeData.status));
-    that.addRow('Type', that.dataDictionary.getTasType(that.shapeData.tas_type));
-    that.addRow('Assign type', that.dataDictionary.getTasAssignType(that.shapeData.tas_assign_type));
-    that.addRow('Derivation', that.dataDictionary.getTasDerivation(that.shapeData.tas_derivation));
-    that.addRow('Start', that.shapeData.tas_start);
+    that.addRow('Title'.translate(), that.shapeData.tas_title);
+    that.addRow('Description'.translate(), that.shapeData.tas_description);
+    that.addRow('Status'.translate(), that.dataDictionary.getStatus(that.shapeData.status));
+    that.addRow('Type'.translate(), that.dataDictionary.getTasType(that.shapeData.tas_type));
+    that.addRow('Assign type'.translate(), that.dataDictionary.getTasAssignType(that.shapeData.tas_assign_type));
+    that.addRow('Routing'.translate(), that.dataDictionary.getTasDerivation(that.shapeData.tas_derivation));
+    that.addRow('Start'.translate(), that.shapeData.tas_start);
     that.addRowNewLine();
-    that.addRow('User Name', that.shapeData.usr_username);
-    that.addRow('User', that.shapeData.usr_firstname + ' ' + that.shapeData.usr_lastname);
+    that.addRow('Last User Name'.translate(), that.shapeData.usr_username);
+    that.addRow('Last User'.translate(), that.shapeData.usr_firstname + ' ' + that.shapeData.usr_lastname);
 
     that.windowAbstract.setTitle('Information'.translate() + ' ' + that.shapeData.tas_title);
     that.windowAbstract.open();

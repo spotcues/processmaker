@@ -31,7 +31,7 @@ ini_set('memory_limit', '512M');
 
 try {
     //Verify data
-    if (count($argv) < 8) {
+    if (count($argv) < 7) {
         throw new Exception('Error: Invalid number of arguments');
     }
 
@@ -51,8 +51,7 @@ try {
     $pathOutTrunk = $argv[3];
     $cronName = $argv[4];
     $workspace = $argv[5];
-    $dateSystem = $argv[6];
-    $sNow = $argv[7]; //date
+    $now = $argv[6]; //date
     //Defines constants
     define('PATH_SEP', ($osIsLinux) ? '/' : '\\');
 
@@ -84,6 +83,9 @@ try {
     $e_all = (defined('E_STRICT')) ? $e_all & ~E_STRICT : $e_all;
     $e_all = ($arraySystemConfiguration['debug']) ? $e_all : $e_all & ~E_NOTICE;
 
+    //In community version the default value is 0
+    $_SESSION['__SYSTEM_UTC_TIME_ZONE__'] = (int)($arraySystemConfiguration['system_utc_time_zone']) == 1;
+
     app()->useStoragePath(realpath(PATH_DATA));
     app()->make(Kernel::class)->bootstrap();
     restore_error_handler();
@@ -93,13 +95,18 @@ try {
     ini_set('short_open_tag', 'On');
     ini_set('default_charset', 'UTF-8');
     ini_set('soap.wsdl_cache_enabled', $arraySystemConfiguration['wsdl_cache']);
-    ini_set('date.timezone', $arraySystemConfiguration['time_zone']);
+    ini_set('date.timezone', $_SESSION['__SYSTEM_UTC_TIME_ZONE__'] ? 'UTC' : $arraySystemConfiguration['time_zone']);
 
     define('DEBUG_SQL_LOG', $arraySystemConfiguration['debug_sql']);
     define('DEBUG_TIME_LOG', $arraySystemConfiguration['debug_time']);
     define('DEBUG_CALENDAR_LOG', $arraySystemConfiguration['debug_calendar']);
     define('MEMCACHED_ENABLED', $arraySystemConfiguration['memcached']);
     define('MEMCACHED_SERVER', $arraySystemConfiguration['memcached_server']);
+    define('TIME_ZONE', ini_get('date.timezone'));
+
+    date_default_timezone_set(TIME_ZONE);
+
+    config(['app.timezone' => TIME_ZONE]);
 
     spl_autoload_register(['Bootstrap', 'autoloadClass']);
 
@@ -219,19 +226,9 @@ try {
             define('SYS_SKIN', $conf->getConfiguration('SKIN_CRON', ''));
         }
 
-        //Set Time Zone
-        $systemUtcTimeZone = false;
-
-        /*----------------------------------********---------------------------------*/
-
-        ini_set('date.timezone', ($systemUtcTimeZone) ? 'UTC' : $arraySystemConfiguration['time_zone']); //Set Time Zone
-
-        define('TIME_ZONE', ini_get('date.timezone'));
-
-        //UTC time zone
-        if ($systemUtcTimeZone) {
-            $sNow = convertToSystemUtcTimeZone($sNow);
-            $dateSystem = convertToSystemUtcTimeZone($dateSystem);
+        $dateSystem = date('Y-m-d H:i:s');
+        if (empty($now)) {
+            $now = $dateSystem;
         }
 
         //Processing
@@ -261,7 +258,7 @@ try {
                 case 'timereventcron':
                     $timerEvent = new \ProcessMaker\BusinessModel\TimerEvent();
 
-                    $timerEvent->startContinueCaseByTimerEvent($sNow, true);
+                    $timerEvent->startContinueCaseByTimerEvent($now, true);
                     break;
                 case 'sendnotificationscron':
                     sendNotifications();
@@ -312,7 +309,7 @@ function processWorkspace()
 function resendEmails()
 {
     global $argvx;
-    global $sNow;
+    global $now;
     global $dateSystem;
 
     if ($argvx != "" && strpos($argvx, "emails") === false) {
@@ -322,9 +319,9 @@ function resendEmails()
     setExecutionMessage("Resending emails");
 
     try {
-        $dateResend = $sNow;
+        $dateResend = $now;
 
-        if ($sNow == $dateSystem) {
+        if ($now == $dateSystem) {
             $arrayDateSystem = getdate(strtotime($dateSystem));
 
             $mktDateSystem = mktime(
@@ -377,7 +374,7 @@ function resendEmails()
 function unpauseApplications()
 {
     global $argvx;
-    global $sNow;
+    global $now;
 
     if ($argvx != "" && strpos($argvx, "unpause") === false) {
         return false;
@@ -387,7 +384,7 @@ function unpauseApplications()
 
     try {
         $oCases = new Cases();
-        $oCases->ThrowUnpauseDaemon($sNow, 1);
+        $oCases->ThrowUnpauseDaemon($now, 1);
 
         setExecutionResultMessage('DONE');
         saveLog('unpauseApplications', 'action', 'Unpausing Applications');
@@ -497,10 +494,10 @@ function calculateDuration()
 }
 /*----------------------------------********---------------------------------*/
 
-function executeEvents($sLastExecution, $sNow = null)
+function executeEvents($sLastExecution, $now = null)
 {
     global $argvx;
-    global $sNow;
+    global $now;
 
     $log = array();
 
@@ -513,15 +510,15 @@ function executeEvents($sLastExecution, $sNow = null)
 
     try {
         $oAppEvent = new AppEvent();
-        saveLog('executeEvents', 'action', "Executing Events $sLastExecution, $sNow ");
-        $n = $oAppEvent->executeEvents($sNow, false, $log, 1);
+        saveLog('executeEvents', 'action', "Executing Events $sLastExecution, $now ");
+        $n = $oAppEvent->executeEvents($now, false, $log, 1);
 
         foreach ($log as $value) {
             $arrayCron = unserialize(trim(@file_get_contents(PATH_DATA . "cron")));
             $arrayCron["processcTimeStart"] = time();
             @file_put_contents(PATH_DATA . "cron", serialize($arrayCron));
 
-            saveLog('executeEvents', 'action', "Execute Events : $value, $sNow ");
+            saveLog('executeEvents', 'action', "Execute Events : $value, $now ");
         }
 
         setExecutionMessage("|- End Execution events");
@@ -533,11 +530,11 @@ function executeEvents($sLastExecution, $sNow = null)
     }
 }
 
-function executeScheduledCases($sNow = null)
+function executeScheduledCases($now = null)
 {
     try {
         global $argvx;
-        global $sNow;
+        global $now;
         $log = array();
 
         if ($argvx != "" && strpos($argvx, "scheduler") === false) {
@@ -548,7 +545,7 @@ function executeScheduledCases($sNow = null)
         setExecutionResultMessage('PROCESSING');
 
         $oCaseScheduler = new CaseScheduler();
-        $oCaseScheduler->caseSchedulerCron($sNow, $log, 1);
+        $oCaseScheduler->caseSchedulerCron($now, $log, 1);
 
         foreach ($log as $value) {
             $arrayCron = unserialize(trim(@file_get_contents(PATH_DATA . "cron")));
@@ -563,31 +560,6 @@ function executeScheduledCases($sNow = null)
         setExecutionResultMessage('WITH ERRORS', 'error');
         eprintln("  '-" . $oError->getMessage(), 'red');
     }
-}
-
-function convertToSystemUtcTimeZone($sNow)
-{
-    global $arraySystemConfiguration;
-
-    $runDate = isset($sNow) ? $sNow : date('Y-m-d H:i:s');
-
-    $systemUtcTimeZone = false;
-    /*----------------------------------********---------------------------------*/
-
-    if ($systemUtcTimeZone) {
-        if (isset($sNow)) {
-            //as the $sNow param that comes from the command line doesn't specicy a time zone
-            //we assume that the user set this time using the server time zone so we use the gmdate
-            //function to convert it
-            $currentTimeZone = date_default_timezone_get();
-            date_default_timezone_set($arraySystemConfiguration['time_zone']);
-            $runDate = gmdate('Y-m-d H:i:s', strtotime($sNow));
-            date_default_timezone_set($currentTimeZone);
-        } else {
-            $runDate = gmdate('Y-m-d H:i:s');
-        }
-    }
-    return $runDate;
 }
 
 function executeUpdateAppTitle()

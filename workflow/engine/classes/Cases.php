@@ -7316,5 +7316,183 @@ class Cases
         $caseDataRow["USR_UID"] = $targetUserId;
         $listInbox->create($caseDataRow);
     }
+
+    /**
+     * Obtains the task information and the user delegated to the task for an specific case
+     *
+     * @param string $applicationUid
+     * @param string $processUid
+     *
+     * @see /workflow/engine/src/ProcessMaker/BusinessModel/Cases::getTasks($applicationUid)
+     *
+     * @return ResultSet
+     * @throws Exception
+     *
+     */
+    public function getTasksInfoForACase($applicationUid, $processUid)
+    {
+        $conn = Propel::getConnection('workflow');
+
+        $sql = 'SELECT TASK.TAS_UID, TASK.TAS_TITLE, TASK.TAS_DESCRIPTION, TASK.TAS_START, 
+                TASK.TAS_TYPE, TASK.TAS_DERIVATION, TASK.TAS_ASSIGN_TYPE, APP.USR_UID, USERS.USR_USERNAME, 
+                USERS.USR_FIRSTNAME, USERS.USR_LASTNAME 
+                FROM TASK LEFT JOIN (SELECT * FROM APP_DELEGATION WHERE APP_DELEGATION.APP_UID = ?) AS APP 
+                ON TASK.TAS_UID = APP.TAS_UID LEFT JOIN USERS 
+                ON (SELECT USR_UID FROM APP_DELEGATION WHERE APP_UID = ? AND TAS_UID = TASK.TAS_UID ORDER BY DEL_INDEX DESC LIMIT 1) = USERS.USR_UID 
+                WHERE TASK.PRO_UID = ?';
+
+        $stmt = $conn->prepareStatement($sql);
+
+        $stmt->set(1, $applicationUid);
+        $stmt->set(2, $applicationUid);
+        $stmt->set(3, $processUid);
+
+        if (!$stmt->executeQuery()) {
+            throw Exception(G::LoadTranslation('ID_MSG_AJAX_FAILURE'));
+        }
+
+        return $stmt->getResultSet();
+    }
+
+    /**
+     * Get the task information when the task is a sub-process
+     *
+     * @param string $processUid
+     * @param string $tasUid
+     *
+     * @see /workflow/engine/src/ProcessMaker/BusinessModel/Cases::getTasks($applicationUid)
+     *
+     * @return ResultSet
+     */
+    public function getTaskInfoForSubProcess($processUid, $tasUid)
+    {
+        $criteria = new Criteria("workflow");
+
+        $criteria->addSelectColumn(SubProcessPeer::PRO_UID);
+        $criteria->addSelectColumn(TaskPeer::TAS_TITLE);
+        $criteria->addSelectColumn(TaskPeer::TAS_DESCRIPTION);
+        $criteria->addJoin(SubProcessPeer::TAS_PARENT, TaskPeer::TAS_UID, Criteria::LEFT_JOIN);
+        $criteria->add(SubProcessPeer::PRO_PARENT, $processUid);
+        $criteria->add(SubProcessPeer::TAS_PARENT, $tasUid);
+
+        $rsCriteria = SubProcessPeer::doSelectRS($criteria);
+        $rsCriteria->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+
+        return $rsCriteria;
+    }
+
+    /**
+     * Get the routes of a task
+     *
+     * @param string $processUid
+     * @param string $tasUid
+     *
+     * @see /workflow/engine/src/ProcessMaker/BusinessModel/Cases::getTasks($applicationUid)
+     *
+     * @return ResultSet
+     */
+    public function getTaskRoutes($processUid, $tasUid)
+    {
+        $criteria = new Criteria("workflow");
+
+        $criteria->addAsColumn("ROU_NUMBER", RoutePeer::ROU_CASE);
+        $criteria->addSelectColumn(RoutePeer::ROU_TYPE);
+        $criteria->addSelectColumn(RoutePeer::ROU_CONDITION);
+        $criteria->addAsColumn("TAS_UID", RoutePeer::ROU_NEXT_TASK);
+        $criteria->add(RoutePeer::PRO_UID, $processUid, Criteria::EQUAL);
+        $criteria->add(RoutePeer::TAS_UID, $tasUid, Criteria::EQUAL);
+        $criteria->addAscendingOrderByColumn("ROU_NUMBER");
+
+        $rsCriteria = RoutePeer::doSelectRS($criteria);
+        $rsCriteria->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+
+        return $rsCriteria;
+    }
+
+    /**
+     * Get the delegations of an specific case
+     *
+     * @param string $applicationUid
+     * @param string $tasUid
+     *
+     * @see /workflow/engine/src/ProcessMaker/BusinessModel/Cases::getTasks($applicationUid)
+     *
+     * @return ResultSet
+     */
+    public function getCaseDelegations($applicationUid, $tasUid)
+    {
+        $criteria = new Criteria("workflow");
+
+        $criteria->addSelectColumn(AppDelegationPeer::DEL_INDEX);
+        $criteria->addSelectColumn(AppDelegationPeer::DEL_DELEGATE_DATE);
+        $criteria->addSelectColumn(AppDelegationPeer::DEL_INIT_DATE);
+        $criteria->addSelectColumn(AppDelegationPeer::DEL_TASK_DUE_DATE);
+        $criteria->addSelectColumn(AppDelegationPeer::DEL_FINISH_DATE);
+        $criteria->addSelectColumn(UsersPeer::USR_UID);
+        $criteria->addSelectColumn(UsersPeer::USR_USERNAME);
+        $criteria->addSelectColumn(UsersPeer::USR_FIRSTNAME);
+        $criteria->addSelectColumn(UsersPeer::USR_LASTNAME);
+
+        $criteria->addJoin(AppDelegationPeer::USR_UID, UsersPeer::USR_UID, Criteria::LEFT_JOIN);
+
+        $criteria->add(AppDelegationPeer::APP_UID, $applicationUid, Criteria::EQUAL);
+        $criteria->add(AppDelegationPeer::TAS_UID, $tasUid, Criteria::EQUAL);
+        $criteria->addAscendingOrderByColumn(AppDelegationPeer::DEL_INDEX);
+
+        $rsCriteria = AppDelegationPeer::doSelectRS($criteria);
+        $rsCriteria->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+
+        return $rsCriteria;
+    }
+
+    /**
+     * Get the total amount and the minimun date of the Delegation table for an specific case
+     *
+     * @param string $applicationUid
+     * @param string $tasUid
+     *
+     * @see /workflow/engine/src/ProcessMaker/BusinessModel/Cases::getTasks($applicationUid)
+     *
+     * @return ResultSet
+     */
+    public function getTotalAndMinDateForACase($applicationUid, $tasUid)
+    {
+        $criteria = new Criteria("workflow");
+
+        $criteria->addAsColumn("CANT", "COUNT(" . AppDelegationPeer::APP_UID . ")");
+        $criteria->addAsColumn("FINISH", "MIN(" . AppDelegationPeer::DEL_FINISH_DATE . ")");
+        $criteria->add(AppDelegationPeer::APP_UID, $applicationUid, Criteria::EQUAL);
+        $criteria->add(AppDelegationPeer::TAS_UID, $tasUid, Criteria::EQUAL);
+
+        $rsCriteria = AppDelegationPeer::doSelectRS($criteria);
+        $rsCriteria->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+
+        return $rsCriteria;
+    }
+
+    /**
+     * Get the DEL_FINISH_DATE of the Delegation table of an specific task in a case
+     *
+     * @param string $applicationUid
+     * @param string $tasUid
+     *
+     * @see /workflow/engine/src/ProcessMaker/BusinessModel/Cases::getTasks($applicationUid)
+     *
+     * @return ResultSet
+     */
+    public function getDelegationFinishDate($applicationUid, $tasUid)
+    {
+        $criteria = new Criteria("workflow");
+
+        $criteria->addSelectColumn(AppDelegationPeer::DEL_FINISH_DATE);
+        $criteria->add(AppDelegationPeer::APP_UID, $applicationUid, Criteria::EQUAL);
+        $criteria->add(AppDelegationPeer::TAS_UID, $tasUid, Criteria::EQUAL);
+        $criteria->add(AppDelegationPeer::DEL_FINISH_DATE, null, Criteria::ISNULL);
+
+        $rsCriteria = AppDelegationPeer::doSelectRS($criteria);
+        $rsCriteria->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+
+        return $rsCriteria;
+    }
 }
 
