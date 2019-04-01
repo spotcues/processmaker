@@ -1,30 +1,30 @@
-[13 days ago] d403c5f  (origin/bugfix/PMC-313) PMC-313 <Roly Rudy Gutierrez Pinto>
-[2 weeks ago] 5d49c31  (origin/bugfix/PMC-126) PMC-126 <Andrea>
-[2 weeks ago] c812aec  (origin/bugfix/PMC-389) PMC-389 <Julio Cesar Laura Avendaño>
-[3 weeks ago] e1ddb43  (origin/bugfix/PMC-195) PMC-195 <Paula Quispe>
-[3 weeks ago] d5dfc89  (origin/bugfix/PMC-508) PMC-508 <Roly Rudy Gutierrez Pinto>
-[3 weeks ago] bbc454e  (origin/bugfix/PMC-401) PMC-401 <Roly Rudy Gutierrez Pinto>
-[4 weeks ago] 586356d  (origin/bugfix/PMC-377) PMC-377 <Roly Rudy Gutierrez Pinto>
-[5 weeks ago] a171042  (origin/bugfix/PMC-369) PMC-369 <Julio Cesar Laura Avendaño>
-[5 weeks ago] cacfcd9  (origin/bugfix/PMC-155-B) PMC-155-B <Roly Rudy Gutierrez Pinto>
-[5 weeks ago] 4b65e96  (origin/bugfix/PMC-368) PMC-368 <Paula Quispe>
-[5 weeks ago] 5949251  (origin/bugfix/PMC-155-A) PMC-155-A <Roly Rudy Gutierrez Pinto>
-[5 weeks ago] 0c3981d  (origin/bugfix/PMC-451) PMC-451 <Paula Quispe>
-[6 weeks ago] e718191  (origin/bugfix/PMC-399) PMC-399 <Paula Quispe>
-[6 weeks ago] a19597e  (origin/bugfix/PMC-435) PMC-435 <Roly Rudy Gutierrez Pinto>
-[7 weeks ago] d093e00  (origin/bugfix/PMC-427) PMC-427 <Julio Cesar Laura Avendaño>
-[7 weeks ago] 5c76201  (origin/bugfix/PMC-155) PMC-155 <Roly Rudy Gutierrez Pinto>
-[7 weeks ago] 1125814  PMC-44 <Fabio Guachalla>
-[7 weeks ago] 7ddf35e  (origin/bugfix/PMC-400-a) PMC-400 <Paula Quispe>
-[7 weeks ago] 46d676f  PMC-44 <Fabio Guachalla>
-[7 weeks ago] b209748  (origin/bugfix/PMC-337-A) PMC-337-A <Roly Rudy Gutierrez Pinto>
-[8 weeks ago] 7706c63  PMC-44:Link Open Case doesn't work with IE <Fabio Guachalla>
-[8 weeks ago] c3738b3  (origin/bugfix/PMC-151) PMC-151 <Paula Quispe>
-[8 weeks ago] 82fc4a8  PMC-398 <Julio Cesar Laura Avendaño>
-[8 weeks ago] 9bc224a  (origin/bugfix/PMC-400) PMC-400 <Paula Quispe>
-[8 weeks ago] b5f85dc  PMC-136 <Julio Cesar Laura Avendaño>
-[9 weeks ago] 4a37ff8  (origin/bugfix/PMC-325) PMC-325 <Roly Rudy Gutierrez Pinto>
-[9 weeks ago] df19f45  (origin/bugfix/PMC-338) PMC-338 <Roly Rudy Gutierrez Pinto>
-[9 weeks ago] 6939bb3  (origin/bugfix/PMC-383) PMC-383 <Paula Quispe>
-[9 weeks ago] 5bd0db7  (origin/bugfix/PMC-342) PMC-342 <Paula Quispe>
-[10 weeks ago] cf6293b  (origin/bugfix/PMC-122) PMC-122 <Roly Rudy Gutierrez Pinto>
+[4 days ago] 04fa8e1  (origin/bugfix/PMC-557-B) PMC-557 <Paula Quispe>
+[6 days ago] 7867093  (origin/bugfix/PMC-143-A) PMC-143 <Paula Quispe>
+[7 days ago] a90e696  (origin/bugfix/PMC-541-B) PMC-541-B <Roly Rudy Gutierrez Pinto>
+[2 weeks ago] 2ce5d4e  (origin/bugfix/PMC-541-A) PMC-541-A <Roly Rudy Gutierrez Pinto>
+[3 weeks ago] e05d884  (origin/bugfix/PMC-536) PMC-536 <Andrea Adamczyk>
+[3 weeks ago] 5d58a0c  (origin/bugfix/PMC-8) PMC-8 <Andrea Adamczyk>
+[3 weeks ago] 901200c  (origin/bugfix/PMC-426) PMC-426 <Paula Quispe>
+[3 weeks ago] f8b10f3  (origin/bugfix/PMC-485) PMC-485 <Andrea Adamczyk>
+[3 weeks ago] 8025fd9  (origin/bugfix/PMC-143) PMC-143 <Paula Quispe>
+[3 weeks ago] bac321d  PMC-557:[Zendesk - 7292] Output documents are generated with an incorrect file name when downloaded <Fabio Guachalla>
+[3 weeks ago] 363746e  (origin/bugfix/PMC-541) PMC-541 <Roly Rudy Gutierrez Pinto>
+[4 weeks ago] 986f313  (origin/bugfix/PMC-522) PMC-522 <Paula Quispe>
+[4 weeks ago] fe3dbc2  (origin/bugfix/PMC-519) PMC-519 <Paula Quispe>
+[5 weeks ago] d403c5f  (origin/bugfix/PMC-313) PMC-313 <Roly Rudy Gutierrez Pinto>
+[5 weeks ago] 5d49c31  (origin/bugfix/PMC-126) PMC-126 <Andrea>
+[5 weeks ago] c812aec  (origin/bugfix/PMC-389) PMC-389 <Julio Cesar Laura Avendaño>
+[6 weeks ago] e1ddb43  (origin/bugfix/PMC-195) PMC-195 <Paula Quispe>
+[6 weeks ago] d5dfc89  (origin/bugfix/PMC-508) PMC-508 <Roly Rudy Gutierrez Pinto>
+[6 weeks ago] bbc454e  (origin/bugfix/PMC-401) PMC-401 <Roly Rudy Gutierrez Pinto>
+[7 weeks ago] 586356d  (origin/bugfix/PMC-377) PMC-377 <Roly Rudy Gutierrez Pinto>
+[8 weeks ago] a171042  (origin/bugfix/PMC-369) PMC-369 <Julio Cesar Laura Avendaño>
+[8 weeks ago] cacfcd9  (origin/bugfix/PMC-155-B) PMC-155-B <Roly Rudy Gutierrez Pinto>
+[8 weeks ago] 4b65e96  (origin/bugfix/PMC-368) PMC-368 <Paula Quispe>
+[8 weeks ago] 5949251  (origin/bugfix/PMC-155-A) PMC-155-A <Roly Rudy Gutierrez Pinto>
+[8 weeks ago] 0c3981d  (origin/bugfix/PMC-451) PMC-451 <Paula Quispe>
+[8 weeks ago] e718191  (origin/bugfix/PMC-399) PMC-399 <Paula Quispe>
+[8 weeks ago] a19597e  (origin/bugfix/PMC-435) PMC-435 <Roly Rudy Gutierrez Pinto>
+[9 weeks ago] d093e00  (origin/bugfix/PMC-427) PMC-427 <Julio Cesar Laura Avendaño>
+[10 weeks ago] 5c76201  (origin/bugfix/PMC-155) PMC-155 <Roly Rudy Gutierrez Pinto>
+[10 weeks ago] 1125814  PMC-44 <Fabio Guachalla>

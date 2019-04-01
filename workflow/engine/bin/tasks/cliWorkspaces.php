@@ -1109,16 +1109,16 @@ function run_clear_dyn_content_history_data($args, $opts)
  * @param array $opts
  *
  * @return void
+ * @see workflow/engine/bin/tasks/cliWorkspaces.php CLI::taskRun()
  */
-
 function run_sync_forms_with_info_from_input_documents($args, $opts) {
     if (count($args) === 1) {
         //This variable is not defined and does not involve its value in this
         //task, it is removed at the end of the method.
         $_SERVER['REQUEST_URI'] = '';
         if (!defined('SYS_SKIN')) {
-            $conf = new Configurations();
-            define('SYS_SKIN', $conf->getConfiguration('SKIN_CRON', ''));
+            $config = System::getSystemConfiguration();
+            define('SYS_SKIN', $config['default_skin']);
         }
         CLI::logging('Sync JSON definition of the Forms with Input Documents information from workspace: ' . pakeColor::colorize($args[0], 'INFO') . "\n");
         $workspaceTools = new WorkspaceTools($args[0]);

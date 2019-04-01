@@ -44,7 +44,8 @@ Ext.onReady(function(){
       }
     }
     metadata.attr = 'ext:qtip="' + data + '" style="'+ style +' white-space: normal; "';
-    return data;
+
+    return PMExt.escapeHtml(data);
   };
 
     var dateFrom = new Ext.form.DateField({

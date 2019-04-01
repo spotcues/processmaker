@@ -5,6 +5,7 @@ use ProcessMaker\BusinessModel\WebEntryEvent;
 /*----------------------------------********---------------------------------*/
 use ProcessMaker\Core\System;
 use ProcessMaker\Plugins\PluginRegistry;
+use ProcessMaker\Util\DateTime;
 
 /**
  * A Cases object where you can do start, load, update, refresh about cases
@@ -631,87 +632,32 @@ class Cases
     }
 
     /**
-     * This function loads the title and description label in a case
-     * PROCESO:
-     *    If there is a label then it is loaded
-     *    To get APP_DELEGATIONS that they are opened in the case
-     *    To look for APP_DELEGATIONS wich TASK in it, It has a label defined(CASE_TITLE)
-     *    We need to read the last APP_DELEGATION->TASK
-     * @param string $sAppUid
-     * @param array $aAppData
-     * @return $res
-     */
-    public function refreshCaseTitleAndDescription($sAppUid, $aAppData)
-    {
-        $res['APP_TITLE'] = null;
-        $res['APP_DESCRIPTION'] = null;
-        //$res['APP_PROC_CODE']   = null;
-
-        $oApplication = new Application;
-        try {
-            $fields = $oApplication->load($sAppUid);
-        } catch (Exception $e) {
-            return $res;
-        }
-
-        $res['APP_TITLE'] = $fields['APP_TITLE']; // $oApplication->$getAppLabel();
-        $res['APP_DESCRIPTION'] = $fields['APP_DESCRIPTION'];
-
-        $lang = defined('SYS_LANG') ? SYS_LANG : 'en';
-        $bUpdatedDefTitle = false;
-        $bUpdatedDefDescription = false;
-        $cri = new Criteria;
-        $cri->add(AppDelegationPeer::APP_UID, $sAppUid);
-        $cri->add(AppDelegationPeer::DEL_THREAD_STATUS, "OPEN");
-        $currentDelegations = AppDelegationPeer::doSelect($cri);
-        //load only the tas_def fields, because these three or two values are needed
-        for ($r = count($currentDelegations) - 1; $r >= 0; $r--) {
-            $c = new Criteria();
-            $c->clearSelectColumns();
-            $c->addSelectColumn(TaskPeer::TAS_DEF_TITLE);
-            $c->addSelectColumn(TaskPeer::TAS_DEF_DESCRIPTION);
-            $c->add(TaskPeer::TAS_UID, $currentDelegations[$r]->getTasUid());
-            $rs = TaskPeer::doSelectRS($c);
-            $rs->setFetchmode(ResultSet::FETCHMODE_ASSOC);
-            while ($rs->next()) {
-                $row = $rs->getRow();
-                $tasDefTitle = $row['TAS_DEF_TITLE'];
-                if ($tasDefTitle != '' && !$bUpdatedDefTitle) {
-                    $res['APP_TITLE'] = G::replaceDataField($tasDefTitle, $aAppData);
-                    $bUpdatedDefTitle = true;
-                }
-                $tasDefDescription = $row['TAS_DEF_DESCRIPTION'];
-                if ($tasDefDescription != '' && !$bUpdatedDefDescription) {
-                    $res['APP_DESCRIPTION'] = G::replaceDataField($tasDefDescription, $aAppData);
-                    $bUpdatedDefDescription = true;
-                }
-            }
-        }
-        return $res;
-    }
-
-    /**
-     * optimized for speed. This function loads the title and description label in a case
+     * Optimized for speed. This function loads the title and description label in a case
      *    If there is a label then it is loaded
      *    Get Open APP_DELEGATIONS in the case
-     *    To look for APP_DELEGATIONS wich TASK in it, It has a label defined(CASE_TITLE)
+     *    To look for APP_DELEGATIONS which TASK in it, It has a label defined(CASE_TITLE)
      *    We need to read the last APP_DELEGATION->TASK
-     * @param string $sAppUid
-     * @param array $aAppData
-     * @return $res
+     *
+     * @param string $appUid
+     * @param array $fields
+     * @param array $lastFieldsCase
+     *
+     * @return array
+     *
+     * @see classes/Cases->startCase()
+     * @see classes/Cases->updateCase()
      */
-    public function newRefreshCaseTitleAndDescription($sAppUid, $fields, $aAppData)
+    public function newRefreshCaseTitleAndDescription($appUid, $fields, $lastFieldsCase = [])
     {
-        $res = array();
+        $res = [];
 
-        $lang = defined('SYS_LANG') ? SYS_LANG : 'en';
-        $bUpdatedDefTitle = false;
-        $bUpdatedDefDescription = false;
+        $flagTitle = false;
+        $flagDescription = false;
 
         $cri = new Criteria;
         $cri->clearSelectColumns();
         $cri->addSelectColumn(AppDelegationPeer::TAS_UID);
-        $cri->add(AppDelegationPeer::APP_UID, $sAppUid);
+        $cri->add(AppDelegationPeer::APP_UID, $appUid);
         $cri->add(AppDelegationPeer::DEL_THREAD_STATUS, "OPEN");
         if (isset($fields['DEL_INDEX'])) {
             $cri->add(AppDelegationPeer::DEL_INDEX, $fields['DEL_INDEX']);
@@ -732,36 +678,38 @@ class Cases
             $rs->setFetchmode(ResultSet::FETCHMODE_ASSOC);
             while ($rs->next()) {
                 $row = $rs->getRow();
+                $newValues = [];
+                //Get the case title
                 $tasDefTitle = trim($row['TAS_DEF_TITLE']);
-                if ($tasDefTitle != '' && !$bUpdatedDefTitle) {
-                    $newAppTitle = G::replaceDataField($tasDefTitle, $aAppData);
-                    $res['APP_TITLE'] = $newAppTitle;
-                    if (!(isset($fields['APP_TITLE']) && $fields['APP_TITLE'] == $newAppTitle)) {
-                        $bUpdatedDefTitle = true;
-                        $appData = array();
-                        $appData['APP_UID'] = $sAppUid;
-                        $appData['APP_TITLE'] = $newAppTitle;
-                        $oApplication = new Application();
-                        $oApplication->update($appData);
+                if (!empty($tasDefTitle) && !$flagTitle) {
+                    $newAppProperty = G::replaceDataField($tasDefTitle, $lastFieldsCase);
+                    $res['APP_TITLE'] = $newAppProperty;
+                    if (!(isset($currentValue) && ($currentValue == $tasDefTitle))) {
+                        $newValues['APP_TITLE'] = $newAppProperty;
+                        $flagTitle = true;
                     }
                 }
+                //Get the case description
                 $tasDefDescription = trim($row['TAS_DEF_DESCRIPTION']);
-                if ($tasDefDescription != '' && !$bUpdatedDefDescription) {
-                    $newAppDescription = G::replaceDataField($tasDefDescription, $aAppData);
-                    $res['APP_DESCRIPTION'] = $newAppDescription;
-                    if (!(isset($fields['APP_DESCRIPTION']) && $fields['APP_DESCRIPTION'] == $newAppDescription)) {
-                        $bUpdatedDefDescription = true;
-                        $appData = array();
-                        $appData['APP_UID'] = $sAppUid;
-                        $appData['APP_DESCRIPTION'] = $newAppDescription;
-                        $oApplication = new Application();
-                        $oApplication->update($appData);
+                if (!empty($tasDefDescription) && !$flagDescription) {
+                    $newAppProperty = G::replaceDataField($tasDefDescription, $lastFieldsCase);
+                    $res['APP_DESCRIPTION'] = $newAppProperty;
+                    if (!(isset($currentValue) && ($currentValue == $tasDefDescription))) {
+                        $newValues['APP_DESCRIPTION'] = $newAppProperty;
+                        $flagDescription = true;
                     }
+                }
+
+                if (!empty($newValues)) {
+                    $application = new Application();
+                    $newValues['APP_UID'] = $appUid;
+                    $application->update($newValues);
                 }
             }
             $rsCri->next();
             $rowCri = $rsCri->getRow();
         }
+
         return $res;
     }
 
@@ -865,27 +813,75 @@ class Cases
      * Update an existing case, this info is used in CaseResume
      *
      * @name updateCase
-     * @param string  $sAppUid
-     * @param integer $iDelIndex > 0 //get the Delegation fields
+     *
+     * @param string $appUid
+     * @param array $Fields
+     * @param bool $forceLoadData
+     *
      * @return Fields
+     * @throws Exception
+     *
+     * @see Cases->cancelCase()
+     * @see Cases->executeTriggerFromList()
+     * @see Cases->executeTriggersAfterExternal()
+     * @see Cases->getExecuteTriggerProcess()
+     * @see Cases->unCancelCase()
+     * @see Cases->cancelCase()
+     * @see executeCaseSelfService()/cron_single.php
+     * @see handleErrors()/class.pmFunctions.php
+     * @see handleFatalErrors()/class.pmFunctions.php
+     * @see PMFRedirectToStep()/class.pmFunctions.php
+     * @see setCaseTrackerCode()/class.pmFunctions.php
+     * @see Derivation::derivate()
+     * @see Derivation::verifyIsCaseChild()
+     * @see WsBase::executeTrigger()
+     * @see WsBase::executeTriggerFromDerivate()
+     * @see WsBase::newCase()
+     * @see WsBase::newCaseImpersonate()
+     * @see WsBase::sendVariables()
+     * @see AdditionalTables->saveDataInTable()
+     * @see AppEvent->executeEvents()
+     * @see cases_Derivate.php
+     * @see cases_SaveData.php
+     * @see cases_SaveDataSupervisor.php
+     * @see cases_SaveDocument.php
+     * @see cases_Step.php
+     * @see cases_SupervisorSaveDocument.php
+     * @see saveForm.php
+     * @see ActionByEmail.php
+     * @see ActionByEmailDataFormPost.php
+     * @see cases_StartExternal.php
+     * @see upload.php
+     * @see \ProcessMaker\BusinessModel\Cases::deleteMultipleFile()
+     * @see \ProcessMaker\BusinessModel\Cases::putExecuteTriggers()
+     * @see \ProcessMaker\BusinessModel\Cases::setCaseVariables()
+     * @see \ProcessMaker\BusinessModel\Consolidated::consolidatedUpdate()
+     * @see \ProcessMaker\BusinessModel\Consolidated::postDerivate()
+     * @see \ProcessMaker\BusinessModel\Light::doExecuteTriggerCase()
+     * @see \ProcessMaker\BusinessModel\Light::getPrepareInformation()
+     * @see \ProcessMaker\BusinessModel\Light::startCase()
+     * @see \ProcessMaker\BusinessModel\MessageApplication::catchMessageEvent()
+     * @see \ProcessMaker\BusinessModel\ScriptTask::execScriptByActivityUid()
+     * @see \ProcessMaker\BusinessModel\Cases\InputDocument::addCasesInputDocument()
+     * @see \ProcessMaker\BusinessModel\Cases\InputDocument::uploadFileCase()
+     * @see \ProcessMaker\BusinessModel\Cases\Variable::create()
+     * @see \ProcessMaker\BusinessModel\Cases\Variable::delete()
+     * @see \ProcessMaker\BusinessModel\Cases\Variable::update()
      */
-    public function updateCase($sAppUid, $Fields = array())
+    public function updateCase($appUid, $Fields = [], $forceLoadData = false)
     {
         try {
-            $oApplication = new Application;
-            if (!$oApplication->exists($sAppUid)) {
+            $application = new Application;
+            if (!$application->exists($appUid)) {
                 return false;
             }
-            $aApplicationFields = $Fields['APP_DATA'];
-            $Fields['APP_UID'] = $sAppUid;
+            $appData = $Fields['APP_DATA'];
+            $Fields['APP_UID'] = $appUid;
             $Fields['APP_UPDATE_DATE'] = 'now';
             $Fields['APP_DATA'] = serialize($Fields['APP_DATA']);
-            /*
-              $oApp = new Application;
-              $appFields = $oApp->load($sAppUid);
-             */
-            $oApp = ApplicationPeer::retrieveByPk($sAppUid);
-            $appFields = $oApp->toArray(BasePeer::TYPE_FIELDNAME);
+
+            $app = ApplicationPeer::retrieveByPk($appUid);
+            $appFields = $app->toArray(BasePeer::TYPE_FIELDNAME);
             if (isset($Fields['APP_TITLE'])) {
                 $appFields['APP_TITLE'] = $Fields['APP_TITLE'];
             }
@@ -896,16 +892,26 @@ class Cases
                 $appFields['DEL_INDEX'] = $Fields['DEL_INDEX'];
             }
 
-            $arrayNewCaseTitleAndDescription = $this->newRefreshCaseTitleAndDescription($sAppUid, $appFields, $aApplicationFields);
+            //Get the appTitle and appDescription
+            $fieldsCase = [];
+            if ($forceLoadData) {
+                $lastFieldsCase = $this->loadCase($appUid)['APP_DATA'];
+                $fieldsCase = array_merge($appData, $lastFieldsCase);
+            }
+            $newTitleOrDescription = $this->newRefreshCaseTitleAndDescription(
+                $appUid,
+                $appFields,
+                empty($fieldsCase) ? $appData : $fieldsCase
+            );
 
             //Start: Save History --By JHL
             if (isset($Fields['CURRENT_DYNAFORM'])) {
                 //only when that variable is set.. from Save
-                $FieldsBefore = $this->loadCase($sAppUid);
-                $FieldsDifference = $this->arrayRecursiveDiff($FieldsBefore['APP_DATA'], $aApplicationFields);
-                $fieldsOnBoth = $this->array_key_intersect($FieldsBefore['APP_DATA'], $aApplicationFields);
+                $FieldsBefore = $this->loadCase($appUid);
+                $FieldsDifference = $this->arrayRecursiveDiff($FieldsBefore['APP_DATA'], $appData);
+                $fieldsOnBoth = $this->array_key_intersect($FieldsBefore['APP_DATA'], $appData);
                 //Add fields that weren't in previous version
-                foreach ($aApplicationFields as $key => $value) {
+                foreach ($appData as $key => $value) {
                     if (is_array($value) && isset($fieldsOnBoth[$key]) && is_array($fieldsOnBoth[$key])) {
                         $afieldDifference = $this->arrayRecursiveDiff($value, $fieldsOnBoth[$key]);
                         $dfieldDifference = $this->arrayRecursiveDiff($fieldsOnBoth[$key], $value);
@@ -919,9 +925,9 @@ class Cases
                     }
                 }
                 if ((is_array($FieldsDifference)) && (count($FieldsDifference) > 0)) {
-                    $oCurrentDynaform = new Dynaform();
+                    $dynaformInstance = new Dynaform();
                     try {
-                        $currentDynaform = $oCurrentDynaform->Load($Fields['CURRENT_DYNAFORM']);
+                        $currentDynaform = $dynaformInstance->Load($Fields['CURRENT_DYNAFORM']);
                     } catch (Exception $e) {
                         $currentDynaform["DYN_CONTENT"] = "";
                     }
@@ -937,8 +943,8 @@ class Cases
                 }
             }
             //End Save History
-            //we are removing the app_title and app_description from this array,
-            //because they already be updated in  newRefreshCaseTitleAndDescription function
+
+            //We are removing the app_title and app_description because they already be updated in newRefreshCaseTitleAndDescription function
             if (isset($Fields['APP_TITLE'])) {
                 unset($Fields['APP_TITLE']);
             }
@@ -951,14 +957,14 @@ class Cases
                 }
                 /*----------------------------------********---------------------------------*/
             }
-            $oApp->update($Fields);
 
-            $DEL_INDEX = isset($Fields['DEL_INDEX']) ? $Fields['DEL_INDEX'] : '';
-            $TAS_UID = isset($Fields['TAS_UID']) ? $Fields['TAS_UID'] : '';
+            /** Update case*/
+            $app->update($Fields);
 
+            //Update the reportTables and tables related to the case
             require_once 'classes/model/AdditionalTables.php';
-            $oReportTables = new ReportTables();
-            $addtionalTables = new additionalTables();
+            $reportTables = new ReportTables();
+            $additionalTables = new additionalTables();
 
             if (!isset($Fields['APP_NUMBER'])) {
                 $Fields['APP_NUMBER'] = $appFields['APP_NUMBER'];
@@ -967,56 +973,33 @@ class Cases
                 $Fields['APP_STATUS'] = $appFields['APP_STATUS'];
             }
 
-            $oReportTables->updateTables($appFields['PRO_UID'], $sAppUid, $Fields['APP_NUMBER'], $aApplicationFields);
-            $addtionalTables->updateReportTables(
-                    $appFields['PRO_UID'], $sAppUid, $Fields['APP_NUMBER'], $aApplicationFields, $Fields['APP_STATUS']
+            $reportTables->updateTables($appFields['PRO_UID'], $appUid, $Fields['APP_NUMBER'], $appData);
+            $additionalTables->updateReportTables(
+                    $appFields['PRO_UID'], $appUid, $Fields['APP_NUMBER'], $appData, $Fields['APP_STATUS']
             );
 
-            //now update the priority in appdelegation table, using the defined variable in task
-            if (trim($DEL_INDEX) != '' && trim($TAS_UID) != '') {
-                //optimized code to avoid load task content row.
-                $c = new Criteria();
-                $c->clearSelectColumns();
-                $c->addSelectColumn(TaskPeer::TAS_PRIORITY_VARIABLE);
-                $c->add(TaskPeer::TAS_UID, $TAS_UID);
-                $rs = TaskPeer::doSelectRS($c);
-                $rs->setFetchmode(ResultSet::FETCHMODE_ASSOC);
-                $rs->next();
-                $row = $rs->getRow();
-                $VAR_PRI = substr($row['TAS_PRIORITY_VARIABLE'], 2);
-                //end optimized code.
+            //Update the priority related to the task
+            $delIndex = isset($Fields['DEL_INDEX']) ? trim($Fields['DEL_INDEX']) : '';
+            $tasUid = isset($Fields['TAS_UID']) ? trim($Fields['TAS_UID']) : '';
+            $appDel = new AppDelegation;
+            $appDel->updatePriority($delIndex, $tasUid, $appUid, $appData);
 
-                $x = unserialize($Fields['APP_DATA']);
-                if (isset($x[$VAR_PRI])) {
-                    if (trim($x[$VAR_PRI]) != '') {
-                        $oDel = new AppDelegation;
-                        $array = array();
-                        $array['APP_UID'] = $sAppUid;
-                        $array['DEL_INDEX'] = $DEL_INDEX;
-                        $array['TAS_UID'] = $TAS_UID;
-                        $array['DEL_PRIORITY'] = (isset($x[$VAR_PRI]) ?
-                                ($x[$VAR_PRI] >= 1 && $x[$VAR_PRI] <= 5 ? $x[$VAR_PRI] : '3') : '3');
-                        $oDel->update($array);
-                    }
-                }
-            }
             //Update Solr Index
             if ($this->appSolr != null) {
-                $this->appSolr->updateApplicationSearchIndex($sAppUid);
+                $this->appSolr->updateApplicationSearchIndex($appUid);
             }
 
             if ($Fields["APP_STATUS"] == "COMPLETED") {
                 //Delete records of the table APP_ASSIGN_SELF_SERVICE_VALUE
                 $appAssignSelfServiceValue = new AppAssignSelfServiceValue();
-
-                $appAssignSelfServiceValue->remove($sAppUid);
+                $appAssignSelfServiceValue->remove($appUid);
             }
 
             /*----------------------------------********---------------------------------*/
 
             //Return
             return $Fields;
-        } catch (exception $e) {
+        } catch (Exception $e) {
             throw ($e);
         }
     }
@@ -3465,7 +3448,7 @@ class Cases
                             $appFieldsTrigger = [];
                             $appFieldsTrigger['APP_DATA'] = $fieldsTrigger;
                             //Update the case
-                            $this->updateCase($appUid, $appFieldsTrigger);
+                            $this->updateCase($appUid, $appFieldsTrigger, true);
                         }
 
                         //Merge the appData with variables changed
@@ -7033,6 +7016,7 @@ class Cases
      * @param string $type
      * @param string $userUid
      * @return array|stdclass|string
+     *
      */
     public function getCaseNotes($applicationID, $type = 'array', $userUid = '')
     {
@@ -7045,13 +7029,16 @@ class Cases
         if (is_array($appNotes)) {
             switch ($type) {
                 case 'array':
-                    $response = array();
+                    $response = [];
                     foreach ($appNotes['array']['notes'] as $key => $value) {
                         $list = array();
                         $list['FULL_NAME'] = $value['USR_FIRSTNAME'] . " " . $value['USR_LASTNAME'];
                         foreach ($value as $keys => $value) {
                             if ($keys != 'USR_FIRSTNAME' && $keys != 'USR_LASTNAME' && $keys != 'USR_EMAIL') {
                                 $list[$keys] = $value;
+                            }
+                            if ($keys == 'NOTE_DATE') {
+                                $list[$keys] = DateTime::convertUtcToTimeZone($value);
                             }
                         }
                         $response[$key + 1] = $list;
@@ -7065,6 +7052,9 @@ class Cases
                             if ($keys != 'USR_FIRSTNAME' && $keys != 'USR_LASTNAME' && $keys != 'USR_EMAIL') {
                                 $response->$key->$keys = $value;
                             }
+                            if ($keys == 'NOTE_DATE') {
+                                $response->$key->$keys = DateTime::convertUtcToTimeZone($value);
+                            }
                         }
                     }
                     break;
@@ -7074,7 +7064,7 @@ class Cases
                         $response .= $value['USR_FIRSTNAME'] . " " .
                             $value['USR_LASTNAME'] . " " .
                             "(" . $value['USR_USERNAME'] . ")" .
-                            " " . $value['NOTE_CONTENT'] . " " . " (" . $value['NOTE_DATE'] . " ) " .
+                            " " . $value['NOTE_CONTENT'] . " " . " (" . DateTime::convertUtcToTimeZone($value['NOTE_DATE']) . " ) " .
                             " \n";
                     }
                     break;

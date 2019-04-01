@@ -130,7 +130,6 @@ switch ($req) {
         $tasTitleDefault = G::LoadTranslation('ID_TASK_NOT_RELATED');
         while ($result->next()) {
             $row = $result->getRow();
-            $row['APP_MSG_FROM'] = htmlentities($row['APP_MSG_FROM'], ENT_QUOTES, "UTF-8");
             $row['APP_MSG_STATUS'] = ucfirst($row['APP_MSG_STATUS']);
 
             switch ($filterBy) {

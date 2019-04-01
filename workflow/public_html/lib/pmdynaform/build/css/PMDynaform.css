@@ -676,16 +676,16 @@
   .label-suggest {
     display: block !important;
     margin-top: 6px;
-    padding-right: 4px;
     vertical-align: top;
     word-wrap: break-word;
     word-break: break-all;
     text-align: left;
+    padding: 0px 4px 0px 0px;
+    list-style-type: none;
   }
 
   .content-print li {
     list-style-type: none;
-    margin-left: -85%;
   }
 }
 @page {
@@ -925,7 +925,6 @@ a.form-control {
 }
 
 .pmdynaform-control-textarea:disabled {
-  overflow-y: hidden;
   cursor: auto;
 }
 

@@ -1360,7 +1360,7 @@ class G
         return $e;
     }
 
-    /** 
+    /**
      * formatNumber
      *
      * @author David Callizaya <calidavidx21@yahoo.com.ar>
@@ -1376,7 +1376,7 @@ class G
         return $snum;
     }
 
-    /** 
+    /**
      * Returns a date formatted according to the given format string
      * @author David Callizaya <calidavidx21@hotmail.com>
      * @param string $format     The format of the outputted date string
@@ -1634,7 +1634,7 @@ class G
         return $campo;
     }
 
-    /** 
+    /**
      * Escapes special characters in a string for use in a SQL statement
      * @param string $sqlString  The string to be escaped
      * @param string $DBEngine   Target DBMS
@@ -1678,7 +1678,7 @@ class G
         }
     }
 
-    /** 
+    /**
      * Returns a sql string with @@parameters replaced with its values defined
      * in array $result using the next notation:
      * NOTATION:
@@ -1856,7 +1856,7 @@ class G
         return $sContent;
     }
 
-    /** 
+    /**
      * Load strings from a XMLFile.
      * @author David Callizaya <davidsantos@colosa.com>
      * @parameter $languageFile An xml language file.
@@ -1895,7 +1895,7 @@ class G
         }
     }
 
-    /** 
+    /**
      * Funcion auxiliar Temporal:
      * Registra en la base de datos los labels xml usados en el sistema
      * @author David Callizaya <calidavidx21@hotmail.com>
@@ -2767,7 +2767,7 @@ class G
         $image = $inputFn($path);
         imagecopyresampled($image_p, $image, 0, 0, 0, 0, $resWidth, $resHeight, $width, $height);
         $outputFn($image_p, $saveTo);
-        
+
         if (!is_null($saveTo)) {
             $filter = new InputFilter();
             $saveTo = $filter->validateInput($saveTo, "path");
@@ -3197,10 +3197,11 @@ class G
      * Inflects a string with accented characters and other characteres not suitable for file names, by defaul replace with undescore
      *
      * @author Erik Amaru Ortiz <erik@colosa.com, aortiz.erik@gamil.com>
-     * @param (string) string to convert
-     * @param (string) character for replace
-     * @param (array) additional characteres map
-     *
+     * @param string $string to convert
+     * @param string $replacement character for replace
+     * @param array $map additional characteres map
+     * @return string|string[]|null
+     * @see PMXPublisher::truncateName, Processes::saveSerializedProcess, XmlExporter::truncateName
      */
     public static function inflect($string, $replacement = '_', $map = array())
     {
@@ -3208,8 +3209,6 @@ class G
             $map = $replacement;
             $replacement = '_';
         }
-
-        $quotedReplacement = preg_quote($replacement, '/');
 
         $default = array('/à|á|å|â/' => 'a',
             '/è|é|ê|ẽ|ë/' => 'e',
@@ -5802,7 +5801,7 @@ class G
             include(PATH_METHODS . "login/version-pmos.php");
         }
         //Removed default version from code.
-        
+
         /**
          * The constants defined comes from the file:
          * processmaker/workflow/engine/classes/class.plugin.php, the loading of this
@@ -5875,7 +5874,7 @@ class G
     /**
      * Fix string corrupted related to PMC-336.
      * To do, this method should be removed. Related to PMC-336.
-     * 
+     *
      * @param string $string
      * @return string
      */

@@ -68,6 +68,14 @@ PMExtJSCommon = function() {
   {
     Ext.msgBoxSlider.msg(title, msg, type, time);
   }
+  //TODO we need to review how many places using this kind of validation
+  this.escapeHtml = function (v) {
+      var pre = document.createElement('pre');
+      var text = document.createTextNode( v );
+      pre.appendChild(text);
+
+      return pre.innerHTML;
+  }
 
     this.getBrowser = function () {
         var browsersList = ["opera", "msie", "firefox", "chrome", "safari", "trident"],

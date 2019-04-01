@@ -149,7 +149,13 @@ try {
 
             define('SERVER_NAME', $SERVER_INFO['SERVER_NAME']);
             define('SERVER_PORT', $SERVER_INFO['SERVER_PORT']);
-            define('REQUEST_SCHEME', $SERVER_INFO['REQUEST_SCHEME']);
+            //to do improvement G::is_https()
+            if ((isset($SERVER_INFO['HTTPS']) && $SERVER_INFO['HTTPS'] == 'on') ||
+                    (isset($SERVER_INFO['HTTP_X_FORWARDED_PROTO']) && $SERVER_INFO['HTTP_X_FORWARDED_PROTO'] == 'https')) {
+                define('REQUEST_SCHEME', 'https');
+            } else {
+                define('REQUEST_SCHEME', $SERVER_INFO['REQUEST_SCHEME']);
+            }
         } else {
             eprintln('WARNING! No server info found!', 'red');
         }
@@ -222,8 +228,8 @@ try {
             define('DB_PASS', $DB_PASS);
         }
         if (!defined('SYS_SKIN')) {
-            $conf = new Configurations();
-            define('SYS_SKIN', $conf->getConfiguration('SKIN_CRON', ''));
+            $config = System::getSystemConfiguration();
+            define('SYS_SKIN', $config['default_skin']);
         }
 
         $dateSystem = date('Y-m-d H:i:s');

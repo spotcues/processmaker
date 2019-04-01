@@ -28,10 +28,10 @@
 //
 // License: LGPL, see LICENSE
 ////////////////////////////////////////////////////
+use ProcessMaker\BusinessModel\Cases as BusinessModelCases;
 use ProcessMaker\Core\System;
 use ProcessMaker\Plugins\PluginRegistry;
 use ProcessMaker\Util\ElementTranslation;
-
 
 /**
  * ProcessMaker has made a number of its PHP functions available be used in triggers and conditions.
@@ -3470,38 +3470,26 @@ function PMFGetNextDerivationInfo($caseUid, $delIndex)
  * @param string | $skin = null | Skin | The skin
  *
  * @return string | $url | Direct case link | Returns the direct case link, FALSE otherwise
+ * @link https://wiki.processmaker.com/3.2/Direct_Case_Link
  */
 function PMFCaseLink($caseUid, $workspace = null, $language = null, $skin = null)
 {
     try {
-        $case = new \ProcessMaker\BusinessModel\Cases();
-
+        $case = new BusinessModelCases();
         $arrayApplicationData = $case->getApplicationRecordByPk($caseUid, [], false);
-
         if ($arrayApplicationData === false) {
             return false;
         }
-        $conf = new Configurations();
-        $envSkin = defined("SYS_SKIN") ? SYS_SKIN : $conf->getConfiguration('SKIN_CRON', '');
-        $workspace = (!empty($workspace)) ? $workspace : config("system.workspace");
-        $language = (!empty($language)) ? $language : SYS_LANG;
-        $skin = (!empty($skin)) ? $skin : $envSkin;
+
+        $workspace = !empty($workspace) ? $workspace : config("system.workspace");
+        $language = !empty($language) ? $language : SYS_LANG;
+        if (empty($skin)) {
+            $config = System::getSystemConfiguration();
+            $skin = defined("SYS_SKIN") ? SYS_SKIN : $config['default_skin'];
+        }
 
         $uri = '/sys' . $workspace . '/' . $language . '/' . $skin . '/cases/opencase/' . $caseUid;
-
-        $envHost = isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : SERVER_NAME;
-        $envProtocol = defined("REQUEST_SCHEME") && REQUEST_SCHEME === "https";
-        if (isset($_SERVER['SERVER_PORT'])) {
-            $envPort = ($_SERVER['SERVER_PORT'] != "80") ? ":" . $_SERVER['SERVER_PORT'] : "";
-        } else if (defined('SERVER_PORT')) {
-            $envPort = (SERVER_PORT . "" != "80") ? ":" . SERVER_PORT : "";
-        } else {
-            $envPort = "";
-        }
-        if (!empty($envPort) && strpos($envHost, $envPort) === false) {
-            $envHost = $envHost . $envPort;
-        }
-        $link = (G::is_https() || $envProtocol ? 'https://' : 'http://') . $envHost . $uri;
+        $link = System::getServerProtocolHost() . $uri;
         return $link;
     } catch (Exception $e) {
         throw $e;

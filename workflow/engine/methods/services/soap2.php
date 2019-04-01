@@ -1,6 +1,7 @@
 <?php
 
 use ProcessMaker\Util\ParseSoapVariableName;
+use ProcessMaker\Util\DateTime;
 
 ini_set("soap.wsdl_cache_enabled", 0); //disabling WSDL cache
 
@@ -923,6 +924,13 @@ function systemInformation($params)
     return $res;
 }
 
+/**
+ * Obtains the cases notes in a soap call
+ *
+ * @param $params
+ * @return WsGetCaseNotesResponse|WsResponse
+ *
+ */
 function getCaseNotes($params)
 {
     $vsResult = isValidSession($params->sessionId);
@@ -933,6 +941,11 @@ function getCaseNotes($params)
 
     $ws = new WsBase();
     $res = $ws->getCaseNotes($params->applicationID, $params->userUid);
+
+    foreach ($res->notes as $key => $value) {
+        $res->notes[$key]['note_date'] = DateTime::convertUtcToTimeZone($res->notes[$key]['note_date']);
+
+    }
 
     return $res;
 }

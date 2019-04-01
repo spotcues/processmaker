@@ -2,11 +2,12 @@
 
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
-/*----------------------------------********---------------------------------*/
 use ProcessMaker\BusinessModel\Process as BmProcess;
+/*----------------------------------********---------------------------------*/
 use ProcessMaker\Core\Installer;
 use ProcessMaker\Core\System;
 use ProcessMaker\Plugins\Adapters\PluginAdapter;
+use ProcessMaker\Project\Adapter\BpmnWorkflow;
 use ProcessMaker\Util\FixReferencePath;
 
 /**
@@ -3644,53 +3645,62 @@ class WorkspaceTools
         CLI::logging("|--> Clean data in table " . OauthRefreshTokensPeer::TABLE_NAME . " rows " . $refreshToken . "\n");
     }
 
+    /**
+     * Migrate the Intermediate throw Email Event to Dummy task, specify the workspaces. 
+     * The processes in this workspace will be updated.
+     * 
+     * @param string $workspaceName
+     * @see workflow/engine/bin/tasks/cliWorkspaces.php::run_migrate_itee_to_dummytask()
+     * @see workflow/engine/classes/WorkspaceTools.php->upgradeDatabase()
+     * @link https://wiki.processmaker.com/3.3/processmaker_command#migrate-itee-to-dummytask
+     */
     public function migrateIteeToDummytask($workspaceName)
     {
         $this->initPropel(true);
-        $arraySystemConfiguration = System::getSystemConfiguration('', '', $workspaceName);
-        $conf = new Configurations();
-        \G::$sysSys = $workspaceName;
-        \G::$pathDataSite = PATH_DATA . "sites" . PATH_SEP . \G::$sysSys . PATH_SEP;
-        \G::$pathDocument = PATH_DATA . 'sites' . DIRECTORY_SEPARATOR . $workspaceName . DIRECTORY_SEPARATOR . 'files';
-        \G::$memcachedEnabled = $arraySystemConfiguration['memcached'];
-        \G::$pathDataPublic = \G::$pathDataSite . "public" . PATH_SEP;
-        \G::$sysSkin = $conf->getConfiguration('SKIN_CRON', '');
-        if (is_file(\G::$pathDataSite . PATH_SEP . ".server_info")) {
-            $serverInfo = file_get_contents(\G::$pathDataSite . PATH_SEP . ".server_info");
+        $config = System::getSystemConfiguration('', '', $workspaceName);
+        G::$sysSys = $workspaceName;
+        G::$pathDataSite = PATH_DATA . "sites" . PATH_SEP . G::$sysSys . PATH_SEP;
+        G::$pathDocument = PATH_DATA . 'sites' . DIRECTORY_SEPARATOR . $workspaceName . DIRECTORY_SEPARATOR . 'files';
+        G::$memcachedEnabled = $config['memcached'];
+        G::$pathDataPublic = G::$pathDataSite . "public" . PATH_SEP;
+        G::$sysSkin = $config['default_skin'];
+        if (is_file(G::$pathDataSite . PATH_SEP . ".server_info")) {
+            $serverInfo = file_get_contents(G::$pathDataSite . PATH_SEP . ".server_info");
             $serverInfo = unserialize($serverInfo);
             $envHost = $serverInfo["SERVER_NAME"];
             $envPort = ($serverInfo["SERVER_PORT"] . "" != "80") ? ":" . $serverInfo["SERVER_PORT"] : "";
             if (!empty($envPort) && strpos($envHost, $envPort) === false) {
                 $envHost = $envHost . $envPort;
             }
-            \G::$httpHost = $envHost;
+            G::$httpHost = $envHost;
         }
 
         //Search All process
-        $oCriteria = new Criteria("workflow");
-        $oCriteria->addSelectColumn(ProcessPeer::PRO_UID);
-        $oCriteria->addSelectColumn(ProcessPeer::PRO_ITEE);
-        $oCriteria->add(ProcessPeer::PRO_ITEE, '0', Criteria::EQUAL);
-        $rsCriteria = ProcessPeer::doSelectRS($oCriteria);
-        $rsCriteria->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+        $criteria = new Criteria("workflow");
+        $criteria->addSelectColumn(ProcessPeer::PRO_UID);
+        $criteria->addSelectColumn(ProcessPeer::PRO_ITEE);
+        $criteria->add(ProcessPeer::PRO_ITEE, '0', Criteria::EQUAL);
+        $resultSet = ProcessPeer::doSelectRS($criteria);
+        $resultSet->setFetchmode(ResultSet::FETCHMODE_ASSOC);
         $message = "-> Migrating the Intermediate Email Event \n";
         CLI::logging($message);
-        while ($rsCriteria->next()) {
-            $row = $rsCriteria->getRow();
-            $prj_uid = $row['PRO_UID'];
-            $bpmnProcess = new Process();
-            if ($bpmnProcess->isBpmnProcess($prj_uid)) {
-                $project = new \ProcessMaker\Project\Adapter\BpmnWorkflow();
-                $diagram = $project->getStruct($prj_uid);
-                $res = $project->updateFromStruct($prj_uid, $diagram);
-                $bpmnProcess->setProUid($prj_uid);
-                $oProcess = new Process();
-                $aProcess['PRO_UID'] = $prj_uid;
-                $aProcess['PRO_ITEE'] = '1';
-                if ($oProcess->processExists($prj_uid)) {
-                    $oProcess->update($aProcess);
+        while ($resultSet->next()) {
+            $row = $resultSet->getRow();
+            $prjUid = $row['PRO_UID'];
+            $process = new Process();
+            if ($process->isBpmnProcess($prjUid)) {
+                $project = new BpmnWorkflow();
+                $diagram = $project->getStruct($prjUid);
+                $project->updateFromStruct($prjUid, $diagram);
+                $process->setProUid($prjUid);
+                $updateProcess = new Process();
+                $updateProcessData = [];
+                $updateProcessData['PRO_UID'] = $prjUid;
+                $updateProcessData['PRO_ITEE'] = '1';
+                if ($updateProcess->processExists($prjUid)) {
+                    $updateProcess->update($updateProcessData);
                 }
-                $message = "    Process updated " . $bpmnProcess->getProTitle() . "\n";
+                $message = "    Process updated " . $process->getProTitle() . "\n";
                 CLI::logging($message);
             }
         }

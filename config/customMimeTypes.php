@@ -661,6 +661,7 @@ return [
     //The following are the custom application mime type
     'dat' => 'text/plain',
     'pm' => ['text/plain', 'application/octet-stream'],
+    'pmp' => ['application/xml', 'text/xml', 'text/html'],
     'pmt' => 'text/plain',
     'pmx' => ['application/xml', 'text/xml', 'text/html'],
     'pmx2' => ['application/xml', 'text/xml', 'text/html'],
