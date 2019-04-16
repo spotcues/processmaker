@@ -180,8 +180,12 @@ class AppNotes extends BaseAppNotes
      * @param string $noteRecipients
      * @param string $from
      * @param integer $delIndex
-     *
+     * @return void
      * @throws Exception
+     *
+     * @see AppNotes->addCaseNote()
+     * @see AppNotes->postNewNote()
+     * @see workflow/engine/src/ProcessMaker/Util/helpers.php::postNote()
     */
     public function sendNoteNotification ($appUid, $usrUid, $noteContent, $noteRecipients, $from = '', $delIndex = 0)
     {
@@ -224,7 +228,7 @@ class AppNotes extends BaseAppNotes
                     '',
                     $appUid,
                     $delIndex,
-                    'DERIVATION',
+                    WsBase::MESSAGE_TYPE_CASE_NOTE,
                     G::replaceDataField($configNoteNotification['subject'], $fieldCase),
                     G::buildFrom($configuration, $from),
                     $to,

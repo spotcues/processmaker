@@ -178,7 +178,29 @@ PMExtJSCommon = function() {
       Tools.createCookie(name,"",-1);
     }
   }
-
+  this.emailConst = {
+    appMsgTypeWithoutTask:['EXTERNAL_REGISTRATION','TEST','CASE_NOTE','SOAP','RETRIEVE_PASSWORD'],
+    appMsgTypeWithConditionalTask:['PM_FUNCTION'],
+    appMsgTypeWithoutCase:['EXTERNAL_REGISTRATION','TEST','RETRIEVE_PASSWORD'],
+    appMsgTypeWithoutProcess:['EXTERNAL_REGISTRATION','TEST','RETRIEVE_PASSWORD'],
+    appMsgTypeWithoutNumber:['EXTERNAL_REGISTRATION','TEST','RETRIEVE_PASSWORD'],
+    numberColumn:{
+      name:'APP_NUMBER',
+      defaultValue:'N/A'
+    },
+    taskColumn:{
+        name:'TAS_TITLE',
+        defaultValue:'N/A'
+    },
+    caseColumn:{
+        name:'APP_TITLE',
+        defaultValue:'N/A'
+    },
+    processColumn:{
+      name:'PRO_TITLE',
+      defaultValue:'N/A'
+    }
+  }
 }
 var PMExt = new PMExtJSCommon();
 

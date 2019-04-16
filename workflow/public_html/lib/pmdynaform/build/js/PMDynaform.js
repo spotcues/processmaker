@@ -9193,19 +9193,19 @@ xCase.extendNamespace = function (path, newClass) {
                     case 'link':
                         cell.setValue(fixedData.value);
                         break;
-                    case 'suggest':
-                        cell.setData(fixedData);
-                        break;
                     case 'file':
                         fixedData.value = fixedData.value === 'string'? [] : fixedData.value;
                         cell.setData(fixedData);
                         break;
                     default:
-                        if (fixedData.value !== '') {
+                        // Only from addRow arrive a empty label, 
+                        // here the dependent event need to be fired
+                        if (!data.label) {
                             cell.setData(fixedData);
                         } else {
-                            cell.model.set({'data': fixedData}, {silent: true});
-                            cell.model.set({'value': fixedData.value}, {silent: true});
+                            cell.model.set({"data": fixedData}, {silent: true});
+                            cell.model.set({"value": fixedData.value}, {silent: true});
+                            cell.model.set("toDraw", true);
                         }
                         break;
                 }
@@ -10292,7 +10292,7 @@ xCase.extendNamespace = function (path, newClass) {
                         model: this.model.get("validator"),
                         domain: false
                     });
-                    this.$el.find("select").parent().append(this.validator.el);
+                    this.$el.find("select").parent().parent().append(this.validator.el);
                     this.applyStyleError();
                 }
             } else {
@@ -10579,7 +10579,7 @@ xCase.extendNamespace = function (path, newClass) {
                     this.validator = new PMDynaform.view.Validator({
                         model: this.model.get("validator")
                     });
-                    this.$el.find(".pmdynaform-control-radio-list").parent().append(this.validator.el);
+                    this.$el.find(".pmdynaform-control-radio-list").parent().parent().append(this.validator.el);
                     this.applyStyleError();
                 }
             } else {
@@ -10919,7 +10919,7 @@ xCase.extendNamespace = function (path, newClass) {
                     this.validator = new PMDynaform.view.Validator({
                         model: this.model.get("validator")
                     });
-                    this.tagControl.parent().append(this.validator.el);
+                    this.tagControl.parent().parent().append(this.validator.el);
                     this.applyStyleError();
                 }
             } else {
@@ -11195,7 +11195,7 @@ xCase.extendNamespace = function (path, newClass) {
                     this.validator = new PMDynaform.view.Validator({
                         model: this.model.get("validator")
                     });
-                    this.tagControl.parent().append(this.validator.el);
+                    this.tagControl.parent().parent().append(this.validator.el);
                     this.applyStyleError();
                 }
             } else {
@@ -11938,7 +11938,7 @@ xCase.extendNamespace = function (path, newClass) {
                     this.validator = new PMDynaform.view.Validator({
                         model: this.model.get("validator")
                     });
-                    this.$el.find(".pmdynaform-control-checkbox-list").parent().append(this.validator.el);
+                    this.$el.find(".pmdynaform-control-checkbox-list").parent().parent().append(this.validator.el);
                     this.applyStyleError();
                 }
             } else {
@@ -13015,7 +13015,7 @@ xCase.extendNamespace = function (path, newClass) {
                     this.validator = new PMDynaform.view.Validator({
                         model: this.model.get("validator")
                     });
-                    this.$el.find("input[type='suggest']").parent().append(this.validator.el);
+                    this.$el.find("input[type='suggest']").parent().parent().append(this.validator.el);
                     this.applyStyleError();
                 }
             } else {
@@ -14629,7 +14629,7 @@ xCase.extendNamespace = function (path, newClass) {
                     this.validator = new PMDynaform.view.Validator({
                         model: this.model.get("validator")
                     });
-                    this.$el.find(".datetime-container").append(this.validator.el);
+                    this.$el.find(".control-group").parent().append(this.validator.el);
                     this.applyStyleError();
                 }
             } else {

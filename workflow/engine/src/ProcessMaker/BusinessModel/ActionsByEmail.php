@@ -24,6 +24,7 @@ use ResultSet;
 use SpoolRun;
 use stdClass;
 use Users as ClassUsers;
+use WsBase;
 
 /**
  * Description of ActionsByEmailService
@@ -366,6 +367,9 @@ class ActionsByEmail
      *
      * @return string $message
      * @throws Exception
+     *
+     * @see workflow/engine/methods/actionsByEmail/actionsByEmailAjax.php
+     * @see \ProcessMaker\Services\Api\ActionsByEmail::forwardMail()
      */
     public function forwardMail(array $arrayData)
     {
@@ -397,7 +401,7 @@ class ActionsByEmail
                     '',
                     $dataRes['APP_UID'],
                     $dataRes['DEL_INDEX'],
-                    'TEST',
+                    WsBase::MESSAGE_TYPE_ACTIONS_BY_EMAIL,
                     $dataRes['ABE_REQ_SUBJECT'],
                     $aSetup['MESS_ACCOUNT'],
                     $dataRes['ABE_REQ_SENT_TO'],

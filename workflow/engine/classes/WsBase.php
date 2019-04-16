@@ -6,8 +6,18 @@ use ProcessMaker\Core\System;
 
 class WsBase
 {
+    const MESSAGE_TYPE_ACTIONS_BY_EMAIL = 'ACTIONS_BY_EMAIL';
+    const MESSAGE_TYPE_CASE_NOTE = 'CASE_NOTE';
+    const MESSAGE_TYPE_EMAIL_EVENT = 'EVENT';
+    const MESSAGE_TYPE_EXTERNAL_REGISTRATION = 'EXTERNAL_REGISTRATION';
+    const MESSAGE_TYPE_PM_FUNCTION = 'PM_FUNCTION';
+    const MESSAGE_TYPE_RETRIEVE_PASSWORD = 'RETRIEVE_PASSWORD';
+    const MESSAGE_TYPE_SOAP = 'SOAP';
+    const MESSAGE_TYPE_TASK_NOTIFICATION = 'ROUTING';
+    const MESSAGE_TYPE_TEST_EMAIL = 'TEST';
     public $stored_system_variables; //boolean
     public $wsSessionId; //web service session id, if the wsbase function is used from a WS request
+    private $taskId;
     private $flagSameCase = true;
 
     public function __construct($params = null)
@@ -41,6 +51,28 @@ class WsBase
     public function setFlagSameCase($var)
     {
         $this->flagSameCase = $var;
+    }
+
+    /**
+     * Get the taskId
+     *
+     * @return int
+     */
+    public function getTaskId()
+    {
+        return $this->taskId;
+    }
+
+    /**
+     * Set the taskId
+     *
+     * @param int $taskId
+     *
+     * @return void
+     */
+    public function setTaskId($taskId)
+    {
+        $this->taskId = $taskId;
     }
 
     /**
@@ -852,6 +884,13 @@ class WsBase
      * @param array $config
      *
      * @return $result will return an object
+     *
+     * @see ActionsByEmailCoreClass->sendActionsByEmail()
+     * @see workflow\engine\classes\class.pmFunctions::PMFSendMessage()
+     * @see workflow\engine\methods\services\soap2::sendMessage()
+     * @see \ProcessMaker\BusinessModel\EmailEvent->sendEmail()
+     * @see \ProcessMaker\BusinessModel\Pmgmail->sendEmailWithApplicationData()
+     *
      */
     public function sendMessage(
         $appUid,
@@ -866,7 +905,8 @@ class WsBase
         $showMessage = true,
         $delIndex = 0,
         $config = [],
-        $gmail = 0
+        $gmail = 0,
+        $appMsgType = WsBase::MESSAGE_TYPE_PM_FUNCTION
     )
     {
         try {
@@ -884,7 +924,7 @@ class WsBase
             $spool->setConfig($setup);
 
             $case = new Cases();
-            $oldFields = $case->loadCase($appUid);
+            $oldFields = $case->loadCase($appUid, $delIndex);
             if ($gmail == 1) {
                 $pathEmail = PATH_DATA_SITE . 'mailTemplates' . PATH_SEP;
             } else {
@@ -910,7 +950,7 @@ class WsBase
                 '',
                 $appUid,
                 $delIndex,
-                'TRIGGER',
+                $appMsgType,
                 $subject,
                 G::buildFrom($setup, $from),
                 $to,
@@ -925,7 +965,7 @@ class WsBase
                 (preg_match("/^.+\.html?$/i", $fileTemplate)) ? true : false,
                 isset($fieldsCase['APP_NUMBER']) ? $fieldsCase['APP_NUMBER'] : 0,
                 isset($fieldsCase['PRO_ID']) ? $fieldsCase['PRO_ID'] : 0,
-                isset($fieldsCase['TAS_ID']) ? $fieldsCase['TAS_ID'] : 0
+                $this->getTaskId() ?$this->getTaskId():(isset($oldFields['TAS_ID'])? $oldFields['TAS_ID'] : 0)
             );
             $spool->create($messageArray);
 

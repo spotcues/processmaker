@@ -292,7 +292,8 @@ class ActionsByEmailCoreClass extends PMPlugin
                                 true,
                                 $data->DEL_INDEX,
                                 $emailSetup,
-                                0
+                                0,
+                                WsBase::MESSAGE_TYPE_ACTIONS_BY_EMAIL
                             );
                             $abeRequest['ABE_REQ_STATUS'] = ($result->status_code == 0 ? 'SENT' : 'ERROR');
 

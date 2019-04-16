@@ -378,6 +378,13 @@ function removeDocument($params)
     return $res;
 }
 
+/**
+ * Send Message
+ *
+ * @param object $params
+ * @return array
+ *
+ */
 function SendMessage($params)
 {
     $vsResult = isValidSession($params->sessionId);
@@ -393,7 +400,22 @@ function SendMessage($params)
     }
 
     $ws = new WsBase();
-    $res = $ws->sendMessage($params->caseId, $params->from, $params->to, $params->cc, $params->bcc, $params->subject, $params->template);
+    $res = $ws->sendMessage(
+        $params->caseId,
+        $params->from,
+        $params->to,
+        $params->cc,
+        $params->bcc,
+        $params->subject,
+        $params->template,
+        null,
+        null,
+        true,
+        0,
+        [],
+        0,
+        WsBase::MESSAGE_TYPE_SOAP
+        );
 
     return $res->getPayloadArray();
 }

@@ -816,7 +816,6 @@ class Cases
      *
      * @param string $appUid
      * @param array $Fields
-     * @param bool $forceLoadData
      *
      * @return Fields
      * @throws Exception
@@ -868,7 +867,7 @@ class Cases
      * @see \ProcessMaker\BusinessModel\Cases\Variable::delete()
      * @see \ProcessMaker\BusinessModel\Cases\Variable::update()
      */
-    public function updateCase($appUid, $Fields = [], $forceLoadData = false)
+    public function updateCase($appUid, $Fields = [])
     {
         try {
             $application = new Application;
@@ -893,15 +892,10 @@ class Cases
             }
 
             //Get the appTitle and appDescription
-            $fieldsCase = [];
-            if ($forceLoadData) {
-                $lastFieldsCase = $this->loadCase($appUid)['APP_DATA'];
-                $fieldsCase = array_merge($appData, $lastFieldsCase);
-            }
             $newTitleOrDescription = $this->newRefreshCaseTitleAndDescription(
                 $appUid,
                 $appFields,
-                empty($fieldsCase) ? $appData : $fieldsCase
+                $appData
             );
 
             //Start: Save History --By JHL
@@ -3403,6 +3397,7 @@ class Cases
 
             /*----------------------------------********---------------------------------*/
 
+            $varInAfterRouting = false;
             $fieldsTrigger = [];
             foreach ($triggersList as $trigger) {
                 /*----------------------------------********---------------------------------*/
@@ -3424,6 +3419,7 @@ class Cases
                     $executedOn = $oPMScript->getExecutionOriginForAStep($stepType, $stepUidObj, $triggerType);
                     $oPMScript->setExecutedOn($executedOn);
                     $oPMScript->execute();
+                    //Return all the appData + variables changed in the execution
                     $appDataAfterTrigger = $oPMScript->aFields;
 
                     /**
@@ -3443,12 +3439,9 @@ class Cases
                             $fieldsCase = array_merge($fieldsCase, $lastFieldsCase);
                         }
 
-                        //Update the case with the fields changed in the trigger
-                        if (!empty($fieldsTrigger)) {
-                            $appFieldsTrigger = [];
-                            $appFieldsTrigger['APP_DATA'] = $fieldsTrigger;
-                            //Update the case
-                            $this->updateCase($appUid, $appFieldsTrigger, true);
+                        //Save the fields changed in the trigger
+                        if (!$varInAfterRouting && !empty($fieldsTrigger)) {
+                            $varInAfterRouting = true;
                         }
 
                         //Merge the appData with variables changed
@@ -3463,6 +3456,17 @@ class Cases
                     $varTriggers = "&nbsp;- " . nl2br(htmlentities($trigger["TRI_TITLE"], ENT_QUOTES)) . "<br/>";
                     $this->addTriggerMessageExecution($varTriggers);
                 }
+            }
+
+            /**
+             * Get the caseTitle from the nextTask and update the caseTitle
+            */
+            if ($varInAfterRouting) {
+                $this->newRefreshCaseTitleAndDescription(
+                    $appUid,
+                    ['DEL_INDEX' => 0],
+                    $fieldsCase
+                );
             }
 
             /*----------------------------------********---------------------------------*/
@@ -5427,9 +5431,14 @@ class Cases
     }
 
     /**
+     * This function send an email for each task in $arrayTask if $to is definded
+     *
      * @param $dataLastEmail
      * @param $arrayData
      * @param $arrayTask
+     * @return void
+     *
+     * @see \Cases->sendNotifications()
      */
     public function sendMessage($dataLastEmail, $arrayData, $arrayTask)
     {
@@ -5513,7 +5522,7 @@ class Cases
                     '',
                     $dataLastEmail['applicationUid'],
                     $dataLastEmail['delIndex'],
-                    'DERIVATION',
+                    WsBase::MESSAGE_TYPE_TASK_NOTIFICATION,
                     $dataLastEmail['subject'],
                     $dataLastEmail['from'],
                     $to,
