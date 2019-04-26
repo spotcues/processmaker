@@ -411,7 +411,7 @@ class ActionsByEmail
                     '',
                     '',
                     'pending',
-                    '',
+                    1,
                     '',
                     false,
                     isset($dataRes['APP_NUMBER']) ? $dataRes['APP_NUMBER'] : 0,

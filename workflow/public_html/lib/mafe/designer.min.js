@@ -708,7 +708,6 @@ jQuery(document).ready(function ($) {
     //the action to generate a .bpmn file with the export option.
     downloadLink = $('.mafe-button-export-bpmn-process');
     downloadLink.click(function (e) {
-        PMDesigner.businessObject = PMDesigner.recursiveXMLEscapeCharacters(PMDesigner.businessObject, "name");
         PMDesigner.moddle.toXML(PMDesigner.businessObject, function (err, xmlStrUpdated) {
 
             setEncoded(downloadLink, PMDesigner.project.projectName + '.bpmn', xmlStrUpdated);
@@ -1482,7 +1481,7 @@ PMDesigner.reloadDataTable = function () {
 };
 
 /**
- * XML escape characters, recursively.
+ * Escape XML characters method.
  * There are only five:
  * "   &quot;
  * '   &apos;
@@ -1490,29 +1489,16 @@ PMDesigner.reloadDataTable = function () {
  * >   &gt;
  * &   &amp;
  * 
- * @param {string} item
- * @param {string} property
- * @param {array|mixed} elements
- * @returns {undefined}
+ * @param {string} label
+ * @returns {string}
  */
-PMDesigner.recursiveXMLEscapeCharacters = function (item, property, elements) {
-    if (!(elements instanceof Array)) {
-        elements = [];
-    }
-    for (var i in item) {
-        if (item[i] instanceof Array || item[i] instanceof Object) {
-            item[i] = PMDesigner.recursiveXMLEscapeCharacters(item[i], property, elements);
-        }
-        if (i === property && elements.indexOf(item) === -1) {
-            item[property] = item[property].replace(/&/g, "&amp;");
-            item[property] = item[property].replace(/"/g, "&quot;");
-            item[property] = item[property].replace(/'/g, "&apos;");
-            item[property] = item[property].replace(/</g, "&lt;");
-            item[property] = item[property].replace(/>/g, "&gt;");
-            elements.push(item);
-        }
-    }
-    return item;
+PMDesigner.escapeXMLCharacters = function (label) {
+    return label
+            .replace(/&/g, "&amp;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&apos;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
 };
 
 DataDictionary = function () {

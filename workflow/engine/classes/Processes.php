@@ -2190,7 +2190,7 @@ class Processes
                 $labels = ['OUT_DOC_TITLE' => $row['OUT_DOC_TITLE'],
                     'OUT_DOC_DESCRIPTION' => !empty($row['OUT_DOC_DESCRIPTION']) ? $row['OUT_DOC_DESCRIPTION'] : '',
                     'OUT_DOC_FILENAME' => $row['OUT_DOC_FILENAME'],
-                    'OUT_DOC_TEMPLATE' => $row['OUT_DOC_TEMPLATE']];
+                    'OUT_DOC_TEMPLATE' => !empty($row['OUT_DOC_TEMPLATE']) ? $row['OUT_DOC_TEMPLATE'] : ''];
                 $this->insertToContentTable($con, $labels, $row['OUT_DOC_UID'], SYS_LANG);
             }
             $con->commit();

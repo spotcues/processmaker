@@ -2357,7 +2357,7 @@ class WorkspaceTools
             return;
         }
 
-        $arrayTable1 = ['ListInbox', 'ListMyInbox', 'ListCanceled', 'ListParticipatedLast', 'ListParticipatedHistory', 'ListPaused', 'ListCompleted'];
+        $arrayTable1 = ['ListInbox', 'ListMyInbox', 'ListCanceled', 'ListParticipatedLast', 'ListParticipatedHistory', 'ListPaused'];
         $arrayTable2 = ['ListUnassigned', 'ListUnassignedGroup'];
         $arrayTable = array_merge($arrayTable1, $arrayTable2);
 
@@ -2383,7 +2383,6 @@ class WorkspaceTools
         }
 
         if ($flagReinsert || !$flagListAll) {
-            $this->regenerateListCompleted($lang);
             $this->regenerateListCanceled($lang);
             $this->regenerateListMyInbox(); //This list require no translation
             $this->regenerateListInbox();   //This list require no translation
@@ -2466,69 +2465,6 @@ class WorkspaceTools
         $stmt = $con->createStatement();
         $stmt->executeQuery($query);
         CLI::logging("> Completed table LIST_CANCELED\n");
-    }
-
-    public function regenerateListCompleted($lang = 'en')
-    {
-        $this->initPropel(true);
-        $query = 'INSERT INTO ' . $this->dbName . '.LIST_COMPLETED
-                    (APP_UID,
-                    USR_UID,
-                    TAS_UID,
-                    PRO_UID,
-                    APP_NUMBER,
-                    APP_TITLE,
-                    APP_PRO_TITLE,
-                    APP_TAS_TITLE,
-                    APP_CREATE_DATE,
-                    APP_FINISH_DATE,
-                    DEL_INDEX,
-                    DEL_PREVIOUS_USR_UID,
-                    DEL_CURRENT_USR_USERNAME,
-                    DEL_CURRENT_USR_FIRSTNAME,
-                    DEL_CURRENT_USR_LASTNAME)
-
-                    SELECT
-                        ACV.APP_UID,
-                        ACV.USR_UID,
-                        ACV.TAS_UID,
-                        ACV.PRO_UID,
-                        ACV.APP_NUMBER,
-                        C_APP.CON_VALUE AS APP_TITLE,
-                        C_PRO.CON_VALUE AS APP_PRO_TITLE,
-                        C_TAS.CON_VALUE AS APP_TAS_TITLE,
-                        ACV.APP_CREATE_DATE,
-                        ACV.APP_FINISH_DATE,
-                        ACV.DEL_INDEX,
-                        PREV_AD.USR_UID AS DEL_PREVIOUS_USR_UID,
-                        USR.USR_USERNAME AS DEL_CURRENT_USR_USERNAME,
-                        USR.USR_FIRSTNAME AS DEL_CURRENT_USR_FIRSTNAME,
-                        USR.USR_LASTNAME AS DEL_CURRENT_USR_LASTNAME
-                    FROM
-                        (' . $this->dbName . '.APP_CACHE_VIEW ACV
-                        LEFT JOIN ' . $this->dbName . '.CONTENT C_APP ON ACV.APP_UID = C_APP.CON_ID
-                            AND C_APP.CON_CATEGORY = \'APP_TITLE\'
-                            AND C_APP.CON_LANG = \'' . $lang . '\'
-                        LEFT JOIN ' . $this->dbName . '.CONTENT C_PRO ON ACV.PRO_UID = C_PRO.CON_ID
-                            AND C_PRO.CON_CATEGORY = \'PRO_TITLE\'
-                            AND C_PRO.CON_LANG = \'' . $lang . '\'
-                        LEFT JOIN ' . $this->dbName . '.CONTENT C_TAS ON ACV.TAS_UID = C_TAS.CON_ID
-                            AND C_TAS.CON_CATEGORY = \'TAS_TITLE\'
-                            AND C_TAS.CON_LANG = \'' . $lang . '\')
-                            LEFT JOIN
-                        (' . $this->dbName . '.APP_DELEGATION AD
-                        INNER JOIN ' . $this->dbName . '.APP_DELEGATION PREV_AD ON AD.APP_UID = PREV_AD.APP_UID
-                            AND AD.DEL_PREVIOUS = PREV_AD.DEL_INDEX) ON ACV.APP_UID = AD.APP_UID
-                            AND ACV.DEL_INDEX = AD.DEL_INDEX
-                            LEFT JOIN
-                        ' . $this->dbName . '.USERS USR ON ACV.USR_UID = USR.USR_UID
-                    WHERE
-                        ACV.APP_STATUS = \'COMPLETED\'
-                            AND ACV.DEL_LAST_INDEX = 1';
-        $con = Propel::getConnection("workflow");
-        $stmt = $con->createStatement();
-        $stmt->executeQuery($query);
-        CLI::logging("> Completed table LIST_COMPLETED\n");
     }
 
     public function regenerateListMyInbox()

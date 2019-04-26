@@ -609,8 +609,8 @@ function setExtStateManagerSetProvider(cache, additionalPrefix) {
     }
     workspace = workspace + additionalPrefix;
     cookieProvider.on('statechange', function (provider, key, value) {
-        if (value !== null && JSON.stringify(Ext.state.Manager.get(workspace + cache)) !== JSON.stringify(value)) {
-            Ext.state.Manager.set(workspace + cache, value);
+        if (value !== null && JSON.stringify(Ext.state.Manager.get(workspace + window.userUid + cache)) !== JSON.stringify(value)) {
+            Ext.state.Manager.set(workspace + window.userUid + cache, value);
         }
     });
     Ext.state.Manager.setProvider(cookieProvider);
@@ -620,7 +620,7 @@ function setExtStateManagerSetProvider(cache, additionalPrefix) {
             for (i in extJsViewState) {
                 Ext.state.Manager.clear(i);
             }
-            Ext.state.Manager.set(cache, Ext.state.Manager.getProvider().decodeValue(extJsViewState[workspace + cache]));
+            Ext.state.Manager.set(cache, Ext.state.Manager.getProvider().decodeValue(extJsViewState[workspace + window.userUid + cache]));
         }
     } catch (e) {
     }

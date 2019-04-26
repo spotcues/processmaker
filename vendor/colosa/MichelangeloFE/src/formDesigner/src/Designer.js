@@ -434,7 +434,14 @@
             return false;
         };
         this.areaButtons.export_[0].onclick = function () {
-            var jsondata = that.getData();
+            var jsondata = that.getData(),
+                i,
+                variables,
+                size= (typeof jsondata['items'] !== 'undefined') ? jsondata['items'].length : 0; // validation for undefined issues
+            for (i = 0; i < size; i += 1) {
+                variables = jsondata['items'][i]['variables'];
+                variables.forEach(function(v){ delete v.create });
+            };
             var name = (that.form1.properties.name.value ? that.form1.properties.name.value : 'untitle') + '.json';
             if (window.navigator.msSaveBlob) {
                 window.navigator.msSaveBlob(new Blob([JSON.stringify(jsondata)], {'type': 'application/octet-stream'}), name);

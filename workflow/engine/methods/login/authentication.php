@@ -1,5 +1,7 @@
 <?php
 
+use Illuminate\Support\Facades\Cache;
+use ProcessMaker\BusinessModel\User;
 use ProcessMaker\Core\System;
 use ProcessMaker\Plugins\PluginRegistry;
 
@@ -22,6 +24,18 @@ try {
         }
 
         $frm = $_POST['form'];
+
+        $changePassword = false;
+        if (isset($_POST['form']['__USR_PASSWORD_CHANGE__'])) {
+            $value = Cache::pull($_POST['form']['__USR_PASSWORD_CHANGE__']);
+            $changePassword = !empty($value);
+            if ($changePassword === true) {
+                $_POST['form']['USER_ENV'] = $value['userEnvironment'];
+                $_POST['form']['BROWSER_TIME_ZONE_OFFSET'] = $value['browserTimeZoneOffset'];
+                $frm['USR_USERNAME'] = $value['usrUsername'];
+                $frm['USR_PASSWORD'] = $value['usrPassword'];
+            }
+        }
 
         if (isset($frm['USR_USERNAME'])) {
             $usr = mb_strtolower(trim($frm['USR_USERNAME']), 'UTF-8');
@@ -296,6 +310,15 @@ try {
     }
 
     $userPropertyInfo = $userProperty->loadOrCreateIfNotExists($_SESSION['USER_LOGGED'], array('USR_PASSWORD_HISTORY' => serialize(array(G::encryptOld($pwd)))));
+    
+    //change password
+    if ($changePassword === true) {
+        $user = new User();
+        $currentUser = $user->changePassword($_SESSION['USER_LOGGED'], $_POST['form']['USR_PASSWORD']);
+        G::header('Location: ' . $currentUser["__REDIRECT_PATH__"]);
+        return;
+    }
+    
     //Get the errors in the password
     $errorInPassword = $userProperty->validatePassword(
         $_POST['form']['USR_PASSWORD'],
@@ -324,13 +347,23 @@ try {
         $G_PUBLISH = new Publisher;
         $version = explode('.', trim(file_get_contents(PATH_GULLIVER . 'VERSION')));
         $version = isset($version[0]) ? intval($version[0]) : 0;
+
         if ($version >= 3) {
-            $G_PUBLISH->AddContent('xmlform', 'xmlform', 'login/changePasswordpm3', '', $messPassword,
-                'changePassword');
+            $values = [
+                "usrUsername" => $usr,
+                "usrPassword" => $pwd,
+                "userEnvironment" => config("system.workspace"),
+                "browserTimeZoneOffset" => $_POST['form']['BROWSER_TIME_ZONE_OFFSET']
+            ];
+            $messPassword['__USR_PASSWORD_CHANGE__'] = G::generateUniqueID();
+            Cache::put($messPassword['__USR_PASSWORD_CHANGE__'], $values, 2);
+            $G_PUBLISH->AddContent('xmlform', 'xmlform', 'login/changePasswordpm3', '', $messPassword, 'sysLoginVerify');
+            G::RenderPage('publish');
+            session_destroy();
         } else {
             $G_PUBLISH->AddContent('xmlform', 'xmlform', 'login/changePassword', '', $messPassword, 'changePassword');
+            G::RenderPage('publish');
         }
-        G::RenderPage('publish');
         die;
     }
 

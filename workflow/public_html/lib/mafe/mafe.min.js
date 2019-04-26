@@ -16754,7 +16754,10 @@ PMShape.prototype.getBpmnElementType = function () {
 
 PMShape.prototype.createWithBpmn = function (bpmnElementType, name) {
     var businessObject = {};
-    businessObject.elem = PMDesigner.bpmnFactory.create(bpmnElementType, {id: 'el_' + this.id, name: this.getName()});
+    businessObject.elem = PMDesigner.bpmnFactory.create(bpmnElementType, {
+        id: 'el_' + this.id,
+        name: this.getName() ? PMDesigner.escapeXMLCharacters(this.getName()) : ""
+    });
     if (!businessObject.di) {
         if (this.type === 'PMParticipant' || this.type === 'PMPool' || this.type === 'PMLane') {
             businessObject.di = PMDesigner.bpmnFactory.createDiShape(businessObject.elem, {}, {
@@ -18174,7 +18177,7 @@ PMFlow.prototype.getBpmnElementType = function () {
 PMFlow.prototype.createWithBpmn = function (bpmnElementType) {
     var businessObject = PMDesigner.bpmnFactory.create(bpmnElementType, {
         id: 'flo_' + this.id,
-        name: this.getName() ? this.getName() : ""
+        name: this.getName() ? PMDesigner.escapeXMLCharacters(this.getName()) : ""
     });
     businessObject.di = PMDesigner.bpmnFactory.createDiEdge(businessObject, [], {
         id: businessObject.id + '_di'
@@ -25779,7 +25782,10 @@ PMArtifact.prototype.createWithBpmn = function () {
     var businessObject = {};
     var bpmnElementType = this.getBpmnElementType();
 
-    businessObject.elem = PMDesigner.bpmnFactory.create(bpmnElementType, {id: this.id, text: this.getName()});
+    businessObject.elem = PMDesigner.bpmnFactory.create(bpmnElementType, {
+        id: this.id,
+        text: this.getName() ? PMDesigner.escapeXMLCharacters(this.getName()) : ""
+    });
 
     if (!businessObject.di) {
         if (this.type === 'Connection') {
@@ -30404,21 +30410,27 @@ PMData.prototype.updateBpmnDataType = function (newBpmnType, dataType) {
 PMData.prototype.createWithBpmn = function (bpmnElementType, name) {
     var businessObject = {};
     if (this.extendedType === 'DATASTORE') {
-        var ds = PMDesigner.bpmnFactory.create('bpmn:DataStore', {id: this.id, name: this.getName()});
+        var ds = PMDesigner.bpmnFactory.create('bpmn:DataStore', {
+            id: this.id,
+            name: this.getName() ? PMDesigner.escapeXMLCharacters(this.getName()) : "",
+        });
         PMDesigner.businessObject.get('rootElements').push(ds);
         businessObject.elem = PMDesigner.bpmnFactory.create('bpmn:DataStoreReference', {
             id: this.id + '_ref',
-            name: this.getName(),
+            name: this.getName() ? PMDesigner.escapeXMLCharacters(this.getName()) : "",
             dataStoreRef: ds
         });
         businessObject.elem.dsRef = ds;
     } else {
 
         if (bpmnElementType == 'bpmn:DataObject' || bpmnElementType === undefined) {
-            var dObj = PMDesigner.bpmnFactory.create('bpmn:DataObject', {id: this.id, name: this.getName()});
+            var dObj = PMDesigner.bpmnFactory.create('bpmn:DataObject', {
+                id: this.id,
+                name: this.getName() ? PMDesigner.escapeXMLCharacters(this.getName()) : "",
+            });
             businessObject.elem = PMDesigner.bpmnFactory.create('bpmn:DataObjectReference', {
                 id: this.id + '_ref',
-                name: this.getName(),
+                name: this.getName() ? PMDesigner.escapeXMLCharacters(this.getName()) : "",
                 dataObjectRef: dObj
             });
             // validate if container is a lane because data store is always into process tag
@@ -30470,7 +30482,7 @@ PMData.prototype.getDataType = function () {
 PMData.prototype.createDataIOEspecification = function (element) {
     var ioEspecification = PMDesigner.bpmnFactory.create('bpmn:InputOutputSpecification', {
         id: this.id + '_ioEspecification',
-        name: this.getName() + '_ioEspecification'
+        name: (this.getName() ? PMDesigner.escapeXMLCharacters(this.getName()) : "") + '_ioEspecification'
     });
     ioEspecification['dataInputs'] = [];
     this.parent.businessObject.elem['ioSpecification'] = ioEspecification;
@@ -30487,7 +30499,10 @@ PMData.prototype.createDataBusinessObject = function () {
 };
 
 PMData.prototype.createDataIOBusinessObject = function (bpmnElementType) {
-    var dObj = PMDesigner.bpmnFactory.create(bpmnElementType, {id: this.id, name: this.getName()});
+    var dObj = PMDesigner.bpmnFactory.create(bpmnElementType, {
+        id: this.id,
+        name: this.getName() ? PMDesigner.escapeXMLCharacters(this.getName()) : ""
+    });
     this.parent.businessObject.elem['ioSpecification'].dataInputs.push(dObj);
     return {elem: dObj};
 };
@@ -38692,7 +38707,14 @@ FormDesigner.leftPad = function (string, length, fill) {
             return false;
         };
         this.areaButtons.export_[0].onclick = function () {
-            var jsondata = that.getData();
+            var jsondata = that.getData(),
+                i,
+                variables,
+                size= (typeof jsondata['items'] !== 'undefined') ? jsondata['items'].length : 0; // validation for undefined issues
+            for (i = 0; i < size; i += 1) {
+                variables = jsondata['items'][i]['variables'];
+                variables.forEach(function(v){ delete v.create });
+            };
             var name = (that.form1.properties.name.value ? that.form1.properties.name.value : 'untitle') + '.json';
             if (window.navigator.msSaveBlob) {
                 window.navigator.msSaveBlob(new Blob([JSON.stringify(jsondata)], {'type': 'application/octet-stream'}), name);

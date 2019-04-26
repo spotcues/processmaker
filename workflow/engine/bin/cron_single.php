@@ -305,6 +305,7 @@ function processWorkspace()
         executeScheduledCases();
         executeUpdateAppTitle();
         executeCaseSelfService();
+        cleanSelfServiceTables();
         executePlugins();
         /*----------------------------------********---------------------------------*/
     } catch (Exception $oError) {
@@ -855,5 +856,48 @@ function sendNotifications()
         setExecutionResultMessage("WITH ERRORS", "error");
         eprintln("  '-" . $e->getMessage(), "red");
         saveLog("ExecuteSendNotifications", "error", "Error when sending notifications " . $e->getMessage());
+    }
+}
+
+/**
+ * Clean unused records in tables related to the Self-Service Value Based feature
+ *
+ * @see processWorkspace()
+ *
+ * @link https://wiki.processmaker.com/3.2/Executing_cron.php#Syntax_of_cron.php_Options
+ */
+function cleanSelfServiceTables()
+{
+    try {
+        global $argvx;
+
+        // Check if the action can be executed
+        if ($argvx !== "" && strpos($argvx, "clean-self-service-tables") === false) {
+            return false;
+        }
+
+        // Start message
+        setExecutionMessage("Clean unused records for Self-Service Value Based feature");
+
+        // Get Propel connection
+        $cnn = Propel::getConnection(AppAssignSelfServiceValueGroupPeer::DATABASE_NAME);
+
+        // Delete related rows and missing relations, criteria don't execute delete with joins
+        $cnn->begin();
+        $stmt = $cnn->createStatement();
+        $stmt->executeQuery("DELETE " . AppAssignSelfServiceValueGroupPeer::TABLE_NAME . "
+                             FROM " . AppAssignSelfServiceValueGroupPeer::TABLE_NAME . "
+                             LEFT JOIN " . AppAssignSelfServiceValuePeer::TABLE_NAME . "
+                             ON (" . AppAssignSelfServiceValueGroupPeer::ID . " = " . AppAssignSelfServiceValuePeer::ID . ")
+                             WHERE " . AppAssignSelfServiceValuePeer::ID . " IS NULL");
+        $cnn->commit();
+
+        // Success message
+        setExecutionResultMessage("DONE");
+    } catch (Exception $e) {
+        $cnn->rollback();
+        setExecutionResultMessage("WITH ERRORS", "error");
+        eprintln("  '-" . $e->getMessage(), "red");
+        saveLog("ExecuteCleanSelfServiceTables", "error", "Error when try to clean self-service tables " . $e->getMessage());
     }
 }

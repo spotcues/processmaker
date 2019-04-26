@@ -466,44 +466,44 @@ class Cases
     {
         try {
             $oApp = new Application;
-            $aFields = $oApp->Load($sAppUid);
+            $fields = $oApp->Load($sAppUid);
 
-            $appData = self::unserializeData($aFields['APP_DATA']);
+            $appData = self::unserializeData($fields['APP_DATA']);
 
-            $aFields['APP_DATA'] = G::array_merges(G::getSystemConstants(), $appData);
+            $fields['APP_DATA'] = G::array_merges(G::getSystemConstants(), $appData);
 
             switch ($oApp->getAppStatus()) {
                 case 'COMPLETED':
-                    $aFields['STATUS'] = G::LoadTranslation('ID_COMPLETED');
+                    $fields['STATUS'] = G::LoadTranslation('ID_COMPLETED');
                     break;
                 case 'CANCELLED':
-                    $aFields['STATUS'] = G::LoadTranslation('ID_CANCELLED');
+                    $fields['STATUS'] = G::LoadTranslation('ID_CANCELLED');
                     break;
                 case 'PAUSED':
-                    $aFields['STATUS'] = G::LoadTranslation('ID_PAUSED');
+                    $fields['STATUS'] = G::LoadTranslation('ID_PAUSED');
                     break;
                 case 'DRAFT':
-                    $aFields['STATUS'] = G::LoadTranslation('ID_DRAFT');
+                    $fields['STATUS'] = G::LoadTranslation('ID_DRAFT');
                     break;
                 case 'TO_DO':
-                    $aFields['STATUS'] = G::LoadTranslation('ID_TO_DO');
+                    $fields['STATUS'] = G::LoadTranslation('ID_TO_DO');
                     break;
             }
             $oUser = new Users();
             try {
                 $oUser->load($oApp->getAppInitUser());
                 $uFields = $oUser->toArray(BasePeer::TYPE_FIELDNAME);
-                $aFields['TITLE'] = $aFields['APP_TITLE'];
-                $aFields['DESCRIPTION'] = $aFields['APP_DESCRIPTION'];
-                $aFields['CREATOR'] = $oUser->getUsrFirstname() . ' ' . $oUser->getUsrLastname();
-                $aFields['CREATE_DATE'] = $oApp->getAppCreateDate();
-                $aFields['UPDATE_DATE'] = $oApp->getAppUpdateDate();
+                $fields['TITLE'] = $fields['APP_TITLE'];
+                $fields['DESCRIPTION'] = $fields['APP_DESCRIPTION'];
+                $fields['CREATOR'] = $oUser->getUsrFirstname() . ' ' . $oUser->getUsrLastname();
+                $fields['CREATE_DATE'] = $oApp->getAppCreateDate();
+                $fields['UPDATE_DATE'] = $oApp->getAppUpdateDate();
             } catch (Exception $oError) {
-                $aFields['TITLE'] = $oApp->getAppTitle();
-                $aFields['DESCRIPTION'] = '';
-                $aFields['CREATOR'] = '(USER_DELETED)';
-                $aFields['CREATE_DATE'] = $oApp->getAppCreateDate();
-                $aFields['UPDATE_DATE'] = $oApp->getAppUpdateDate();
+                $fields['TITLE'] = $oApp->getAppTitle();
+                $fields['DESCRIPTION'] = '';
+                $fields['CREATOR'] = '(USER_DELETED)';
+                $fields['CREATE_DATE'] = $oApp->getAppCreateDate();
+                $fields['UPDATE_DATE'] = $oApp->getAppUpdateDate();
             }
 
             if ($iDelIndex > 0) {
@@ -511,50 +511,52 @@ class Cases
                 $oAppDel = new AppDelegation();
                 $oAppDel->Load($sAppUid, $iDelIndex);
                 $aAppDel = $oAppDel->toArray(BasePeer::TYPE_FIELDNAME);
-                $aFields['TAS_UID'] = $aAppDel['TAS_UID'];
-                $aFields['DEL_INDEX'] = $aAppDel['DEL_INDEX'];
-                $aFields['DEL_PREVIOUS'] = $aAppDel['DEL_PREVIOUS'];
-                $aFields['DEL_TYPE'] = $aAppDel['DEL_TYPE'];
-                $aFields['DEL_PRIORITY'] = $aAppDel['DEL_PRIORITY'];
-                $aFields['DEL_THREAD_STATUS'] = $aAppDel['DEL_THREAD_STATUS'];
-                $aFields['DEL_THREAD'] = $aAppDel['DEL_THREAD'];
-                $aFields['DEL_DELEGATE_DATE'] = $aAppDel['DEL_DELEGATE_DATE'];
-                $aFields['DEL_INIT_DATE'] = $aAppDel['DEL_INIT_DATE'];
-                $aFields['DEL_TASK_DUE_DATE'] = $aAppDel['DEL_TASK_DUE_DATE'];
-                $aFields['DEL_FINISH_DATE'] = $aAppDel['DEL_FINISH_DATE'];
-                $aFields['CURRENT_USER_UID'] = $aAppDel['USR_UID'];
+                $fields['TAS_UID'] = $aAppDel['TAS_UID'];
+                $fields['DEL_INDEX'] = $aAppDel['DEL_INDEX'];
+                $fields['DEL_PREVIOUS'] = $aAppDel['DEL_PREVIOUS'];
+                $fields['DEL_TYPE'] = $aAppDel['DEL_TYPE'];
+                $fields['DEL_PRIORITY'] = $aAppDel['DEL_PRIORITY'];
+                $fields['DEL_THREAD_STATUS'] = $aAppDel['DEL_THREAD_STATUS'];
+                $fields['DEL_THREAD'] = $aAppDel['DEL_THREAD'];
+                $fields['DEL_DELEGATE_DATE'] = $aAppDel['DEL_DELEGATE_DATE'];
+                $fields['DEL_INIT_DATE'] = $aAppDel['DEL_INIT_DATE'];
+                $fields['DEL_TASK_DUE_DATE'] = $aAppDel['DEL_TASK_DUE_DATE'];
+                $fields['DEL_FINISH_DATE'] = $aAppDel['DEL_FINISH_DATE'];
+                $fields['CURRENT_USER_UID'] = $aAppDel['USR_UID'];
 
                 //Update the global variables
-                $aFields['TASK'] = $aAppDel['TAS_UID'];
-                $aFields['INDEX'] = $aAppDel['DEL_INDEX'];
-                $aFields['TAS_ID'] = $aAppDel['TAS_ID'];
-                $aFields['PRO_ID'] = $aAppDel['PRO_ID'];
+                $fields['TASK'] = $aAppDel['TAS_UID'];
+                $fields['INDEX'] = $aAppDel['DEL_INDEX'];
+                $fields['TAS_ID'] = $aAppDel['TAS_ID'];
+                $fields['PRO_ID'] = $aAppDel['PRO_ID'];
                 try {
                     $oCurUser = new Users();
                     if ($jump != '') {
-                        $aCases = $oAppDel->LoadParallel($sAppUid);
-                        $aFields['TAS_UID'] = '';
-                        $aFields['CURRENT_USER'] = array();
-                        foreach ($aCases as $key => $value) {
-                            $oCurUser->load($value['USR_UID']);
-                            $aFields['CURRENT_USER'][] = $oCurUser->getUsrFirstname() . ' ' . $oCurUser->getUsrLastname();
-                            $aFields['TAS_UID'] .= (($aFields['TAS_UID'] != '') ? '|' : '') . $value['TAS_UID'];
+                        $cases = $oAppDel->LoadParallel($sAppUid);
+                        if (!empty($cases)) {
+                            $fields['TAS_UID'] = '';
                         }
-                        $aFields['CURRENT_USER'] = implode(" - ", array_values($aFields['CURRENT_USER']));
-                        $tasksArray = array_filter(explode('|', $aFields['TAS_UID']));
+                        $fields['CURRENT_USER'] = array();
+                        foreach ($cases as $key => $value) {
+                            $oCurUser->load($value['USR_UID']);
+                            $fields['CURRENT_USER'][] = $oCurUser->getUsrFirstname() . ' ' . $oCurUser->getUsrLastname();
+                            $fields['TAS_UID'] .= (($fields['TAS_UID'] != '') ? '|' : '') . $value['TAS_UID'];
+                        }
+                        $fields['CURRENT_USER'] = implode(" - ", array_values($fields['CURRENT_USER']));
+                        $tasksArray = array_filter(explode('|', $fields['TAS_UID']));
 
                         if (count($tasksArray) == 1) {
-                            $aFields['TAS_UID'] = $tasksArray[0];
+                            $fields['TAS_UID'] = $tasksArray[0];
                         }
                     } else {
                         $oCurUser->load($aAppDel['USR_UID']);
-                        $aFields['CURRENT_USER'] = $oCurUser->getUsrFirstname() . ' ' . $oCurUser->getUsrLastname();
+                        $fields['CURRENT_USER'] = $oCurUser->getUsrFirstname() . ' ' . $oCurUser->getUsrLastname();
                     }
                 } catch (Exception $oError) {
-                    $aFields['CURRENT_USER'] = '';
+                    $fields['CURRENT_USER'] = '';
                 }
             }
-            return $aFields;
+            return $fields;
         } catch (exception $e) {
             throw ($e);
         }
@@ -949,7 +951,9 @@ class Cases
                 if (isset($Fields['CURRENT_USER_UID'])) {
                     $Fields['USR_UID'] = $Fields['CURRENT_USER_UID'];
                 }
-                /*----------------------------------********---------------------------------*/
+                //Will be update the status in the list Participated
+                $listParticipatedLast = new ListParticipatedLast();
+                $listParticipatedLast->refreshStatus($Fields['APP_UID'], 'COMPLETED');
             }
 
             /** Update case*/
@@ -3425,6 +3429,8 @@ class Cases
                     /**
                      * This section of code its related to the route the case with parallel task in the same time
                      * @link https://processmaker.atlassian.net/browse/PMC-2
+                     *
+                     * @todo: The solution for ticket HOR-4602 should be restated in another ticket, for now this change was reverted
                     */
                     if ($oPMScript->executedOn() === $oPMScript::AFTER_ROUTING) {
                         //Get the variables changed with the trigger
@@ -3433,11 +3439,6 @@ class Cases
                         //We will be load the last appData because:
                         //Other thread execution can be changed the variables
                         $appUid = !empty($fieldsCase['APPLICATION']) ? $fieldsCase['APPLICATION'] : '';
-                        if (!empty($appUid)) {
-                            $lastFieldsCase = $this->loadCase($appUid)['APP_DATA'];
-                            //Update $fieldsCase with the last appData
-                            $fieldsCase = array_merge($fieldsCase, $lastFieldsCase);
-                        }
 
                         //Save the fields changed in the trigger
                         if (!$varInAfterRouting && !empty($fieldsTrigger)) {
@@ -5532,7 +5533,7 @@ class Cases
                     '',
                     '',
                     'pending',
-                    '',
+                    1,
                     $dataLastEmail['msgError'],
                     true,
                     isset($arrayData['APP_NUMBER']) ? $arrayData['APP_NUMBER'] : 0,

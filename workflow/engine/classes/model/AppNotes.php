@@ -238,7 +238,7 @@ class AppNotes extends BaseAppNotes
                     '',
                     '',
                     'pending',
-                    '',
+                    1,
                     $msgError,
                     true,
                     (isset($fieldCase['APP_NUMBER'])) ? $fieldCase['APP_NUMBER'] : 0,

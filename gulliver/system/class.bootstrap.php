@@ -207,7 +207,7 @@ class Bootstrap
      *        	= local path
      * @return boolean
      */
-    public function virtualURI($url, $convertionTable, &$realPath)
+    public static function virtualURI($url, $convertionTable, &$realPath)
     {
         foreach ($convertionTable as $urlPattern => $localPath) {
             //      $urlPattern = addcslashes( $urlPattern , '/');
@@ -240,7 +240,7 @@ class Bootstrap
      * @param string $downloadFileName
      * @return string
      */
-    public function streamFile($file, $download = false, $downloadFileName = '', $forceLoad = false)
+    public static function streamFile($file, $download = false, $downloadFileName = '', $forceLoad = false)
     {
         $filter = new InputFilter();
         $file = $filter->xssFilterHard($file);
@@ -399,7 +399,7 @@ class Bootstrap
      * nameWorkspace to specific workspace
      * return true if the file exists, otherwise false.
      */
-    public function isPMUnderUpdating($setFlag = 2, $content="true")
+    public static function isPMUnderUpdating($setFlag = 2, $content="true")
     {
         if (!defined('PATH_DATA')) {
             return false;
@@ -438,7 +438,7 @@ class Bootstrap
      *        	array containig the template data
      * @return $content string containing the parsed template content
      */
-    public function parseTemplate($template, $data = array())
+    public static function parseTemplate($template, $data = array())
     {
         $content = '';
 
@@ -556,7 +556,7 @@ class Bootstrap
      * @param string $strSkin
      * @return void
      */
-    public function RenderPage($strTemplate = "default", $strSkin = SYS_SKIN, $objContent = null, $layout = '')
+    public static function RenderPage($strTemplate = "default", $strSkin = SYS_SKIN, $objContent = null, $layout = '')
     {
         global $G_CONTENT;
         global $G_TEMPLATE;
@@ -617,7 +617,7 @@ class Bootstrap
      *
      * @return void
      */
-    public function SendTemporalMessage($msgID, $strType, $sType = 'LABEL', $time = null, $width = null, $customLabels = null)
+    public static function SendTemporalMessage($msgID, $strType, $sType = 'LABEL', $time = null, $width = null, $customLabels = null)
     {
         if (isset($width)) {
             $_SESSION ['G_MESSAGE_WIDTH'] = $width;
@@ -653,7 +653,7 @@ class Bootstrap
      * @param string $parameter
      * @return string
      */
-    public function header($parameter)
+    public static function header($parameter)
     {
         if (defined('ENABLE_ENCRYPT') && (ENABLE_ENCRYPT == 'yes') && (substr($parameter, 0, 9) == 'location:')) {
             $url = Bootstrap::encrypt(substr($parameter, 10), URL_KEY);
@@ -673,7 +673,7 @@ class Bootstrap
      * @access public
      * @return void
      */
-    public function LoadAllPluginModelClasses()
+    public static function LoadAllPluginModelClasses()
     {
         // Get the current Include path, where the plugins directories should be
         if (!defined('PATH_SEPARATOR')) {
@@ -723,7 +723,7 @@ class Bootstrap
     /**
      * function to calculate the time used to render a page
      */
-    public function logTimeByPage()
+    public static function logTimeByPage()
     {
         if (!defined(PATH_DATA)) {
             return false;
@@ -748,7 +748,7 @@ class Bootstrap
      * @param string $downloadFileName
      * @return string
      */
-    public function streamJSTranslationFile($filename, $locale = 'en')
+    public static function streamJSTranslationFile($filename, $locale = 'en')
     {
         $typearray = explode('.', basename($filename));
         $typeCount = count($typearray);
@@ -808,7 +808,7 @@ class Bootstrap
      * @param string $file
      * @return string
      */
-    public function streamCSSBigFile($filename)
+    public static function streamCSSBigFile($filename)
     {
         header('Content-Type: text/css');
 
@@ -964,7 +964,7 @@ class Bootstrap
      *
      * @return void
      */
-    public function sendHeaders($filename, $contentType = '', $download = false, $downloadFileName = '')
+    public static function sendHeaders($filename, $contentType = '', $download = false, $downloadFileName = '')
     {
         if ($download) {
             if ($downloadFileName == '') {
@@ -1115,7 +1115,7 @@ class Bootstrap
      * strip_slashes
      * @param  vVar
      */
-    public function strip_slashes($vVar)
+    public static function strip_slashes($vVar)
     {
         if (is_array($vVar)) {
             foreach ($vVar as $sKey => $vValue) {
@@ -1142,7 +1142,7 @@ class Bootstrap
      * @param eter array data // erik: associative array within data input to replace for formatted string i.e "any messsage {replaced_label} that contains a replace label"
      * @return string
      */
-    public function LoadTranslation($msgID, $lang = SYS_LANG, $data = null)
+    public static function LoadTranslation($msgID, $lang = SYS_LANG, $data = null)
     {
         global $translation;
 
@@ -1182,7 +1182,7 @@ class Bootstrap
      * @param $pattern pattern to filter some specified files
      * @return <array> array containing the recursive glob results
      */
-    public function rglob($pattern = '*', $flags = 0, $path = '')
+    public static function rglob($pattern = '*', $flags = 0, $path = '')
     {
         $paths = glob($path . '*', GLOB_MARK | GLOB_ONLYDIR | GLOB_NOSORT);
         $files = glob($path . $pattern, $flags);
@@ -1197,7 +1197,7 @@ class Bootstrap
      *
      * @author Erik A.O. <erik@gmail.com, aortiz.erik@gmail.com>
      */
-    public function json_encode($Json)
+    public static function json_encode($Json)
     {
         if (function_exists('json_encode')) {
             return json_encode($Json);
@@ -1229,7 +1229,7 @@ class Bootstrap
      *
      * @author Erik Amaru Ortiz <erik@colosa.com>
      */
-    public function xmlParser(&$string)
+    public static function xmlParser(&$string)
     {
         $parser = xml_parser_create();
         xml_parser_set_option($parser, XML_OPTION_CASE_FOLDING, 0);
@@ -1304,7 +1304,7 @@ class Bootstrap
      * @param unknown_type $maxmtime
      * @return Ambigous <number, unknown>
      */
-    public function getDirectorySize($path, $maxmtime = 0)
+    public static function getDirectorySize($path, $maxmtime = 0)
     {
         $totalsize = 0;
         $totalcount = 0;
@@ -1365,7 +1365,7 @@ class Bootstrap
      * @author Ralph A.
      * @return multitype:array containing browser name and type
      */
-    public function get_current_browser()
+    public static function get_current_browser()
     {
         static $a_full_assoc_data, $a_mobile_data, $browser_user_agent;
         static $browser_working, $moz_type, $webkit_type;
@@ -1563,7 +1563,7 @@ class Bootstrap
      * @param unknown_type $pv_extra_search
      * @return string
      */
-    public function get_item_version($pv_browser_user_agent, $pv_search_string, $pv_b_break_last = '', $pv_extra_search = '')
+    public static function get_item_version($pv_browser_user_agent, $pv_search_string, $pv_b_break_last = '', $pv_extra_search = '')
     {
         $substring_length = 15;
         $start_pos = 0; // set $start_pos to 0 for first iteration
@@ -1594,7 +1594,7 @@ class Bootstrap
      * @param unknown_type $pv_type
      * @param unknown_type $pv_value
      */
-    public function get_set_count($pv_type, $pv_value = '')
+    public static function get_set_count($pv_type, $pv_value = '')
     {
         static $slice_increment;
         $return_value = '';
@@ -1743,7 +1743,7 @@ class Bootstrap
      * @param unknown_type $pv_browser_user_agent
      * @return string
      */
-    public function check_is_mobile($pv_browser_user_agent)
+    public static function check_is_mobile($pv_browser_user_agent)
     {
         $mobile_working_test = '';
         $a_mobile_search = array(
@@ -1771,7 +1771,7 @@ class Bootstrap
      *
      * @param unknown_type $pv_browser_user_agent
      */
-    public function get_mobile_data($pv_browser_user_agent)
+    public static function get_mobile_data($pv_browser_user_agent)
     {
         $mobile_browser = '';
         $mobile_browser_number = '';
@@ -1943,7 +1943,7 @@ class Bootstrap
      * @param string $key
      * @return string
      */
-    public function encrypt($string, $key)
+    public static function encrypt($string, $key)
     {
         //print $string;
         //    if ( defined ( 'ENABLE_ENCRYPT' ) && ENABLE_ENCRYPT == 'yes' ) {
@@ -1973,7 +1973,7 @@ class Bootstrap
      * @param string $key
      * @return string
      */
-    public function decrypt($string, $key)
+    public static function decrypt($string, $key)
     {
         //   if ( defined ( 'ENABLE_ENCRYPT' ) && ENABLE_ENCRYPT == 'yes' ) {
         //if (strpos($string, '|', 0) !== false) return $string;
@@ -2066,7 +2066,7 @@ class Bootstrap
      * @param string $array_i
      * @return array
      */
-    public function array_merge_2(&$array, &$array_i)
+    public static function array_merge_2(&$array, &$array_i)
     {
         foreach ($array_i as $k => $v) {
             if (is_array($v)) {
@@ -2095,7 +2095,7 @@ class Bootstrap
      * @return array_sum(explode(' ',microtime()))
      */
     /* public static */
-    public function microtime_float()
+    public static function microtime_float()
     {
         return array_sum(explode(' ', microtime()));
     }
@@ -2344,7 +2344,7 @@ class Bootstrap
      * @author Erik Amaru Ortiz <erik@colosa.com>
      * @name complete_field($string, $lenght, $type={1:number/2:string/3:float})
      */
-    public function complete_field($campo, $long, $tipo)
+    public static function complete_field($campo, $long, $tipo)
     {
         $campo = trim($campo);
         switch ($tipo) {
@@ -2580,7 +2580,7 @@ class Bootstrap
      * @param string $userPass hash of password
      * @return bool true or false
      */
-    public function verifyHashPassword($pass, $userPass)
+    public static function verifyHashPassword($pass, $userPass)
     {
         global $RBAC;
         $passwordHashConfig = Bootstrap::getPasswordHashConfig();
@@ -2610,7 +2610,7 @@ class Bootstrap
      * @param $string
      * @return mixed
      */
-    public function encryptOld($string)
+    public static function encryptOld($string)
     {
         $consthashFx = self::hashFx;
         return $consthashFx($string);

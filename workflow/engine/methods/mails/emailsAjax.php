@@ -2,6 +2,7 @@
 
 use ProcessMaker\Plugins\PluginRegistry;
 use ProcessMaker\Exception\RBACException;
+use ProcessMaker\Util\DateTime;
 
 $req = (isset($_REQUEST['request']) ? $_REQUEST['request'] : '');
 
@@ -131,6 +132,7 @@ switch ($req) {
         while ($result->next()) {
             $row = $result->getRow();
             $row['APP_MSG_STATUS'] = ucfirst($row['APP_MSG_STATUS']);
+            $row['APP_MSG_DATE'] = DateTime::convertUtcToTimeZone($row['APP_MSG_DATE']);
 
             switch ($filterBy) {
                 case 'CASES':
