@@ -21,6 +21,7 @@ use BpmnEngineServicesSearchIndex;
 use Cases as ClassesCases;
 use CasesPeer;
 use Configurations;
+use CreoleTypes;
 use Criteria;
 use DBAdapter;
 use EntitySolrRequestData;
@@ -32,6 +33,7 @@ use InputDocument;
 use InvalidIndexSearchTextException;
 use ListParticipatedLast;
 use PmDynaform;
+use PmTable;
 use ProcessMaker\BusinessModel\ProcessSupervisor as BmProcessSupervisor;
 use ProcessMaker\BusinessModel\Task as BmTask;
 use ProcessMaker\BusinessModel\User as BmUser;
@@ -39,16 +41,16 @@ use ProcessMaker\Core\System;
 use ProcessMaker\Exception\UploadException;
 use ProcessMaker\Plugins\PluginRegistry;
 use ProcessMaker\Services\OAuth2\Server;
+use ProcessMaker\Util\DateTime as UtilDateTime;
 use ProcessMaker\Validation\ExceptionRestApi;
 use ProcessMaker\Validation\Validator as FileValidator;
+
 use ProcessPeer;
 use ProcessUser;
 use ProcessUserPeer;
 use RBAC;
 use ResultSet;
-use RoutePeer;
 use SubApplication;
-use SubProcessPeer;
 use Task as ModelTask;
 use TaskPeer;
 use Tasks as ClassesTasks;
@@ -3502,7 +3504,7 @@ class Cases
      * @param string $listPeer , name of the list class
      * @param string $search , the parameter for search in the table
      * @param string $additionalClassName , name of the className of pmtable
-     * @param array $additionalColumns , columns related to the custom cases list
+     * @param array $additionalColumns , columns related to the custom cases list ex: TABLE_NAME.COLUMN_NAME
      *
      * @throws PropelException
      */
@@ -3511,31 +3513,35 @@ class Cases
         $listPeer,
         $search,
         $additionalClassName = '',
-        $additionalColumns = array()
+        $additionalColumns = []
     ) {
-        $oTmpCriteria = '';
+        $tmpCriteria = '';
         //If we have additional tables configured in the custom cases list, prepare the variables for search
         if (count($additionalColumns) > 0) {
             require_once(PATH_DATA_SITE . 'classes' . PATH_SEP . $additionalClassName . '.php');
-            $oNewCriteria = new Criteria("workflow");
-            $oTmpCriteria = $oNewCriteria->getNewCriterion(current($additionalColumns), "%" . $search . "%",
-                Criteria::LIKE);
+
+            $columnPivot = current($additionalColumns);
+            $tableAndColumn = explode(".", $columnPivot);
+            $type = PmTable::getTypeOfColumn($listPeer, $tableAndColumn[0], $tableAndColumn[1]);
+            $tmpCriteria = $this->defineCriteriaByColumnType($type, $columnPivot, $search);
 
             //We prepare the query related to the custom cases list
-            foreach (array_slice($additionalColumns, 1) as $value) {
-                $oTmpCriteria = $oNewCriteria->getNewCriterion($value, "%" . $search . "%",
-                    Criteria::LIKE)->addOr($oTmpCriteria);
+            foreach (array_slice($additionalColumns, 1) as $column) {
+                $tableAndColumn = explode(".", $column);
+                $type = PmTable::getTypeOfColumn($listPeer, $tableAndColumn[0], $tableAndColumn[1]);
+                $tmpCriteria = $this->defineCriteriaByColumnType($type, $column, $search)->addOr($tmpCriteria);
+
             }
         }
 
-        if (!empty($oTmpCriteria)) {
+        if (!empty($tmpCriteria)) {
             $criteria->add(
                 $criteria->getNewCriterion($listPeer::APP_TITLE, '%' . $search . '%', Criteria::LIKE)->addOr(
                     $criteria->getNewCriterion($listPeer::APP_TAS_TITLE, '%' . $search . '%', Criteria::LIKE)->addOr(
                         $criteria->getNewCriterion($listPeer::APP_PRO_TITLE, '%' . $search . '%',
                             Criteria::LIKE)->addOr(
                             $criteria->getNewCriterion($listPeer::APP_NUMBER, $search, Criteria::EQUAL)->addOr(
-                                $oTmpCriteria
+                                $tmpCriteria
                             ))))
             );
         } else {
@@ -3547,6 +3553,58 @@ class Cases
                             $criteria->getNewCriterion($listPeer::APP_NUMBER, $search, Criteria::EQUAL))))
             );
         }
+    }
+
+    /**
+     * Define the criteria according to the column type
+     *
+     * @param string $fieldType
+     * @param string $column
+     * @param string $search
+     *
+     * @return Criteria
+     */
+    private function defineCriteriaByColumnType($fieldType, $column, $search)
+    {
+        $newCriteria = new Criteria("workflow");
+
+        switch ($fieldType) {
+            case CreoleTypes::BOOLEAN:
+                $criteria = $newCriteria->getNewCriterion($column, $search, Criteria::EQUAL);
+                break;
+            case CreoleTypes::BIGINT:
+            case CreoleTypes::INTEGER:
+            case CreoleTypes::SMALLINT:
+            case CreoleTypes::TINYINT:
+                $criteria = $newCriteria->getNewCriterion($column, $search, Criteria::EQUAL);
+                break;
+            case CreoleTypes::REAL:
+            case CreoleTypes::DECIMAL:
+            case CreoleTypes::DOUBLE:
+            case CreoleTypes::FLOAT:
+                $criteria = $newCriteria->getNewCriterion($column, $search, Criteria::LIKE);
+                break;
+            case CreoleTypes::CHAR:
+            case CreoleTypes::LONGVARCHAR:
+            case CreoleTypes::VARCHAR:
+                $criteria = $newCriteria->getNewCriterion($column, "%" . $search . "%", Criteria::LIKE);
+                break;
+            case CreoleTypes::DATE:
+            case CreoleTypes::TIME:
+            case CreoleTypes::TIMESTAMP://DATETIME
+                //@todo use the same constant in other places
+                if (preg_match(UtilDateTime::REGEX_IS_DATE,
+                    $search, $arrayMatch)) {
+                    $criteria = $newCriteria->getNewCriterion($column, $search, Criteria::GREATER_EQUAL);
+                } else {
+                    $criteria = $newCriteria->getNewCriterion($column, $search, Criteria::EQUAL);
+                }
+                break;
+            default:
+                $criteria = $newCriteria->getNewCriterion($column, $search, Criteria::EQUAL);
+        }
+
+        return $criteria;
     }
 
     /**

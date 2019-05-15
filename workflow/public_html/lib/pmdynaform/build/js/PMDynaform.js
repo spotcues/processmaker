@@ -8121,6 +8121,7 @@ xCase.extendNamespace = function (path, newClass) {
         updatePropertiesCell: function (index) {
             var i,
                 j,
+                k,
                 cell,
                 cells,
                 row,
@@ -8133,7 +8134,8 @@ xCase.extendNamespace = function (path, newClass) {
                 type,
                 nameHiddeControl = "",
                 nameControl = "",
-                idcontrol;
+                idcontrol,
+                formulaExist = false;
             rows = this.gridtable;
             for (i = index; i < rows.length; i += 1) {
                 row = $(this.dom[i]);
@@ -8218,6 +8220,35 @@ xCase.extendNamespace = function (path, newClass) {
                                 break;
                             case "multipleFile":
                                 this.updateMultipleFileCell(cell, i, j);
+                                break;
+                            case "text":
+                                // TODO need refactor Formula.js or update formulator with the index correct after update the model. PMC-762
+                                control = $(cell.$el.find(".form-control"));
+                                hiddenControls = element.find("input[type='hidden']");
+                                if (this.model.get("variable") !== "") {
+                                    nameControl = "form" + this.changeIdField(this.model.get("name"), i + 1, cell.model.get("columnName"));
+                                    nameHiddeControl = nameControl.substring(0, nameControl.length - 1).concat("_label]");
+                                } else {
+                                    nameControl = "";
+                                    nameHiddeControl = "";
+                                }
+                                idcontrol = "form" + this.changeIdField(this.model.get("id"), i + 1, this.columnsModel[j].id);
+                                control.attr({
+                                    name: nameControl,
+                                    id: idcontrol
+                                });
+                                hiddenControls.attr({
+                                    name: nameHiddeControl,
+                                    id: idcontrol
+                                });
+                                for (k = 0; k < cells.length; k += 1) {
+                                    if (cells[k].model.get("formula")) {
+                                        formulaExist = true;
+                                    }
+                                }
+                                if (!formulaExist) {
+                                    this.updateModelCell(cell, i, j);
+                                }
                                 break;
                             default :
                                 control = $(cell.$el.find(".form-control"));
@@ -9190,6 +9221,7 @@ xCase.extendNamespace = function (path, newClass) {
                 };
                 cell.model.set('addRowValue', fixedData.value || null);
                 switch (cell.model.get('type')) {
+                    case 'checkbox':
                     case 'link':
                         cell.setValue(fixedData.value);
                         break;
@@ -9198,7 +9230,7 @@ xCase.extendNamespace = function (path, newClass) {
                         cell.setData(fixedData);
                         break;
                     default:
-                        // Only from addRow arrive a empty label, 
+                        // Only from addRow arrive a empty label,
                         // here the dependent event need to be fired
                         if (!data.label) {
                             cell.setData(fixedData);
@@ -19425,18 +19457,6 @@ xCase.extendNamespace = function (path, newClass) {
                     this.reviewRemoteVariable();
                 }
             }
-            return this;
-        },
-        onChange: function (attrs, item) {
-            var data;
-            item = (item === null || item === undefined) ? '' : item;
-            data = {
-                value: item,
-                label: item
-            };
-            this.attributes.text = item;
-            this.attributes.value = item;
-            this.set("data", data);
             return this;
         },
         setValue: function (value) {

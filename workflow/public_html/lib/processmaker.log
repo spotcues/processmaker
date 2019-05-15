@@ -1,30 +1,30 @@
-[7 days ago] 3cc90d2  (origin/bugfix/PMC-693-A) PMC-693-A <Roly Rudy Gutierrez Pinto>
-[8 days ago] fedf113  (origin/bugfix/PMC-387-A) PMC-387 <Paula Quispe>
-[8 days ago] 63ceef5  (origin/bugfix/PMC-705) PMC-705 <Andrea Adamczyk>
-[8 days ago] 90b1abb  (origin/bugfix/PMC-711) PMC-711 <Paula Quispe>
-[8 days ago] 0ee9f85  PMC-141:[Mantis - 25511] The time in the email logs is incorrectly being shown in UTC+00 despite the user's timezone <Fabio Guachalla>
-[8 days ago] 5dc261c  (origin/bugfix/PMC-703) PMC-703 <Julio Cesar Laura Avendaño>
-[9 days ago] 7169e72  PMC-387:[Mantis 26619] Date labels show inconsistency by showing one date in UTC and others in user based time zone <Fabio Guachalla>
-[9 days ago] cd3d6cb  (origin/bugfix/PMC-704) PMC-704 <Paula Quispe>
-[10 days ago] a7a205c  (origin/bugfix/PMC-359) PMC-359 <Roly Rudy Gutierrez Pinto>
-[10 days ago] 4e6a07a  (origin/bugfix/PMC-440) PMC-440 <Israel Bernabe>
-[2 weeks ago] 0529f25  (origin/bugfix/PMC-593) PMC-593 <Julio Cesar Laura Avendaño>
-[2 weeks ago] 6be09d3  (origin/bugfix/PMC-379-A) PMC-379-A <Israel Bernabe>
-[2 weeks ago] 48502bb  (origin/bugfix/PMC-601) PMC-601 <Paula Quispe>
-[2 weeks ago] 09987b8  (origin/bugfix/PMC-680) PMC-680 <Paula Quispe>
-[2 weeks ago] 1fc2f0c  (origin/bugfix/PMC-678) PMC-678 <Paula Quispe>
-[3 weeks ago] 8e069da  (origin/bugfix/PMC-32) PMC-32 <Israel Bernabe>
-[3 weeks ago] 0612317  (origin/bugfix/PMC-615) PMC-615 <Andrea Adamczyk>
-[3 weeks ago] c0918e1  PMC-115:Files uploaded in ABE cannot be fetched in Script task or IEE <Fabio Guachalla>
-[3 weeks ago] 9ceb114  (origin/bugfix/PMC-614) PMC-614 <Julio Cesar Laura Avendaño>
-[4 weeks ago] 04fa8e1  (origin/bugfix/PMC-557-B) PMC-557 <Paula Quispe>
-[4 weeks ago] 7867093  (origin/bugfix/PMC-143-A) PMC-143 <Paula Quispe>
-[4 weeks ago] a90e696  (origin/bugfix/PMC-541-B) PMC-541-B <Roly Rudy Gutierrez Pinto>
-[5 weeks ago] cb439fa  (origin/bugfix/PMC-608) PMC-608 <Paula Quispe>
-[5 weeks ago] 82fe93a  (origin/bugfix/PMC-425) PMC-425 <Roly Rudy Gutierrez Pinto>
-[5 weeks ago] a5a8c42  (origin/bugfix/PMC-597) PMC-597 <Paula Quispe>
-[5 weeks ago] 2ce5d4e  (origin/bugfix/PMC-541-A) PMC-541-A <Roly Rudy Gutierrez Pinto>
-[5 weeks ago] cb95200  (origin/bugfix/PMC-379) PMC-379 <Paula Quispe>
-[6 weeks ago] e05d884  (origin/bugfix/PMC-536) PMC-536 <Andrea Adamczyk>
-[6 weeks ago] 5d58a0c  (origin/bugfix/PMC-8) PMC-8 <Andrea Adamczyk>
-[6 weeks ago] 901200c  (origin/bugfix/PMC-426) PMC-426 <Paula Quispe>
+[9 days ago] 1a1de6c  (origin/bugfix/PMC-748) PMC-748 <Paula Quispe>
+[10 days ago] 557eee1  (origin/bugfix/PMC-112) PMC-112 <Paula Quispe>
+[13 days ago] 283c0a3  (origin/bugfix/PMC-695) PMC-695 <Roly Rudy Gutierrez Pinto>
+[3 weeks ago] 3cc90d2  (origin/bugfix/PMC-693-A) PMC-693-A <Roly Rudy Gutierrez Pinto>
+[3 weeks ago] fedf113  (origin/bugfix/PMC-387-A) PMC-387 <Paula Quispe>
+[3 weeks ago] 63ceef5  (origin/bugfix/PMC-705) PMC-705 <Andrea Adamczyk>
+[3 weeks ago] 90b1abb  (origin/bugfix/PMC-711) PMC-711 <Paula Quispe>
+[3 weeks ago] 0ee9f85  PMC-141:[Mantis - 25511] The time in the email logs is incorrectly being shown in UTC+00 despite the user's timezone <Fabio Guachalla>
+[3 weeks ago] 5dc261c  (origin/bugfix/PMC-703) PMC-703 <Julio Cesar Laura Avendaño>
+[3 weeks ago] 7169e72  PMC-387:[Mantis 26619] Date labels show inconsistency by showing one date in UTC and others in user based time zone <Fabio Guachalla>
+[3 weeks ago] cd3d6cb  (origin/bugfix/PMC-704) PMC-704 <Paula Quispe>
+[3 weeks ago] a7a205c  (origin/bugfix/PMC-359) PMC-359 <Roly Rudy Gutierrez Pinto>
+[3 weeks ago] 4e6a07a  (origin/bugfix/PMC-440) PMC-440 <Israel Bernabe>
+[4 weeks ago] 0529f25  (origin/bugfix/PMC-593) PMC-593 <Julio Cesar Laura Avendaño>
+[4 weeks ago] 6be09d3  (origin/bugfix/PMC-379-A) PMC-379-A <Israel Bernabe>
+[4 weeks ago] 48502bb  (origin/bugfix/PMC-601) PMC-601 <Paula Quispe>
+[4 weeks ago] 09987b8  (origin/bugfix/PMC-680) PMC-680 <Paula Quispe>
+[4 weeks ago] 1fc2f0c  (origin/bugfix/PMC-678) PMC-678 <Paula Quispe>
+[5 weeks ago] 8e069da  (origin/bugfix/PMC-32) PMC-32 <Israel Bernabe>
+[5 weeks ago] 0612317  (origin/bugfix/PMC-615) PMC-615 <Andrea Adamczyk>
+[5 weeks ago] c0918e1  PMC-115:Files uploaded in ABE cannot be fetched in Script task or IEE <Fabio Guachalla>
+[5 weeks ago] 9ceb114  (origin/bugfix/PMC-614) PMC-614 <Julio Cesar Laura Avendaño>
+[6 weeks ago] 04fa8e1  (origin/bugfix/PMC-557-B) PMC-557 <Paula Quispe>
+[6 weeks ago] 7867093  (origin/bugfix/PMC-143-A) PMC-143 <Paula Quispe>
+[6 weeks ago] a90e696  (origin/bugfix/PMC-541-B) PMC-541-B <Roly Rudy Gutierrez Pinto>
+[7 weeks ago] cb439fa  (origin/bugfix/PMC-608) PMC-608 <Paula Quispe>
+[7 weeks ago] 82fe93a  (origin/bugfix/PMC-425) PMC-425 <Roly Rudy Gutierrez Pinto>
+[7 weeks ago] a5a8c42  (origin/bugfix/PMC-597) PMC-597 <Paula Quispe>
+[7 weeks ago] 2ce5d4e  (origin/bugfix/PMC-541-A) PMC-541-A <Roly Rudy Gutierrez Pinto>
+[7 weeks ago] cb95200  (origin/bugfix/PMC-379) PMC-379 <Paula Quispe>

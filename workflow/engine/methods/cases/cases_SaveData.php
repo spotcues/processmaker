@@ -50,12 +50,18 @@ if (!isset($_SESSION['USER_LOGGED'])) {
     }
 }
 
-ValidationUploadedFiles::getValidationUploadedFiles()->dispatch(function($validator) {
+/**
+ * To do: The following evaluation must be moved after saving the data (so as not to lose the data entered in the form).
+ * It only remains because it is an old behavior, which must be defined by "Product Owner".
+ * @see workflow/engine/methods/services/ActionsByEmailDataFormPost.php
+ */
+$validator = ValidationUploadedFiles::getValidationUploadedFiles()->runRulesForFileEmpty();
+if ($validator->fails()) {
     G::SendMessageText($validator->getMessage(), "ERROR");
     $url = explode("sys" . config("system.workspace"), $_SERVER['HTTP_REFERER']);
     G::header("location: " . "/sys" . config("system.workspace") . $url[1]);
     die();
-});
+}
 
 try {
     if ($_GET['APP_UID'] !== $_SESSION['APPLICATION']) {

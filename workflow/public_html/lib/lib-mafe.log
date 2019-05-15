@@ -1,30 +1,30 @@
-[8 days ago] 062be72  (origin/bugfix/PMC-708) PMC-708 <Roly Rudy Gutierrez Pinto>
-[9 days ago] 154002b  (origin/bugfix/PMC-161) PMC-161 <Andrea Adamczyk>
-[8 weeks ago] 8aa4d71  (origin/bugfix/PMC-313) PMC-313 <Roly Rudy Gutierrez Pinto>
-[8 weeks ago] 2b29792  (origin/bugfix/PMC-126) PMC-126 <Andrea Adamczyk>
+[3 weeks ago] 062be72  (origin/bugfix/PMC-708) PMC-708 <Roly Rudy Gutierrez Pinto>
+[3 weeks ago] 154002b  (origin/bugfix/PMC-161) PMC-161 <Andrea Adamczyk>
+[2 months ago] 8aa4d71  (origin/bugfix/PMC-313) PMC-313 <Roly Rudy Gutierrez Pinto>
+[2 months ago] 2b29792  (origin/bugfix/PMC-126) PMC-126 <Andrea Adamczyk>
 [4 months ago] 20bddf1  (origin/bugfix/PMC-163) PMC-163 <Roly Rudy Gutierrez Pinto>
-[4 months ago] 5750f94  PMC-322:[Mantis 25900] Add the labels for some English fields in the English .po file <Fabio Guachalla>
-[4 months ago] 67d2d9d  PMC-320:Does not works the "Del/Supr" Key after press "Enter" key in the "Confirm" frame <Fabio Guachalla>
+[5 months ago] 5750f94  PMC-322:[Mantis 25900] Add the labels for some English fields in the English .po file <Fabio Guachalla>
+[5 months ago] 67d2d9d  PMC-320:Does not works the "Del/Supr" Key after press "Enter" key in the "Confirm" frame <Fabio Guachalla>
 [5 months ago] a94f831  (origin/bugfix/PMC-174_B) PMC-174: Appear "confirm" frame when is delete one rule of a gateway <Rodrigo Quelca>
 [5 months ago] d3f6ccb  (origin/bugfix/PMC-100) bugfix/PMC-100: Delete a pool with elements BPMN, it occurs a error in console and the "Confirm" frame does not disappear <Rodrigo Quelca>
 [5 months ago] 6573881  (origin/bugfix/PMC-71) PMC-71 <Roly Rudy Gutierrez Pinto>
-[5 months ago] f112748  (origin/bugfix/FBI-2517_B) FBI-2517: Default date is out of range message when setting minDate but no default date in datetime control <Rodrigo Quelca>
-[5 months ago] 14e3cb5  FBI-2394:Task deleted on CTRL+ALT+DELETE - Windows 10 <Fabio Guachalla>
-[5 months ago] 36bfb24  FBI-2372:[Mantis - 24685] Comporium - Inclusive to parallel gateway alert message is not shown in designer for PM 3.2.2 <Fabio Guachalla>
+[6 months ago] f112748  (origin/bugfix/FBI-2517_B) FBI-2517: Default date is out of range message when setting minDate but no default date in datetime control <Rodrigo Quelca>
+[6 months ago] 14e3cb5  FBI-2394:Task deleted on CTRL+ALT+DELETE - Windows 10 <Fabio Guachalla>
+[6 months ago] 36bfb24  FBI-2372:[Mantis - 24685] Comporium - Inclusive to parallel gateway alert message is not shown in designer for PM 3.2.2 <Fabio Guachalla>
 [6 months ago] ab5c757  (origin/bugfix/PMC-22) PMC-22 <Paula Quispe>
 [6 months ago] 94c33d7  FBI-2386: Upload files: We need to show the message error send by backend <alex santos>
 [6 months ago] 2ca0bac  FBI-1560:[permissions] it does not show message -->Fields marked with an asterisk (*) are required. <Fabio Guachalla>
-[6 months ago] 31a4ad3  FBI-2518:(Designer) (x)Button in the default date always show the messages of validation <Fabio Guachalla>
+[7 months ago] 31a4ad3  FBI-2518:(Designer) (x)Button in the default date always show the messages of validation <Fabio Guachalla>
 [7 months ago] e53a91d  (origin/feature/HOR-4861) FBI-2483:CLONE - We need to use the regex from backend <Fabio Guachalla>
 [7 months ago] 28a3ac3  (origin/feature/FBI-2504) FBI-2504: [Process designer] the process map was lost <Rodrigo Quelca>
 [7 months ago] 537401f  FBI-2498:The process designer is sending a PUT request in read-only mode <Fabio Guachalla>
 [7 months ago] 5003d37  (origin/feature/FBI-2497) FBI-2497: Disable the save action in the process designer when is in read only mode <Rodrigo Quelca>
 [8 months ago] 31de20a  (origin/bugfix/FBI-2454_B) FBI-2454: [zendesk-6082] Problem embedding hyperlinks in Intermediate email event <Rodrigo Quelca>
-[8 months ago] 70d94cf  Email event: Add the option "Default email account" in From <Fabio Guachalla>
+[9 months ago] 70d94cf  Email event: Add the option "Default email account" in From <Fabio Guachalla>
 [9 months ago] 89ed1eb  FBI-2461:When you create the end event or  another  element, near the crown, the end event goes behind the pool <Fabio Guachalla>
-[9 months ago] 67a0298  FBI-2441: Remove the option 'History of use' <Alex Santos>
-[10 months ago] 21e9767  (origin/feature/FBI-2433) FBI-2433: Refactor Email Event - sender account  field logic, to support  "Default email configuration" <Rodrigo Quelca>
-[11 months ago] bc74b2d  (origin/feature/HOR-4424, origin/feature/FBI-2387_B) FBI-2387: Process Permission: Allow reassignment in certain tasks <Rodrigo Quelca>
-[12 months ago] 94d747f  Update composer.json <Julio Cesar Laura Avendaño>
+[10 months ago] 67a0298  FBI-2441: Remove the option 'History of use' <Alex Santos>
+[11 months ago] 21e9767  (origin/feature/FBI-2433) FBI-2433: Refactor Email Event - sender account  field logic, to support  "Default email configuration" <Rodrigo Quelca>
+[12 months ago] bc74b2d  (origin/feature/HOR-4424, origin/feature/FBI-2387_B) FBI-2387: Process Permission: Allow reassignment in certain tasks <Rodrigo Quelca>
+[1 year ago] 94d747f  Update composer.json <Julio Cesar Laura Avendaño>
 [1 year ago] 09ace31  (origin/bugfix/FBI-2362) FBI-2362: Create/complete missing labels on version 3.2.2 <Rodrigo Quelca>
-[1 year ago] 93990e0  FBI-2382:Triggers > when we go to "copy" in triggers, the "required field" alert is being superimposed on the code information <Fabio Guachalla>
+[1 year, 1 month ago] 93990e0  FBI-2382:Triggers > when we go to "copy" in triggers, the "required field" alert is being superimposed on the code information <Fabio Guachalla>

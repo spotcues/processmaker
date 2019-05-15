@@ -3434,19 +3434,19 @@ class Cases
                     */
                     if ($oPMScript->executedOn() === $oPMScript::AFTER_ROUTING) {
                         //Get the variables changed with the trigger
-                        $fieldsTrigger = arrayDiffRecursive($appDataAfterTrigger, $fieldsCase);
+                        $fieldsTrigger = getDiffBetweenModifiedVariables($appDataAfterTrigger, $fieldsCase);
+                        $collection = collect($fieldsCase);
+                        $merged = $collection->merge($fieldsTrigger);
+                        //Merge the appData with variables changed
+                        $fieldsCase = $merged->all();
 
                         //We will be load the last appData because:
                         //Other thread execution can be changed the variables
                         $appUid = !empty($fieldsCase['APPLICATION']) ? $fieldsCase['APPLICATION'] : '';
-
                         //Save the fields changed in the trigger
                         if (!$varInAfterRouting && !empty($fieldsTrigger)) {
                             $varInAfterRouting = true;
                         }
-
-                        //Merge the appData with variables changed
-                        $fieldsCase = array_merge($fieldsCase, $fieldsTrigger);
                     } else {
                         $fieldsCase = $appDataAfterTrigger;
                     }
