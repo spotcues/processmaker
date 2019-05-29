@@ -1348,8 +1348,7 @@ class Bootstrap
      *
      * @return void
      */
-    // _Internal: Remove recursion in result array
-    public function _del_p(&$ary)
+    public static function _del_p(&$ary)
     {
         foreach ($ary as $k => $v) {
             if ($k === '_p') {

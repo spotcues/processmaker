@@ -4,6 +4,7 @@ use ProcessMaker\Core\System;
 use ProcessMaker\BusinessModel\DynaForm\SuggestTrait;
 use ProcessMaker\BusinessModel\Cases;
 use ProcessMaker\BusinessModel\DynaForm\ValidatorFactory;
+use ProcessMaker\Model\Dynaform as ModelDynaform;
 
 /**
  * Implementing pmDynaform library in the running case.
@@ -78,6 +79,14 @@ class PmDynaform
         return $titleDynaform;
     }
 
+    /**
+     * Get a dynaform.
+     * @return array|null
+     * @see ConsolidatedCases->processConsolidated()
+     * @see workflow/engine/methods/cases/caseConsolidated.php
+     * @see ProcessMaker\BusinessModel\Cases->getCaseVariables()
+     * @see PmDynaform->__construct()
+     */
     public function getDynaform()
     {
         if (!isset($this->fields["CURRENT_DYNAFORM"])) {
@@ -86,22 +95,21 @@ class PmDynaform
         if ($this->record != null) {
             return $this->record;
         }
-        $a = new Criteria("workflow");
-        $a->addSelectColumn(DynaformPeer::DYN_VERSION);
-        $a->addSelectColumn(DynaformPeer::DYN_LABEL);
-        $a->addSelectColumn(DynaformPeer::DYN_CONTENT);
-        $a->addSelectColumn(DynaformPeer::PRO_UID);
-        $a->addSelectColumn(DynaformPeer::DYN_UID);
-        $a->add(DynaformPeer::DYN_UID, $this->fields["CURRENT_DYNAFORM"], Criteria::EQUAL);
-        $ds = DynaformPeer::doSelectRS($a);
-        $ds->setFetchmode(ResultSet::FETCHMODE_ASSOC);
-        $ds->next();
-        $row = $ds->getRow();
-        $this->record = isset($row) ? $row : null;
-        $this->langs = ($this->record["DYN_LABEL"] !== "" && $this->record["DYN_LABEL"] !== null) ? G::json_decode($this->record["DYN_LABEL"]) : null;
+        $dynaform = ModelDynaform::getByDynUid($this->fields["CURRENT_DYNAFORM"]);
+        if (empty($dynaform)) {
+            $this->langs = null;
+            return null;
+        }
+        $this->langs = empty($dynaform->DYN_LABEL) ? null : G::json_decode($dynaform->DYN_LABEL);
+        $this->record = (array) $dynaform;
         return $this->record;
     }
 
+    /**
+     * Get all dynaforms except this dynaform, related to process.
+     * @return array
+     * @see PmDynaform->__construct()
+     */
     public function getDynaforms()
     {
         if ($this->record === null) {
@@ -110,21 +118,11 @@ class PmDynaform
         if ($this->records != null) {
             return $this->records;
         }
-        $a = new Criteria("workflow");
-        $a->addSelectColumn(DynaformPeer::DYN_UPDATE_DATE);
-        $a->addSelectColumn(DynaformPeer::DYN_VERSION);
-        $a->addSelectColumn(DynaformPeer::DYN_LABEL);
-        $a->addSelectColumn(DynaformPeer::DYN_CONTENT);
-        $a->addSelectColumn(DynaformPeer::PRO_UID);
-        $a->addSelectColumn(DynaformPeer::DYN_UID);
-        $a->add(DynaformPeer::PRO_UID, $this->record["PRO_UID"], Criteria::EQUAL);
-        $a->add(DynaformPeer::DYN_UID, $this->record["DYN_UID"], Criteria::NOT_EQUAL);
-        $ds = DynaformPeer::doSelectRS($a);
-        $ds->setFetchmode(ResultSet::FETCHMODE_ASSOC);
-        $this->records = array();
-        while ($ds->next()) {
-            array_push($this->records, $ds->getRow());
-        }
+        $result = ModelDynaform::getByProUidExceptDynUid($this->record["PRO_UID"], $this->record["DYN_UID"]);
+        $result->transform(function($item) {
+            return (array) $item;
+        });
+        $this->records = $result->toArray();
         return $this->records;
     }
 
@@ -1562,19 +1560,27 @@ class PmDynaform
         }
     }
 
+    /**
+     * Verify the use of the variable in all the forms of the process.
+     * 
+     * @param string $processUid
+     * @param string $variable
+     * @return boolean | string
+     * 
+     * @see ProcessMaker\BusinessModel\Variable->delete()
+     * @link https://wiki.processmaker.com/3.2/Variables#Managing_Variables
+     */
     public function isUsed($processUid, $variable)
     {
-        $criteria = new Criteria("workflow");
-        $criteria->addSelectColumn(DynaformPeer::DYN_UID);
-        $criteria->addSelectColumn(DynaformPeer::DYN_CONTENT);
-        $criteria->add(DynaformPeer::PRO_UID, $processUid, Criteria::EQUAL);
-        $rsCriteria = DynaformPeer::doSelectRS($criteria);
-        $rsCriteria->setFetchmode(ResultSet::FETCHMODE_ASSOC);
-        while ($rsCriteria->next()) {
-            $aRow = $rsCriteria->getRow();
-            $json = G::json_decode($aRow['DYN_CONTENT']);
+        $result = ModelDynaform::getByProUid($processUid);
+        if (empty($result)) {
+            return false;
+        }
+        foreach ($result as $row) {
+            $dynaform = new PmDynaform(["CURRENT_DYNAFORM" => $row->DYN_UID]);
+            $json = G::json_decode($dynaform->record["DYN_CONTENT"]);
             if ($this->jsoni($json, $variable)) {
-                return $aRow['DYN_UID'];
+                return $row->DYN_UID;
             }
         }
         return false;

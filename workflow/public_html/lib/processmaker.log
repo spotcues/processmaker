@@ -1,30 +1,30 @@
-[9 days ago] 1a1de6c  (origin/bugfix/PMC-748) PMC-748 <Paula Quispe>
-[10 days ago] 557eee1  (origin/bugfix/PMC-112) PMC-112 <Paula Quispe>
-[13 days ago] 283c0a3  (origin/bugfix/PMC-695) PMC-695 <Roly Rudy Gutierrez Pinto>
-[3 weeks ago] 3cc90d2  (origin/bugfix/PMC-693-A) PMC-693-A <Roly Rudy Gutierrez Pinto>
-[3 weeks ago] fedf113  (origin/bugfix/PMC-387-A) PMC-387 <Paula Quispe>
-[3 weeks ago] 63ceef5  (origin/bugfix/PMC-705) PMC-705 <Andrea Adamczyk>
-[3 weeks ago] 90b1abb  (origin/bugfix/PMC-711) PMC-711 <Paula Quispe>
-[3 weeks ago] 0ee9f85  PMC-141:[Mantis - 25511] The time in the email logs is incorrectly being shown in UTC+00 despite the user's timezone <Fabio Guachalla>
-[3 weeks ago] 5dc261c  (origin/bugfix/PMC-703) PMC-703 <Julio Cesar Laura Avendaño>
-[3 weeks ago] 7169e72  PMC-387:[Mantis 26619] Date labels show inconsistency by showing one date in UTC and others in user based time zone <Fabio Guachalla>
-[3 weeks ago] cd3d6cb  (origin/bugfix/PMC-704) PMC-704 <Paula Quispe>
-[3 weeks ago] a7a205c  (origin/bugfix/PMC-359) PMC-359 <Roly Rudy Gutierrez Pinto>
-[3 weeks ago] 4e6a07a  (origin/bugfix/PMC-440) PMC-440 <Israel Bernabe>
-[4 weeks ago] 0529f25  (origin/bugfix/PMC-593) PMC-593 <Julio Cesar Laura Avendaño>
-[4 weeks ago] 6be09d3  (origin/bugfix/PMC-379-A) PMC-379-A <Israel Bernabe>
-[4 weeks ago] 48502bb  (origin/bugfix/PMC-601) PMC-601 <Paula Quispe>
-[4 weeks ago] 09987b8  (origin/bugfix/PMC-680) PMC-680 <Paula Quispe>
-[4 weeks ago] 1fc2f0c  (origin/bugfix/PMC-678) PMC-678 <Paula Quispe>
-[5 weeks ago] 8e069da  (origin/bugfix/PMC-32) PMC-32 <Israel Bernabe>
-[5 weeks ago] 0612317  (origin/bugfix/PMC-615) PMC-615 <Andrea Adamczyk>
-[5 weeks ago] c0918e1  PMC-115:Files uploaded in ABE cannot be fetched in Script task or IEE <Fabio Guachalla>
-[5 weeks ago] 9ceb114  (origin/bugfix/PMC-614) PMC-614 <Julio Cesar Laura Avendaño>
-[6 weeks ago] 04fa8e1  (origin/bugfix/PMC-557-B) PMC-557 <Paula Quispe>
-[6 weeks ago] 7867093  (origin/bugfix/PMC-143-A) PMC-143 <Paula Quispe>
-[6 weeks ago] a90e696  (origin/bugfix/PMC-541-B) PMC-541-B <Roly Rudy Gutierrez Pinto>
-[7 weeks ago] cb439fa  (origin/bugfix/PMC-608) PMC-608 <Paula Quispe>
-[7 weeks ago] 82fe93a  (origin/bugfix/PMC-425) PMC-425 <Roly Rudy Gutierrez Pinto>
-[7 weeks ago] a5a8c42  (origin/bugfix/PMC-597) PMC-597 <Paula Quispe>
-[7 weeks ago] 2ce5d4e  (origin/bugfix/PMC-541-A) PMC-541-A <Roly Rudy Gutierrez Pinto>
-[7 weeks ago] cb95200  (origin/bugfix/PMC-379) PMC-379 <Paula Quispe>
+[4 days ago] 6ef1916  (origin/revert-pr-6893) Revert "PMC-602 (pull request 6893)" <Julio Cesar Laura Avendaño>
+[4 days ago] e9ec024  (origin/revert-pr-6906) Revert "PMC-808 (pull request #6906)" <Julio Cesar Laura Avendaño>
+[4 days ago] 3d925bc  (origin/revert-pr-6907) Revert "PMC-602 (pull request #6907)" <Julio Cesar Laura Avendaño>
+[5 days ago] 70cff4a  PMC-602 <Julio Cesar Laura Avendaño>
+[6 days ago] 52b4560  (origin/bugfix/PMC-808) PMC-808 <Julio Cesar Laura Avendaño>
+[12 days ago] 078ccd8  PMC-380 <Andrea Adamczyk>
+[13 days ago] 593f3f0  (origin/bugfix/PMC-585-A) PMC-585-A <Roly Rudy Gutierrez Pinto>
+[13 days ago] f785e5c  (origin/bugfix/PMC-602) PMC-602 <Julio Cesar Laura Avendaño>
+[3 weeks ago] 04a949b  (origin/bugfix/PMC-523) PMC-523 <Julio Cesar Laura Avendaño>
+[3 weeks ago] 0d3ce92  (origin/bugfix/PMC-738) PMC-738 <Paula Quispe>
+[3 weeks ago] 96c5010  (origin/bugfix/PMC-751) PMC-751 <Paula Quispe>
+[3 weeks ago] fbfe513  (origin/bugfix/PMC-763-a) PMC-763 <Paula Quispe>
+[3 weeks ago] cbaa1ce  (origin/bugfix/PMC-765) PMC-765 <Paula Quispe>
+[3 weeks ago] 735de87  (origin/bugfix/PMC-371) PMC-371 <Paula Quispe>
+[3 weeks ago] 78fa4f2  (origin/feature/PMC-700) PMC-700 <Paula Quispe>
+[3 weeks ago] b3211aa  PMC-755 <Paula Quispe>
+[4 weeks ago] a254e48  (origin/bugfix/PMC-763) filter by task title and order by lastModified, dueDate, status, process and task <Paula Quispe>
+[4 weeks ago] fe2c7e9  Add test to show how to utilize a diff with laravel collection filter and map to remove elements when they are no longer in the change. <Taylor Dondich>
+[4 weeks ago] b1cf07f  Add test to make sure it can modify a row in place. <Taylor Dondich>
+[4 weeks ago] 67c899a  Add test case for array diff recursive to show function works as designed. Add tests to show the underlying problem with using this function with grids and assuming changes. <Taylor Dondich>
+[4 weeks ago] 2ca1dc4  Adding user case Hertland <Paula Quispe>
+[4 weeks ago] 70ee2ae  Filter by case number <Paula Quispe>
+[4 weeks ago] cc0df24  Add check for invalid USER potentially due to unassigned. In this situation, assign blank values to result. Fixes test to check for unassigned users. <Taylor Dondich>
+[4 weeks ago] bf3c249  filter with unassigned, date from and date to <Paula Quispe>
+[4 weeks ago] 99985d7  Add self service delegation for it_should_return_pages_of_data <Julio Cesar Laura Avendaño>
+[4 weeks ago] 60493fa  Change test name to it_should_return_data_filtered_by_process_category <Julio Cesar Laura Avendaño>
+[4 weeks ago] e758d31  conflicts <Julio Cesar Laura Avendaño>
+[4 weeks ago] 0800fff  conflicts <Paula Quispe>
+[4 weeks ago] 9610b58  First commit for filter by category <Julio Cesar Laura Avendaño>
+[4 weeks ago] 3906785  sort by case and user <Paula Quispe>

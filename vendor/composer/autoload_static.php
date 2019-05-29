@@ -4,7 +4,7 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInit66bc30249e5d6d2d0fc249853688d926
+class ComposerStaticInit929cd3499cbe7920320b69323ccb59d9
 {
     public static $files = array (
         '320cde22f66dd4f5d3fd621d3e88b98f' => __DIR__ . '/..' . '/symfony/polyfill-ctype/bootstrap.php',
@@ -13,6 +13,7 @@ class ComposerStaticInit66bc30249e5d6d2d0fc249853688d926
         '023d27dca8066ef29e6739335ea73bad' => __DIR__ . '/..' . '/symfony/polyfill-php70/bootstrap.php',
         '667aeda72477189d0494fecd327c3641' => __DIR__ . '/..' . '/symfony/var-dumper/Resources/functions/dump.php',
         '2c102faa651ef8ea5874edb585946bce' => __DIR__ . '/..' . '/swiftmailer/swiftmailer/lib/swift_required.php',
+        '801c31d8ed748cfa537fa45402288c95' => __DIR__ . '/..' . '/psy/psysh/src/functions.php',
         'f0906e6318348a765ffb6eb24e0d0938' => __DIR__ . '/..' . '/laravel/framework/src/Illuminate/Foundation/helpers.php',
         '58571171fd5812e6e447dce228f52f4d' => __DIR__ . '/..' . '/laravel/framework/src/Illuminate/Support/helpers.php',
         '7b11c4dc42b3b3023073cb14e519683c' => __DIR__ . '/..' . '/ralouphie/getallheaders/src/getallheaders.php',
@@ -26,6 +27,10 @@ class ComposerStaticInit66bc30249e5d6d2d0fc249853688d926
     );
 
     public static $prefixLengthsPsr4 = array (
+        'X' => 
+        array (
+            'XdgBaseDir\\' => 11,
+        ),
         'T' => 
         array (
             'TijsVerkoyen\\CssToInlineStyles\\' => 31,
@@ -58,7 +63,9 @@ class ComposerStaticInit66bc30249e5d6d2d0fc249853688d926
         ),
         'P' => 
         array (
+            'Psy\\' => 4,
             'Psr\\Container\\' => 14,
+            'PhpParser\\' => 10,
             'PDepend\\' => 8,
         ),
         'M' => 
@@ -69,6 +76,12 @@ class ComposerStaticInit66bc30249e5d6d2d0fc249853688d926
         'L' => 
         array (
             'League\\Flysystem\\' => 17,
+            'Laravel\\Tinker\\' => 15,
+        ),
+        'J' => 
+        array (
+            'JakubOnderka\\PhpConsoleHighlighter\\' => 35,
+            'JakubOnderka\\PhpConsoleColor\\' => 29,
         ),
         'I' => 
         array (
@@ -90,6 +103,10 @@ class ComposerStaticInit66bc30249e5d6d2d0fc249853688d926
     );
 
     public static $prefixDirsPsr4 = array (
+        'XdgBaseDir\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/dnoegel/php-xdg-base-dir/src',
+        ),
         'TijsVerkoyen\\CssToInlineStyles\\' => 
         array (
             0 => __DIR__ . '/..' . '/tijsverkoyen/css-to-inline-styles/src',
@@ -174,9 +191,17 @@ class ComposerStaticInit66bc30249e5d6d2d0fc249853688d926
         array (
             0 => __DIR__ . '/..' . '/ramsey/uuid/src',
         ),
+        'Psy\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/psy/psysh/src',
+        ),
         'Psr\\Container\\' => 
         array (
             0 => __DIR__ . '/..' . '/psr/container/src',
+        ),
+        'PhpParser\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/nikic/php-parser/lib/PhpParser',
         ),
         'PDepend\\' => 
         array (
@@ -193,6 +218,18 @@ class ComposerStaticInit66bc30249e5d6d2d0fc249853688d926
         'League\\Flysystem\\' => 
         array (
             0 => __DIR__ . '/..' . '/league/flysystem/src',
+        ),
+        'Laravel\\Tinker\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/laravel/tinker/src',
+        ),
+        'JakubOnderka\\PhpConsoleHighlighter\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/jakub-onderka/php-console-highlighter/src',
+        ),
+        'JakubOnderka\\PhpConsoleColor\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/jakub-onderka/php-console-color/src',
         ),
         'Illuminate\\' => 
         array (
@@ -1105,6 +1142,7 @@ class ComposerStaticInit66bc30249e5d6d2d0fc249853688d926
         'DynaformHandler' => __DIR__ . '/../..' . '/gulliver/system/class.dynaformhandler.php',
         'DynaformMapBuilder' => __DIR__ . '/../..' . '/workflow/engine/classes/model/map/DynaformMapBuilder.php',
         'DynaformPeer' => __DIR__ . '/../..' . '/workflow/engine/classes/model/DynaformPeer.php',
+        'EasyPeasyICS' => __DIR__ . '/..' . '/phpmailer/phpmailer/extras/EasyPeasyICS.php',
         'EchoTask' => __DIR__ . '/../..' . '/thirdparty/phing/tasks/system/EchoTask.php',
         'EdgePDF' => __DIR__ . '/../..' . '/thirdparty/html2ps_pdf/value.border.edge.class.php',
         'ElementTaskRelation' => __DIR__ . '/../..' . '/workflow/engine/classes/model/ElementTaskRelation.php',
@@ -5190,6 +5228,8 @@ class ComposerStaticInit66bc30249e5d6d2d0fc249853688d926
         'PHPClass' => __DIR__ . '/../..' . '/thirdparty/html2ps_pdf/classes/org/active-link/doc/PHPClass.php',
         'PHPDocumentorTask' => __DIR__ . '/../..' . '/thirdparty/phing/tasks/ext/phpdoc/PHPDocumentorTask.php',
         'PHPMailer' => __DIR__ . '/..' . '/phpmailer/phpmailer/class.phpmailer.php',
+        'PHPMailerOAuth' => __DIR__ . '/..' . '/phpmailer/phpmailer/class.phpmaileroauth.php',
+        'PHPMailerOAuthGoogle' => __DIR__ . '/..' . '/phpmailer/phpmailer/class.phpmaileroauthgoogle.php',
         'PHPSQLParser' => __DIR__ . '/../..' . '/gulliver/system/class.phpSqlParser.php',
         'PHPUnit2ReportTask' => __DIR__ . '/../..' . '/thirdparty/phing/tasks/ext/phpunit2/PHPUnit2ReportTask.php',
         'PHPUnit2ResultFormatter' => __DIR__ . '/../..' . '/thirdparty/phing/tasks/ext/phpunit2/PHPUnit2ResultFormatter.php',
@@ -5764,6 +5804,7 @@ class ComposerStaticInit66bc30249e5d6d2d0fc249853688d926
         'mailer' => __DIR__ . '/../..' . '/gulliver/system/class.mailer.php',
         'menuDetail' => __DIR__ . '/../..' . '/workflow/engine/classes/class.plugin.php',
         'newSiteProxy' => __DIR__ . '/../..' . '/workflow/engine/controllers/newSiteProxy.php',
+        'ntlm_sasl_client_class' => __DIR__ . '/..' . '/phpmailer/phpmailer/extras/ntlm_sasl_client.php',
         'nusoap_base' => __DIR__ . '/../..' . '/thirdparty/pear/nusoap.php',
         'nusoap_base_colosa' => __DIR__ . '/../..' . '/thirdparty/pear/nusoap.colosa.php',
         'nusoapservermime' => __DIR__ . '/../..' . '/thirdparty/pear/nusoapmime.php',
@@ -5818,12 +5859,12 @@ class ComposerStaticInit66bc30249e5d6d2d0fc249853688d926
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInit66bc30249e5d6d2d0fc249853688d926::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInit66bc30249e5d6d2d0fc249853688d926::$prefixDirsPsr4;
-            $loader->fallbackDirsPsr4 = ComposerStaticInit66bc30249e5d6d2d0fc249853688d926::$fallbackDirsPsr4;
-            $loader->prefixesPsr0 = ComposerStaticInit66bc30249e5d6d2d0fc249853688d926::$prefixesPsr0;
-            $loader->fallbackDirsPsr0 = ComposerStaticInit66bc30249e5d6d2d0fc249853688d926::$fallbackDirsPsr0;
-            $loader->classMap = ComposerStaticInit66bc30249e5d6d2d0fc249853688d926::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticInit929cd3499cbe7920320b69323ccb59d9::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInit929cd3499cbe7920320b69323ccb59d9::$prefixDirsPsr4;
+            $loader->fallbackDirsPsr4 = ComposerStaticInit929cd3499cbe7920320b69323ccb59d9::$fallbackDirsPsr4;
+            $loader->prefixesPsr0 = ComposerStaticInit929cd3499cbe7920320b69323ccb59d9::$prefixesPsr0;
+            $loader->fallbackDirsPsr0 = ComposerStaticInit929cd3499cbe7920320b69323ccb59d9::$fallbackDirsPsr0;
+            $loader->classMap = ComposerStaticInit929cd3499cbe7920320b69323ccb59d9::$classMap;
 
         }, null, ClassLoader::class);
     }

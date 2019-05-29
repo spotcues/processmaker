@@ -6,6 +6,7 @@ $vendorDir = dirname(dirname(__FILE__));
 $baseDir = dirname($vendorDir);
 
 return array(
+    'XdgBaseDir\\' => array($vendorDir . '/dnoegel/php-xdg-base-dir/src'),
     'TijsVerkoyen\\CssToInlineStyles\\' => array($vendorDir . '/tijsverkoyen/css-to-inline-styles/src'),
     'Tests\\' => array($baseDir . '/tests'),
     'TYPO3\\ClassAliasLoader\\' => array($vendorDir . '/typo3/class-alias-loader/src'),
@@ -27,11 +28,16 @@ return array(
     'Symfony\\Component\\Console\\' => array($vendorDir . '/symfony/console'),
     'Symfony\\Component\\Config\\' => array($vendorDir . '/symfony/config'),
     'Ramsey\\Uuid\\' => array($vendorDir . '/ramsey/uuid/src'),
+    'Psy\\' => array($vendorDir . '/psy/psysh/src'),
     'Psr\\Container\\' => array($vendorDir . '/psr/container/src'),
+    'PhpParser\\' => array($vendorDir . '/nikic/php-parser/lib/PhpParser'),
     'PDepend\\' => array($vendorDir . '/pdepend/pdepend/src/main/php/PDepend'),
     'Monolog\\' => array($vendorDir . '/monolog/monolog/src/Monolog'),
     'Maveriks\\' => array($baseDir . '/framework/src/Maveriks'),
     'League\\Flysystem\\' => array($vendorDir . '/league/flysystem/src'),
+    'Laravel\\Tinker\\' => array($vendorDir . '/laravel/tinker/src'),
+    'JakubOnderka\\PhpConsoleHighlighter\\' => array($vendorDir . '/jakub-onderka/php-console-highlighter/src'),
+    'JakubOnderka\\PhpConsoleColor\\' => array($vendorDir . '/jakub-onderka/php-console-color/src'),
     'Illuminate\\' => array($vendorDir . '/laravel/framework/src/Illuminate'),
     'Dotenv\\' => array($vendorDir . '/vlucas/phpdotenv/src'),
     'Cron\\' => array($vendorDir . '/mtdowling/cron-expression/src/Cron'),
