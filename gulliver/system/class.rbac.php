@@ -213,7 +213,7 @@ class RBAC
      * @access public
      * @return object
      */
-    public function &getSingleton()
+    public static function &getSingleton()
     {
         if (self::$instance == null) {
             self::$instance = new RBAC();

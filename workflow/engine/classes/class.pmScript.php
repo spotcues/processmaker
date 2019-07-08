@@ -706,7 +706,7 @@ class PMScript
                                 try {
                                     $cnn = Propel::getConnection($varInfo["VAR_DBCONNECTION"]);
                                     $stmt = $cnn->createStatement();
-                                    $sql = G::replaceDataField($varInfo["VAR_SQL"], $this->aFields);
+                                    $sql = G::replaceDataField($varInfo["VAR_SQL"], $this->aFields, 'mysql', false);
                                     $rs = $stmt->executeQuery($sql, \ResultSet::FETCHMODE_NUM);
                                     while ($rs->next()) {
                                         $row = $rs->getRow();

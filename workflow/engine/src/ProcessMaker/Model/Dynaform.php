@@ -14,8 +14,13 @@ use Illuminate\Support\Facades\DB;
 class Dynaform extends Model
 {
     protected $table = 'DYNAFORM';
+    protected $primaryKey = "DYN_ID";
     public $timestamps = false;
 
+    /**
+     * Return relation process.
+     * @return object
+     */
     public function process()
     {
         return $this->belongsTo(Process::class, 'PRO_UID', 'PRO_UID');

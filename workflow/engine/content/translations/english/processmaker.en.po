@@ -2744,6 +2744,12 @@ msgid "Batch Routing"
 msgstr "Batch Routing"
 
 # TRANSLATION
+# LABEL/ID_BATCH_ROUTING_APPLY_CHANGES
+#: LABEL/ID_BATCH_ROUTING_APPLY_CHANGES
+msgid "The modification will be applied to all rows"
+msgstr "The modification will be applied to all rows"
+
+# TRANSLATION
 # LABEL/ID_BATCH_ROUTING_TABLE_ALREADY_EXISTS
 #: LABEL/ID_BATCH_ROUTING_TABLE_ALREADY_EXISTS
 msgid "The specified batch routing table already exists. The existing table will be used to store the batch routing information. Please be sure that the table has the correct batch routing configuration."
@@ -23654,8 +23660,8 @@ msgstr "Setting SUPER privilege"
 # TRANSLATION
 # LABEL/ID_SETUP
 #: LABEL/ID_SETUP
-msgid "ADMIN"
-msgstr "ADMIN"
+msgid "Admin"
+msgstr "Admin"
 
 # TRANSLATION
 # LABEL/ID_SETUP_MAILCONF_TITLE

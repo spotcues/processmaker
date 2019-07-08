@@ -101,7 +101,7 @@ class AppDelay extends BaseAppDelay
      *
      * @return boolean
     */
-    public function isPaused($appUid, $delIndex)
+    public static function isPaused($appUid, $delIndex)
     {
         $criteria = new Criteria('workflow');
         $criteria->add(AppDelayPeer::APP_UID, $appUid);

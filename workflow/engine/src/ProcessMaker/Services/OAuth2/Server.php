@@ -394,7 +394,7 @@ class Server implements iAuthenticate
         return $this->server;
     }
 
-    public function getUserId()
+    public static function getUserId()
     {
         return self::$userId;
     }

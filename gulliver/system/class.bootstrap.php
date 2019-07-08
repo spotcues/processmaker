@@ -1839,7 +1839,7 @@ class Bootstrap
      *
      * @return multitype:string mixed Ambigous <number, string>
      */
-    public function parseNormalUri($aRequestUri, array $arrayFriendlyUri = null)
+    public static function parseNormalUri($aRequestUri, array $arrayFriendlyUri = null)
     {
         if (substr($aRequestUri[1], 0, 3) == 'sys') {
             define('SYS_TEMP', substr($aRequestUri[1], 3));

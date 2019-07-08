@@ -1639,7 +1639,7 @@ class G
      * @param string $sqlString  The string to be escaped
      * @param string $DBEngine   Target DBMS
     */
-    public function sqlEscape($sqlString, $DBEngine = DB_ADAPTER)
+    public static function sqlEscape($sqlString, $DBEngine = DB_ADAPTER)
     {
         $DBEngine = DB_ADAPTER;
         switch ($DBEngine) {
@@ -1691,7 +1691,7 @@ class G
      *     @fn()  Evaluate string with the function "fn"
      * @author David Callizaya <calidavidx21@hotmail.com>
      */
-    public static function replaceDataField($sqlString, $result, $DBEngine = 'mysql')
+    public static function replaceDataField($sqlString, $result, $DBEngine = 'mysql', $recursive = true)
     {
         if (!is_array($result)) {
             $result = array();
@@ -1748,12 +1748,12 @@ class G
                     }
                     //Non-quoted
                     if (($match[1][$r][0] == '#') && (isset($result[$match[2][$r][0]]))) {
-                        $__textoEval .= G::replaceDataField($result[$match[2][$r][0]], $result);
+                        $__textoEval .= $recursive ? G::replaceDataField($result[$match[2][$r][0]], $result) : $result[$match[2][$r][0]];
                         continue;
                     }
                     //Non-quoted =
                     if (($match[1][$r][0] == '=') && (isset($result[$match[2][$r][0]]))) {
-                        $__textoEval .= G::replaceDataField($result[$match[2][$r][0]], $result);
+                        $__textoEval .= $recursive ? G::replaceDataField($result[$match[2][$r][0]], $result) : $result[$match[2][$r][0]];
                         continue;
                     }
                     //Objects attributes
@@ -1826,7 +1826,7 @@ class G
                                         }
                                     }
                                 }
-                                $strData = $strData . G::replaceDataField($arrayMatch2[2], $aRow);
+                                $strData = $strData . G::replaceDataField($arrayMatch2[2], $aRow, 'mysql', false);
                             }
                         }
 
@@ -1851,7 +1851,7 @@ class G
             }
         }
 
-        $sContent = G::replaceDataField($sContent, $aFields);
+        $sContent = G::replaceDataField($sContent, $aFields, 'mysql', false);
 
         return $sContent;
     }

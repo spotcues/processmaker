@@ -518,6 +518,18 @@ abstract class Importer
             foreach ($arrayWorkflowTables["emailEvent"] as &$emailEvent) {
                 $this->preserveEmailEventConfiguration($emailEvent);
             }
+            
+            foreach ($arrayWorkflowTables["dynaforms"] as &$dynaform) {
+                $this->preserveDynaformId($dynaform);
+            }
+
+            foreach ($arrayWorkflowTables["inputs"] as &$input) {
+                $this->preserveInputDocumentId($input);
+            }
+
+            foreach ($arrayWorkflowTables["outputs"] as &$output) {
+                $this->preserveOutputDocumentId($output);
+            }
 
             $this->importWfTables($arrayWorkflowTables);
 
@@ -778,6 +790,8 @@ abstract class Importer
      * Saves the current objects before import.
      * 
      * @param string $proUid
+     * 
+     * @see ProcessMaker\Importer\Importer::import()
      */
     public function saveCurrentProcess($proUid)
     {
@@ -789,9 +803,9 @@ abstract class Importer
         $result->tasks = $processes->getTaskRows($proUid);
         $result->abeConfigurations = $processes->getActionsByEmail($proUid);
         $result->emailEvents = $processes->getEmailEvent($proUid);
-        $result->dynaforms = $processes->getDynaformRows($proUid);
-        $result->inputs = $processes->getInputRows($proUid);
-        $result->outputs = $processes->getOutputRows($proUid);
+        $result->dynaforms = $processes->getDynaformRows($proUid, false);
+        $result->inputs = $processes->getInputRows($proUid, false);
+        $result->outputs = $processes->getOutputRows($proUid, false);
 
         $this->setCurrentProcess($result);
     }
@@ -864,4 +878,87 @@ abstract class Importer
         }
     }
 
+    /**
+     * Restore DYN_ID value for specific dynaform.
+     * The value of __DYN_ID_UPDATE__ only used like a reference.
+     * 
+     * @param array $data
+     * 
+     * @see ProcessMaker\Importer\Importer::import()
+     * @see ProcessMaker\Importer\Importer::doImport()
+     * @link https://wiki.processmaker.com/3.1/Importing_and_Exporting_Projects#Importing_a_Project
+     */
+    public function preserveDynaformId(&$data)
+    {
+        $currentProccess = $this->getCurrentProcess();
+        if (!is_object($currentProccess)) {
+            return;
+        }
+        if (!is_array($currentProccess->dynaforms)) {
+            return;
+        }
+        foreach ($currentProccess->dynaforms as $dynaform) {
+            if ($data["DYN_UID"] === $dynaform["DYN_UID"]) {
+                $data["DYN_ID"] = $dynaform["DYN_ID"];
+                $data["__DYN_ID_UPDATE__"] = false;
+                break;
+            }
+        }
+    }
+
+    /**
+     * Restore INP_DOC_ID value for specific input document.
+     * The value of __INP_DOC_ID_UPDATE__ only used like a reference.
+     * 
+     * @param array $data
+     * 
+     * @see ProcessMaker\Importer\Importer::import()
+     * @see ProcessMaker\Importer\Importer::doImport()
+     * @link https://wiki.processmaker.com/3.1/Importing_and_Exporting_Projects#Importing_a_Project
+     */
+    public function preserveInputDocumentId(&$data)
+    {
+        $currentProccess = $this->getCurrentProcess();
+        if (!is_object($currentProccess)) {
+            return;
+        }
+        if (!is_array($currentProccess->inputs)) {
+            return;
+        }
+        foreach ($currentProccess->inputs as $inputDocument) {
+            if ($data["INP_DOC_UID"] === $inputDocument["INP_DOC_UID"]) {
+                $data["INP_DOC_ID"] = $inputDocument["INP_DOC_ID"];
+                $data["__INP_DOC_ID_UPDATE__"] = false;
+                break;
+            }
+        }
+    }
+
+    /**
+     * Restore OUT_DOC_ID value for specific output document.
+     * The value of __OUT_DOC_ID_UPDATE__ only used like a reference.
+     * 
+     * @param array $data
+     * 
+     * @see ProcessMaker\Importer\Importer::import()
+     * @see ProcessMaker\Importer\Importer::doImport()
+     * @link https://wiki.processmaker.com/3.1/Importing_and_Exporting_Projects#Importing_a_Project
+     */
+    public function preserveOutputDocumentId(&$data)
+    {
+        $currentProccess = $this->getCurrentProcess();
+        if (!is_object($currentProccess)) {
+            return;
+        }
+        if (!is_array($currentProccess->outputs)) {
+            return;
+        }
+        foreach ($currentProccess->outputs as $outputDocument) {
+            if ($data["OUT_DOC_UID"] === $outputDocument["OUT_DOC_UID"]) {
+                $data["OUT_DOC_ID"] = $outputDocument["OUT_DOC_ID"];
+                $data["__OUT_DOC_ID_UPDATE__"] = false;
+                break;
+            }
+        }
+    }
 }

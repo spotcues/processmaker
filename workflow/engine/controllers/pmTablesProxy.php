@@ -1,19 +1,8 @@
 <?php
-/**
- * pmTablesProxy
- *
- * @author Erik Amaru Ortiz <erik@colosa.com, aortiz.erik@gmail.com>
- * @inherits HttpProxyController
- * @access public
- */
 
 use ProcessMaker\Core\System;
 use ProcessMaker\Validation\ExceptionRestApi;
 use ProcessMaker\Validation\ValidationUploadedFiles;
-
-//We need to suppress the error for the unittest that use this function
-@header("Content-type: text/html;charset=utf-8");
-
 
 class pmTablesProxy extends HttpProxyController
 {

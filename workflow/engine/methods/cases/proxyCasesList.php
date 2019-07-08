@@ -116,7 +116,9 @@ try {
             $columnSearch
         );
     } else {
-        $data = Delegation::search(
+        //This section is used by the community version
+        $apps = new Applications();
+        $data = $apps->getAll(
             $userUid,
             $start,
             $limit,

@@ -1735,7 +1735,7 @@ class AppCacheView extends BaseAppCacheView
                 $arrayAppField = $app->Load($appcvAppUid);
 
                 $appTitle    = (!empty($appTitle))? $appTitle : "#" . $arrayAppField["APP_NUMBER"];
-                $appTitleNew = G::replaceDataField($appTitle, unserialize($arrayAppField["APP_DATA"]));
+                $appTitleNew = G::replaceDataField($appTitle, unserialize($arrayAppField["APP_DATA"]), 'mysql', false);
 
                 if (isset($arrayAppField["APP_TITLE"]) && $arrayAppField["APP_TITLE"] != $appTitleNew) {
                     //Updating the value in content, where...

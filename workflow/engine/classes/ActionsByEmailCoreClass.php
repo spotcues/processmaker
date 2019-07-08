@@ -110,7 +110,7 @@ class ActionsByEmailCoreClass extends PMPlugin
                     }
 
                     if ($email != '') {
-                        $subject = G::replaceDataField( $configuration['ABE_SUBJECT_FIELD'], $caseFields['APP_DATA'] );
+                        $subject = G::replaceDataField( $configuration['ABE_SUBJECT_FIELD'], $caseFields['APP_DATA'], 'mysql', false );
                         if($subject == ''){
                             $subject = $caseFields['APP_TITLE'];
                         }

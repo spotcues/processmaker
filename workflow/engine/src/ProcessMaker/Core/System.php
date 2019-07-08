@@ -1023,7 +1023,7 @@ class System
      *
      * @return array $skinListArray
      */
-    public function getSkingList()
+    public static function getSkingList()
     {
         //Create Skins custom folder if it doesn't exists
         if (!is_dir(PATH_CUSTOM_SKINS)) {

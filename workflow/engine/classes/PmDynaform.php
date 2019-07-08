@@ -253,7 +253,7 @@ class PmDynaform
                                 }
                             }
                         }
-                        $sql = G::replaceDataField($json->sql, $dtFields);
+                        $sql = G::replaceDataField($json->sql, $dtFields, 'mysql', false);
                         if ($value === "suggest") {
                             $sql = $this->prepareSuggestSql($sql, $json);
                         }
@@ -715,7 +715,7 @@ class PmDynaform
                 }
             }
             if ($json->dbConnection !== "" && $json->dbConnection !== "none" && $json->sql !== "") {
-                $sql = G::replaceDataField($json->sql, $data);
+                $sql = G::replaceDataField($json->sql, $data, 'mysql', false);
                 $dt = $this->getCacheQueryData($json->dbConnection, $sql, $json->type);
                 $row = isset($dt[0]) ? $dt[0] : [];
                 $index = $json->variable === "" ? $json->id : $json->variable;

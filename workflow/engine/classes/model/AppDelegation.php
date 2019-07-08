@@ -763,7 +763,7 @@ class AppDelegation extends BaseAppDelegation
      * @param integer $index, Index to review
      * @return array
     */
-    public function getCurrentUsers($appUid, $index)
+    public static function getCurrentUsers($appUid, $index)
     {
         $oCriteria = new Criteria();
         $oCriteria->addSelectColumn(AppDelegationPeer::USR_UID);

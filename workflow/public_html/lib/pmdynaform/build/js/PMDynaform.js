@@ -21243,7 +21243,7 @@ xCase.extendNamespace = function (path, newClass) {
                 this.set("fullOptions", items);
             } else {
                 try {
-                    options = JSON.parse(items);
+                    options = JSON.parse(JSON.stringify(items));
                     if (_.isArray(options)) {
                         this.set("fullOptions", options);
                     } else {
