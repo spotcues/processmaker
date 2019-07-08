@@ -70,6 +70,7 @@ workflow/engine/methods/setup/jasper.php
 workflow/engine/methods/setup/webServices.php
 workflow/engine/methods/setup/webServicesAjax.php
 workflow/engine/methods/setup/webServicesList.php
+workflow/engine/methods/users/data_usersList.php
 workflow/engine/plugins/openFlash.php
 workflow/engine/plugins/openFlash/chart-data.php
 workflow/engine/plugins/openFlash/chart.php

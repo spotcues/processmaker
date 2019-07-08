@@ -39,6 +39,7 @@ use ProcessMaker\BusinessModel\Task as BmTask;
 use ProcessMaker\BusinessModel\User as BmUser;
 use ProcessMaker\Core\System;
 use ProcessMaker\Exception\UploadException;
+use ProcessMaker\Model\Delegation;
 use ProcessMaker\Plugins\PluginRegistry;
 use ProcessMaker\Services\OAuth2\Server;
 use ProcessMaker\Util\DateTime as UtilDateTime;
@@ -2438,6 +2439,14 @@ class Cases
      *
      * @return array Return an array with status info Case, array empty otherwise
      * @throws Exception
+     *
+     * @see workflow/engine/methods/cases/main_init.php
+     * @see workflow/engine/methods/cases/opencase.php
+     * @see ProcessMaker\BusinessModel\Cases->setCaseVariables()
+     * @see ProcessMaker\BusinessModel\Cases\InputDocument->getCasesInputDocuments()
+     * @see ProcessMaker\BusinessModel\Cases\InputDocument->throwExceptionIfHaventPermissionToDelete()
+     * @see ProcessMaker\BusinessModel\Cases\OutputDocument->throwExceptionIfCaseNotIsInInbox()
+     * @see ProcessMaker\BusinessModel\Cases\OutputDocument->throwExceptionIfHaventPermissionToDelete()
      */
     public function getStatusInfo($applicationUid, $delIndex = 0, $userUid = "")
     {
@@ -2598,19 +2607,7 @@ class Cases
             }
 
             //Status is PARTICIPATED
-            $criteria2 = clone $criteria;
-
-            $criteria2->setDistinct();
-            $criteria2->clearSelectColumns();
-            $criteria2->addSelectColumn($delimiter . 'PARTICIPATED' . $delimiter . ' AS APP_STATUS');
-            $criteria2->addSelectColumn(AppDelegationPeer::DEL_INDEX);
-            $criteria2->addSelectColumn(ApplicationPeer::APP_UID);
-            $criteria2->addSelectColumn(ApplicationPeer::PRO_UID);
-
-            $rsCriteria2 = ApplicationPeer::doSelectRS($criteria2);
-            $rsCriteria2->setFetchmode(ResultSet::FETCHMODE_ASSOC);
-
-            $arrayData = $this->__getStatusInfoDataByRsCriteria($rsCriteria2);
+            $arrayData = Delegation::getParticipatedInfo($applicationUid);
 
             if (!empty($arrayData)) {
                 return $arrayData;

@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ProcessMaker (Branch 3.3.1)\n"
 "POT-Creation-Date: \n"
-"PO-Revision-Date: 2018-10-23 16:48:05\n"
+"PO-Revision-Date: 2019-05-20 19:36:15\n"
 "Last-Translator: \n"
 "Language-Team: Colosa Developers Team <developers@colosa.com>\n"
 "MIME-Version: 1.0\n"
@@ -22938,6 +22938,18 @@ msgid "It sends a request to Sales Department, do you want to continue?"
 msgstr "It sends a request to Sales Department, do you want to continue?"
 
 # TRANSLATION
+# LABEL/ID_SAML_ENABLE
+#: LABEL/ID_SAML_ENABLE
+msgid "SAML Authentication Enable"
+msgstr "SAML Authentication Enable"
+
+# TRANSLATION
+# LABEL/ID_SAML_PROVIDER
+#: LABEL/ID_SAML_PROVIDER
+msgid "SAML Authentication Provider"
+msgstr "SAML Authentication Provider"
+
+# TRANSLATION
 # LABEL/ID_SAMPLES
 #: LABEL/ID_SAMPLES
 msgid "Samples"
@@ -23158,6 +23170,36 @@ msgstr "Username"
 #: LABEL/ID_SEARCH_XML_METADATA
 msgid "Search XML metadata"
 msgstr "Search XML metadata"
+
+# TRANSLATION
+# LABEL/ID_SEARCHING
+#: LABEL/ID_SEARCHING
+msgid "Searching..."
+msgstr "Searching..."
+
+# TRANSLATION
+# LABEL/ID_SEARCHING_CANCEL_MESSAGE
+#: LABEL/ID_SEARCHING_CANCEL_MESSAGE
+msgid "We are still gathering your search results. This may take a while based on your search criteria. You may cancel this search at any time"
+msgstr "We are still gathering your search results. This may take a while based on your search criteria. You may cancel this search at any time"
+
+# TRANSLATION
+# LABEL/ID_SEARCHING_TIME_OUT
+#: LABEL/ID_SEARCHING_TIME_OUT
+msgid "Your search timed out"
+msgstr "Your search timed out"
+
+# TRANSLATION
+# LABEL/ID_SEARCHING_UNEXPECTED_ERROR
+#: LABEL/ID_SEARCHING_UNEXPECTED_ERROR
+msgid "An unexpected error occurred while searching for your results. Error Code {0} and Please contact your administrator."
+msgstr "An unexpected error occurred while searching for your results. Error Code {0} and Please contact your administrator."
+
+# TRANSLATION
+# LABEL/ID_SEARCHING_UNEXPECTED_ERROR_DEFAULT
+#: LABEL/ID_SEARCHING_UNEXPECTED_ERROR_DEFAULT
+msgid "An unexpected error occurred while searching for your results. Please contact your administrator."
+msgstr "An unexpected error occurred while searching for your results. Please contact your administrator."
 
 # TRANSLATION
 # LABEL/ID_SECOND

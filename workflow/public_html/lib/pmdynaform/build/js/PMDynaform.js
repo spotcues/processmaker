@@ -8769,29 +8769,27 @@ xCase.extendNamespace = function (path, newClass) {
             return this;
         },
         createHTMLPager: function (behavior) {
-            var i,
-                that = this,
-                htmlPager,
+            var htmlPager,
                 pagerContainer,
                 activeIndex,
                 pager,
                 pagerItems,
-                lastPager,
                 elementList,
-                ellipsis,
-                newItem;
+                ellipsis;
             pagerContainer = this.$el.find(".pmdynaform-grid-pagination");
             activeIndex = this.$el.find(".pagination").find("li.active");
             if (activeIndex.length) {
                 htmlPager = pagerContainer.children();
                 pagerItems = htmlPager.children().not(":first").not(':last').not('.toPrevItem').not('.toNextItem').not('.toPrev').not('.toNext');
-                if (behavior == "add") {
+                if (behavior === "add") {
                     if (Math.ceil(this.gridtable.length / this.pageSize) > pagerItems.length) {
+                        $(".sec_1").removeClass("showItem");
+                        $(".sec_1").addClass("showItem");
                         elementList = jQuery("<li class = 'sec_" +
                             Math.ceil(this.gridtable.length / 5) + "'><a data-target='#" + this.model.get("id") + "-body' data-slide-to='" +
                             (Math.ceil(this.gridtable.length / this.pageSize) - 1) + "' href=''>" + Math.ceil(this.gridtable.length / this.pageSize) + "</a></li>");
                         elementList.css({display: "none"});
-                        if (htmlPager.find(".toNext").length == 0 && (Number(elementList.text().trim()) > 5)) {
+                        if (htmlPager.find(".toNext").length === 0 && (Number(elementList.text().trim()) > 5)) {
                             ellipsis = jQuery('<li class="toNext"><a data-target="#' + this.model.get("id") + '" data-rotate="' + this.model.get("paginationRotate") + '" href="javascript:void(0)">...</a></li>');
                             htmlPager.find(".showItem").last().after(ellipsis);
                             ellipsis.after(elementList);
@@ -8807,7 +8805,7 @@ xCase.extendNamespace = function (path, newClass) {
                         }
                     }
                 }
-                if (behavior == "remove") {
+                if (behavior === "remove") {
                     var itemRemoved;
                     if (Math.ceil(this.gridtable.length / this.pageSize) > 0 && Math.ceil(this.gridtable.length / this.pageSize) < pagerItems.length) {
                         if (pagerItems.eq(pagerItems.length - 1).hasClass("active")) {
@@ -10363,7 +10361,6 @@ xCase.extendNamespace = function (path, newClass) {
                 name;
             this.existHTML = true;
             this.$el.html(this.template(this.model.toJSON()));
-            this._setDataOption();
             this.$el.find("input[type='hidden']").val(this.model.get("data")["label"]);
             if (this.model.get("group") === "grid") {
                 hidden = this.$el.find("input[type = 'hidden']")[0];

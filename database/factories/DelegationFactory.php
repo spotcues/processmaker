@@ -1,6 +1,5 @@
 <?php
 use Faker\Generator as Faker;
-use ProcessMaker\BusinessModel\Cases as BmCases;
 
 $factory->define(\ProcessMaker\Model\Delegation::class, function(Faker $faker) {
     $app = factory(\ProcessMaker\Model\Application::class)->create();
@@ -14,6 +13,8 @@ $factory->define(\ProcessMaker\Model\Delegation::class, function(Faker $faker) {
     } else{
         $user = $users->random();
     }
+
+    // Return with default values
     return [
         'APP_UID' => $app->APP_UID,
         'DEL_INDEX' => 1,
@@ -34,5 +35,42 @@ $factory->define(\ProcessMaker\Model\Delegation::class, function(Faker $faker) {
         'PRO_ID' => $process->PRO_ID,
         'TAS_ID' => $task->TAS_ID,
         'DEL_DATA' => ''
+    ];
+});
+
+// Create a open delegation
+$factory->state(\ProcessMaker\Model\Delegation::class, 'open', function (Faker $faker) {
+    // Create dates with sense
+    $delegateDate = $faker->dateTime();
+    $initDate = $faker->dateTimeInInterval($delegateDate, '+30 minutes');
+    $riskDate = $faker->dateTimeInInterval($initDate, '+1 day');
+    $taskDueDate = $faker->dateTimeInInterval($riskDate, '+1 day');
+
+    return [
+        'DEL_THREAD_STATUS' => 'OPEN',
+        'DEL_DELEGATE_DATE' => $delegateDate,
+        'DEL_INIT_DATE' => $initDate,
+        'DEL_RISK_DATE' => $riskDate,
+        'DEL_TASK_DUE_DATE' => $taskDueDate,
+        'DEL_FINISH_DATE' => null
+    ];
+});
+
+// Create a closed delegation
+$factory->state(\ProcessMaker\Model\Delegation::class, 'closed', function (Faker $faker) {
+    // Create dates with sense
+    $delegateDate = $faker->dateTime();
+    $initDate = $faker->dateTimeInInterval($delegateDate, '+30 minutes');
+    $riskDate = $faker->dateTimeInInterval($initDate, '+1 day');
+    $taskDueDate = $faker->dateTimeInInterval($riskDate, '+1 day');
+    $finishDate = $faker->dateTimeInInterval($initDate, '+10 days');
+
+    return [
+        'DEL_THREAD_STATUS' => 'CLOSED',
+        'DEL_DELEGATE_DATE' => $delegateDate,
+        'DEL_INIT_DATE' => $initDate,
+        'DEL_RISK_DATE' => $riskDate,
+        'DEL_TASK_DUE_DATE' => $taskDueDate,
+        'DEL_FINISH_DATE' => $finishDate
     ];
 });

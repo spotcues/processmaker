@@ -33,11 +33,11 @@ if (isset ($_POST['form']['USER_ENV'])) {
 //Save session variables
 $arraySession = array();
 
-if (isset($_SESSION["G_MESSAGE"])) {
+if (!empty($_SESSION['G_MESSAGE'])) {
     $arraySession["G_MESSAGE"] = $_SESSION["G_MESSAGE"];
 }
 
-if (isset($_SESSION["G_MESSAGE_TYPE"])) {
+if (!empty($_SESSION['G_MESSAGE_TYPE'])) {
     $arraySession["G_MESSAGE_TYPE"] = $_SESSION["G_MESSAGE_TYPE"];
 }
 

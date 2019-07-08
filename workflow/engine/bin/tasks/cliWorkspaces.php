@@ -313,6 +313,16 @@ CLI::taskArg('workspace');
 CLI::taskRun("run_sync_forms_with_info_from_input_documents");
 
 /**
+ * Remove the deprecated files
+ */
+CLI::taskName('remove-unused-files');
+CLI::taskDescription(<<<EOT
+    Remove the deprecated files.
+EOT
+);
+CLI::taskRun("remove_deprecated_files");
+
+/**
  * Function run_info
  * 
  * @param array $args
@@ -1131,4 +1141,19 @@ function run_sync_forms_with_info_from_input_documents($args, $opts) {
                 $workspace->name);
         }
     }
+}
+
+/**
+ * Remove the deprecated files
+ *
+ * @return void
+ * @see workflow/engine/bin/tasks/cliWorkspaces.php CLI::taskRun()
+ * @link https://wiki.processmaker.com/3.3/processmaker_command
+ */
+function remove_deprecated_files()
+{
+    //The constructor requires an argument, so we send an empty value in order to use the class.
+    $workspaceTools = new WorkspaceTools('');
+    $workspaceTools->removeDeprecatedFiles();
+    CLI::logging("<*> The deprecated files has been removed. \n");
 }

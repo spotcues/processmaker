@@ -1,30 +1,30 @@
-[4 days ago] 6ef1916  (origin/revert-pr-6893) Revert "PMC-602 (pull request 6893)" <Julio Cesar Laura Avendaño>
-[4 days ago] e9ec024  (origin/revert-pr-6906) Revert "PMC-808 (pull request #6906)" <Julio Cesar Laura Avendaño>
-[4 days ago] 3d925bc  (origin/revert-pr-6907) Revert "PMC-602 (pull request #6907)" <Julio Cesar Laura Avendaño>
-[5 days ago] 70cff4a  PMC-602 <Julio Cesar Laura Avendaño>
-[6 days ago] 52b4560  (origin/bugfix/PMC-808) PMC-808 <Julio Cesar Laura Avendaño>
-[12 days ago] 078ccd8  PMC-380 <Andrea Adamczyk>
-[13 days ago] 593f3f0  (origin/bugfix/PMC-585-A) PMC-585-A <Roly Rudy Gutierrez Pinto>
-[13 days ago] f785e5c  (origin/bugfix/PMC-602) PMC-602 <Julio Cesar Laura Avendaño>
-[3 weeks ago] 04a949b  (origin/bugfix/PMC-523) PMC-523 <Julio Cesar Laura Avendaño>
-[3 weeks ago] 0d3ce92  (origin/bugfix/PMC-738) PMC-738 <Paula Quispe>
-[3 weeks ago] 96c5010  (origin/bugfix/PMC-751) PMC-751 <Paula Quispe>
-[3 weeks ago] fbfe513  (origin/bugfix/PMC-763-a) PMC-763 <Paula Quispe>
-[3 weeks ago] cbaa1ce  (origin/bugfix/PMC-765) PMC-765 <Paula Quispe>
-[3 weeks ago] 735de87  (origin/bugfix/PMC-371) PMC-371 <Paula Quispe>
-[3 weeks ago] 78fa4f2  (origin/feature/PMC-700) PMC-700 <Paula Quispe>
-[3 weeks ago] b3211aa  PMC-755 <Paula Quispe>
-[4 weeks ago] a254e48  (origin/bugfix/PMC-763) filter by task title and order by lastModified, dueDate, status, process and task <Paula Quispe>
-[4 weeks ago] fe2c7e9  Add test to show how to utilize a diff with laravel collection filter and map to remove elements when they are no longer in the change. <Taylor Dondich>
-[4 weeks ago] b1cf07f  Add test to make sure it can modify a row in place. <Taylor Dondich>
-[4 weeks ago] 67c899a  Add test case for array diff recursive to show function works as designed. Add tests to show the underlying problem with using this function with grids and assuming changes. <Taylor Dondich>
-[4 weeks ago] 2ca1dc4  Adding user case Hertland <Paula Quispe>
-[4 weeks ago] 70ee2ae  Filter by case number <Paula Quispe>
-[4 weeks ago] cc0df24  Add check for invalid USER potentially due to unassigned. In this situation, assign blank values to result. Fixes test to check for unassigned users. <Taylor Dondich>
-[4 weeks ago] bf3c249  filter with unassigned, date from and date to <Paula Quispe>
-[4 weeks ago] 99985d7  Add self service delegation for it_should_return_pages_of_data <Julio Cesar Laura Avendaño>
-[4 weeks ago] 60493fa  Change test name to it_should_return_data_filtered_by_process_category <Julio Cesar Laura Avendaño>
-[4 weeks ago] e758d31  conflicts <Julio Cesar Laura Avendaño>
-[4 weeks ago] 0800fff  conflicts <Paula Quispe>
-[4 weeks ago] 9610b58  First commit for filter by category <Julio Cesar Laura Avendaño>
-[4 weeks ago] 3906785  sort by case and user <Paula Quispe>
+[8 days ago] 7fe8fb4  (HEAD -> release/3.3.12, origin/release/3.3.12) Revert PMC-602 <Julio Cesar Laura Avendaño>
+[12 days ago] ecd9adf  (origin/bugfix/PMC-809-A) PMC-809-A <Roly Rudy Gutierrez Pinto>
+[3 weeks ago] 99aab9d  (origin/bugfix/PMC-815) PMC-815 <Andrea Adamczyk>
+[3 weeks ago] ae7605f  (origin/bugfix/PMC-786) PMC-786 <Paula Quispe>
+[4 weeks ago] 6a543eb  (origin/bugfix/PMC-604) PMC-604 <Julio Cesar Laura Avendaño>
+[4 weeks ago] 6a67051  (origin/bugfix/PMC-602-B) PMC-602 <Julio Cesar Laura Avendaño>
+[4 weeks ago] 1a8a4fa  (origin/bugfix/PMC-798) PMC-798 <Paula Quispe>
+[4 weeks ago] 8ccb9d4  (origin/bugfix/PMC-744) PMC-744 <Roly Rudy Gutierrez Pinto>
+[4 weeks ago] 29ba5e1  (origin/feature/PMC-814) PMC-814: Improve advanced search sending the param CATEGORY_UID to filter process by categories <Rodrigo Quelca>
+[4 weeks ago] 821eb31  PMC-604 <Julio Cesar Laura Avendaño>
+[4 weeks ago] ed3a10a  PMC-800 <Ronald Q>
+[4 weeks ago] 6be06fb  PMC-801 <Ronald Q>
+[5 weeks ago] e4e7c3a  (origin/feature/PMC-758-A) PMC-760: Advanced Search Loader UI <Rodrigo Quelca>
+[5 weeks ago] 98de6a8  PMC-794 <Paula Quispe>
+[5 weeks ago] 078ccd8  PMC-380 <Andrea Adamczyk>
+[5 weeks ago] 593f3f0  (origin/bugfix/PMC-585-A) PMC-585-A <Roly Rudy Gutierrez Pinto>
+[5 weeks ago] f785e5c  (origin/bugfix/PMC-602) PMC-602 <Julio Cesar Laura Avendaño>
+[5 weeks ago] 18b29c5  (origin/bugfix/PMC-783) PMC-783 <Paula Quispe>
+[6 weeks ago] 04a949b  (origin/bugfix/PMC-523) PMC-523 <Julio Cesar Laura Avendaño>
+[6 weeks ago] 0d3ce92  (origin/bugfix/PMC-738) PMC-738 <Paula Quispe>
+[6 weeks ago] 96c5010  (origin/bugfix/PMC-751) PMC-751 <Paula Quispe>
+[6 weeks ago] fbfe513  (origin/bugfix/PMC-763-a) PMC-763 <Paula Quispe>
+[6 weeks ago] cbaa1ce  (origin/bugfix/PMC-765) PMC-765 <Paula Quispe>
+[6 weeks ago] 735de87  (origin/bugfix/PMC-371) PMC-371 <Paula Quispe>
+[6 weeks ago] 78fa4f2  (origin/feature/PMC-700) PMC-700 <Paula Quispe>
+[6 weeks ago] b3211aa  PMC-755 <Paula Quispe>
+[7 weeks ago] a254e48  (origin/bugfix/PMC-763) filter by task title and order by lastModified, dueDate, status, process and task <Paula Quispe>
+[7 weeks ago] fe2c7e9  Add test to show how to utilize a diff with laravel collection filter and map to remove elements when they are no longer in the change. <Taylor Dondich>
+[7 weeks ago] b1cf07f  Add test to make sure it can modify a row in place. <Taylor Dondich>
+[7 weeks ago] 67c899a  Add test case for array diff recursive to show function works as designed. Add tests to show the underlying problem with using this function with grids and assuming changes. <Taylor Dondich>

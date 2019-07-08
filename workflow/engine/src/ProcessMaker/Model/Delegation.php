@@ -46,6 +46,92 @@ class Delegation extends Model
     }
 
     /**
+     * Scope a query to get the delegations from a case by APP_UID
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder $query
+     * @param string $appUid
+     *
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeAppUid($query, $appUid)
+    {
+        return $query->where('APP_UID', '=', $appUid);
+    }
+
+    /**
+     * Scope a query to only include open threads
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeIsThreadOpen($query)
+    {
+        return $query->where('DEL_THREAD_STATUS', '=', 'OPEN');
+    }
+
+    /**
+     * Scope a query to only include threads without user
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeNoUserInThread($query)
+    {
+        return $query->where('USR_ID', '=', 0);
+    }
+
+    /**
+     * Scope a query to only include specific tasks
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder $query
+     * @param  array $tasks
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeTasksIn($query, array $tasks)
+    {
+        return $query->whereIn('APP_DELEGATION.TAS_ID', $tasks);
+    }
+
+    /**
+     * Scope a query to only include a specific case
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder $query
+     * @param  integer $appNumber
+     *
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeCase($query, $appNumber)
+    {
+        return $query->where('APP_NUMBER', '=', $appNumber);
+    }
+
+    /**
+     * Scope a query to only include a specific index
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder $query
+     * @param  integer $index
+     *
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeIndex($query, $index)
+    {
+        return $query->where('DEL_INDEX', '=', $index);
+    }
+
+    /**
+     * Scope a query to only include a specific task
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder $query
+     * @param  integer $task
+     *
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeTask($query, $task)
+    {
+        return $query->where('APP_DELEGATION.TAS_ID', '=', $task);
+    }
+
+    /**
      * Searches for delegations which match certain criteria
      *
      * The query is related to advanced search with different filters
@@ -164,7 +250,7 @@ class Delegation extends Model
         });
 
         // Add join for process, but only for certain scenarios such as category or process
-        if (($category && !$process) || $sort == 'APP_PRO_TITLE') {
+        if ($category || $process || $sort == 'APP_PRO_TITLE') {
             $query->join('PROCESS', function ($join) use ($category) {
                 $join->on('APP_DELEGATION.PRO_ID', '=', 'PROCESS.PRO_ID');
                 if ($category) {
@@ -330,4 +416,93 @@ class Delegation extends Model
         return $response;
     }
 
+    /**
+     * Get participation information for a case
+     *
+     * @param string $appUid
+     * @return array
+     *
+     * @see ProcessMaker\BusinessModel\Cases:getStatusInfo()
+     */
+    public static function getParticipatedInfo($appUid)
+    {
+        // Build the query
+        $query = Delegation::query()->select([
+            'APP_UID',
+            'DEL_INDEX',
+            'PRO_UID'
+        ]);
+        $query->appUid($appUid);
+        $query->orderBy('DEL_INDEX', 'ASC');
+
+        // Fetch results
+        $results = $query->get();
+
+        // Initialize the array to return
+        $arrayData = [];
+
+        // If the collection have at least one item, build the main array to return
+        if ($results->count() > 0) {
+            // Get the first item
+            $first = $results->first();
+
+            // Build the main array to return
+            $arrayData = [
+                'APP_STATUS' => 'PARTICIPATED', // Value hardcoded because we need to return the same structure previously sent
+                'DEL_INDEX' => [], // Initialize this item like an array
+                'PRO_UID' => $first->PRO_UID
+            ];
+
+            // Populate the DEL_INDEX key with the values of the items collected
+            $results->each(function ($item) use (&$arrayData) {
+                $arrayData['DEL_INDEX'][] = $item->DEL_INDEX;
+            });
+        }
+
+        return $arrayData;
+    }
+
+    /**
+     * Count the self-services cases by user
+     *
+     * @param string $usrUid
+     *
+     * @return integer
+     */
+    public static function countSelfService($usrUid)
+    {
+        //Get the task self services related to the user
+        $taskSelfService = TaskUser::getSelfServicePerUser($usrUid);
+        //Get the task self services value based related to the user
+        $selfServiceValueBased = AppAssignSelfServiceValue::getSelfServiceCasesByEvaluatePerUser($usrUid);
+
+        //Start the query for get the cases related to the user
+        $query = Delegation::query()->select('APP_NUMBER');
+        //Add Join with task filtering only the type self-service
+        $query->join('TASK', function ($join) {
+            $join->on('APP_DELEGATION.TAS_ID', '=', 'TASK.TAS_ID')
+                ->where('TASK.TAS_ASSIGN_TYPE', '=', 'SELF_SERVICE');
+        });
+        //Filtering the open threads and without users
+        $query->isThreadOpen()->noUserInThread();
+
+        //Get the cases unassigned
+        if (!empty($selfServiceValueBased)) {
+            $query->where(function ($query) use ($selfServiceValueBased, $taskSelfService) {
+                //Get the cases related to the task self service
+                $query->tasksIn($taskSelfService);
+                foreach ($selfServiceValueBased as $case) {
+                    //Get the cases related to the task self service value based
+                    $query->orWhere(function ($query) use ($case) {
+                        $query->case($case['APP_NUMBER'])->index($case['DEL_INDEX'])->task($case['TAS_ID']);
+                    });
+                }
+            });
+        } else {
+            //Get the cases related to the task self service
+            $query->tasksIn($taskSelfService);
+        }
+
+        return $query->count();
+    }
 }

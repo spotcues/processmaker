@@ -2,13 +2,13 @@
 
 namespace ProcessMaker\BusinessModel;
 
-use \G;
-use \Criteria;
-use \UsersPeer;
-use \PMLicensedFeatures;
+use G;
+use Criteria;
+use PMLicensedFeatures;
+use ProcessMaker\Model\Delegation;
+use UsersPeer;
 
 /**
- * @author Brayan Pereyra (Cochalo) <brayan@colosa.com>
  * @copyright Colosa - Bolivia
  */
 class Lists
@@ -254,6 +254,7 @@ class Lists
 
     /**
      * Get counters for lists
+     * 
      * @param $userId
      * @return array
      */
@@ -266,6 +267,13 @@ class Lists
                 case 'ListDraft':
                     $total = $this->$listObject->getCountList($userId, array('action' => 'draft'));
                     array_push($response, (array('count' => $total, 'item' => $item)));
+                    break;
+                case 'ListSelfService':
+                    $total = Delegation::countSelfService($userId);
+                    array_push($response, ([
+                        'count' => $total,
+                        'item' => $item
+                    ]));
                     break;
                 /*----------------------------------********---------------------------------*/
                 default:

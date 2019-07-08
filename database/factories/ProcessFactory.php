@@ -15,6 +15,7 @@ $factory->define(\ProcessMaker\Model\Process::class, function(Faker $faker) {
         'PRO_CREATE_USER' => '00000000000000000000000000000001',
         'PRO_DYNAFORMS' => '',
         'PRO_ITEE' => 1,
+        'PRO_STATUS' => 'ACTIVE'
     ];
 
     $task1 = factory(\ProcessMaker\Model\Task::class)
