@@ -108,12 +108,6 @@ if (isset($_SESSION['USER_LOGGED'])) {
             $aLog['USR_UID'] = $aRow['USR_UID'];
 
             $weblog->update($aLog);
-
-            $aLog = array();
-            $aLog['USR_UID'] = $aRow['USR_UID'];
-            $aLog['USR_LAST_LOGIN'] = $endDate;
-            $user = new Users();
-            $aUser = $user->update($aLog);
         }
     }
 } else {

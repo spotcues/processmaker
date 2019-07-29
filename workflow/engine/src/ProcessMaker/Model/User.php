@@ -3,6 +3,7 @@
 namespace ProcessMaker\Model;
 
 use Illuminate\Database\Eloquent\Model;
+use Exception;
 
 class User extends Model
 {
@@ -38,5 +39,27 @@ class User extends Model
     public static function getGroups($usrUid)
     {
         return User::find($usrUid)->groups()->get();
+    }
+
+    /**
+     * Scope for the specified user
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query @param \Illuminate\Database\Eloquent\Builder $query
+     * @param array $filters
+     *
+     * @return \Illuminate\Database\Eloquent\Builder
+     * @throws Exception
+     */
+    public function scopeUserFilters($query, array $filters)
+    {
+        if (!empty($filters['USR_ID'])) {
+            $query->where('USR_ID', $filters['USR_ID']);
+        } elseif (!empty($filters['USR_UID'])) {
+            $query->where('USR_UID', $filters['USR_UID']);
+        } else {
+            throw new Exception("There are no filter for loading a user model");
+        }
+
+        return $query;
     }
 }

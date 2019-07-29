@@ -295,7 +295,7 @@ class InstallerModule extends Controller
 
         // memory limit verification
         $memory = (int)ini_get('memory_limit');
-        $info->memory->version = $memory . 'M';
+        $info->memory->version = changeAbbreviationOfDirectives(ini_get('memory_limit'));
         $info->memory->result = $memory > 255;
 
         return $info;

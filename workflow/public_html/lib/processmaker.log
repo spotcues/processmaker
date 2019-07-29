@@ -1,30 +1,30 @@
-[2 days ago] 828940d  (HEAD -> release/3.3.13, origin/release/3.3.14, origin/release/3.3.13) PMC-774:[Mantis - 27541] PM_USERS permission removes System and System Information options <Fabio Guachalla>
-[3 days ago] 43aedce  (origin/bugfix/PMC-916) PMC-916 <Julio Cesar Laura Avendaño>
-[7 days ago] 00bf139  (origin/bugfix/PMC-909) PMC-909 <Julio Cesar Laura Avendaño>
-[2 weeks ago] 1308c5a  (origin/bugfix/PMC-885) PMC-885 <Roly Rudy Gutierrez Pinto>
-[2 weeks ago] 0f45402  (origin/bugfix/PMC-849) PMC-849 <Paula Quispe>
-[2 weeks ago] 265ef97  (origin/bugfix/PMC-552-A) PMC-552-A <Andrea Adamczyk>
-[3 weeks ago] 7fe8fb4  (origin/release/3.3.12) Revert PMC-602 <Julio Cesar Laura Avendaño>
-[4 weeks ago] ecd9adf  (origin/bugfix/PMC-809-A) PMC-809-A <Roly Rudy Gutierrez Pinto>
-[4 weeks ago] 814d454  (origin/bugfix/PMC-809) PMC-809 <Roly Rudy Gutierrez Pinto>
-[4 weeks ago] 67ffc3a  (origin/bugfix/PMC-834) PMC-834 <Roly Rudy Gutierrez Pinto>
-[4 weeks ago] 93d557a  (origin/bugfix/PMC-167) PMC-167 <Paula Quispe>
-[5 weeks ago] 99aab9d  (origin/bugfix/PMC-815) PMC-815 <Andrea Adamczyk>
-[5 weeks ago] 08bdc4e  (origin/bugfix/PMC-476) PMC-476 <Roly Rudy Gutierrez Pinto>
-[5 weeks ago] 445c39b  (origin/bugfix/PMC-840) PMC-840 <Paula Quispe>
-[5 weeks ago] ae7605f  (origin/bugfix/PMC-786) PMC-786 <Paula Quispe>
-[6 weeks ago] 6a543eb  (origin/bugfix/PMC-604) PMC-604 <Julio Cesar Laura Avendaño>
-[6 weeks ago] 6a67051  (origin/bugfix/PMC-602-B) PMC-602 <Julio Cesar Laura Avendaño>
-[6 weeks ago] 1a8a4fa  (origin/bugfix/PMC-798) PMC-798 <Paula Quispe>
-[6 weeks ago] 8ccb9d4  (origin/bugfix/PMC-744) PMC-744 <Roly Rudy Gutierrez Pinto>
-[6 weeks ago] 29ba5e1  (origin/feature/PMC-814) PMC-814: Improve advanced search sending the param CATEGORY_UID to filter process by categories <Rodrigo Quelca>
-[6 weeks ago] 821eb31  PMC-604 <Julio Cesar Laura Avendaño>
-[6 weeks ago] ed3a10a  PMC-800 <Ronald Q>
-[6 weeks ago] 6be06fb  PMC-801 <Ronald Q>
-[7 weeks ago] e4e7c3a  (origin/feature/PMC-758-A) PMC-760: Advanced Search Loader UI <Rodrigo Quelca>
-[7 weeks ago] 98de6a8  PMC-794 <Paula Quispe>
-[7 weeks ago] 078ccd8  PMC-380 <Andrea Adamczyk>
-[7 weeks ago] 593f3f0  (origin/bugfix/PMC-585-A) PMC-585-A <Roly Rudy Gutierrez Pinto>
-[7 weeks ago] f785e5c  (origin/bugfix/PMC-602) PMC-602 <Julio Cesar Laura Avendaño>
-[7 weeks ago] 18b29c5  (origin/bugfix/PMC-783) PMC-783 <Paula Quispe>
-[8 weeks ago] 04a949b  (origin/bugfix/PMC-523) PMC-523 <Julio Cesar Laura Avendaño>
+[11 days ago] b46c40d  (origin/bugfix/PMC-114) PMC-114 <Andrea Adamczyk>
+[11 days ago] 0e5a3f2  (origin/bugfix/PMC-402) PMC-402 <Paula Quispe>
+[13 days ago] f3b7ea2  (origin/bugfix/PMC-119) PMC-119 <Andrea Adamczyk>
+[3 weeks ago] 828940d  (tag: v3.3.13, origin/release/3.3.13, origin/patch/3.3.13.patch1.cloud) PMC-774:[Mantis - 27541] PM_USERS permission removes System and System Information options <Fabio Guachalla>
+[3 weeks ago] 43aedce  (origin/bugfix/PMC-916) PMC-916 <Julio Cesar Laura Avendaño>
+[4 weeks ago] 00bf139  (origin/bugfix/PMC-909) PMC-909 <Julio Cesar Laura Avendaño>
+[5 weeks ago] 1308c5a  (origin/bugfix/PMC-885) PMC-885 <Roly Rudy Gutierrez Pinto>
+[5 weeks ago] 0f45402  (origin/bugfix/PMC-849) PMC-849 <Paula Quispe>
+[5 weeks ago] 265ef97  (origin/bugfix/PMC-552-A) PMC-552-A <Andrea Adamczyk>
+[6 weeks ago] 7fe8fb4  (tag: v3.3.12, origin/release/3.3.12) Revert PMC-602 <Julio Cesar Laura Avendaño>
+[6 weeks ago] ecd9adf  (origin/bugfix/PMC-809-A) PMC-809-A <Roly Rudy Gutierrez Pinto>
+[7 weeks ago] 814d454  (origin/bugfix/PMC-809) PMC-809 <Roly Rudy Gutierrez Pinto>
+[7 weeks ago] 67ffc3a  (origin/bugfix/PMC-834) PMC-834 <Roly Rudy Gutierrez Pinto>
+[7 weeks ago] 93d557a  (origin/bugfix/PMC-167) PMC-167 <Paula Quispe>
+[8 weeks ago] 99aab9d  (origin/bugfix/PMC-815) PMC-815 <Andrea Adamczyk>
+[8 weeks ago] 08bdc4e  (origin/bugfix/PMC-476) PMC-476 <Roly Rudy Gutierrez Pinto>
+[8 weeks ago] 445c39b  (origin/bugfix/PMC-840) PMC-840 <Paula Quispe>
+[8 weeks ago] ae7605f  (origin/bugfix/PMC-786) PMC-786 <Paula Quispe>
+[8 weeks ago] 6a543eb  (origin/bugfix/PMC-604) PMC-604 <Julio Cesar Laura Avendaño>
+[8 weeks ago] 6a67051  (origin/bugfix/PMC-602-B) PMC-602 <Julio Cesar Laura Avendaño>
+[8 weeks ago] 1a8a4fa  (origin/bugfix/PMC-798) PMC-798 <Paula Quispe>
+[9 weeks ago] 8ccb9d4  (origin/bugfix/PMC-744) PMC-744 <Roly Rudy Gutierrez Pinto>
+[9 weeks ago] 29ba5e1  (origin/feature/PMC-814) PMC-814: Improve advanced search sending the param CATEGORY_UID to filter process by categories <Rodrigo Quelca>
+[9 weeks ago] 821eb31  PMC-604 <Julio Cesar Laura Avendaño>
+[9 weeks ago] ed3a10a  PMC-800 <Ronald Q>
+[9 weeks ago] 6be06fb  PMC-801 <Ronald Q>
+[10 weeks ago] e4e7c3a  (origin/feature/PMC-758-A) PMC-760: Advanced Search Loader UI <Rodrigo Quelca>
+[10 weeks ago] 98de6a8  PMC-794 <Paula Quispe>
+[10 weeks ago] 078ccd8  PMC-380 <Andrea Adamczyk>
+[10 weeks ago] 593f3f0  (origin/bugfix/PMC-585-A) PMC-585-A <Roly Rudy Gutierrez Pinto>

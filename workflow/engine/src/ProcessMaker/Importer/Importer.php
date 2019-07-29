@@ -91,6 +91,7 @@ abstract class Importer
     public function import($option = self::IMPORT_OPTION_CREATE_NEW, $optionGroup = self::GROUP_IMPORT_OPTION_CREATE_NEW, $generateUidFromJs = null, $objectsToImport = '')
     {
         $this->prepare();
+        $keepCreateDate = false;
         //Verify data
         switch ($option) {
             case self::IMPORT_OPTION_CREATE_NEW:
@@ -126,6 +127,7 @@ abstract class Importer
             case self::IMPORT_OPTION_DISABLE_AND_CREATE_NEW:
                 break;
             case self::IMPORT_OPTION_KEEP_WITHOUT_CHANGING_AND_CREATE_NEW:
+                $keepCreateDate = true;
                 break;
         }
 
@@ -228,7 +230,7 @@ abstract class Importer
         $this->importData["tables"]["workflow"]["process"] = $this->importData["tables"]["workflow"]["process"][0];
 
         //Import
-        if(!empty($generateUidFromJs)) {
+        if (!empty($generateUidFromJs)) {
             $generateUid = $generateUidFromJs;
         }
         /*----------------------------------********---------------------------------*/
@@ -549,7 +551,9 @@ abstract class Importer
             }
 
             unset($arrayWorkflowTables["process"]["PRO_CREATE_USER"]);
-            unset($arrayWorkflowTables["process"]["PRO_CREATE_DATE"]);
+            if ($generateUid) {
+                unset($arrayWorkflowTables["process"]["PRO_CREATE_DATE"]);
+            }
             unset($arrayWorkflowTables["process"]["PRO_UPDATE_DATE"]);
 
             if ($flagDeleteCategory) {

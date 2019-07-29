@@ -5833,6 +5833,45 @@ xCase.extendNamespace = function (path, newClass) {
             }
             return data;
         },
+         /**
+         * Function to get deleted data for multiple file upload field
+         * @returns {Object}
+         */
+        getDeletedData: function () {
+            var i,
+                k,
+                fields,
+                panels,
+                removedDataRecursive,
+                grid,
+                data = {"__VARIABLE_DOCUMENT_DELETE__": {}},
+                documentDelete;
+            panels = this.model.get("items");
+            for (i = 0; i < panels.length; i += 1) {
+                fields = this.views[i].items.asArray();
+                for (k = 0; k < fields.length; k += 1) {
+                    if (this.isValidFieldToSendData(fields[k])) {
+                        if (typeof fields[k].getItems === "function") {
+                            removedDataRecursive = this.getRemovedDataRecursive(fields[k]);
+                            $.extend(true, data["__VARIABLE_DOCUMENT_DELETE__"], removedDataRecursive);
+                        } else if (typeof fields[k].model.getData === "function") {
+                            if (fields[k].model.get("type") === "grid") {
+                                grid = fields[k].model;
+                                if (typeof fields[k].getDeletedData === "function") {
+                                    data["__VARIABLE_DOCUMENT_DELETE__"][grid.get("name")] = fields[k].getDeletedData();
+                                }
+                            } else {
+                                if (typeof fields[k].model.makeVariableDocumentDelete === "function") {
+                                    documentDelete = fields[k].model.makeVariableDocumentDelete();
+                                    $.extend(true, data["__VARIABLE_DOCUMENT_DELETE__"], documentDelete);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return data;
+        },
         /**
          * This function verify that field is valid to send data
          * @param field
@@ -5879,6 +5918,44 @@ xCase.extendNamespace = function (path, newClass) {
                             } else {
                                 fieldDt = viewField.model.getAppData();
                                 $.extend(true, data, fieldDt);
+                            }
+                        }
+                    }
+                }
+            }
+            return data;
+        },
+        /**
+         * Get all subform multiple file removed data
+         * @param {*} view
+         * @returns {Object}
+         */
+        getRemovedDataRecursive: function (view) {
+            var items = view.getItems(),
+                viewField,
+                fieldDt,
+                dataRecursive = {},
+                grid,
+                data = {},
+                index;
+            for (index = 0; index < items.length; index += 1) {
+                if (this.isValidFieldToSendData(items[index])) {
+                    viewField = items[index];
+                    if (this.isValidFieldToSendData(viewField)) {
+                        if (typeof viewField.getItems === "function") {
+                            dataRecursive = this.getRemovedDataRecursive(viewField);
+                            $.extend(true, data, dataRecursive);
+                        } else if (typeof viewField.model.getData === "function") {
+                            if (viewField.model.get("type") === "grid") {
+                                grid = viewField.model;
+                                if (typeof viewField.getDeletedData === "function") {
+                                    data[grid.get("name")] = viewField.getDeletedData();
+                                }
+                            } else {
+                                if (typeof viewField.model.makeVariableDocumentDelete === "function") {
+                                    fieldDt = viewField.model.makeVariableDocumentDelete();
+                                    $.extend(true, data, fieldDt);
+                                }
                             }
                         }
                     }
@@ -6857,11 +6934,18 @@ xCase.extendNamespace = function (path, newClass) {
                 webServiceManager = project.webServiceManager;
                 formData = panel.getData2();
                 if (project.isMobile()) {
+                    $.extend(true, 
+                        formData, 
+                        {
+                            "__VARIABLE_DOCUMENT_DELETE__": project.getDataExtra("__VARIABLE_DOCUMENT_DELETE__")
+                        });
                     requestManager = project.getRequestManager();
                     if (requestManager && requestManager.isOffLine()) {
                         app.saveFormDataOffLine();
                         return resp;
                     }
+                } else {
+                    $.extend(true, formData, panel.getDeletedData());
                 }
                 webServiceManager.saveData({
                     formUID: formId,
@@ -9505,6 +9589,40 @@ xCase.extendNamespace = function (path, newClass) {
             }
             return data;
         },
+        /**
+         * Get deleted files into a grid
+         * @returns {Object}
+         */
+        getDeletedData: function () {
+            var validControls,
+                gridpanel,
+                cellName,
+                rowDeletedData,
+                cell,
+                deletedData = {},
+                k,
+                i;
+            validControls = ["text", "textarea", "dropdown", "hidden", "checkbox", "datetime", "suggest", "multipleFile"];
+            gridpanel = this.gridtable;
+            for (i = 0; i < gridpanel.length; i += 1) {
+                rowDeletedData = {};
+                for (k = 0; k < gridpanel[i].length; k += 1) {
+                    cell = gridpanel[i][k].model;
+                    if (validControls.indexOf(cell.get("originalType")) > -1) {
+                        cellName = cell.get("columnName");
+                        documentDelete = cell.makeVariableDocumentDelete ? cell.makeVariableDocumentDelete() : {};
+                        if (!_.isEmpty(documentDelete) && !_.isEmpty(documentDelete[cell.get("name")])) {
+                            rowDeletedData[cellName] = documentDelete[cell.get("name")];
+                        }
+                    }
+                }
+                if (!_.isEmpty(rowDeletedData)) { 
+                    deletedData[i + 1] = rowDeletedData;
+                }
+               
+            }
+            return deletedData;
+        },
         setData2: function (data) {
             var rowIndex, grid, dataRow,
                 colIndexm, cols, colIndex,
@@ -10361,6 +10479,7 @@ xCase.extendNamespace = function (path, newClass) {
                 name;
             this.existHTML = true;
             this.$el.html(this.template(this.model.toJSON()));
+            this._setDataOption();
             this.$el.find("input[type='hidden']").val(this.model.get("data")["label"]);
             if (this.model.get("group") === "grid") {
                 hidden = this.$el.find("input[type = 'hidden']")[0];
@@ -23084,6 +23203,27 @@ xCase.extendNamespace = function (path, newClass) {
         deleteFiles: function () {
             this.get("fileCollection").deleteFiles();
             return this;
+        },
+        /**
+         * Make the array that contains all deleted files
+         * @returns {object} 
+         */
+        makeVariableDocumentDelete: function() {
+            var removeArray = this.get("toRemoveArray"),
+                i,
+                item,
+                data = [],
+                result = {};
+            for (i = 0; i < removeArray.length; i += 1) {
+                item = removeArray[i];
+                data.push({
+                    "appDocUid": item.get("appDocUid"),
+                    "name": item.get("file").name,
+                    "version": item.get("version")
+                });
+            }
+            result[this.get("name")] = data;
+            return result;
         }
     });
     PMDynaform.extendNamespace("PMDynaform.file.MultipleFileModel", MultipleFileModel);

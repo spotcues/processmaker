@@ -305,6 +305,8 @@ try {
     }
 
     if ($RBAC->singleSignOn) {
+        // Update the User's last login date
+        updateUserLastLogin($aLog);
         G::header('Location: ' . $sLocation);
         die();
     }
@@ -315,6 +317,8 @@ try {
     if ($changePassword === true) {
         $user = new User();
         $currentUser = $user->changePassword($_SESSION['USER_LOGGED'], $_POST['form']['USR_PASSWORD']);
+        // Update the User's last login date
+        updateUserLastLogin($aLog);
         G::header('Location: ' . $currentUser["__REDIRECT_PATH__"]);
         return;
     }
@@ -372,6 +376,9 @@ try {
     if ($activeSession){
         setcookie("PM-TabPrimary", 101010010, time() + (24 * 60 * 60), '/');
     }
+
+    // Update the User's last login date
+    updateUserLastLogin($aLog);
 
     $oPluginRegistry = PluginRegistry::loadSingleton();
     if ($oPluginRegistry->existsTrigger ( PM_AFTER_LOGIN )) {
