@@ -98,7 +98,7 @@ class MySQLiResultSet extends ResultSetCommon implements ResultSet {
      */
     public function close()
     {
-        if (is_resource($this->result)) {
+        if ($this->result instanceof mysqli_result) {
             @mysqli_free_result($this->result);
         }
         $this->fields = array();

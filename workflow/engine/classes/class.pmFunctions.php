@@ -308,6 +308,7 @@ function executeQuery ($SqlStatement, $DBConnectionUID = 'workflow', $aParameter
                     while ($rs->next()) {
                         $result[$i ++] = $rs->getRow();
                     }
+                    $rs->close();
                     $con->commit();
                     break;
                 case preg_match( "/^INSERT\s/i", $statement ):
