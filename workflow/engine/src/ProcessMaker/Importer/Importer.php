@@ -189,14 +189,12 @@ abstract class Importer
                     }
                 }
                 //Shouldn't generate new UID for all objects
-                /*----------------------------------********---------------------------------*/
                     try {
                         $this->verifyIfTheProcessHasStartedCases();
                     } catch (\Exception $e) {
                         throw $e;
                     }
                     $this->removeProject(false);
-                /*----------------------------------********---------------------------------*/
                 $generateUid = false;
                 break;
             case self::IMPORT_OPTION_DISABLE_AND_CREATE_NEW:
@@ -233,7 +231,6 @@ abstract class Importer
         if (!empty($generateUidFromJs)) {
             $generateUid = $generateUidFromJs;
         }
-        /*----------------------------------********---------------------------------*/
 
         $result = $this->doImport($generateUid);
 

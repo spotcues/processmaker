@@ -18,7 +18,7 @@ use ProcessMaker\Core\System;
 class PushMessageAndroid
 {
     private $url = 'https://fcm.googleapis.com/fcm/send';
-    private $serverApiKey = "AAAAMvip2iU:APA91bHFAvHmCsSh0zbRaC9Xo2EPIbbRYzehkFAKUdXmj_ZVBOOO52npae183LYUONHjNPHaKo1MqT4BWiEuTF7HVEMfwn05XOA-h1LQ_bJ0ezAA35l-wADPq5VtKDiHT1VFGW1oeU7L";
+    private $serverApiKey = "AAAAshotYCU:APA91bH25JoNzd_mTIwhMraFdWL7Bu4Fugw6kzTeXyS2x4AUM-FkdB-CWUrI4SeTLsTpFRkT3IH68P6E97Wb7E1ZIc0TpBnZXA3Q3tzrLB8mT4SHkrzVpdbaBnNz8_ih2-FcwYwREoEv";
     private $devices = [];
     private $numberDevices = 0;
 

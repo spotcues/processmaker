@@ -2,7 +2,6 @@
 
 use ProcessMaker\BusinessModel\User as BusinessModelUser;
 use ProcessMaker\BusinessModel\WebEntryEvent;
-/*----------------------------------********---------------------------------*/
 use ProcessMaker\Core\System;
 use ProcessMaker\Plugins\PluginRegistry;
 use ProcessMaker\Util\DateTime;
@@ -935,7 +934,6 @@ class Cases
                     $aFieldsHistory['APP_DATA'] = serialize($FieldsDifference);
                     $appHistory->insertHistory($aFieldsHistory);
 
-                    /*----------------------------------********---------------------------------*/
                 }
             }
             //End Save History
@@ -993,7 +991,6 @@ class Cases
                 $appAssignSelfServiceValue->remove($appUid);
             }
 
-            /*----------------------------------********---------------------------------*/
 
             //Return
             return $Fields;
@@ -1100,7 +1097,6 @@ class Cases
             if ($this->appSolr != null) {
                 $this->appSolr->deleteApplicationSearchIndex($sAppUid);
             }
-            /*----------------------------------********---------------------------------*/
             //Logger deleteCase
             $nameFiles = '';
             foreach (debug_backtrace() as $node) {
@@ -1135,7 +1131,6 @@ class Cases
             $oAppDel = AppDelegationPeer::retrieveByPk($sAppUid, $iDelIndex);
             $oAppDel->setDelInitDate("now");
             $oAppDel->save();
-            /*----------------------------------********---------------------------------*/
             //update searchindex
             if ($this->appSolr != null) {
                 $this->appSolr->updateApplicationSearchIndex($sAppUid);
@@ -1174,7 +1169,6 @@ class Cases
             $appAssignSelfServiceValue = new AppAssignSelfServiceValue();
 
             $appAssignSelfServiceValue->remove($sAppUid, $iDelIndex);
-            /*----------------------------------********---------------------------------*/
         } catch (exception $e) {
             throw ($e);
         }
@@ -1920,7 +1914,6 @@ class Cases
                     throw (new PropelException('The row cannot be created!', new PropelException($msg)));
                 }
 
-                /*----------------------------------********---------------------------------*/
             }
 
             /** Update search index */
@@ -1965,7 +1958,6 @@ class Cases
                 }
             }
 
-            /*----------------------------------********---------------------------------*/
 
             /** Update searchindex */
             if ($this->appSolr != null) {
@@ -2153,7 +2145,6 @@ class Cases
                     $this->appSolr->updateApplicationSearchIndex($sAppUid);
                 }
 
-                /*----------------------------------********---------------------------------*/
             } catch (exception $e) {
                 throw ($e);
             }
@@ -3347,7 +3338,6 @@ class Cases
         //Execute the trigger defined in the step
         $lastFields = $this->executeTriggerFromList($triggersList, $fieldsCase, $stepType, $stepUidObj, $triggerType);
 
-        /*----------------------------------********---------------------------------*/
 
         return $lastFields;
     }
@@ -3399,12 +3389,10 @@ class Cases
                 $oPMScript = new PMScript();
             }
 
-            /*----------------------------------********---------------------------------*/
 
             $varInAfterRouting = false;
             $fieldsTrigger = [];
             foreach ($triggersList as $trigger) {
-                /*----------------------------------********---------------------------------*/
 
                 $oPMScript->setFields($fieldsCase);
                 $execute = true;
@@ -3470,7 +3458,6 @@ class Cases
                 );
             }
 
-            /*----------------------------------********---------------------------------*/
         }
 
         return $fieldsCase;
@@ -3495,7 +3482,8 @@ class Cases
     }
 
     /**
-     * Review the code in the trigger if the feature is enable
+     * If the feature is enable and the code_scanner_scope has the argument trigger the code scanner will check the code
+     * Review in the running cases
      *
      * @param CodeScanner $cs
      * @param string $code
@@ -3503,11 +3491,11 @@ class Cases
      *
      * @return string
      *
+     * @link https://wiki.processmaker.com/Plugin_Trigger_Code_Security_Scanner_v2
     */
     private function codeScannerReview(CodeScanner $cs, $code, $triTitle)
     {
         $foundDisabledCode = "";
-        /*----------------------------------********---------------------------------*/
 
         return $foundDisabledCode;
     }
@@ -4084,7 +4072,6 @@ class Cases
 
         $this->getExecuteTriggerProcess($sApplicationUID, 'PAUSED');
 
-        /*----------------------------------********---------------------------------*/
     }
 
     /**
@@ -4193,7 +4180,6 @@ class Cases
 
         $this->getExecuteTriggerProcess($sApplicationUID, "UNPAUSE");
 
-        /*----------------------------------********---------------------------------*/
     }
 
     /**
@@ -4244,7 +4230,6 @@ class Cases
             /** Execute a trigger when a case is cancelled */
             $this->getExecuteTriggerProcess($appUid, 'CANCELED', $executeSameCase);
 
-            /*----------------------------------********---------------------------------*/
         }
     }
 
@@ -4263,7 +4248,6 @@ class Cases
 
         /** Close all the threads in APP_DELEGATION and APP_THREAD */
         if (is_null($delIndex)) {
-            /*----------------------------------********---------------------------------*/
 
         } else {
             /** Close the specific delIndex in APP_DELEGATION and APP_THREAD */
@@ -4535,7 +4519,6 @@ class Cases
         //Execute trigger
         $this->getExecuteTriggerProcess($appUid, 'REASSIGNED');
 
-        /*----------------------------------********---------------------------------*/
 
         //Delete record of the table LIST_UNASSIGNED
         $unassigned = new ListUnassigned();
@@ -5922,7 +5905,6 @@ class Cases
                         $resultAttachments = array_merge($resultAttachments, $listAttachment);
 
                         $resultCaseNotes = 1;
-                        /*----------------------------------********---------------------------------*/
 
                         //Message History
                         $listMessage = $objectPermission->objectPermissionMessage(
@@ -5982,7 +5964,6 @@ class Cases
                     case 'CASES_NOTES':
                         $resultCaseNotes = 1;
                         break;
-                    /*----------------------------------********---------------------------------*/
                     case 'MSGS_HISTORY':
                         $listMessage = $objectPermission->objectPermissionMessage(
                             $appUid,
@@ -5996,7 +5977,6 @@ class Cases
                         );
                         $resultMessages = array_merge($resultMessages, $listMessage);
                         break;
-                    /*----------------------------------********---------------------------------*/
                 }
             }
         }
@@ -6008,7 +5988,6 @@ class Cases
             "OUTPUT_DOCUMENTS" => $resultOutputs,
             "CASES_NOTES" => $resultCaseNotes,
             "MSGS_HISTORY" => $resultMessages
-            /*----------------------------------********---------------------------------*/
         ];
     }
 

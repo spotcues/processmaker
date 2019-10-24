@@ -34,7 +34,6 @@ if (file_exists($envFile)) {
 
 $languageManagement = 0;
 
-/*----------------------------------********---------------------------------*/
 
 $arraySystemConfiguration = System::getSystemConfiguration('', '', config("system.workspace"));
 

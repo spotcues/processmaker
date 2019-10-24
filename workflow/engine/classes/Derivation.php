@@ -787,7 +787,6 @@ class Derivation
      */
     private function updateList(array $arrayCurrentDelegationData, array $arrayNextDelegationData, $taskNextDelegation, array $arrayApplicationData, $delIndexNew, $aSp, $removeList)
     {
-        /*----------------------------------********---------------------------------*/
     }
 
     /**
@@ -1492,7 +1491,6 @@ class Derivation
                 $parentCase['APP_DATA'] = array_merge($parentCase['APP_DATA'], $newFields);
                 $case->updateCase($subApplication['APP_PARENT'], $parentCase);
 
-                /*----------------------------------********---------------------------------*/
 
                 //Update table SUB_APPLICATION
                 $newSubApplication = new SubApplication();

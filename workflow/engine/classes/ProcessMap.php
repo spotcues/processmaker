@@ -814,7 +814,6 @@ class ProcessMap
         $oCriteria->addSelectColumn(StepTriggerPeer::TRI_UID);
         $oCriteria->addAsColumn('TRI_LOCATE_WEBBOT_PARAM', '(SELECT LOCATE(MD5(' . TriggersPeer::TRI_WEBBOT . '),' . TriggersPeer::TRI_PARAM . ') FROM ' . TriggersPeer::TABLE_NAME . ' WHERE ' . TriggersPeer::TRI_UID . '=' . StepTriggerPeer::TRI_UID . ' )');
         $oCriteria->addSelectColumn(StepTriggerPeer::ST_TYPE);
-        /*----------------------------------********---------------------------------*/
         $oCriteria->addSelectColumn(StepTriggerPeer::ST_POSITION);
         $oCriteria->addSelectColumn(TriggersPeer::TRI_TITLE);
         $oCriteria->addJoin(StepTriggerPeer::TRI_UID, TriggersPeer::TRI_UID, Criteria::LEFT_JOIN);
@@ -3327,7 +3326,6 @@ class ProcessMap
                     $sObjectType = G::LoadTranslation('MSGS_HISTORY');
                     $sObject = G::LoadTranslation('ID_ALL');
                     break;
-                /*----------------------------------********---------------------------------*/
                 default:
                     $sObjectType = G::LoadTranslation('ID_ALL');
                     $sObject = G::LoadTranslation('ID_ALL');

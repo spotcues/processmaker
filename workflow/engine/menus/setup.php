@@ -6,7 +6,6 @@ global $G_TMP_MENU;
 global $RBAC;
 $partnerFlag = (defined('PARTNER_FLAG')) ? PARTNER_FLAG : false;
 
-/*----------------------------------********---------------------------------*/
 if ($RBAC->userCanAccess('PM_SETUP') === 1) {
     $pmSetupPermission = true;
     if ($RBAC->userCanAccess('PM_SETUP_LOGO') === 1) {
@@ -97,7 +96,6 @@ if ($RBAC->userCanAccess('PM_SETUP') === 1) {
             ucfirst(G::LoadTranslation('ID_DASHBOARD')),
             '', '', 'settings'
         );
-        /*----------------------------------********---------------------------------*/
     }
 }
 //tools options
@@ -175,10 +173,8 @@ if ($RBAC->userCanAccess('PM_SETUP') === 1 && $RBAC->userCanAccess('PM_SETUP_LOG
         ucfirst(strtolower(G::LoadTranslation('ID_EMAILS'))),
         '', '', 'logs'
     );
-    /*----------------------------------********---------------------------------*/
 }
 
-/*----------------------------------********---------------------------------*/
 
 
 if ($RBAC->userCanAccess('PM_SETUP') === 1) {
@@ -192,11 +188,7 @@ if ($RBAC->userCanAccess('PM_SETUP') === 1) {
         G::LoadTranslation('ID_PHP_INFO'),
         '', '', 'settings'
     );
-    /*----------------------------------********---------------------------------*/
 }
-/*----------------------------------********---------------------------------*/
 if ($RBAC->userCanAccess('PM_SETUP') == 1) {
-    /*----------------------------------********---------------------------------*/
 }
 
-/*----------------------------------********---------------------------------*/

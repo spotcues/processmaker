@@ -252,10 +252,8 @@ class AppDelegation extends BaseAppDelegation
             $data->PREVIOUS_USR_UID = ($arrayAppDelegationPrevious !== false)? $arrayAppDelegationPrevious['USR_UID'] : $delPreviusUsrUid;
 
             if ($bpmn->exists($sProUid)) {
-                /*----------------------------------********---------------------------------*/
 
 
-                /*----------------------------------********---------------------------------*/
             }
 
             if ($flagActionsByEmail) {

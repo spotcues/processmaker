@@ -199,6 +199,8 @@ class AppDelay extends BaseAppDelay
         if (empty($usrUid)) {
             global $RBAC;
             $usrUid = $RBAC->aUserInfo['USER_INFO']['USR_UID'];
+        }
+        if (empty($usrId)) {
             $u = new Users();
             $usrId = $u->load($usrUid)['USR_ID'];
         }

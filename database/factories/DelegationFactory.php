@@ -1,26 +1,47 @@
 <?php
+
 use Faker\Generator as Faker;
 
 $factory->define(\ProcessMaker\Model\Delegation::class, function(Faker $faker) {
-    $app = factory(\ProcessMaker\Model\Application::class)->create();
-    $process = \ProcessMaker\Model\Process::where('PRO_UID', $app->PRO_UID)->first();
-    $task = $process->tasks->first();
+    // Return with default values
+    return [
+        'APP_UID' => G::generateUniqueID(),
+        'DEL_INDEX' => 1,
+        'APP_NUMBER' => $faker->unique()->numberBetween(1, 100000),
+        'DEL_PREVIOUS' => 0,
+        'PRO_UID' => G::generateUniqueID(),
+        'TAS_UID' => G::generateUniqueID(),
+        'USR_UID' => G::generateUniqueID(),
+        'DEL_TYPE' => 'NORMAL',
+        'DEL_THREAD' => 1,
+        'DEL_THREAD_STATUS' => 'OPEN',
+        'DEL_PRIORITY' => 3,
+        'DEL_DELEGATE_DATE' => $faker->dateTime(),
+        'DEL_INIT_DATE' => $faker->dateTime(),
+        'DEL_TASK_DUE_DATE' => $faker->dateTime(),
+        'DEL_RISK_DATE' => $faker->dateTime(),
+        'USR_ID' => 0,
+        'PRO_ID' => 0,
+        'TAS_ID' => 0,
+        'DEL_DATA' => ''
+    ];
+});
 
-    // Grab a user if random
-    $users = \ProcessMaker\Model\User::all();
-    if(!count($users)) {
-        $user = factory(\ProcessMaker\Model\User::class)->create();
-    } else{
-        $user = $users->random();
-    }
+// Create a delegation with the foreign keys
+$factory->state(\ProcessMaker\Model\Delegation::class, 'foreign_keys', function (Faker $faker) {
+    // Create values in the foreign key relations
+    $application = factory(\ProcessMaker\Model\Application::class)->create();
+    $process = factory(\ProcessMaker\Model\Process::class)->create();
+    $task = factory(\ProcessMaker\Model\Task::class)->create();
+    $user = factory(\ProcessMaker\Model\User::class)->create();
 
     // Return with default values
     return [
-        'APP_UID' => $app->APP_UID,
+        'APP_UID' => $application->APP_UID,
         'DEL_INDEX' => 1,
-        'APP_NUMBER' => $app->APP_NUMBER,
+        'APP_NUMBER' => $application->APP_NUMBER,
         'DEL_PREVIOUS' => 0,
-        'PRO_UID' => $app->PRO_UID,
+        'PRO_UID' => $process->PRO_UID,
         'TAS_UID' => $task->TAS_UID,
         'USR_UID' => $user->USR_UID,
         'DEL_TYPE' => 'NORMAL',
@@ -32,7 +53,7 @@ $factory->define(\ProcessMaker\Model\Delegation::class, function(Faker $faker) {
         'DEL_TASK_DUE_DATE' => $faker->dateTime(),
         'DEL_RISK_DATE' => $faker->dateTime(),
         'USR_ID' => $user->USR_ID,
-        'PRO_ID' => $process->PRO_ID,
+        'PRO_ID' => $process->id,
         'TAS_ID' => $task->TAS_ID,
         'DEL_DATA' => ''
     ];

@@ -1,30 +1,30 @@
-[4 days ago] 92e5067  (HEAD -> release/3.3.15, origin/release/3.3.15) PMC-1042 Memory Leak using PM Function "executeQuery" <Roly Rudy Gutierrez Pinto>
-[5 weeks ago] b46c40d  (origin/bugfix/PMC-114) PMC-114 <Andrea Adamczyk>
-[5 weeks ago] 0e5a3f2  (origin/bugfix/PMC-402) PMC-402 <Paula Quispe>
-[5 weeks ago] f3b7ea2  (origin/bugfix/PMC-119) PMC-119 <Andrea Adamczyk>
-[6 weeks ago] 828940d  (tag: v3.3.13, origin/release/3.3.13, origin/patch/3.3.13.patch1.cloud) PMC-774:[Mantis - 27541] PM_USERS permission removes System and System Information options <Fabio Guachalla>
-[6 weeks ago] 43aedce  (origin/bugfix/PMC-916) PMC-916 <Julio Cesar Laura Avendaño>
-[7 weeks ago] 00bf139  (origin/bugfix/PMC-909) PMC-909 <Julio Cesar Laura Avendaño>
-[8 weeks ago] 1308c5a  (origin/bugfix/PMC-885) PMC-885 <Roly Rudy Gutierrez Pinto>
-[8 weeks ago] 0f45402  (origin/bugfix/PMC-849) PMC-849 <Paula Quispe>
-[8 weeks ago] 265ef97  (origin/bugfix/PMC-552-A) PMC-552-A <Andrea Adamczyk>
-[9 weeks ago] 7fe8fb4  (tag: v3.3.12, origin/release/3.3.12) Revert PMC-602 <Julio Cesar Laura Avendaño>
-[10 weeks ago] ecd9adf  (origin/bugfix/PMC-809-A) PMC-809-A <Roly Rudy Gutierrez Pinto>
-[10 weeks ago] 814d454  (origin/bugfix/PMC-809) PMC-809 <Roly Rudy Gutierrez Pinto>
-[10 weeks ago] 67ffc3a  (origin/bugfix/PMC-834) PMC-834 <Roly Rudy Gutierrez Pinto>
-[2 months ago] 93d557a  (origin/bugfix/PMC-167) PMC-167 <Paula Quispe>
-[3 months ago] 99aab9d  (origin/bugfix/PMC-815) PMC-815 <Andrea Adamczyk>
-[3 months ago] 08bdc4e  (origin/bugfix/PMC-476) PMC-476 <Roly Rudy Gutierrez Pinto>
-[3 months ago] 445c39b  (origin/bugfix/PMC-840) PMC-840 <Paula Quispe>
-[3 months ago] ae7605f  (origin/bugfix/PMC-786) PMC-786 <Paula Quispe>
-[3 months ago] 6a543eb  (origin/bugfix/PMC-604) PMC-604 <Julio Cesar Laura Avendaño>
-[3 months ago] 6a67051  (origin/bugfix/PMC-602-B) PMC-602 <Julio Cesar Laura Avendaño>
-[3 months ago] 1a8a4fa  (origin/bugfix/PMC-798) PMC-798 <Paula Quispe>
-[3 months ago] 8ccb9d4  (origin/bugfix/PMC-744) PMC-744 <Roly Rudy Gutierrez Pinto>
-[3 months ago] 29ba5e1  (origin/feature/PMC-814) PMC-814: Improve advanced search sending the param CATEGORY_UID to filter process by categories <Rodrigo Quelca>
-[3 months ago] 821eb31  PMC-604 <Julio Cesar Laura Avendaño>
-[3 months ago] ed3a10a  PMC-800 <Ronald Q>
-[3 months ago] 6be06fb  PMC-801 <Ronald Q>
-[3 months ago] e4e7c3a  (origin/feature/PMC-758-A) PMC-760: Advanced Search Loader UI <Rodrigo Quelca>
-[3 months ago] 98de6a8  PMC-794 <Paula Quispe>
-[3 months ago] 078ccd8  PMC-380 <Andrea Adamczyk>
+[2 days ago] 8cfcfb1ca  (origin/bugfix/PMC-1315) PMC-1315 <Paula Quispe>
+[5 days ago] ac873c86c  (origin/bugfix/PMC-778) PMC-778 <Andrea Adamczyk>
+[12 days ago] b3806a7bf  (origin/bugfix/PMC-1226) PMC-1226 <Paula Quispe>
+[3 weeks ago] c8991577f  PMC-778 <Fabio Guachalla>
+[3 weeks ago] d5b8bb4d1  (origin/bugfix/PMC-1234) PMC-1234 Unit test solve errors from CircleCI related to CustomizeFormatterTest <Roly Rudy Gutierrez Pinto>
+[3 weeks ago] 9196ce0b8  (origin/bugfix/PMC-1244) PMC-1244 pmfUpdateUser/pmfCreateUser don't work from execute on case create and Start Timer Event <Roly Rudy Gutierrez Pinto>
+[4 weeks ago] 45a52ca63  (origin/bugfix/PMC-1237) PMC-1237 <Paula Quispe>
+[4 weeks ago] a0d40cf63  (origin/bugfix/PMC-1218) PMC-1218 <Julio Cesar Laura Avendaño>
+[4 weeks ago] fcf0c91aa  (origin/bugfix/PMC-1162) PMC-1162 <Paula Quispe>
+[4 weeks ago] c75dc499a  (origin/bugfix/PMC-1227) PMC-1227 <Paula Quispe>
+[5 weeks ago] 8abe69180  (origin/bugfix/PMC-1213) PMC-1213 Set missing values, previous changes are reverted. <Roly Rudy Gutierrez Pinto>
+[5 weeks ago] 93cbc5a99  (origin/bugfix/PMC-1216) PMC-1216 <Julio Cesar Laura Avendaño>
+[5 weeks ago] 1b6476052  PMC-1213 Set missing values <Roly Rudy Gutierrez Pinto>
+[6 weeks ago] f1e5b314e  (origin/bugfix/PMC-1193) PMC-1193 <Paula Quispe>
+[6 weeks ago] 637adbcce  (origin/feature/PMC-1090) . <Paula Quispe>
+[6 weeks ago] 6e0b32960  (tag: v3.3.18, origin/release/3.3.18) PMC-1181 <Paula Quispe>
+[6 weeks ago] 185cf39a7  (origin/bugfix/PMC-1181) PMC-1181 <Paula Quispe>
+[6 weeks ago] 0e7a7d2c9  PMC-1185_A <Andrea Adamczyk>
+[6 weeks ago] 479831678  (origin/bugfix/PMC-780) PMC-780 <Julio Cesar Laura Avendaño>
+[6 weeks ago] d6729f404  (origin/bugfix/PMC-370) PMC-370 <Andrea Adamczyk>
+[6 weeks ago] 1d902d308  (origin/bugfix/PMC-1185_A) PMC-1185_A <Andrea Adamczyk>
+[6 weeks ago] d0d691c37  Merged in feature/PMC-1173 (pull request #7066) <Julio Cesar Laura Avendaño>
+[6 weeks ago] dc60e3d66  (tag: v3.3.17, origin/release/3.3.17) PMC-1173 <Julio Cesar Laura Avendaño>
+[6 weeks ago] 9bd55591e  (origin/feature/PMC-1173) PMC-1173 <Julio Cesar Laura Avendaño>
+[7 weeks ago] 119d960d5  PMC-1165 The application is using two different paths for the Laravel cache files <Roly Rudy Gutierrez Pinto>
+[7 weeks ago] 8e3e1d7a8  (origin/bugfix/PMC-24) PMC-24 <Paula Quispe>
+[7 weeks ago] bf15fc1b4  PMC-1160 <Ronald Q>
+[7 weeks ago] 6c51848cc  Solving conflicts for PMC-1126 <Andrea Adamczyk>
+[7 weeks ago] 5661e8e6e  (origin/bugfix/PMC-149) PMC-149 <Roly Rudy Gutierrez Pinto>
+[7 weeks ago] 43f0c79ca  PMC-1160 <Ronald Q>

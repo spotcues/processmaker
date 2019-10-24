@@ -39,7 +39,7 @@ class TaskUser extends Model
         $groups = GroupUser::getGroups($usrUid, 'GRP_UID');
 
         // Build query
-        $query = Task::query()->select('TAS_ID');
+        $query = Task::query()->select('TASK.TAS_ID');
         //Add Join with process filtering only the active process
         $query->join('PROCESS', function ($join) {
             $join->on('PROCESS.PRO_UID', '=', 'TASK.PRO_UID')

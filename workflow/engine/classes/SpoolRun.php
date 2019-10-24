@@ -92,6 +92,26 @@ class SpoolRun
     }
 
     /**
+     * Set the $spoolId
+     *
+     * @param string
+     */
+    public function setSpoolId($v)
+    {
+        $this->spoolId = $v;
+    }
+
+    /**
+     * Get the $spoolId
+     *
+     * @return string
+     */
+    public function getSpoolId()
+    {
+        return $this->spoolId;
+    }
+
+    /**
      * Get the fileData property
      *
      * @return array
@@ -489,11 +509,13 @@ class SpoolRun
                 switch ($this->config['MESS_ENGINE']) {
                     case 'MAIL':
                     case 'PHPMAILER':
+                    case 'IMAP':
                         switch ($this->config['MESS_ENGINE']) {
                             case 'MAIL':
                                 $phpMailer = new PHPMailer();
                                 $phpMailer->Mailer = 'mail';
                                 break;
+                            case 'IMAP':
                             case 'PHPMAILER':
                                 $phpMailer = new PHPMailer(true);
                                 $phpMailer->Mailer = 'smtp';
@@ -505,6 +527,7 @@ class SpoolRun
                         switch ($this->config['MESS_ENGINE']) {
                             case 'MAIL':
                                 break;
+                            case 'IMAP':
                             case 'PHPMAILER':
                                 //Posible Options for SMTPSecure are: "", "ssl" or "tls"
                                 if (isset($this->config['SMTPSecure']) && preg_match('/^(ssl|tls)$/', $this->config['SMTPSecure'])) {

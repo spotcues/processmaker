@@ -595,304 +595,182 @@ class ReportTables
             $oDataset = ReportTablePeer::doSelectRS($oCriteria);
             $oDataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
             $oDataset->next();
-            $aVars = array();
             while ($aRow = $oDataset->getRow()) {
                 $aRow['REP_TAB_NAME'] = $this->sPrefix . $aRow['REP_TAB_NAME'];
                 $PropelDatabase = $this->chooseDB($aRow['REP_TAB_CONNECTION']);
                 $con = Propel::getConnection($PropelDatabase);
                 $con->getResource();
                 $stmt = $con->createStatement();
-                switch (DB_ADAPTER) {
-                    case 'mysql':
-                        $aTableFields = $this->getTableVars($aRow['REP_TAB_UID'], true);
-                        if ($aRow['REP_TAB_TYPE'] == 'NORMAL') {
-                            $sqlExists = "SELECT * FROM `" . $aRow['REP_TAB_NAME'] . "` WHERE APP_UID = '" . $sApplicationUid . "'";
-                            $rsExists = $stmt->executeQuery($sqlExists, ResultSet::FETCHMODE_ASSOC);
-                            $rsExists->next();
-                            $aRow2 = $rsExists->getRow();
+                $aTableFields = $this->getTableVars($aRow['REP_TAB_UID'], true);
+                if ($aRow['REP_TAB_TYPE'] == 'NORMAL') {
+                    $sqlExists = "SELECT * FROM `" . $aRow['REP_TAB_NAME'] . "` WHERE APP_UID = '" . $sApplicationUid . "'";
+                    $rsExists = $stmt->executeQuery($sqlExists, ResultSet::FETCHMODE_ASSOC);
+                    $rsExists->next();
+                    $aRow2 = $rsExists->getRow();
 
-                            if (is_array($aRow2)) {
-                                $sQuery = 'UPDATE `' . $aRow['REP_TAB_NAME'] . '` SET ';
-                                foreach ($aTableFields as $aField) {
-                                    $sQuery .= '`' . $aField['sFieldName'] . '` = ';
+                    if (is_array($aRow2)) {
+                        $sQuery = 'UPDATE `' . $aRow['REP_TAB_NAME'] . '` SET ';
+                        foreach ($aTableFields as $aField) {
+                            $sQuery .= '`' . $aField['sFieldName'] . '` = ';
 
-                                    if (!$isBpmn && !isset($aFields[$aField['sFieldName']])) {
-                                        foreach ($aFields as $row) {
-                                            if (is_array($row) && isset($row[count($row)])) {
-                                                $aFields = $row[count($row)];
-                                            }
-                                        }
-                                    }
-
-                                    switch ($aField['sType']) {
-                                        case 'number':
-                                            $sQuery .= (isset($aFields[$aField['sFieldName']]) ? (float)str_replace(
-                                                    ',',
-                                                    '',
-                                                    $aFields[$aField['sFieldName']]
-                                                ) : '0') . ',';
-                                            break;
-                                        case 'char':
-                                        case 'text':
-                                            if (!isset($aFields[$aField['sFieldName']])) {
-                                                $aFields[$aField['sFieldName']] = '';
-                                            }
-                                            if (!isset($aFields[$aField['sFieldName'] . '_label'])) {
-                                                $aFields[$aField['sFieldName'] . '_label'] = '';
-                                            }
-                                            if (is_array($aFields[$aField['sFieldName']])) {
-                                                $sQuery .= "'" . (isset($aFields[$aField['sFieldName']]) ? $aFields[$aField['sFieldName']][0] : '') . "',";
-                                            } else {
-                                                $sQuery .= '\'' . ((isset($aFields[$aField['sFieldName']])) ? mysqli_real_escape_string(
-                                                        $con->getResource(),
-                                                        $aFields[$aField['sFieldName']]
-                                                    ) : '') . '\',';
-                                            }
-                                            break;
-                                        case 'date':
-                                            $mysqlDate = (isset($aFields[$aField['sFieldName']]) ? $aFields[$aField['sFieldName']] : '');
-                                            if ($mysqlDate != '') {
-                                                $mysqlDate = str_replace('/', '-', $mysqlDate);
-                                                $mysqlDate = date('Y-m-d', strtotime($mysqlDate));
-                                            }
-                                            $value = trim($mysqlDate) != '' ? "'" . $mysqlDate . "'" : 'NULL';
-                                            $sQuery .= $value . ",";
-                                            break;
+                            if (!$isBpmn && !isset($aFields[$aField['sFieldName']])) {
+                                foreach ($aFields as $row) {
+                                    if (is_array($row) && isset($row[count($row)])) {
+                                        $aFields = $row[count($row)];
                                     }
                                 }
-                                $sQuery = substr($sQuery, 0, -1);
-                                $sQuery .= " WHERE APP_UID = '" . $sApplicationUid . "'";
+                            }
 
-                                //Only we will to executeQuery if we have additional field
-                                if (count($aTableFields) > 0) {
-                                    try {
-                                        $rs = $stmt->executeQuery($sQuery);
-                                    } catch (Exception $e) {
-                                        Bootstrap::registerMonolog(
-                                            'sqlExecution',
-                                            400,
-                                            'Sql Execution',
-                                            ['sql' => $sQuery, 'error' => $e->getMessage()],
-                                            config("system.workspace"),
-                                            'processmaker.log'
-                                        );
+                            switch ($aField['sType']) {
+                                case 'number':
+                                    $sQuery .= (isset($aFields[$aField['sFieldName']]) ? (float)str_replace(
+                                            ',',
+                                            '',
+                                            $aFields[$aField['sFieldName']]
+                                        ) : '0') . ',';
+                                    break;
+                                case 'char':
+                                case 'text':
+                                    if (!isset($aFields[$aField['sFieldName']])) {
+                                        $aFields[$aField['sFieldName']] = '';
                                     }
-                                }
-                            } else {
+                                    if (!isset($aFields[$aField['sFieldName'] . '_label'])) {
+                                        $aFields[$aField['sFieldName'] . '_label'] = '';
+                                    }
+                                    if (is_array($aFields[$aField['sFieldName']])) {
+                                        $sQuery .= "'" . (isset($aFields[$aField['sFieldName']]) ? $aFields[$aField['sFieldName']][0] : '') . "',";
+                                    } else {
+                                        $sQuery .= '\'' . ((isset($aFields[$aField['sFieldName']])) ? mysqli_real_escape_string(
+                                                $con->getResource(),
+                                                $aFields[$aField['sFieldName']]
+                                            ) : '') . '\',';
+                                    }
+                                    break;
+                                case 'date':
+                                    $mysqlDate = (isset($aFields[$aField['sFieldName']]) ? $aFields[$aField['sFieldName']] : '');
+                                    if ($mysqlDate != '') {
+                                        $mysqlDate = str_replace('/', '-', $mysqlDate);
+                                        $mysqlDate = date('Y-m-d', strtotime($mysqlDate));
+                                    }
+                                    $value = trim($mysqlDate) != '' ? "'" . $mysqlDate . "'" : 'NULL';
+                                    $sQuery .= $value . ",";
+                                    break;
+                            }
+                        }
+                        $sQuery = substr($sQuery, 0, -1);
+                        $sQuery .= " WHERE APP_UID = '" . $sApplicationUid . "'";
+
+                        //Only we will to executeQuery if we have additional field
+                        if (count($aTableFields) > 0) {
+                            try {
+                                $rs = $stmt->executeQuery($sQuery);
+                            } catch (Exception $e) {
+                                Bootstrap::registerMonolog(
+                                    'sqlExecution',
+                                    400,
+                                    'Sql Execution',
+                                    ['sql' => $sQuery, 'error' => $e->getMessage()],
+                                    config("system.workspace"),
+                                    'processmaker.log'
+                                );
+                            }
+                        }
+                    } else {
+                        $sQuery = 'INSERT INTO `' . $aRow['REP_TAB_NAME'] . '` (';
+                        $sQuery .= '`APP_UID`,`APP_NUMBER`';
+                        foreach ($aTableFields as $aField) {
+                            $sQuery .= ',`' . $aField['sFieldName'] . '`';
+                        }
+                        $sQuery .= ") VALUES ('" . $sApplicationUid . "'," . (int)$iApplicationNumber;
+                        foreach ($aTableFields as $aField) {
+                            switch ($aField['sType']) {
+                                case 'number':
+                                    $sQuery .= ',' . (isset($aFields[$aField['sFieldName']]) ? (float)str_replace(
+                                            ',',
+                                            '',
+                                            $aFields[$aField['sFieldName']]
+                                        ) : '0');
+                                    break;
+                                case 'char':
+                                case 'text':
+                                    if (!isset($aFields[$aField['sFieldName']])) {
+                                        $aFields[$aField['sFieldName']] = '';
+                                    }
+                                    $sQuery .= ",'" . (isset($aFields[$aField['sFieldName']]) ? mysqli_real_escape_string(
+                                            $con->getResource(),
+                                            $aFields[$aField['sFieldName']]
+                                        ) : '') . "'";
+                                    break;
+                                case 'date':
+                                    $mysqlDate = (isset($aFields[$aField['sFieldName']]) ? $aFields[$aField['sFieldName']] : '');
+                                    if ($mysqlDate != '') {
+                                        $mysqlDate = str_replace('/', '-', $mysqlDate);
+                                        $mysqlDate = date('Y-m-d', strtotime($mysqlDate));
+                                    }
+                                    $value = trim($mysqlDate) != '' ? "'" . $mysqlDate . "'" : 'NULL';
+                                    $sQuery .= "," . $value;
+                                    break;
+                            }
+                        }
+                        $sQuery .= ')';
+
+                        try {
+                            $rs = $stmt->executeQuery($sQuery);
+                        } catch (Exception $e) {
+                            Bootstrap::registerMonolog(
+                                'sqlExecution',
+                                400,
+                                'Sql Execution',
+                                ['sql' => $sQuery, 'error' => $e->getMessage()],
+                                config("system.workspace"),
+                                'processmaker.log'
+                            );
+                        }
+                    }
+                } else {
+                    //remove old rows from database
+                    $sqlDelete = 'DELETE FROM `' . $aRow['REP_TAB_NAME'] . "` WHERE APP_UID = '" . $sApplicationUid . "'";
+                    $rsDelete = $stmt->executeQuery($sqlDelete);
+
+                    $aAux = explode('-', $aRow['REP_TAB_GRID']);
+                    if (isset($aFields[$aAux[0]])) {
+                        if (is_array($aFields[$aAux[0]])) {
+                            foreach ($aFields[$aAux[0]] as $iRow => $aGridRow) {
                                 $sQuery = 'INSERT INTO `' . $aRow['REP_TAB_NAME'] . '` (';
-                                $sQuery .= '`APP_UID`,`APP_NUMBER`';
+                                $sQuery .= '`APP_UID`,`APP_NUMBER`,`ROW`';
                                 foreach ($aTableFields as $aField) {
                                     $sQuery .= ',`' . $aField['sFieldName'] . '`';
                                 }
-                                $sQuery .= ") VALUES ('" . $sApplicationUid . "'," . (int)$iApplicationNumber;
+                                $sQuery .= ") VALUES ('" . $sApplicationUid . "'," . (int)$iApplicationNumber . ',' . $iRow;
                                 foreach ($aTableFields as $aField) {
                                     switch ($aField['sType']) {
                                         case 'number':
-                                            $sQuery .= ',' . (isset($aFields[$aField['sFieldName']]) ? (float)str_replace(
+                                            $sQuery .= ',' . (isset($aGridRow[$aField['sFieldName']]) ? (float)str_replace(
                                                     ',',
                                                     '',
-                                                    $aFields[$aField['sFieldName']]
+                                                    $aGridRow[$aField['sFieldName']]
                                                 ) : '0');
                                             break;
                                         case 'char':
                                         case 'text':
-                                            if (!isset($aFields[$aField['sFieldName']])) {
-                                                $aFields[$aField['sFieldName']] = '';
+                                            if (!isset($aGridRow[$aField['sFieldName']])) {
+                                                $aGridRow[$aField['sFieldName']] = '';
                                             }
-                                            $sQuery .= ",'" . (isset($aFields[$aField['sFieldName']]) ? mysqli_real_escape_string(
+                                            $sQuery .= ",'" . (isset($aGridRow[$aField['sFieldName']]) ? mysqli_real_escape_string(
                                                     $con->getResource(),
-                                                    $aFields[$aField['sFieldName']]
+                                                    $aGridRow[$aField['sFieldName']]
                                                 ) : '') . "'";
                                             break;
                                         case 'date':
-                                            $mysqlDate = (isset($aFields[$aField['sFieldName']]) ? $aFields[$aField['sFieldName']] : '');
-                                            if ($mysqlDate != '') {
-                                                $mysqlDate = str_replace('/', '-', $mysqlDate);
-                                                $mysqlDate = date('Y-m-d', strtotime($mysqlDate));
-                                            }
-                                            $value = trim($mysqlDate) != '' ? "'" . $mysqlDate . "'" : 'NULL';
-                                            $sQuery .= "," . $value;
+                                            $sQuery .= ",'" . (isset($aGridRow[$aField['sFieldName']]) ? $aGridRow[$aField['sFieldName']] : '') . "'";
                                             break;
                                     }
                                 }
                                 $sQuery .= ')';
-
-                                try {
-                                    $rs = $stmt->executeQuery($sQuery);
-                                } catch (Exception $e) {
-                                    Bootstrap::registerMonolog(
-                                        'sqlExecution',
-                                        400,
-                                        'Sql Execution',
-                                        ['sql' => $sQuery, 'error' => $e->getMessage()],
-                                        config("system.workspace"),
-                                        'processmaker.log'
-                                    );
-                                }
-                            }
-                        } else {
-                            //remove old rows from database
-                            $sqlDelete = 'DELETE FROM `' . $aRow['REP_TAB_NAME'] . "` WHERE APP_UID = '" . $sApplicationUid . "'";
-                            $rsDelete = $stmt->executeQuery($sqlDelete);
-
-                            $aAux = explode('-', $aRow['REP_TAB_GRID']);
-                            if (isset($aFields[$aAux[0]])) {
-                                if (is_array($aFields[$aAux[0]])) {
-                                    foreach ($aFields[$aAux[0]] as $iRow => $aGridRow) {
-                                        $sQuery = 'INSERT INTO `' . $aRow['REP_TAB_NAME'] . '` (';
-                                        $sQuery .= '`APP_UID`,`APP_NUMBER`,`ROW`';
-                                        foreach ($aTableFields as $aField) {
-                                            $sQuery .= ',`' . $aField['sFieldName'] . '`';
-                                        }
-                                        $sQuery .= ") VALUES ('" . $sApplicationUid . "'," . (int)$iApplicationNumber . ',' . $iRow;
-                                        foreach ($aTableFields as $aField) {
-                                            switch ($aField['sType']) {
-                                                case 'number':
-                                                    $sQuery .= ',' . (isset($aGridRow[$aField['sFieldName']]) ? (float)str_replace(
-                                                            ',',
-                                                            '',
-                                                            $aGridRow[$aField['sFieldName']]
-                                                        ) : '0');
-                                                    break;
-                                                case 'char':
-                                                case 'text':
-                                                    if (!isset($aGridRow[$aField['sFieldName']])) {
-                                                        $aGridRow[$aField['sFieldName']] = '';
-                                                    }
-                                                    $sQuery .= ",'" . (isset($aGridRow[$aField['sFieldName']]) ? mysqli_real_escape_string(
-                                                            $con->getResource(),
-                                                            $aGridRow[$aField['sFieldName']]
-                                                        ) : '') . "'";
-                                                    break;
-                                                case 'date':
-                                                    $sQuery .= ",'" . (isset($aGridRow[$aField['sFieldName']]) ? $aGridRow[$aField['sFieldName']] : '') . "'";
-                                                    break;
-                                            }
-                                        }
-                                        $sQuery .= ')';
-                                        $rs = $stmt->executeQuery($sQuery);
-                                    }
-                                }
+                                $rs = $stmt->executeQuery($sQuery);
                             }
                         }
-                        break;
-
-                    /**
-                     * For SQLServer code
-                     */
-                    case 'mssql':
-                        $aTableFields = $this->getTableVars($aRow['REP_TAB_UID'], true);
-                        if ($aRow['REP_TAB_TYPE'] == 'NORMAL') {
-                            $oDataset2 = mssql_query("SELECT * FROM [" . $aRow['REP_TAB_NAME'] . "] WHERE APP_UID = '" . $sApplicationUid . "'");
-                            if ($aRow2 = mssql_fetch_row($oDataset2)) {
-                                $sQuery = 'UPDATE [' . $aRow['REP_TAB_NAME'] . '] SET ';
-                                foreach ($aTableFields as $aField) {
-                                    $sQuery .= '[' . $aField['sFieldName'] . '] = ';
-                                    switch ($aField['sType']) {
-                                        case 'number':
-                                            $sQuery .= (isset($aFields[$aField['sFieldName']]) ? (float)str_replace(
-                                                    ',',
-                                                    '',
-                                                    $aFields[$aField['sFieldName']]
-                                                ) : '0') . ',';
-                                            break;
-                                        case 'char':
-                                        case 'text':
-                                            if (!isset($aFields[$aField['sFieldName']])) {
-                                                $aFields[$aField['sFieldName']] = '';
-                                            }
-                                            $sQuery .= "'" . (isset($aFields[$aField['sFieldName']]) ? mysqli_real_escape_string(
-                                                    $con->getResource(),
-                                                    $aFields[$aField['sFieldName']]
-                                                ) : '') . "',";
-                                            break;
-                                        case 'date':
-                                            $sQuery .= "'" . (isset($aFields[$aField['sFieldName']]) ? $aFields[$aField['sFieldName']] : '') . "',";
-                                            break;
-                                    }
-                                }
-                                $sQuery = substr($sQuery, 0, -1);
-                                $sQuery .= " WHERE APP_UID = '" . $sApplicationUid . "'";
-                            } else {
-                                $sQuery = 'INSERT INTO [' . $aRow['REP_TAB_NAME'] . '] (';
-                                $sQuery .= '[APP_UID],[APP_NUMBER]';
-                                foreach ($aTableFields as $aField) {
-                                    $sQuery .= ',[' . $aField['sFieldName'] . ']';
-                                }
-                                $sQuery .= ") VALUES ('" . $sApplicationUid . "'," . (int)$iApplicationNumber;
-                                foreach ($aTableFields as $aField) {
-                                    switch ($aField['sType']) {
-                                        case 'number':
-                                            $sQuery .= ',' . (isset($aFields[$aField['sFieldName']]) ? (float)str_replace(
-                                                    ',',
-                                                    '',
-                                                    $aFields[$aField['sFieldName']]
-                                                ) : '0');
-                                            break;
-                                        case 'char':
-                                        case 'text':
-                                            if (!isset($aFields[$aField['sFieldName']])) {
-                                                $aFields[$aField['sFieldName']] = '';
-                                            }
-                                            $sQuery .= ",'" . (isset($aFields[$aField['sFieldName']]) ? mysqli_real_escape_string(
-                                                    $con->getResource(),
-                                                    $aFields[$aField['sFieldName']]
-                                                ) : '') . "'";
-                                            break;
-                                        case 'date':
-                                            $sQuery .= ",'" . (isset($aFields[$aField['sFieldName']]) ? $aFields[$aField['sFieldName']] : '') . "'";
-                                            break;
-                                    }
-                                }
-                                $sQuery .= ')';
-                            }
-                            $rs = $stmt->executeQuery($sQuery);
-                        } else {
-                            //Verify use in mssql
-                            mysqli_query(
-                                $con->getResource(),
-                                'DELETE FROM [' . $aRow['REP_TAB_NAME'] . "] WHERE APP_UID = '" . $sApplicationUid . "'"
-                            );
-                            $aAux = explode('-', $aRow['REP_TAB_GRID']);
-                            if (isset($aFields[$aAux[0]])) {
-                                foreach ($aFields[$aAux[0]] as $iRow => $aGridRow) {
-                                    $sQuery = 'INSERT INTO [' . $aRow['REP_TAB_NAME'] . '] (';
-                                    $sQuery .= '[APP_UID],[APP_NUMBER],[ROW]';
-                                    foreach ($aTableFields as $aField) {
-                                        $sQuery .= ',[' . $aField['sFieldName'] . ']';
-                                    }
-                                    $sQuery .= ") VALUES ('" . $sApplicationUid . "'," . (int)$iApplicationNumber . ',' . $iRow;
-                                    foreach ($aTableFields as $aField) {
-                                        switch ($aField['sType']) {
-                                            case 'number':
-                                                $sQuery .= ',' . (isset($aGridRow[$aField['sFieldName']]) ? (float)str_replace(
-                                                        ',',
-                                                        '',
-                                                        $aGridRow[$aField['sFieldName']]
-                                                    ) : '0');
-                                                break;
-                                            case 'char':
-                                            case 'text':
-                                                if (!isset($aGridRow[$aField['sFieldName']])) {
-                                                    $aGridRow[$aField['sFieldName']] = '';
-                                                }
-                                                $sQuery .= ",'" . (isset($aGridRow[$aField['sFieldName']]) ? mysqli_real_escape_string(
-                                                        $con->getResource(),
-                                                        $aGridRow[$aField['sFieldName']]
-                                                    ) : '') . "'";
-                                                break;
-                                            case 'date':
-                                                $sQuery .= ",'" . (isset($aGridRow[$aField['sFieldName']]) ? $aGridRow[$aField['sFieldName']] : '') . "'";
-                                                break;
-                                        }
-                                    }
-                                    $sQuery .= ')';
-                                    $rs = $stmt->executeQuery($sQuery);
-                                }
-                            }
-                        }
-                        break;
-
+                    }
                 }
                 $oDataset->next();
             }

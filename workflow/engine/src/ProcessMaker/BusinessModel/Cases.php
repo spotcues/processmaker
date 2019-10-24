@@ -11,6 +11,7 @@ use AppDelegationPeer;
 use AppDocument;
 use AppDocumentPeer;
 use AppHistoryPeer;
+use Application;
 use ApplicationPeer;
 use Applications;
 use AppNotesPeer;
@@ -45,7 +46,6 @@ use ProcessMaker\Services\OAuth2\Server;
 use ProcessMaker\Util\DateTime as UtilDateTime;
 use ProcessMaker\Validation\ExceptionRestApi;
 use ProcessMaker\Validation\Validator as FileValidator;
-
 use ProcessPeer;
 use ProcessUser;
 use ProcessUserPeer;
@@ -1859,6 +1859,11 @@ class Cases
             $arrayCaseVariable = array_merge($arrayCaseVariable, $dateHistory);
         }
 
+        // Get the SYS_LANG defined, it can be updated
+        if (defined('SYS_LANG')) {
+            $arrayCaseVariable['SYS_LANG'] = SYS_LANG;
+        }
+
         return $arrayCaseVariable;
     }
 
@@ -3317,6 +3322,7 @@ class Cases
      * @param array $objectPermissions, the permissions that we need to review
      * @param boolean $objectSupervisor, if we need to get all the objects supervisor
      * @param string $tasUid
+     *
      * @return array
      */
     public function userAuthorization(
@@ -3330,23 +3336,21 @@ class Cases
     ) {
         $arrayAccess = [];
 
-        //User has participated
-        $participated = new ListParticipatedLast();
-        $listParticipated = $participated->loadList($usrUid, [], null, $appUid);
-        $arrayAccess['participated'] = (count($listParticipated) == 0) ? false : true;
+        // User has participated
+        $arrayAccess['participated'] = Delegation::participation($appUid, $usrUid);
 
-        //User is supervisor
+        // User is supervisor
         $supervisor = new BmProcessSupervisor();
         $isSupervisor = $supervisor->isUserProcessSupervisor($proUid, $usrUid);
         $arrayAccess['supervisor'] = ($isSupervisor) ? true : false;
 
-        //If the user is supervisor we will to return the object assigned
+        // If the user is supervisor we will to return the object assigned
         if ($isSupervisor && $objectSupervisor) {
             $ps = new BmProcessSupervisor();
             $arrayAccess['objectSupervisor']  = $ps->getObjectSupervisor($proUid);
         }
 
-        //Roles Permissions
+        // Roles Permissions
         if (count($rolesPermissions) > 0) {
             global $RBAC;
             foreach ($rolesPermissions as $value) {
@@ -3354,7 +3358,7 @@ class Cases
             }
         }
 
-        //Object Permissions
+        // Object Permissions
         if (count($objectPermissions) > 0) {
             $case = new ClassesCases();
             foreach ($objectPermissions as $key => $value) {

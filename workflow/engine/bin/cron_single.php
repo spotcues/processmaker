@@ -17,6 +17,7 @@ require_once __DIR__ . '/../../../gulliver/system/class.g.php';
 require_once __DIR__ . '/../../../bootstrap/autoload.php';
 require_once __DIR__ . '/../../../bootstrap/app.php';
 
+use ProcessMaker\Core\JobsManager;
 use ProcessMaker\Core\System;
 use ProcessMaker\Plugins\PluginRegistry;
 
@@ -111,14 +112,11 @@ try {
     spl_autoload_register(['Bootstrap', 'autoloadClass']);
 
     //Set variables
-    /*----------------------------------********---------------------------------*/
 
     $argvx = '';
 
     for ($i = 7; $i <= count($argv) - 1; $i++) {
-            /*----------------------------------********---------------------------------*/
             $argvx = $argvx . (($argvx != '') ? ' ' : '') . $argv[$i];
-        /*----------------------------------********---------------------------------*/
     }
     global $sObject;
     $sObject = $workspace;
@@ -159,7 +157,8 @@ try {
         } else {
             eprintln('WARNING! No server info found!', 'red');
         }
-
+        //load Processmaker translations
+        Bootstrap::LoadTranslationObject(SYS_LANG);
         //DB
         $phpCode = '';
 
@@ -208,8 +207,20 @@ try {
 
         Propel::init(PATH_CORE . 'config' . PATH_SEP . '_databases_.php');
 
-        //Enable RBAC
-        $rbac = RBAC::getSingleton(PATH_DATA, session_id());
+        /**
+         * Load Laravel database connection
+         */
+        $dbHost = explode(':', $DB_HOST);
+        config(['database.connections.workflow.host' => $dbHost[0]]);
+        config(['database.connections.workflow.database' => $DB_NAME]);
+        config(['database.connections.workflow.username' => $DB_USER]);
+        config(['database.connections.workflow.password' => $DB_PASS]);
+        if (count($dbHost) > 1) {
+            config(['database.connections.workflow.port' => $dbHost[1]]);
+        }
+
+        //Enable RBAC, We need to keep both variables in upper and lower case.
+        $rbac = $RBAC = RBAC::getSingleton(PATH_DATA, session_id());
         $rbac->sSystem = 'PROCESSMAKER';
 
         if (!defined('DB_ADAPTER')) {
@@ -239,6 +250,11 @@ try {
 
         //Processing
         eprintln('Processing workspace: ' . $workspace, 'green');
+        
+        /**
+         * JobsManager
+         */
+        JobsManager::getSingleton()->init();
 
         // We load plugins' pmFunctions
         $oPluginRegistry = PluginRegistry::loadSingleton();
@@ -300,14 +316,12 @@ function processWorkspace()
         resendEmails();
         unpauseApplications();
         calculateDuration();
-        /*----------------------------------********---------------------------------*/
         executeEvents($sLastExecution);
         executeScheduledCases();
         executeUpdateAppTitle();
         executeCaseSelfService();
         cleanSelfServiceTables();
         executePlugins();
-        /*----------------------------------********---------------------------------*/
     } catch (Exception $oError) {
         saveLog("main", "error", "Error processing workspace : " . $oError->getMessage() . "\n");
     }
@@ -499,7 +513,6 @@ function calculateDuration()
         saveLog('calculateDuration', 'error', 'Error Calculating Duration: ' . $oError->getMessage());
     }
 }
-/*----------------------------------********---------------------------------*/
 
 function executeEvents($sLastExecution, $now = null)
 {
@@ -641,7 +654,6 @@ function executeCaseSelfService()
         $criteria->addSelectColumn(TaskPeer::TAS_SELFSERVICE_TIME);
         $criteria->addSelectColumn(TaskPeer::TAS_SELFSERVICE_TIME_UNIT);
         $criteria->addSelectColumn(TaskPeer::TAS_SELFSERVICE_TRIGGER_UID);
-        /*----------------------------------********---------------------------------*/
 
         //FROM
         $condition = array();
@@ -675,7 +687,6 @@ function executeCaseSelfService()
             $taskSelfServiceTime = intval($row["TAS_SELFSERVICE_TIME"]);
             $taskSelfServiceTimeUnit = $row["TAS_SELFSERVICE_TIME_UNIT"];
             $taskSelfServiceTriggerUid = $row["TAS_SELFSERVICE_TRIGGER_UID"];
-            /*----------------------------------********---------------------------------*/
 
             if ($calendar->pmCalendarUid == '') {
                 $calendar->getCalendar(null, $appcacheProUid, $taskUid);
@@ -732,7 +743,6 @@ function executeCaseSelfService()
                         $oPMScript->setExecutedOn(PMScript::SELF_SERVICE_TIMEOUT);
                         $oPMScript->execute();
 
-                        /*----------------------------------********---------------------------------*/
                         $appFields["APP_DATA"] = array_merge($appFields["APP_DATA"], $oPMScript->aFields);
 
                         unset($appFields['APP_STATUS']);
@@ -809,7 +819,6 @@ function setExecutionResultMessage($m, $t = '')
 
     eprintln("[$m]", $c);
 }
-/*----------------------------------********---------------------------------*/
 
 function sendNotifications()
 {

@@ -66,4 +66,16 @@ class Dynaform extends Model
                         ->where('DYNAFORM.DYN_UID', '!=', $dynUid)
                         ->get();
     }
+
+    /**
+     * Scope a query to filter an specific process
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder $query
+     * @param  string $columns
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeProcess($query, string $proUID)
+    {
+        return $query->where('PRO_UID', $proUID);
+    }
 }

@@ -63,7 +63,6 @@ class Lists
             'ListParticipated' => 'CASES_SENT',
             'ListPaused' => 'CASES_PAUSED',
             'ListCompleted' => 'CASES_COMPLETED',
-            /*----------------------------------********---------------------------------*/
             'ListSelfService' => 'CASES_SELFSERVICE'
         );
 
@@ -73,7 +72,6 @@ class Lists
         $this->ListParticipated = new \ListParticipatedLast();
         $this->ListPaused = new \ListPaused();
         $this->ListCompleted = new \ListCompleted();
-        /*----------------------------------********---------------------------------*/
         $this->ListSelfService = new \ListUnassigned();
     }
 
@@ -275,7 +273,6 @@ class Lists
                         'item' => $item
                     ]));
                     break;
-                /*----------------------------------********---------------------------------*/
                 default:
                     $totalInbox = $this->$listObject->getCountList($userId);
                     array_push($response, (array('count' => $totalInbox, 'item' => $item)));

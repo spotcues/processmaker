@@ -23,7 +23,6 @@ if ($RBAC->userCanAccess('PM_DASHBOARD') == 1) {
     $G_TMP_MENU->AddIdRawOption('DASHBOARD', 'dashboard/main', G::LoadTranslation('ID_DASHBOARD'), '', '', '', 'x-pm-dashboard');
 }
 
-/*----------------------------------********---------------------------------*/
 
 // ADMIN MODULE
 if ($RBAC->userCanAccess('PM_SETUP') == 1 || $RBAC->userCanAccess('PM_USERS') == 1) {

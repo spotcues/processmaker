@@ -5,16 +5,10 @@
 use Faker\Generator as Faker;
 
 $factory->define(\ProcessMaker\Model\ListUnassigned::class, function (Faker $faker) {
-    $app = factory(\ProcessMaker\Model\Application::class)->create();
+    $app = factory(\ProcessMaker\Model\Application::class)->states('foreign_keys')->create();
+    $user = factory(\ProcessMaker\Model\User::class)->create();
     $process = \ProcessMaker\Model\Process::where('PRO_UID', $app->PRO_UID)->first();
     $task = $process->tasks->first();
-    // Grab a user if random
-    $users = \ProcessMaker\Model\User::all();
-    if(!count($users)) {
-        $user = factory(\ProcessMaker\Model\User::class)->create();
-    } else{
-        $user = $users->random();
-    }
 
     return [
         'APP_UID' => $app->APP_UID,

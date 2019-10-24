@@ -6352,19 +6352,22 @@ class Processes
     }
 
     /**
-     * Get disabled code
+     * If the feature is enable and the code_scanner_scope has the arguments for enable code scanner
+     * Review the triggers related to the process
      *
      * @param string $processUid    Unique id of Process
      * @param string $workspaceName Workspace name
      *
-     * @return array Returns an array with disabled code found, array empty otherwise
+     * @return array
+     * @throws Exception
+     *
+     * @link https://wiki.processmaker.com/Plugin_Trigger_Code_Security_Scanner_v2
      */
     public function getDisabledCode($processUid = null, $workspaceName = null)
     {
         try {
-            $arrayDisabledCode = array();
+            $arrayDisabledCode = [];
 
-            /*----------------------------------********---------------------------------*/
 
             //Return
             return $arrayDisabledCode;

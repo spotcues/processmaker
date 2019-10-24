@@ -366,8 +366,9 @@ class Project extends Api
      * 
      * @url GET /:prj_uid/dynaforms
      * @param string $prj_uid {@min 32}{@max 32}
+     * @param string $seen
      */
-    public function doGetDynaForms($prj_uid)
+    public function doGetDynaForms($prj_uid, $seen = '0')
     {
         try {
             $process = new \ProcessMaker\BusinessModel\Process();
@@ -375,7 +376,7 @@ class Project extends Api
             $process->setArrayFieldNameForException(array("processUid" => "prj_uid"));
 
             $response = $process->getDynaForms($prj_uid);
-
+            $process->setIfFirstTimeConsumed($this->getUserId(), $seen);
             return DateTime::convertUtcToIso8601($response, $this->arrayFieldIso8601);
         } catch (Exception $e) {
             throw (new RestException(Api::STAT_APP_EXCEPTION, $e->getMessage()));

@@ -39,4 +39,28 @@ class Process extends Model
     {
         return $this->hasOne(ProcessCategory::class, 'PRO_CATEGORY', 'CATEGORY_UID');
     }
+
+    /**
+     * Obtains the process list for an specific user and/or for the specific category
+     *
+     * @param string $categoryUid
+     * @param string $userUid
+     * @return array
+     *
+     * @see ProcessMaker\BusinessModel\Light::getProcessList()
+     */
+    public function getProcessList($categoryUid, $userUid)
+    {
+        $selectedColumns = ['PRO_UID', 'PRO_TITLE'];
+        $query = Process::query()
+            ->select($selectedColumns)
+            ->where('PRO_STATUS', 'ACTIVE')
+            ->where('PRO_CREATE_USER', $userUid);
+
+        if (!empty($categoryUid)) {
+            $query->where('PRO_CATEGORY', $categoryUid);
+        }
+
+        return ($query->get()->values()->toArray());
+    }
 }

@@ -41,7 +41,6 @@ try {
             $usr = mb_strtolower(trim($frm['USR_USERNAME']), 'UTF-8');
             $pwd = trim($frm['USR_PASSWORD']);
         }
-        /*----------------------------------********---------------------------------*/
         $uid = $RBAC->VerifyLogin($usr , $pwd);
         $RBAC->cleanSessionFiles(72); //cleaning session files older than 72 hours
 
@@ -227,7 +226,6 @@ try {
         $_SESSION['USR_TIME_ZONE'] = $userTimeZone;
     }
 
-    /*----------------------------------********---------------------------------*/
 
     //Set data
     $aUser = $RBAC->userObj->load($_SESSION['USER_LOGGED']);

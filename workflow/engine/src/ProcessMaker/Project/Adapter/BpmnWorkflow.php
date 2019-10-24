@@ -284,7 +284,7 @@ class BpmnWorkflow extends Project\Bpmn
             ));
         }
 
-        $taskData = self::__updateServiceTask($activityBefore, $activityCurrent, $taskData);
+        $taskData = self::updateServiceTask($activityBefore, $activityCurrent, $taskData);
 
         if ($activityCurrent->getActLoopType() == "PARALLEL") {
             $task = \TaskPeer::retrieveByPK($actUid);
@@ -326,7 +326,7 @@ class BpmnWorkflow extends Project\Bpmn
      * @param $taskData
      * @return mixed
      */
-    public static function __updateServiceTask($activityBefore, $activityCurrent, $taskData)
+    public static function updateServiceTask($activityBefore, $activityCurrent, $taskData)
     {
         $registry = PluginRegistry::loadSingleton();
         if ($activityBefore->getActTaskType() != "SERVICETASK" && $activityCurrent->getActTaskType() == "SERVICETASK") {
@@ -439,7 +439,7 @@ class BpmnWorkflow extends Project\Bpmn
                         //$this->updateEventStartObjects($data["FLO_ELEMENT_ORIGIN"], $data["FLO_ELEMENT_DEST"]);
 
                         //WebEntry-Event - Update
-                        $this->__updateWebEntryEventByEvent($data['FLO_ELEMENT_ORIGIN'], ['ACT_UID' => $data['FLO_ELEMENT_DEST']]);
+                        $this->updateWebEntryEventByEvent($data['FLO_ELEMENT_ORIGIN'], ['ACT_UID' => $data['FLO_ELEMENT_DEST']]);
                         break;
                     case "bpmnEvent":
                         $messageEventRelationUid = $this->createMessageEventRelationByBpmnFlow(\BpmnFlowPeer::retrieveByPK($floUid));
@@ -489,7 +489,7 @@ class BpmnWorkflow extends Project\Bpmn
                 //$this->updateEventStartObjects($flowCurrent->getFloElementOrigin(), $flowCurrent->getFloElementDest());
 
                 //WebEntry-Event - Update
-                $this->__updateWebEntryEventByEvent($flowCurrent->getFloElementOrigin(), ['ACT_UID' => $flowCurrent->getFloElementDest()]);
+                $this->updateWebEntryEventByEvent($flowCurrent->getFloElementOrigin(), ['ACT_UID' => $flowCurrent->getFloElementDest()]);
             }
         }
 
@@ -586,7 +586,7 @@ class BpmnWorkflow extends Project\Bpmn
 
             //WebEntry-Event - Update
             if (is_null($bpmnFlow)) {
-                $this->__updateWebEntryEventByEvent($flow->getFloElementOrigin(), ['WEE_STATUS' => 'DISABLED']);
+                $this->updateWebEntryEventByEvent($flow->getFloElementOrigin(), ['WEE_STATUS' => 'DISABLED']);
             }
         } elseif ($flow->getFloElementOriginType() == "bpmnActivity" &&
             $flow->getFloElementDestType() == "bpmnEvent") {
@@ -633,7 +633,7 @@ class BpmnWorkflow extends Project\Bpmn
         // TODO Complete for other routes, activity->activity, activity->gateway and viceversa
     }
 
-    private function __updateEventActivityDefinition(\BpmnEvent $bpmnEvent, $flagStartTask)
+    private function updateEventActivityDefinition(\BpmnEvent $bpmnEvent, $flagStartTask)
     {
         try {
             if ($bpmnEvent->getEvnType() == "START") {
@@ -655,7 +655,7 @@ class BpmnWorkflow extends Project\Bpmn
                             if (!is_null(\BpmnActivityPeer::retrieveByPK($arrayFlowData['FLO_ELEMENT_DEST']))) {
                                 $this->wp->setStartTask($arrayFlowData['FLO_ELEMENT_DEST'], $flagStartTask);
 
-                                $this->__updateWebEntryEventByEvent($bpmnEvent->getEvnUid());
+                                $this->updateWebEntryEventByEvent($bpmnEvent->getEvnUid());
                             }
                             break;
                     }
@@ -758,7 +758,7 @@ class BpmnWorkflow extends Project\Bpmn
             if ((isset($arrayEventData["EVN_TYPE"]) && $arrayEventData["EVN_TYPE"] != $bpmnEvent->getEvnType()) ||
                 (isset($arrayEventData["EVN_MARKER"]) && $arrayEventData["EVN_MARKER"] != $bpmnEvent->getEvnMarker())
             ) {
-                $this->__updateEventActivityDefinition($bpmnEvent, false);
+                $this->updateEventActivityDefinition($bpmnEvent, false);
                 $this->removeEventDefinition($bpmnEvent);
             }
 
@@ -773,7 +773,7 @@ class BpmnWorkflow extends Project\Bpmn
         try {
             $bpmnEvent = \BpmnEventPeer::retrieveByPK($eventUid);
 
-            $this->__updateEventActivityDefinition($bpmnEvent, false);
+            $this->updateEventActivityDefinition($bpmnEvent, false);
             $this->removeEventDefinition($bpmnEvent);
 
             parent::removeEvent($eventUid);
@@ -794,15 +794,13 @@ class BpmnWorkflow extends Project\Bpmn
      * @return string
      * @throws Exception
      */
-    private function __createTaskByElement($elementUid, $elementType, $key, $eventName = '')
+    private function createTaskByElement($elementUid, $elementType, $key, $eventName = '')
     {
         try {
             $taskTitle = $taskType = $this->arrayTaskAttribute[$key]["type"];
-            /*----------------------------------********---------------------------------*/
 
             if (isset($this->arrayElementTaskRelation[$elementUid])) {
                 $taskUid = $this->arrayElementTaskRelation[$elementUid];
-                /*----------------------------------********---------------------------------*/
             } else {
                 $taskPosX = 0;
                 $taskPosY = 0;
@@ -935,7 +933,7 @@ class BpmnWorkflow extends Project\Bpmn
                         break;
                     case "bpmnGateway":
                         //Gateway ----> Gateway
-                        $taskUid = $this->__createTaskByElement(
+                        $taskUid = $this->createTaskByElement(
                             $arrayFlowData['FLO_ELEMENT_DEST'],
                             'bpmnGateway',
                             'gateway-to-gateway'
@@ -958,7 +956,7 @@ class BpmnWorkflow extends Project\Bpmn
                                     //$event->getEvnMarker(): EMPTY or MESSAGETHROW
                                     switch ($event->getEvnMarker()) {
                                         case "MESSAGETHROW":
-                                            $taskUid = $this->__createTaskByElement(
+                                            $taskUid = $this->createTaskByElement(
                                                 $event->getEvnUid(),
                                                 "bpmnEvent",
                                                 "end-message-event"
@@ -968,7 +966,7 @@ class BpmnWorkflow extends Project\Bpmn
                                             $result = $this->wp->addRoute($taskUid, -1, "SEQUENTIAL");
                                             break;
                                         case "EMAIL":
-                                            $taskUid = $this->__createTaskByElement(
+                                            $taskUid = $this->createTaskByElement(
                                                 $event->getEvnUid(),
                                                 "bpmnEvent",
                                                 "end-email-event"
@@ -1021,7 +1019,7 @@ class BpmnWorkflow extends Project\Bpmn
                         "EMAIL" => "intermediate-throw-email-event"
                     );
 
-                    $taskUid = $this->__createTaskByElement(
+                    $taskUid = $this->createTaskByElement(
                         $eventUid,
                         "bpmnEvent",
                         $arrayKey[$arrayEventData["EVN_MARKER"]],
@@ -1075,7 +1073,7 @@ class BpmnWorkflow extends Project\Bpmn
                                         //$event->getEvnMarker(): EMPTY or MESSAGETHROW
                                         switch ($event->getEvnMarker()) {
                                             case "MESSAGETHROW":
-                                                $taskUid = $this->__createTaskByElement(
+                                                $taskUid = $this->createTaskByElement(
                                                     $event->getEvnUid(),
                                                     "bpmnEvent",
                                                     "end-message-event"
@@ -1085,7 +1083,7 @@ class BpmnWorkflow extends Project\Bpmn
                                                 $result = $this->wp->addRoute($taskUid, -1, "SEQUENTIAL");
                                                 break;
                                             case "EMAIL":
-                                                $taskUid = $this->__createTaskByElement(
+                                                $taskUid = $this->createTaskByElement(
                                                     $event->getEvnUid(),
                                                     "bpmnEvent",
                                                     "end-email-event"
@@ -1168,7 +1166,7 @@ class BpmnWorkflow extends Project\Bpmn
                                     //$event->getEvnMarker(): EMPTY or MESSAGETHROW
                                     switch ($event->getEvnMarker()) {
                                         case "MESSAGETHROW":
-                                            $taskUid = $this->__createTaskByElement(
+                                            $taskUid = $this->createTaskByElement(
                                                 $event->getEvnUid(),
                                                 "bpmnEvent",
                                                 "end-message-event"
@@ -1178,7 +1176,7 @@ class BpmnWorkflow extends Project\Bpmn
                                             $result = $this->wp->addRoute($taskUid, -1, "SEQUENTIAL");
                                             break;
                                         case "EMAIL":
-                                            $taskUid = $this->__createTaskByElement(
+                                            $taskUid = $this->createTaskByElement(
                                                 $event->getEvnUid(),
                                                 "bpmnEvent",
                                                 "end-email-event"
@@ -1213,7 +1211,7 @@ class BpmnWorkflow extends Project\Bpmn
                 case "START":
                     switch ($event["EVN_MARKER"]) {
                         case "MESSAGECATCH":
-                            $taskUid = $this->__createTaskByElement(
+                            $taskUid = $this->createTaskByElement(
                                 $event["EVN_UID"],
                                 "bpmnEvent",
                                 "start-message-event"
@@ -1224,7 +1222,7 @@ class BpmnWorkflow extends Project\Bpmn
                             $this->mapBpmnEventToWorkflowRoutes($taskUid, $event["EVN_UID"]);
                             break;
                         case "TIMER":
-                            $taskUid = $this->__createTaskByElement(
+                            $taskUid = $this->createTaskByElement(
                                 $event["EVN_UID"],
                                 "bpmnEvent",
                                 "start-timer-event"
@@ -1235,7 +1233,7 @@ class BpmnWorkflow extends Project\Bpmn
                             $this->mapBpmnEventToWorkflowRoutes($taskUid, $event["EVN_UID"]);
                             break;
                         case "EMPTY":
-                            $this->__updateEventActivityDefinition(\BpmnEventPeer::retrieveByPK($event['EVN_UID']), true);
+                            $this->updateEventActivityDefinition(\BpmnEventPeer::retrieveByPK($event['EVN_UID']), true);
                             break;
                     }
                     break;
@@ -2043,7 +2041,7 @@ class BpmnWorkflow extends Project\Bpmn
         //Map Bpmn-Flows to Workflow-Routes
         $bwp->mapBpmnFlowsToWorkflowRoutes();
 
-        $bwp->__gatewayToGatewayDeleteCorruptedRecords(); //Delete corrupted records in task and element_task_relation tables
+        $bwp->gatewayToGatewayDeleteCorruptedRecords(); //Delete corrupted records in task and element_task_relation tables
 
         //Return
         return $result;
@@ -2066,7 +2064,7 @@ class BpmnWorkflow extends Project\Bpmn
         $this->wp->setDisabled($value);
     }
 
-    private function __updateWebEntryEventByEvent($eventUid, array $arrayData = null)
+    private function updateWebEntryEventByEvent($eventUid, array $arrayData = null)
     {
         try {
             $bpmnEvent = \BpmnEventPeer::retrieveByPK($eventUid);
@@ -2140,7 +2138,7 @@ class BpmnWorkflow extends Project\Bpmn
         return $diagram;
     }
 
-    private function __gatewayToGatewayDeleteCorruptedRecords()
+    private function gatewayToGatewayDeleteCorruptedRecords()
     {
         //Delete corrupted records in task and element_task_relation tables
 
