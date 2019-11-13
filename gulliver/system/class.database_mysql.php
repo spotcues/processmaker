@@ -1010,7 +1010,7 @@ class database extends database_base
     public function tableExists($tableName, $database)
     {
         try {
-            $result = DB::connect($this->getNameConnection())
+            $result = DB::connection($this->getNameConnection())
                 ->select("show tables like '$tableName'");
             $flag = count($result) > 0;
 

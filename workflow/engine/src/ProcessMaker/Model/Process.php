@@ -14,30 +14,24 @@ class Process extends Model
 {
     // Set our table name
     protected $table = 'PROCESS';
+    protected $primaryKey = 'PRO_ID';
     // Our custom timestamp columns
     const CREATED_AT = 'PRO_CREATE_DATE';
     const UPDATED_AT = 'PRO_UPDATE_DATE';
-    /**
-     * Retrieve all applications that belong to this process
-     */
-    public function applications()
-    {
-        return $this->hasMany(Application::class, 'PRO_ID', 'PRO_ID');
-    }
 
     public function tasks()
     {
-        return $this->hasMany(Task::class, 'PRO_UID', 'PRO_UID');
+        return $this->belongsTo(Task::class, 'PRO_ID', 'PRO_ID');
     }
 
     public function creator()
     {
-        return $this->hasOne(User::class, 'PRO_CREATE_USER', 'USR_UID');
+        return $this->belongsTo(User::class, 'PRO_CREATE_USER', 'USR_UID');
     }
 
     public function category()
     {
-        return $this->hasOne(ProcessCategory::class, 'PRO_CATEGORY', 'CATEGORY_UID');
+        return $this->belongsTo(ProcessCategory::class, 'PRO_CATEGORY', 'CATEGORY_UID');
     }
 
     /**

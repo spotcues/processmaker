@@ -4807,9 +4807,7 @@ class Processes
         $oData->abeConfiguration = $this->getActionsByEmail($sProUid);
         $oData->elementTask = $this->getElementTaskRelation($sProUid);
         $oData->groupwfs = $this->groupwfsMerge($oData->groupwfs, $oData->processUser, "USR_UID");
-        $oData->process["PRO_TYPE_PROCESS"] = "PUBLIC";
 
-        //Return
         return $oData;
     }
 

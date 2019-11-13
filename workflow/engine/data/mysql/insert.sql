@@ -57104,6 +57104,7 @@ INSERT INTO TRANSLATION (TRN_CATEGORY,TRN_ID,TRN_LANG,TRN_VALUE,TRN_UPDATE_DATE 
 ( 'LABEL','ID_ACTION','en','Action','2014-01-15') ,
 ( 'LABEL','ID_ACTIONS','en','Actions','2014-01-15') ,
 ( 'LABEL','ID_ACTIONS_BY_EMAIL','en','actionsByEmail.html','2014-01-15') ,
+( 'LABEL','ID_ACTIONS_BY_EMAIL_LINK_TO_FILL_A_FORM','en','Please complete this form','2019-10-18') ,
 ( 'LABEL','ID_ACTIONS_BY_EMAIL_LOG','en','Actions By Email Log','2016-01-12') ,
 ( 'LABEL','ID_ACTION_DISABLED_TO_LOW_PERFORMANCE_1','en','This action was disabled to prevent slow browser performance. There are more than 100 records in the column definition grid.','2015-01-16') ,
 ( 'LABEL','ID_ACTION_DISABLED_TO_LOW_PERFORMANCE_2','en','<br/><br/>Please perform this action with manual selection only.','2014-01-15') ,

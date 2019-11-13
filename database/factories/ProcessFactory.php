@@ -5,57 +5,66 @@
 use Faker\Generator as Faker;
 
 $factory->define(\ProcessMaker\Model\Process::class, function(Faker $faker) {
-    /**
-     * @todo Determine if we need more base columns populated
-     */
-    $process =  [
+    // Return with default values
+    return [
         'PRO_UID' => G::generateUniqueID(),
+        'PRO_ID' => $faker->unique()->numberBetween(1, 200000),
         'PRO_TITLE' => $faker->sentence(3),
         'PRO_DESCRIPTION' => $faker->paragraph(3),
         'PRO_CREATE_USER' => '00000000000000000000000000000001',
         'PRO_DYNAFORMS' => '',
         'PRO_ITEE' => 1,
-        'PRO_STATUS' => 'ACTIVE'
+        'PRO_STATUS' => 'ACTIVE',
+        'PRO_STATUS_ID' => 1,
+        'PRO_TYPE_PROCESS' => 'PUBLIC',
+        'PRO_UPDATE_DATE' => $faker->dateTime(),
+        'PRO_CREATE_DATE' => $faker->dateTime(),
+        'PRO_CATEGORY' => '',
     ];
+});
 
-    $task1 = factory(\ProcessMaker\Model\Task::class)
-        ->create([
-            'PRO_UID' => $process['PRO_UID'],
-            'TAS_START'=>'TRUE'
-        ]);
+// Create a process with the foreign keys
+$factory->state(\ProcessMaker\Model\Process::class, 'foreign_keys', function (Faker $faker) {
+    $user = factory(\ProcessMaker\Model\User::class)->create();
+    return [
+        'PRO_UID' => G::generateUniqueID(),
+        'PRO_ID' => $faker->unique()->numberBetween(1, 200000),
+        'PRO_TITLE' => $faker->sentence(3),
+        'PRO_DESCRIPTION' => $faker->paragraph(3),
+        'PRO_CREATE_USER' => $user->USR_UID,
+        'PRO_DYNAFORMS' => '',
+        'PRO_ITEE' => 1,
+        'PRO_STATUS' => 'ACTIVE',
+        'PRO_STATUS_ID' => 1,
+        'PRO_TYPE_PROCESS' => 'PUBLIC',
+        'PRO_UPDATE_DATE' => $faker->dateTime(),
+        'PRO_CREATE_DATE' => $faker->dateTime(),
+        'PRO_CATEGORY' => '',
+    ];
+});
 
-    $task2 = factory(\ProcessMaker\Model\Task::class)
-        ->create([
-            'PRO_UID' => $process['PRO_UID'],
-        ]);
-
-    //routes
-    factory(\ProcessMaker\Model\Route::class)
-        ->create([
-            'PRO_UID' => $process['PRO_UID'],
-            'TAS_UID' => $task2['TAS_UID'],
-            'ROU_NEXT_TASK' => '-1',
-        ]);
-
-    factory(\ProcessMaker\Model\Route::class)
-        ->create([
-            'PRO_UID' => $process['PRO_UID'],
-            'TAS_UID' => $task1['TAS_UID'],
-            'ROU_NEXT_TASK' => $task2['TAS_UID']
-        ]);
-
-    //User assignments
-    factory(\ProcessMaker\Model\TaskUser::class)
-        ->create([
-            'TAS_UID' => $task1['TAS_UID'],
-            'USR_UID' => \ProcessMaker\Model\User::all()->random()->USR_UID
-        ]);
-
-    factory(\ProcessMaker\Model\TaskUser::class)
-        ->create([
-            'TAS_UID' => $task2['TAS_UID'],
-            'USR_UID' => \ProcessMaker\Model\User::all()->random()->USR_UID
-        ]);
-
-    return $process;
+// Create a process related to the flow designer
+$factory->state(\ProcessMaker\Model\Process::class, 'flow', function (Faker $faker) {
+    // Create values in the foreign key relations
+    $user = factory(\ProcessMaker\Model\User::class)->create();
+    $process = [
+        'PRO_UID' => G::generateUniqueID(),
+        'PRO_ID' => $faker->unique()->numberBetween(1, 200000),
+        'PRO_TITLE' => $faker->sentence(3),
+        'PRO_DESCRIPTION' => $faker->paragraph(3),
+        'PRO_CREATE_USER' => $user->USR_UID,
+        'PRO_DYNAFORMS' => '',
+        'PRO_ITEE' => 1,
+        'PRO_STATUS' => 'ACTIVE',
+        'PRO_STATUS_ID' => 1,
+        'PRO_TYPE_PROCESS' => 'PUBLIC',
+        'PRO_UPDATE_DATE' => $faker->dateTime(),
+        'PRO_CREATE_DATE' => $faker->dateTime(),
+        'PRO_CATEGORY' => '',
+    ];
+    // Create a task related to this process
+    $task = factory(\ProcessMaker\Model\Task::class)->create([
+        'PRO_UID' => $process->PRO_UID,
+        'PRO_ID' => $process->PRO_ID,
+    ]);
 });

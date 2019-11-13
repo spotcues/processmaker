@@ -1339,7 +1339,11 @@ Translation.prototype = {
             lang = 'en';
 
         if (window.parent) {
-            url = window.parent.location.pathname.split('/');
+            try {
+                url = window.parent.location.pathname.split('/');
+            } catch (e) {
+                url = window.location.pathname.split('/');
+            }
             lang = url[2] || lang;
         }
         return lang;
@@ -19308,10 +19312,10 @@ xCase.extendNamespace = function (path, newClass) {
         afterExecuteQuery: function(response) {
             var currentValue = this.get("value"),
                 newValue;
-            if (_.isArray(response) && response.length > 0 ) {
+            if (_.isArray(response)) {
                 this.mergeRemoteOptions(response);
                 // Force to update the values using the DOM
-                this.get("view").updateValues({}, (response[0] && response[0].value) ? response[0].value : '');
+                this.get("view").updateValues({}, (this.get("options")[0] && this.get("options")[0].value) ? this.get("options")[0].value : '');
             }
             newValue = this.get("value");
             if (_.isArray(response) && response.length > 0 && this.get("showDependentSpinners") && currentValue !== newValue) {

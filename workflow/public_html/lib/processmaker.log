@@ -1,30 +1,30 @@
-[2 days ago] 8cfcfb1ca  (origin/bugfix/PMC-1315) PMC-1315 <Paula Quispe>
-[5 days ago] ac873c86c  (origin/bugfix/PMC-778) PMC-778 <Andrea Adamczyk>
-[12 days ago] b3806a7bf  (origin/bugfix/PMC-1226) PMC-1226 <Paula Quispe>
-[3 weeks ago] c8991577f  PMC-778 <Fabio Guachalla>
-[3 weeks ago] d5b8bb4d1  (origin/bugfix/PMC-1234) PMC-1234 Unit test solve errors from CircleCI related to CustomizeFormatterTest <Roly Rudy Gutierrez Pinto>
-[3 weeks ago] 9196ce0b8  (origin/bugfix/PMC-1244) PMC-1244 pmfUpdateUser/pmfCreateUser don't work from execute on case create and Start Timer Event <Roly Rudy Gutierrez Pinto>
-[4 weeks ago] 45a52ca63  (origin/bugfix/PMC-1237) PMC-1237 <Paula Quispe>
-[4 weeks ago] a0d40cf63  (origin/bugfix/PMC-1218) PMC-1218 <Julio Cesar Laura Avendaño>
-[4 weeks ago] fcf0c91aa  (origin/bugfix/PMC-1162) PMC-1162 <Paula Quispe>
-[4 weeks ago] c75dc499a  (origin/bugfix/PMC-1227) PMC-1227 <Paula Quispe>
-[5 weeks ago] 8abe69180  (origin/bugfix/PMC-1213) PMC-1213 Set missing values, previous changes are reverted. <Roly Rudy Gutierrez Pinto>
-[5 weeks ago] 93cbc5a99  (origin/bugfix/PMC-1216) PMC-1216 <Julio Cesar Laura Avendaño>
-[5 weeks ago] 1b6476052  PMC-1213 Set missing values <Roly Rudy Gutierrez Pinto>
-[6 weeks ago] f1e5b314e  (origin/bugfix/PMC-1193) PMC-1193 <Paula Quispe>
-[6 weeks ago] 637adbcce  (origin/feature/PMC-1090) . <Paula Quispe>
-[6 weeks ago] 6e0b32960  (tag: v3.3.18, origin/release/3.3.18) PMC-1181 <Paula Quispe>
-[6 weeks ago] 185cf39a7  (origin/bugfix/PMC-1181) PMC-1181 <Paula Quispe>
-[6 weeks ago] 0e7a7d2c9  PMC-1185_A <Andrea Adamczyk>
-[6 weeks ago] 479831678  (origin/bugfix/PMC-780) PMC-780 <Julio Cesar Laura Avendaño>
-[6 weeks ago] d6729f404  (origin/bugfix/PMC-370) PMC-370 <Andrea Adamczyk>
-[6 weeks ago] 1d902d308  (origin/bugfix/PMC-1185_A) PMC-1185_A <Andrea Adamczyk>
-[6 weeks ago] d0d691c37  Merged in feature/PMC-1173 (pull request #7066) <Julio Cesar Laura Avendaño>
-[6 weeks ago] dc60e3d66  (tag: v3.3.17, origin/release/3.3.17) PMC-1173 <Julio Cesar Laura Avendaño>
-[6 weeks ago] 9bd55591e  (origin/feature/PMC-1173) PMC-1173 <Julio Cesar Laura Avendaño>
-[7 weeks ago] 119d960d5  PMC-1165 The application is using two different paths for the Laravel cache files <Roly Rudy Gutierrez Pinto>
-[7 weeks ago] 8e3e1d7a8  (origin/bugfix/PMC-24) PMC-24 <Paula Quispe>
-[7 weeks ago] bf15fc1b4  PMC-1160 <Ronald Q>
-[7 weeks ago] 6c51848cc  Solving conflicts for PMC-1126 <Andrea Adamczyk>
-[7 weeks ago] 5661e8e6e  (origin/bugfix/PMC-149) PMC-149 <Roly Rudy Gutierrez Pinto>
-[7 weeks ago] 43f0c79ca  PMC-1160 <Ronald Q>
+[7 days ago] 1f7b9475b  (origin/bugfix/PMC-138) PMC-138 Assigned user lost in case of Custom Import (Promotion Manager) <Roly Rudy Gutierrez Pinto>
+[9 days ago] 44f3158a8  (origin/bugfix/PMC-1150) PMC-1150 <Paula Quispe>
+[2 weeks ago] 4bd413707  (origin/bugfix/PMC-1074) PMC-1074 <Andrea Adamczyk>
+[3 weeks ago] 7d3eb2ba1  (origin/bugfix/PMC-1048) PMC-1048 Unit test for mysql_free_result inside executeQuery <Roly Rudy Gutierrez Pinto>
+[3 weeks ago] 8cfcfb1ca  (origin/bugfix/PMC-1315) PMC-1315 <Paula Quispe>
+[3 weeks ago] 380d4c52a  (origin/bugfix/PMC-943) PMC-943 <Paula Quispe>
+[3 weeks ago] ac873c86c  (origin/bugfix/PMC-778) PMC-778 <Andrea Adamczyk>
+[3 weeks ago] 45e58886f  (origin/bugfix/PMC-1311) PMC-1311 <Paula Quispe>
+[3 weeks ago] 4fab2d68e  (origin/bugfix/PMC-1310) PMC-1310 <Paula Quispe>
+[4 weeks ago] b3806a7bf  (origin/bugfix/PMC-1226) PMC-1226 <Paula Quispe>
+[4 weeks ago] 3858512e4  (origin/bugfix/PMC-1002) PMC-1002 Error message: "mysql_free_result() couldnt fetch mysql_result" in appears in the _ERROR_ variable <Roly Rudy Gutierrez Pinto>
+[4 weeks ago] 797c9e7bd  PMC-1297 <Andrea Adamczyk>
+[5 weeks ago] 120cfce36  (origin/bugfix/PMC-1291) PMC-1291 <Paula Quispe>
+[5 weeks ago] c10f3e9f9  PMC-1288 <Andrea Adamczyk>
+[5 weeks ago] c8991577f  PMC-778 <Fabio Guachalla>
+[5 weeks ago] d5b8bb4d1  (origin/bugfix/PMC-1234) PMC-1234 Unit test solve errors from CircleCI related to CustomizeFormatterTest <Roly Rudy Gutierrez Pinto>
+[5 weeks ago] 9196ce0b8  (origin/bugfix/PMC-1244) PMC-1244 pmfUpdateUser/pmfCreateUser don't work from execute on case create and Start Timer Event <Roly Rudy Gutierrez Pinto>
+[6 weeks ago] 6872bc7ec  (origin/bugfix/PMC-1117) PMC-1117 <Julio Cesar Laura Avendaño>
+[6 weeks ago] 45a52ca63  (origin/bugfix/PMC-1237) PMC-1237 <Paula Quispe>
+[6 weeks ago] a0d40cf63  (origin/bugfix/PMC-1218) PMC-1218 <Julio Cesar Laura Avendaño>
+[6 weeks ago] fcf0c91aa  (origin/bugfix/PMC-1162) PMC-1162 <Paula Quispe>
+[6 weeks ago] c75dc499a  (origin/bugfix/PMC-1227) PMC-1227 <Paula Quispe>
+[7 weeks ago] 8abe69180  (origin/bugfix/PMC-1213) PMC-1213 Set missing values, previous changes are reverted. <Roly Rudy Gutierrez Pinto>
+[7 weeks ago] 93cbc5a99  (origin/bugfix/PMC-1216) PMC-1216 <Julio Cesar Laura Avendaño>
+[7 weeks ago] 1b6476052  PMC-1213 Set missing values <Roly Rudy Gutierrez Pinto>
+[8 weeks ago] f1e5b314e  (origin/bugfix/PMC-1193) PMC-1193 <Paula Quispe>
+[8 weeks ago] 637adbcce  (origin/feature/PMC-1090) . <Paula Quispe>
+[8 weeks ago] 6e0b32960  (tag: v3.3.18, origin/release/3.3.18) PMC-1181 <Paula Quispe>
+[8 weeks ago] 185cf39a7  (origin/bugfix/PMC-1181) PMC-1181 <Paula Quispe>
+[8 weeks ago] 0e7a7d2c9  PMC-1185_A <Andrea Adamczyk>

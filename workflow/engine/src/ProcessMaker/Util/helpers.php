@@ -488,10 +488,12 @@ function changeAbbreviationOfDirectives($size)
 function fixContentDispositionFilename($fileName, $replacement = '_')
 {
     //(double quote) has to be removed
+    //(question mark) has to be replaced by underscore due to the issue in google chrome
     //(forward slash) has to replaced by underscore
     //(backslash) has to replaced by underscore
     $default = [
         '/[\"]/' => '',
+        '/[\?]/' => $replacement,
         '/[\\|\/]/' => $replacement,
         '/\\\\/' => $replacement
     ];

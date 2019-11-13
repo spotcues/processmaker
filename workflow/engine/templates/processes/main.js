@@ -411,7 +411,7 @@ Ext.onReady(function(){
           color = r.get('PRO_STATUS') == 'ACTIVE'? 'green': 'red';
           return String.format("<font color='{0}'>{1}</font>", color, v);
         }},
-        {header: _('ID_PRO_USER'), dataIndex: 'PRO_CREATE_USER_LABEL', width: 150},
+        {header: _('ID_OWNER'), dataIndex: 'PRO_CREATE_USER_LABEL', width: 150},
         {header: _('ID_PRO_CREATE_DATE'), dataIndex: 'PRO_CREATE_DATE', width: 90},
         {header: _('ID_INBOX'), dataIndex: 'CASES_COUNT_TO_DO', width: 50, align:'right'},
         {header: _('ID_DRAFT'), dataIndex: 'CASES_COUNT_DRAFT', width: 50, align:'right'},

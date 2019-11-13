@@ -2,11 +2,12 @@
 namespace ProcessMaker\Importer;
 
 use Processes;
-use ProcessMaker\Util;
-use ProcessMaker\Project;
-use ProcessMaker\Project\Adapter;
 use ProcessMaker\BusinessModel\Migrator;
 use ProcessMaker\BusinessModel\Migrator\ImportException;
+use ProcessMaker\Model\Process;
+use ProcessMaker\Project;
+use ProcessMaker\Project\Adapter;
+use ProcessMaker\Util;
 use ProcessMaker\Util\Common;
 use ProcessPeer;
 use stdClass;
@@ -18,7 +19,7 @@ abstract class Importer
     protected $filename = "";
     protected $saveDir = "";
     protected $metadata = array();
-    protected $prjCreateUser = '';
+
     /**
      * Stores the current objects before import.
      * @var object 
@@ -233,9 +234,27 @@ abstract class Importer
         }
 
         $result = $this->doImport($generateUid);
-
-        //Return
+        $this->updateTheProcessOwner($result);
         return $result;
+    }
+    
+    /**
+     * This updates the process owner.
+     * @param string $proUid
+     * @return void
+     */
+    private function updateTheProcessOwner(string $proUid): void
+    {
+        $processOwner = $this->data["usr_uid"];
+
+        $currentProcess = $this->getCurrentProcess();
+        if (is_object($currentProcess)) {
+            $processOwner = $currentProcess->process->getProCreateUser();
+        }
+        $process = Process::where('PRO_UID', '=', $proUid);
+        $process->update([
+            'PRO_CREATE_USER' => $processOwner
+        ]);
     }
 
     /**
@@ -427,19 +446,17 @@ abstract class Importer
         // Build BPMN project struct
         $project = $tables["project"][0];
         $diagram = $tables["diagram"][0];
-        $diagram["activities"] =  (isset($tables["activity"]))? $tables["activity"] : array();
-        $diagram["artifacts"] = (isset($tables["artifact"]))? $tables["artifact"] : array();
-        $diagram["events"] = (isset($tables["event"]))? $tables["event"] : array();
-        $diagram["flows"] = (isset($tables["flow"]))? $tables["flow"] : array();
-        $diagram["gateways"] = (isset($tables["gateway"]))? $tables["gateway"]: array();
-        $diagram["data"] = (isset($tables["data"]))? $tables["data"] : array();
-        $diagram["participants"] = (isset($tables["participant"]))? $tables["participant"] : array();
-        $diagram["laneset"] = (isset($tables["laneset"]))? $tables["laneset"] : array();
-        $diagram["lanes"] = (isset($tables["lane"]))? $tables["lane"] : array();
+        $diagram["activities"] =  (isset($tables["activity"]))? $tables["activity"] : [];
+        $diagram["artifacts"] = (isset($tables["artifact"]))? $tables["artifact"] : [];
+        $diagram["events"] = (isset($tables["event"]))? $tables["event"] : [];
+        $diagram["flows"] = (isset($tables["flow"]))? $tables["flow"] : [];
+        $diagram["gateways"] = (isset($tables["gateway"]))? $tables["gateway"]: [];
+        $diagram["data"] = (isset($tables["data"]))? $tables["data"] : [];
+        $diagram["participants"] = (isset($tables["participant"]))? $tables["participant"] : [];
+        $diagram["laneset"] = (isset($tables["laneset"]))? $tables["laneset"] : [];
+        $diagram["lanes"] = (isset($tables["lane"]))? $tables["lane"] : [];
         $project["diagrams"] = array($diagram);
-        $project["prj_author"] = isset($this->data["usr_uid"])? $this->data["usr_uid"]: "00000000000000000000000000000001";
         $project["process"] = $tables["process"][0];
-        $project["prjCreateUser"] = $this->prjCreateUser;
 
         return Adapter\BpmnWorkflow::createFromStruct($project, $generateUid);
     }
@@ -731,7 +748,7 @@ abstract class Importer
         }
     }
 
-    public function saveAs($prj_uid, $prj_name, $prj_description, $prj_category, $prj_user = '')
+    public function saveAs($prj_uid, $prj_name, $prj_description, $prj_category)
     {
         try {
             $exporter = new \ProcessMaker\Exporter\XmlExporter($prj_uid);
@@ -749,7 +766,7 @@ abstract class Importer
 
             $this->setSourceFile($outputFilename);
             $this->prepare();
-            $this->prjCreateUser = $prj_user;
+
             $this->importData["tables"]["bpmn"]["project"][0]["prj_name"] = $prj_name;
             $this->importData["tables"]["bpmn"]["project"][0]["prj_description"] = $prj_description;
             $this->importData["tables"]["bpmn"]["diagram"][0]["dia_name"] = $prj_name;
@@ -761,7 +778,9 @@ abstract class Importer
             $this->importData["tables"]["workflow"]["process"][0]["PRO_UPDATE_DATE"] = null;
             $this->importData["tables"]["workflow"]["process"] = $this->importData["tables"]["workflow"]["process"][0];
 
-            return ['prj_uid' => $this->doImport(true, false)];
+            $result = $this->doImport(true, false);
+            $this->updateTheProcessOwner($result);
+            return ['prj_uid' => $result];
         } catch (\Exception $e) {
             return $e->getMessage();
         }

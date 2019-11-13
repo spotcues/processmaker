@@ -1838,6 +1838,12 @@ msgid "actionsByEmail.html"
 msgstr "actionsByEmail.html"
 
 # TRANSLATION
+# LABEL/ID_ACTIONS_BY_EMAIL_LINK_TO_FILL_A_FORM
+#: LABEL/ID_ACTIONS_BY_EMAIL_LINK_TO_FILL_A_FORM
+msgid "Please complete this form"
+msgstr "Please complete this form"
+
+# TRANSLATION
 # LABEL/ID_ACTIONS_BY_EMAIL_LOG
 #: LABEL/ID_ACTIONS_BY_EMAIL_LOG
 msgid "Actions By Email Log"

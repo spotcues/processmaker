@@ -1,16 +1,19 @@
-[2 days ago] 7ee7a12c  PMC-1317:Helper getUserInfo parameter  "userName" has in web, but in mobile has "username" <Fabio Guachalla>
-[2 weeks ago] d50a061c  PMC-1295:Helpers to retrieve the information of the current user <Fabio Guachalla>
-[4 weeks ago] 4475bab4  (origin/bugfix/PMC-1221) [7543] Dependent fields - Valeo's feedback over PMC-707 <Rodrigo Quelca>
-[6 weeks ago] 4d8761aa  (origin/bugfix/PMC-1184) PMC-1184: Automatic call setOnchange function <Rodrigo Quelca>
-[8 weeks ago] f4d85b6c  (origin/bugfix/PMC-1121) PMC-1121: Dependent Fields:  The spinner does not disappear when the options are used. <Rodrigo Quelca>
+[8 days ago] 4e282455  (origin/bugfix/PMC-1318) PMC-1318 <Julio Cesar Laura Avendaño>
+[11 days ago] 1862b975  (origin/bugfix/PMC-1331) fix first option <Rodrigo Quelca>
+[11 days ago] 3b81265a  PMC-1331:Secondary dependent fields do not refresh data when changing the dropdowns. Also, always the first row of the SQL query set as default value in the dependent fields, and not the static empty value configured. <Rodrigo Quelca>
+[3 weeks ago] 7ee7a12c  PMC-1317:Helper getUserInfo parameter  "userName" has in web, but in mobile has "username" <Fabio Guachalla>
+[4 weeks ago] d50a061c  PMC-1295:Helpers to retrieve the information of the current user <Fabio Guachalla>
+[6 weeks ago] 4475bab4  (origin/bugfix/PMC-1221) [7543] Dependent fields - Valeo's feedback over PMC-707 <Rodrigo Quelca>
+[8 weeks ago] 4d8761aa  (origin/bugfix/PMC-1184) PMC-1184: Automatic call setOnchange function <Rodrigo Quelca>
+[2 months ago] f4d85b6c  (origin/bugfix/PMC-1121) PMC-1121: Dependent Fields:  The spinner does not disappear when the options are used. <Rodrigo Quelca>
 [3 months ago] 163311f9  PMC-1036:PROD-641 >> The getControl helper does not work for Suggest control <Fabio Guachalla>
 [3 months ago] 90aac5fc  PMC-1037:PROD-575 >> Loading Spinner icon disappear <Fabio Guachalla>
 [3 months ago] 6f05ac54  (origin/bugfix/PMC-1011) PMC-1011:Spinner does not disappear in multiples dependent fields <Rodrigo Quelca>
-[3 months ago] 36611ce3  PMC-953:PROD-641 >> In the second dependent field, you can choose wrong options <Fabio Guachalla>
-[3 months ago] f5e27b00  (origin/bugfix/PMC-34_B) QA rejection fixes <Rodrigo Quelca>
-[3 months ago] 384393c2  (origin/bugfix/PMC-955) PROD-575 >> Prevent the form submission if an element is still loading its dependency using "saveForm" helper does not work <Rodrigo Quelca>
-[3 months ago] 5f69517b  (origin/bugfix/PMC-954) PMC-954: PROD-575 >> The second dependent field does not display its spinner icon and its value and text <Rodrigo Quelca>
-[3 months ago] 43e205ea  PMC-939 <Fabio Guachalla>
+[4 months ago] 36611ce3  PMC-953:PROD-641 >> In the second dependent field, you can choose wrong options <Fabio Guachalla>
+[4 months ago] f5e27b00  (origin/bugfix/PMC-34_B) QA rejection fixes <Rodrigo Quelca>
+[4 months ago] 384393c2  (origin/bugfix/PMC-955) PROD-575 >> Prevent the form submission if an element is still loading its dependency using "saveForm" helper does not work <Rodrigo Quelca>
+[4 months ago] 5f69517b  (origin/bugfix/PMC-954) PMC-954: PROD-575 >> The second dependent field does not display its spinner icon and its value and text <Rodrigo Quelca>
+[4 months ago] 43e205ea  PMC-939 <Fabio Guachalla>
 [4 months ago] 065e5451  (origin/bugfix/PMC-34) PMC-34: Documents in data base is wrong with multiple files <Rodrigo Quelca>
 [4 months ago] 9a30ec5d  PMC-938:Update lib for select2 <Fabio Guachalla>
 [4 months ago] 871da2b6  clear Dependent field <Fabio Guachalla>
@@ -24,7 +27,4 @@
 [4 months ago] 53c7457c  PMC-73: Suggest field improvements <Fabio Guachalla>
 [4 months ago] 7efaf51e  fix code style <Rodrigo Quelca>
 [4 months ago] e1d35859  fix the CR notes <Rodrigo Quelca>
-[4 months ago] 2b4f5296  add mobile first load execute query <Rodrigo Quelca>
-[4 months ago] c36cf7ec  fix removed methods <Rodrigo Quelca>
-[4 months ago] 3ff1119b  add spinner to first load <Rodrigo Quelca>
-[4 months ago] 11d0eb0b  (origin/feature/PMC-866) PMC-866: [mobile] Dependent field queries (in grids) are not executed when the page loads add dependent on first load <Rodrigo Quelca>
+[5 months ago] 2b4f5296  add mobile first load execute query <Rodrigo Quelca>

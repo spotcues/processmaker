@@ -833,7 +833,7 @@ class ActionsByEmailCoreClass extends PMPlugin
                 URL_KEY, true) . '&DEL_INDEX=' . G::encrypt($this->getIndex(), URL_KEY,
                 true) . '&DYN_UID=' . G::encrypt($this->getItemAbeProperties('DYN_UID'), URL_KEY,
                 true) . '&ABER=' . G::encrypt($abeRequest['ABE_REQ_UID'], URL_KEY,
-                true) . '" target="_blank">Please complete this form</a>';
+                true) . '" target="_blank">' . G::LoadTranslation('ID_ACTIONS_BY_EMAIL_LINK_TO_FILL_A_FORM') . '</a>';
 
         return $html;
     }

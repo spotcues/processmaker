@@ -277,7 +277,8 @@ class Project extends Api
     public function doSaveAs($prj_uid, $prj_name, $prj_description = null, $prj_category = null)
     {
         $importer = new \ProcessMaker\Importer\XmlImporter();
-        return $importer->saveAs($prj_uid, $prj_name, $prj_description, $prj_category, $this->getUserId());
+        $importer->setData("usr_uid", $this->getUserId());
+        return $importer->saveAs($prj_uid, $prj_name, $prj_description, $prj_category);
     }
 
     /**
