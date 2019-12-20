@@ -624,7 +624,7 @@ class User
      * @return array Return an array with custom record
      * @throws Exception
      */
-    private function __getUserCustomRecordFromRecord(array $record)
+    private function getUserCustomRecordFromRecord(array $record)
     {
         try {
             //Get Calendar
@@ -1042,7 +1042,7 @@ class User
             $row = $rsCriteria->getRow();
 
             //Return
-            return (!$flagGetRecord) ? $this->__getUserCustomRecordFromRecord($row) : $row;
+            return (!$flagGetRecord) ? $this->getUserCustomRecordFromRecord($row) : $row;
         } catch (Exception $e) {
             throw $e;
         }
@@ -1452,7 +1452,7 @@ class User
             while ($rsCriteria->next()) {
                 $record = $rsCriteria->getRow();
 
-                $arrayUser[] = ($flagRecord) ? $record : $this->__getUserCustomRecordFromRecord($record);
+                $arrayUser[] = ($flagRecord) ? $record : $this->getUserCustomRecordFromRecord($record);
             }
 
             //Return

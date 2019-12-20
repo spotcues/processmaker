@@ -2,15 +2,15 @@
 
 use ProcessMaker\Plugins\PluginRegistry;
 
-function __autoload($sClassName)
-{
+spl_autoload_register(function($sClassName) {
     if (!empty(config("system.workspace"))) {
         $sPath = PATH_DB . config("system.workspace") . PATH_SEP . 'classes' . PATH_SEP;
         if (file_exists($sPath . $sClassName . '.php')) {
             require_once $sPath . $sClassName . '.php';
         }
     }
-}
+});
+
 if (!empty(config("system.workspace")) && (!defined('PATH_DATA_SITE') || !defined('PATH_WORKSPACE'))) {
     Bootstrap::setConstantsRelatedWs(config("system.workspace"));
 }

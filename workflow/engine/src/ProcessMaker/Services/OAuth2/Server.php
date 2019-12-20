@@ -50,7 +50,7 @@ class Server implements iAuthenticate
         }
 
         // Pass a storage object or array of storage objects to the OAuth2 server class
-        $this->server = new \OAuth2\Server($this->storage, array('allow_implicit' => true, 'access_lifetime' => 86400));
+        $this->server = new OAuth2Server($this->storage, array('allow_implicit' => true, 'access_lifetime' => 86400));
 
         $this->server->setConfig('enforce_state', false);
 
@@ -178,7 +178,7 @@ class Server implements iAuthenticate
         if (! isset($_SESSION['USER_LOGGED'])) {
             $http = \G::is_https() ? 'https' : 'http';
             $host = $http . '://' . $_SERVER['SERVER_NAME'] . ($_SERVER['SERVER_PORT'] != '80' ? ':' . $_SERVER['SERVER_PORT'] : '');
-            $redirect = urlencode($host.'/'.self::$workspace.$_SERVER['REQUEST_URI']);
+            $redirect = urlencode('/'.self::$workspace.$_SERVER['REQUEST_URI']);
 
             $loginLink = sprintf('%s/sys%s/%s/%s/login/login?u=%s', $host, config("system.workspace"), SYS_LANG, SYS_SKIN, $redirect);
             header('location: ' . $loginLink);

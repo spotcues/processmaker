@@ -21,12 +21,11 @@ use ProcessMaker\Core\JobsManager;
 use ProcessMaker\Core\System;
 use ProcessMaker\Plugins\PluginRegistry;
 
-$fn = '
+register_shutdown_function(function () {
     if (class_exists("Propel")) {
         Propel::close();
     }
-    ';
-register_shutdown_function(create_function('', $fn));
+});
 
 ini_set('memory_limit', '512M');
 

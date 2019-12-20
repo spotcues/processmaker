@@ -207,6 +207,9 @@ class pmTablesProxy extends HttpProxyController
     public function save ($httpData, $alterTable = true)
     {
         try {
+            // Remove temporary Propel folder used by Report Tables and PM Tables (Bug PMC-388)
+            PmTable::removePmtPropelFolder();
+
             $reportTable = new \ProcessMaker\BusinessModel\ReportTable();
 
             return $reportTable->saveStructureOfTable((array)($httpData), $alterTable);
@@ -815,6 +818,9 @@ class pmTablesProxy extends HttpProxyController
             }
 
             fclose($f);
+
+            // Remove temporary Propel folder used by Report Tables and PM Tables (Bug PMC-388)
+            PmTable::removePmtPropelFolder();
 
             //First Validate the file
             $reportTable = new \ProcessMaker\BusinessModel\ReportTable();

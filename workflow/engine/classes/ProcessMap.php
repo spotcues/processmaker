@@ -729,6 +729,7 @@ class ProcessMap
                 $urlEdit = '';
                 $linkEditValue = '';
 
+                $shouldItContinue = false;
                 switch ($aRow['STEP_TYPE_OBJ']) {
                     case 'DYNAFORM':
                         $oDynaform = new Dynaform();
@@ -748,7 +749,8 @@ class ProcessMap
                         $oInputDocument = new InputDocument();
                         $aFields = $oInputDocument->getByUid($aRow['STEP_UID_OBJ']);
                         if ($aFields === false) {
-                            continue;
+                            $shouldItContinue = true;
+                            break;
                         }
                         $sTitle = $aFields['INP_DOC_TITLE'];
                         break;
@@ -757,7 +759,8 @@ class ProcessMap
                         $aFields = $oOutputDocument->getByUid($aRow['STEP_UID_OBJ']);
 
                         if ($aFields === false) {
-                            continue;
+                            $shouldItContinue = true;
+                            break;
                         }
                         $sTitle = $aFields['OUT_DOC_TITLE'];
                         break;
@@ -776,6 +779,9 @@ class ProcessMap
                             }
                         }
                         break;
+                }
+                if ($shouldItContinue === true) {
+                    continue;
                 }
 
                 $aSteps[] = array('STEP_TITLE' => $sTitle, 'STEP_UID' => $aRow['STEP_UID'], 'STEP_TYPE_OBJ' => $aRow['STEP_TYPE_OBJ'], 'STEP_MODE' => $aRow['STEP_MODE'], 'STEP_CONDITION' => $aRow['STEP_CONDITION'], 'STEP_POSITION' => $aRow['STEP_POSITION'], 'urlEdit' => $urlEdit, 'linkEditValue' => $linkEditValue, 'PRO_UID' => $aRow['PRO_UID']

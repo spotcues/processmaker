@@ -1305,8 +1305,8 @@ class Derivation
             $aOldFields = $this->case->loadCase( $aNewCase['APPLICATION'] );
 
             foreach ($aFields as $sOriginField => $sTargetField) {
-                $sOriginField = trim($sOriginField, " @#%?$=");
-                $sTargetField = trim($sTargetField, " @#%?$=");
+                $sOriginField = trim($sOriginField, " @#%?$=&");
+                $sTargetField = trim($sTargetField, " @#%?$=&");
 
                 $aNewFields[$sTargetField] = isset( $appFields['APP_DATA'][$sOriginField] ) ? $appFields['APP_DATA'][$sOriginField] : '';
 
@@ -1620,12 +1620,14 @@ class Derivation
             $originField = str_replace('?', '', $originField);
             $originField = str_replace('$', '', $originField);
             $originField = str_replace('=', '', $originField);
+            $originField = str_replace('&', '', $originField);
             $targetField = str_replace('@', '', $targetField);
             $targetField = str_replace('#', '', $targetField);
             $targetField = str_replace('%', '', $targetField);
             $targetField = str_replace('?', '', $targetField);
             $targetField = str_replace('$', '', $targetField);
             $targetField = str_replace('=', '', $targetField);
+            $targetField = str_replace('&', '', $targetField);
             $newFields[$targetField] = isset($childCaseData[$originField]) ? $childCaseData[$originField] : '';
 
             if (array_key_exists($originField . '_label', $childCaseData)) {

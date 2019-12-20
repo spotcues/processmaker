@@ -9618,6 +9618,7 @@ xCase.extendNamespace = function (path, newClass) {
                 case "text":
                 case "textarea":
                 case "dropdown":
+                case "label":
                     if (row.model.runDependency) {
                         row.model.runDependency();
                     }
@@ -10871,9 +10872,9 @@ xCase.extendNamespace = function (path, newClass) {
                 name;
             this.existHTML = true;
             this.$el.html(this.template(this.model.toJSON()));
-            this._setDataOption();
             this.$el.find("input[type='hidden']").val(this.model.get("data")["label"]);
             if (this.model.get("group") === "grid") {
+                this._setDataOption();
                 hidden = this.$el.find("input[type = 'hidden']")[0];
                 name = this.model.get("name");
                 name = name.substring(0, name.length - 1).concat("_label]");
@@ -10967,6 +10968,10 @@ xCase.extendNamespace = function (path, newClass) {
                 if (value === currentValue && this.firstLoad) {
                     this.model.trigger("change:value", this.model, value);
                 } else {
+                    // force to execute the dependent field if there is
+                    if (this.model.get("group") === "grid" && this.firstLoad) {
+                        this.runDependetOptions();
+                    }
                     this.model.set("value", value);
                 }
                 this.firstLoad = false;
@@ -13526,7 +13531,12 @@ xCase.extendNamespace = function (path, newClass) {
                         id = self.getIdSelect();
                     data = self._forceSelectionIsConfigurated(option, value);
                     newOpt = new Option(data.text, data.id, true, true);
-                    $(id).append(newOpt).trigger('change');
+                    self.model.set("data", {
+                        value: data.id,
+                        label: data.text
+                    });
+                    $(id).append(newOpt);
+                    self.model.set("toDraw", true);
                 }
             );
             return this;
@@ -13586,7 +13596,7 @@ xCase.extendNamespace = function (path, newClass) {
                     value: data['value'] !== undefined ? data['value'] : "",
                     label: data['label'] !== undefined ? data['label'] : ""
                 };
-                this.model.set("data", dataObject);
+                this.setValue(data['value']);
                 this.render();
             }
             return this;
@@ -13787,11 +13797,40 @@ xCase.extendNamespace = function (path, newClass) {
             this.onFieldAssociatedHandler();
             return this;
         },
+        /**
+         * On change handler 
+         * @param {Object} event
+         * @chainable
+         */
         onChange: function (event) {
-            var data;
-            data = this.model.get("data");
-            if (data["label"] !== undefined && data["label"] !== null) {
-                this.model.setFullOptions(data["label"]);
+            var newData,
+                originalType = this.model.get("originalType"),
+                data = this.model.get("data");
+            switch (originalType) {
+                case "checkbox":
+                    newData = this.model.getCheckBoxData(data.value);
+                    break;
+                case "checkgroup":
+                    newData = this.model.getCheckGroupData(data.value);
+                    break;
+                case "dropdown":
+                    newData = this.model.getDropDownData(data.value);
+                    break;
+                case "datetime":
+                    newData = this.model.getDateTimeData(data.value);
+                    break;
+                case "radio":
+                    newData = this.model.getRadioData(data.value);
+                    break;
+                case "suggest":
+                    newData = this.model.getSuggestData(data.value);
+                    break;
+                default:
+                    newData = this.model.getTextBoxData(data.value);
+                    break;
+            }
+            if (newData["label"] !== undefined && newData["label"] !== null) {
+                this.model.setFullOptions(newData["label"]);
             }
             return this;
         },
@@ -17972,9 +18011,7 @@ xCase.extendNamespace = function (path, newClass) {
          */
         onChangeData: function () {
             this.setDataToSuggest();
-            if (!this.get("view").firstLoad) {
-                this.executeDependentsEvents();
-            }
+            this.executeDependentsEvents();
             return this;
         },
         /**
@@ -19314,8 +19351,7 @@ xCase.extendNamespace = function (path, newClass) {
                 newValue;
             if (_.isArray(response)) {
                 this.mergeRemoteOptions(response);
-                // Force to update the values using the DOM
-                this.get("view").updateValues({}, (this.get("options")[0] && this.get("options")[0].value) ? this.get("options")[0].value : '');
+                this.setFirstOptionInData();
             }
             newValue = this.get("value");
             if (_.isArray(response) && response.length > 0 && this.get("showDependentSpinners") && currentValue !== newValue) {

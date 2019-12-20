@@ -985,7 +985,7 @@ class PmDynaform
                         }
                         break;
                     case "subquery":
-                        if (strpos($sAlias, $sBaseExpr, 0) != 0) {
+                        if (strpos($sAlias, $sBaseExpr, 0) !== 0) {
                             $select .= $sAlias;
                         } else {
                             $select .= $sBaseExpr . " AS " . $sAlias;
@@ -1023,7 +1023,7 @@ class PmDynaform
                                 . $dt[$key]["table"]
                                 . ($dt[$key]["table"] == $dt[$key]["alias"] ? "" : " " . $dt[$key]["alias"]) . " "
                                 . $dt[$key]["ref_type"] . " "
-                                . $dt[$key]["ref_clause"];
+                                . rtrim($dt[$key]["ref_clause"], " INNER");
                     }
                 }
             }
