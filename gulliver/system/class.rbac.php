@@ -211,6 +211,24 @@ class RBAC
                 'showDynaformListHistory' => ['PM_CASES'],
                 'dynaformChangeLogViewHistory' => ['PM_CASES'],
                 'historyDynaformGridPreview' => ['PM_CASES'],
+            ],
+            'usersAjax.php' => [
+                'countryList' => ['PM_LOGIN'],
+                'stateList' => ['PM_LOGIN'],
+                'locationList' => ['PM_LOGIN'],
+                'usersList' => ['PM_USERS,PM_EDIT_USER_PROFILE_REPLACED_BY'],
+                'availableCalendars' => ['PM_LOGIN'],
+                'rolesList' => ['PM_LOGIN'],
+                'getUserLogedRole' => ['PM_USERS,PM_EDIT_USER_PROFILE_PASSWORD'],
+                'languagesList' => ['PM_LOGIN'],
+                'saveUser' => [], // This action is validated with custom logic in the same page
+                'savePersonalInfo' => [], // This action is validated with custom logic in the same page
+                'userData' => [], // This action is validated with custom logic in the same page
+                'defaultMainMenuOptionList' => ['PM_LOGIN'],
+                'defaultCasesMenuOptionList' => ['PM_LOGIN'],
+                'testPassword' => ['PM_USERS,PM_EDIT_USER_PROFILE_PASSWORD'],
+                'testUsername' => ['PM_USERS,PM_EDIT_USER_PROFILE_USERNAME'],
+                'passwordValidate' => ['PM_USERS,PM_EDIT_USER_PROFILE_PASSWORD'],
             ]
         ];
         $this->aliasPermissions['PM_CASES'] = [self::PM_GUEST_CASE];

@@ -1,30 +1,30 @@
-[19 hours ago] de8ce865e  (origin/bugfix/PMC-1503) PMC-1503 <Andrea Adamczyk>
-[3 days ago] 635b36534  (origin/bugfix/PMC-1498) PMC-1498 <Paula Quispe>
-[2 weeks ago] 796405a01  (origin/bugfix/PMC-1452) PMC-1452 <Andrea Adamczyk>
-[3 weeks ago] 7fde8b45d  (origin/bugfix/PMC-1447) PMC-1447 Warning in processes_Import_Ajax.php <Roly Rudy Gutierrez Pinto>
-[3 weeks ago] b00def4ad  (origin/bugfix/PMC-1446) PMC-1446 PHP Warning: count(): Parameter must be an array or an object that implements Countable <Roly Rudy Gutierrez Pinto>
-[3 weeks ago] 96a29a453  (origin/bugfix/PMC-1445) PMC-1445 Update gitignore file <Roly Rudy Gutierrez Pinto>
-[3 weeks ago] 09a1398e1  (origin/bugfix/PMC-1441) PMC-1441 get_class() expects parameter 1 to be object <Roly Rudy Gutierrez Pinto>
-[3 weeks ago] 2dd0d34bf  (origin/bugfix/PMC-1418) PMC-1418 Use of __autoload() function is deprecated since PHP 7.2 <Roly Rudy Gutierrez Pinto>
-[3 weeks ago] 08639eba0  (origin/bugfix/PMC-1404) PMC-1404 <Andrea Adamczyk>
-[3 weeks ago] 4cbf1f6f5  (origin/bugfix/PMC-1416) PMC-1416 <Andrea Adamczyk>
-[3 weeks ago] 95a7f10ad  (origin/bugfix/PMC-1422) PMC-1422 Warning in charts.php <Roly Rudy Gutierrez Pinto>
-[3 weeks ago] db90c5554  (origin/bugfix/PMC-1423) PMC-1423 Warning in processTemplate.php <Roly Rudy Gutierrez Pinto>
-[3 weeks ago] 9d5faa60f  (origin/bugfix/PMC-1406_B) PMC-1406_B <Andrea Adamczyk>
-[3 weeks ago] 5da22ee5b  (origin/bugfix/PMC-1419) PMC-1419 Warning in Cases.php <Roly Rudy Gutierrez Pinto>
-[3 weeks ago] 7c617f236  (origin/bugfix/PMC-1428) PMC-1428 <Paula Quispe>
-[3 weeks ago] eea2b70c7  (origin/bugfix/PMC-1430) PMC-1430 <Julio Cesar Laura Avendaño>
-[3 weeks ago] 18a16a598  (origin/bugfix/PMC-1414) PMC-1414 <Andrea Adamczyk>
-[3 weeks ago] 1ffe41698  (origin/bugfix/PMC-1415) PMC-1415 Warning in class.controller.php <Roly Rudy Gutierrez Pinto>
-[3 weeks ago] d1e70f9bc  (origin/bugfix/PMC-1405) PMC-1405 The body of a heredoc/nowdoc can not contain the heredoc/nowdoc closing marker as text at the start of a line since PHP 7.3. <Roly Rudy Gutierrez Pinto>
-[3 weeks ago] 5b67edbb5  (origin/bugfix/PMC-1417) PMC-1417 <Paula Quispe>
-[3 weeks ago] 22c02f306  (origin/bugfix/PMC-1425) PMC-1425 <Paula Quispe>
-[3 weeks ago] 4da3d9cf6  (origin/bugfix/PMC-1424) PMC-1424 <Paula Quispe>
-[3 weeks ago] 30e859779  (origin/bugfix/PMC-1427) PMC-1427 <Paula Quispe>
-[3 weeks ago] a3796b57d  (origin/bugfix/PMC-1426) PMC-1426 <Paula Quispe>
-[3 weeks ago] 9af3fb3f6  (origin/bugfix/PMC-1407) PMC-1407 "$this" can no longer be used in a plain function or method since PHP 7.1. <Roly Rudy Gutierrez Pinto>
-[3 weeks ago] f7d0bb6ab  (origin/bugfix/PMC-1354) PMC-1354 <Andrea Adamczyk>
-[3 weeks ago] 0b28a2ba9  (origin/bugfix/PMC-1403) PMC-1403 Targeting a 'switch' control structure with a 'continue' statement is strongly discouraged and will throw a warning as of PHP 7.3. <Roly Rudy Gutierrez Pinto>
-[3 weeks ago] 710c33b3b  (origin/bugfix/PMC-1401) PMC-1401 warning issues in class.phpSqlParser.php <Roly Rudy Gutierrez Pinto>
-[3 weeks ago] 1283bc5d2  (origin/bugfix/PMC-1395) PMC-1395 Fatal error: Declaration of remove() <Roly Rudy Gutierrez Pinto>
-[3 weeks ago] 3b3dd1b0a  (origin/bugfix/PMC-1398) PMC-1398 <Andrea Adamczyk>
+[7 days ago] f75744548  (origin/bugfix/PMC-1540) PMC-1540 <Paula Quispe>
+[2 weeks ago] 8a24a0a91  PMC-1459 It is not possible to export processes <Roly Rudy Gutierrez Pinto>
+[3 weeks ago] c87455335  (origin/bugfix/PMC-1396) PMC-1396 <Andrea Adamczyk>
+[3 weeks ago] de8ce865e  (origin/bugfix/PMC-1503) PMC-1503 <Andrea Adamczyk>
+[3 weeks ago] a4fdd3bfb  (origin/bugfix/PMC-1399) PMC-1399 <Andrea Adamczyk>
+[3 weeks ago] 635b36534  (origin/bugfix/PMC-1498) PMC-1498 <Paula Quispe>
+[4 weeks ago] 4a9a737b0  (origin/bugfix/PMC-1412) PMC-1412 <Andrea Adamczyk>
+[4 weeks ago] ccc8b0348  (origin/bugfix/PMC-1409) PMC-1409 <Julio Cesar Laura Avendaño>
+[4 weeks ago] 12fe9241f  (origin/bugfix/PMC-131) PMC-131 In section Admin->Users->Groups the second page of the list always shows double the corresponding amount of groups <Roly Rudy Gutierrez Pinto>
+[4 weeks ago] 17346f273  (origin/bugfix/PMC-1489) PMC-1489 ErrorException: Function create_function() is deprecated in PHP7.3 with smarty 2.6.30 <Roly Rudy Gutierrez Pinto>
+[4 weeks ago] e62aa45a2  (origin/bugfix/PMC-1442) PMC-1442 <Paula Quispe>
+[4 weeks ago] ce0fb8b1f  (origin/feature/PMC-1478) Update to ensure setting of cache entry for ee contents if cache does not have it stored. <Taylor Dondich>
+[4 weeks ago] 2178440c8  (origin/feature/PMC-1478-A) PMC-1478: Missing 'use' statementswq <Julio Cesar Laura Avendaño>
+[4 weeks ago] 217c340f4  PMC-1478 <Taylor Dondich>
+[4 weeks ago] 1302aec54  Add return null just for safety. <Taylor Dondich>
+[4 weeks ago] 3d5e3339b  Update one last place where EE is read. <Taylor Dondich>
+[4 weeks ago] a9f6bd25e  Update any references to reading ee file. Update code style. Update prefix of key for workspace specific. <Taylor Dondich>
+[4 weeks ago] 292c35c13  (origin/bugfix/PMC-1453-A) PMC-1453 <Paula Quispe>
+[4 weeks ago] 4d7ee8029  Update to have registerEE utilize cache behavior for loading and storing from ee file. <Taylor Dondich>
+[5 weeks ago] 95a0a9f0a  (origin/bugfix/PMC-1472) PMC-1472 <Paula Quispe>
+[5 weeks ago] 796405a01  (origin/bugfix/PMC-1452) PMC-1452 <Andrea Adamczyk>
+[6 weeks ago] 7fde8b45d  (origin/bugfix/PMC-1447) PMC-1447 Warning in processes_Import_Ajax.php <Roly Rudy Gutierrez Pinto>
+[6 weeks ago] b00def4ad  (origin/bugfix/PMC-1446) PMC-1446 PHP Warning: count(): Parameter must be an array or an object that implements Countable <Roly Rudy Gutierrez Pinto>
+[6 weeks ago] 96a29a453  (origin/bugfix/PMC-1445) PMC-1445 Update gitignore file <Roly Rudy Gutierrez Pinto>
+[6 weeks ago] 09a1398e1  (origin/bugfix/PMC-1441) PMC-1441 get_class() expects parameter 1 to be object <Roly Rudy Gutierrez Pinto>
+[6 weeks ago] 2dd0d34bf  (origin/bugfix/PMC-1418) PMC-1418 Use of __autoload() function is deprecated since PHP 7.2 <Roly Rudy Gutierrez Pinto>
+[6 weeks ago] 08639eba0  (origin/bugfix/PMC-1404) PMC-1404 <Andrea Adamczyk>
+[6 weeks ago] 4cbf1f6f5  (origin/bugfix/PMC-1416) PMC-1416 <Andrea Adamczyk>
+[6 weeks ago] 95a7f10ad  (origin/bugfix/PMC-1422) PMC-1422 Warning in charts.php <Roly Rudy Gutierrez Pinto>
+[6 weeks ago] db90c5554  (origin/bugfix/PMC-1423) PMC-1423 Warning in processTemplate.php <Roly Rudy Gutierrez Pinto>

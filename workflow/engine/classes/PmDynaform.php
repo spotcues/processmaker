@@ -357,6 +357,7 @@ class PmDynaform
                                 $option->value = isset($row[0]) ? $row[0] : "";
                                 $option->label = isset($row[1]) ? $row[1] : "";
                                 $json->optionsSql[] = $option;
+                                $json->queryOutputData[] = $option;
                             }
                         }
                         if ($value === "suggest" && isset($json->queryField) && $json->queryField == true) {

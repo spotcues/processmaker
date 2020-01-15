@@ -6407,8 +6407,8 @@ xCase.extendNamespace = function (path, newClass) {
                             view: PMDynaform.view.Signature_mobile
                         },
                         "imagemobile": {
-                            model: PMDynaform.model.FileMobile,
-                            view: PMDynaform.view.FileMobile
+                            model: PMDynaform.model.ImageFieldModel,
+                            view: PMDynaform.view.ImageFieldView
                         },
                         "audiomobile": {
                             model: PMDynaform.model.FileMobile,
@@ -8365,9 +8365,6 @@ xCase.extendNamespace = function (path, newClass) {
                 row = [];
                 for (k = 0; k < gridpanel[i].length; k += 1) {
                     if (gridpanel[i][k].validate) {
-                        if (gridpanel[i][k].firstLoad) {
-                            gridpanel[i][k].firstLoad = false;
-                        }
                         if (event) {
                             gridpanel[i][k].validate(event);
                             if (!gridpanel[i][k].model.get("valid")) {
@@ -8992,6 +8989,7 @@ xCase.extendNamespace = function (path, newClass) {
 
             buttonRemove.className = "glyphicon glyphicon-trash btn btn-danger btn-sm";
             buttonRemove.setAttribute("data-row", index);
+            buttonRemove.setAttribute("aria-label", this.model.get("removeAriaLabel") + " #" + index);
 
             $(buttonRemove).data("row", index);
             $(buttonRemove).on("click", function (event) {
@@ -9391,9 +9389,6 @@ xCase.extendNamespace = function (path, newClass) {
             tr.appendChild(tdNumber);
             for (k = 0; k < this.columnsModel.length; k += 1) {
                 cloneModel = jQuery.extend(true, {}, this.columnsModel[k]);
-                if (_.isArray(dataRow) &&  dataRow.length > 0) {
-                    cloneModel.optionsSql = [];
-                }
                 cellModel = null;
                 product = cloneModel.product;
                 nameToPostControl = this.createPostVariables(numberRow + 1, cloneModel.name);
@@ -9986,10 +9981,10 @@ xCase.extendNamespace = function (path, newClass) {
                         }
                     }
                 }
-                if (!_.isEmpty(rowDeletedData)) { 
+                if (!_.isEmpty(rowDeletedData)) {
                     deletedData[i + 1] = rowDeletedData;
                 }
-               
+
             }
             return deletedData;
         },
@@ -10659,28 +10654,30 @@ xCase.extendNamespace = function (path, newClass) {
                 dependency,
                 i,
                 postRender = true;
-            if (this.firstLoad) {
-                if (!this.dirty && parent) {
-                    this.tagControl.empty();
-                    value = this.model.get("value") || "";
-                    dependency = this.model.get("dependency");
-                    for (i = 0; i < dependency.length; i += 1) {
-                        if (parent.model.get("type") === "grid") {
-                            item = parent.model.findCellInRow(this.model.get("row"), dependency[i]);
-                        } else {
-                            item = parent.model.get("fields")[dependency[i]];
+            if (_.isArray(this.model.get("dependency")) && this.model.get("dependency").length) {
+                if (this.firstLoad) {
+                    if (!this.dirty && parent) {
+                        this.tagControl.empty();
+                        value = this.model.get("value") || "";
+                        dependency = this.model.get("dependency");
+                        for (i = 0; i < dependency.length; i += 1) {
+                            if (parent.model.get("type") === "grid") {
+                                item = parent.model.findCellInRow(this.model.get("row"), dependency[i]);
+                            } else {
+                                item = parent.model.get("fields")[dependency[i]];
+                            }
+                            if (item) {
+                                data[dependency[i]] = item.get("value");
+                            }
                         }
-                        if (item) {
-                            data[dependency[i]] = item.get("value");
-                        }
+                        this.model.set("showDependentSpinners", false);
+                        this.model.recoverySyncRemoteOptions(data, postRender);
+                        this.model.trigger("change:options");
+                        this.tagControl.val(value);
+                        this.dirty = true;
                     }
-                    this.model.set("showDependentSpinners", false);
-                    this.model.recoverySyncRemoteOptions(data, postRender);
-                    this.model.trigger("change:options");
-                    this.tagControl.val(value);
-                    this.dirty = true;
+                    this.firstLoad = false;
                 }
-                this.firstLoad = false;
             }
             return this;
         },
@@ -10694,7 +10691,7 @@ xCase.extendNamespace = function (path, newClass) {
             this.formulaFieldsAssociated = [];
             this.model.on("change:value", this.eventListener, this, {change: true});
             this.model.on("change:options", this.redrawOptions, this);
-            this.model.on("change:toDraw", this.render, this);
+            this.model.on("change:toDraw", this.refreshHTML, this);
             this.model.on("change:data", this.onChangeData, this);
         },
         /**
@@ -10819,7 +10816,7 @@ xCase.extendNamespace = function (path, newClass) {
             var drpValue;
             drpValue = this.$el.find("select").val() || "";
             this.model.set({value: drpValue}, {validate: true});
-            if (this.model.get("enableValidate") && !this.firstLoad) {
+            if (this.model.get("enableValidate")) {
                 if (this.validator) {
                     this.validator.$el.remove();
                     this.$el.removeClass('has-error');
@@ -10861,11 +10858,26 @@ xCase.extendNamespace = function (path, newClass) {
             return this;
         },
         /**
-         * Gets the html control using its class identifier
+         * Get the html control using its class identifier
          * @returns {Object}
          */
         getHTMLControl: function () {
             return this.$el.find("select");
+        },
+        /**
+         * Refresh dropdown in grids
+         * @return {DropDownView}
+         */
+        refreshHTML: function () {
+            if (this.existHTML && this.model.get("group") === "grid") {
+                if (_.isArray(this.model.get("dependency")) && this.model.get("dependency").length) {
+                    this._setOptions([this.model.get("data")]);
+                    this.tagHiddenToLabel.val(this.model.get("data")["label"]);
+                } else {
+                    this.render();
+                }
+            }
+            return this;
         },
         render: function () {
             var hidden,
@@ -10874,7 +10886,6 @@ xCase.extendNamespace = function (path, newClass) {
             this.$el.html(this.template(this.model.toJSON()));
             this.$el.find("input[type='hidden']").val(this.model.get("data")["label"]);
             if (this.model.get("group") === "grid") {
-                this._setDataOption();
                 hidden = this.$el.find("input[type = 'hidden']")[0];
                 name = this.model.get("name");
                 name = name.substring(0, name.length - 1).concat("_label]");
@@ -10950,7 +10961,7 @@ xCase.extendNamespace = function (path, newClass) {
             return this;
         },
         _setDataOption: function () {
-            var data = this.model.get("data");
+            var data = this.model.get("options");
             if (data && data["value"]) {
                 this._setOptions([data]);
             }
@@ -11185,9 +11196,23 @@ xCase.extendNamespace = function (path, newClass) {
                     label: option.label
                 });
                 this.$el.find(".content-print").text(option.label);
+                //update aria-label
+                this.updateAccessibility({ariaLabel: option.label, tagOption: tagOption});
                 this.model.attributes.value = option.value;
                 this.model.attributes.keyLabel = option.label;
                 this.updateValueHiddenControl(option.label);
+            }
+            return this;
+        },
+        /**
+         * Update accessibility HTML attributes
+         * @param {Object} params 
+         * @chainable
+         */
+        updateAccessibility: function (params) {
+            if (this.model.get("ariaLabelVisible")) {
+                this.$el.find("input[type='radio']").removeAttr("aria-label");
+                params.tagOption.attr("aria-label", params.ariaLabel);
             }
             return this;
         },
@@ -12543,10 +12568,26 @@ xCase.extendNamespace = function (path, newClass) {
             } else {
                 dataChecked = this.getDataChecked();
             }
+            this.updateAccessibility({data: dataChecked});
             this.model.set("labelsSelected", dataChecked.labels);
             this.model.attributes.value = dataChecked.values;
             this.updateDataModel(dataChecked.values, dataChecked.labels);
             this.$el.find("input[type='hidden']").val(JSON.stringify(dataChecked.labels));
+            return this;
+        },
+        /**
+         * Update accessibility HTML attributes
+         * @param {Object} params
+         * @chainable
+         */
+        updateAccessibility: function (params) {
+            var i;
+            if (this.model.get("ariaLabelVisible")) {
+                this.$el.find("input[type='checkbox']").removeAttr("aria-label");
+                for (i = 0; i < params.data.values.length; i += 1) {
+                    this.$el.find("input[type='checkbox'][value=" + params.data.values[i]+"]").attr("aria-label", params.data.labels[i]);
+                }
+            }
             return this;
         },
         getDataChecked: function () {
@@ -12802,11 +12843,26 @@ xCase.extendNamespace = function (path, newClass) {
                 this.$el.find("input[type='checkbox']").attr("name", "");
                 this.$el.find("input[type='hidden']").attr("name", "");
             }
+            this.updateAccessibility({ariaLabel: this.model.get("data")["label"]});
             this.$el.find(".content-print").text(this.model.get("data")["label"]);
             this.tagControl = this.$el.find(".pmdynaform-checkbox-items");
             this.tagHiddenToLabel = this.$el.find("input[type='hidden']");
             this.keyLabelControl = this.$el.find("input[type='hidden']");
             PMDynaform.view.Field.prototype.render.apply(this, arguments);
+            return this;
+        },
+        /**
+         * Update accessibility HTML attributes
+         * @param {Object} params 
+         * @chainable
+         */
+        updateAccessibility: function (params) {
+            // for accessibilty arial label
+            if (this.model.get("ariaLabelVisible") && this.model.get("value") === "1") {
+                this.$el.find("input[type='checkbox']").eq(0).attr("aria-label", params.ariaLabel);
+            } else {
+                this.$el.find("input[type='checkbox']").eq(0).removeAttr("aria-label");
+            }
             return this;
         },
         validate: function () {
@@ -12890,6 +12946,8 @@ xCase.extendNamespace = function (path, newClass) {
             }
             this.updateDataModel(newValue);
             data = this.model.get("data");
+            firstCheckbox.val(data.value);
+            this.updateAccessibility({ariaLabel: data.label});
             this.$el.find(".content-print").text(data.label);
             this.$el.find("input[type='hidden']").val(data.label);
             return this;
@@ -13385,6 +13443,7 @@ xCase.extendNamespace = function (path, newClass) {
             }
             this.firstLoad = false;
             this.$el.find(".content-print").text(this.previousLabel);
+            this.$el.find(".select2.select2-container").attr("aria-label", this.model.get("ariaLabel"));
             PMDynaform.view.Field.prototype.render.apply(this, arguments);
             return this;
     },
@@ -13536,7 +13595,6 @@ xCase.extendNamespace = function (path, newClass) {
                         label: data.text
                     });
                     $(id).append(newOpt);
-                    self.model.set("toDraw", true);
                 }
             );
             return this;
@@ -15984,7 +16042,8 @@ xCase.extendNamespace = function (path, newClass) {
         validator: null,
         messageRequired: "This field is required.".translate(),
         events: {
-            "click buttonImage": "onClickButtonMobile"
+            "click buttonImage": "onClickButtonMobile",
+            "click .pmdynaform-file-resizeimage": "onClickImage"
         },
         initialize: function () {
             return this;
@@ -16029,6 +16088,24 @@ xCase.extendNamespace = function (path, newClass) {
             project.requestManager.getImage(respData);
             return this;
         },
+        /**
+         * Listen OnclickEvent for preview a image 
+         * @param event
+         * @returns {FileMobile}
+         */
+        onClickImage: function (event) {
+            var respData,
+                project = this.model.get("project");
+            respData = {
+                idField: this.model.get("name"),
+                docUid: this.model.get("inp_doc_uid"),
+                idFile: event.target.id,
+                type: "image",
+                availableOffline: this.model.get("availableOffline")
+            };
+            project.requestManager.previewImage(respData);
+            return this;
+        }, 
         /**
          * Listen OnclickEvent for Audio Control
          * @param event
@@ -16107,17 +16184,25 @@ xCase.extendNamespace = function (path, newClass) {
         },
         render: function () {
             var dataFiles,
-                nameField;
+                nameField,
+                options =  _.extend(
+                    this.model.toJSON(), 
+                    {
+                        dottedBox: !(this.model.get("mode") === "view" || (this.model.get("mode") === "parent" && this.model.get("parent").get("mode") === "view"))
+                    }
+                );
 
             if (PMDynaform.core.ProjectMobile) {
-                this.createBoxPlus();
-                this.$el.html(this.template(this.model.toJSON()));
+                if (this.model.get("mode") === "edit" || (this.model.get("mode") === "parent" && this.model.get("parent").get("mode") === "edit")) {
+                    this.createBoxPlus();
+                }
+                this.$el.html(this.template(options));
                 if (this.model.get("hint")) {
                     this.enableTooltip();
                 }
                 this.$el.find(".pmdynaform-file-droparea-ext").append(this.boxPlus);
             } else {
-                this.$el.html(this.template(this.model.toJSON()));
+                this.$el.html(this.template(options));
                 dataFiles = this.project.mobileDataControls;
                 nameField = this.model.get("name");
                 if (dataFiles.hasOwnProperty(nameField)) {
@@ -16275,7 +16360,7 @@ xCase.extendNamespace = function (path, newClass) {
                 template.className = "pmdynaform-file-containerimage";
 
                 resizeImage.className = "pmdynaform-file-resizeimage";
-                resizeImage.innerHTML = '<img class="pmdynaform-image-ext" src="' + newSrc + '"><span class="pmdynaform-file-overlay"><span class="pmdynaform-file-updone"></span></span>';
+                resizeImage.innerHTML = '<img id="'+ file.id + '" class="pmdynaform-image-ext" src="' + newSrc + '"><span class="pmdynaform-file-overlay"><span class="pmdynaform-file-updone"></span></span>';
                 preview.id = rand;
                 preview.className = "pmdynaform-file-preview";
                 preview.appendChild(resizeImage);
@@ -16434,6 +16519,466 @@ xCase.extendNamespace = function (path, newClass) {
     });
 
     PMDynaform.extendNamespace("PMDynaform.view.FileMobile", FileMobile);
+}());
+
+(function () {
+    var ImageFieldView = PMDynaform.view.Field.extend({
+        eventsMobile: {
+            PREVIEW: "image/preview",
+            UPLOAD_PROGRESS: "image/uploadProgress",
+            CANCEL: "image/request/cancel",
+            DELETE: "image/delete",
+            THUMBNAIL: "imageThumbnail/request"
+        },
+        template: _.template($("#tpl-extfile").html()),
+        templateImage: _.template($("#tpl-extfile").html()),
+        templatePlusImage: _.template($("#tpl-extfile-plus-image").html()),
+        templateRenderingWeb: _.template($("#tpl-multimedia-renderingWeb").html()),
+        boxPlus: null,
+        viewsFiles: [],
+        mediaVideos: [],
+        validator: null,
+        messageRequired: "This field is required.".translate(),
+        events: {
+            "click buttonImage": "onClickAddImage",
+            "click .pmdynaform-file-resizeimage": "onClickPreviewImage",
+        },
+        initialize: function () {
+            return this;
+        },
+
+        /**
+         * Delete File View
+         * @param fileId
+         */
+        deleteFileView: function (fileId) {
+            var that = this;
+            var view = _.find(that.viewsFiles, function (obj) {return obj.id === fileId;});
+            if (view && view.data.remove) {
+                view.data.remove();
+            }
+        },
+        /**
+         * Listen OnclickEvent for Mobile Controls
+         * @param event
+         * @returns {FileMobile}
+         */
+        onClickAddImage: function (event) {
+            var type = this.model.get("type"),
+                that = this,
+                respData,
+                project = this.model.get("project");
+            respData = {
+                idField: this.model.get("name"),
+                docUid: this.model.get("inp_doc_uid"),
+                type: "image",
+                galleryEnabled: this.model.get("galleryEnabled"),
+                cameraEnabled: this.model.get("cameraEnabled")
+            };
+            project.requestManager.getImage(respData);
+
+            this.model.get("project").requestManager.channelEvents(
+                {
+                    handler: this.model.get("id"),
+                    type: this.eventsMobile.UPLOAD_PROGRESS,
+                    bridge: false,
+                    data: {},
+                    callback: function (event) {
+                        that.updateProgressBar(event);
+                    }
+                });
+
+            event.preventDefault();
+            event.stopPropagation();
+            return this;
+        },
+        /**
+         * Cancel Upload Image, remove the file from model and view
+         * @param event
+         * @returns {ImageFieldView}
+         */
+        onCancelUpload: function (event) {
+            var that = this;
+            this.model.get("project").requestManager.channelEvents(
+                {
+                    handler: this.model.get("id"),
+                    type: this.eventsMobile.CANCEL,
+                    bridge: true,
+                    data: {
+                        idField: this.model.get("name"),
+                        idFile: event.currentTarget.id,
+                        id: this.model.get("id")
+                    },
+                    callback: function (event) {
+                        that.cancelProgressBar(event.idFile);
+                    }
+                });
+            this.model.deleteFile(event.currentTarget.id);
+            this.deleteFileView(event.currentTarget.id);
+            event.preventDefault();
+            event.stopPropagation();
+            return this;
+        },
+        /**
+         * Cancel progressbar in image
+         * @param idFile
+         */
+        cancelProgressBar: function (idFile) {
+            this.model.set("blockPreviewImage", false);
+            this.$el.find("img").css("opacity", 1);
+            $("#" + idFile).find("progress").css("display", "none");
+            $("#" + idFile).find(".image-cancel").css("display", "none");
+        },
+        /**
+         * The update method about upload Progress bar from mobile api
+         * @param data
+         */
+        updateProgressBar: function (data) {
+            if (data.value < 100) {
+                $("#" + data.idFile).find("progress").css("display", "block");
+                this.model.set("blockPreviewImage", true);
+                this.model.set("fileInProgress", data.idFile);
+                this.$el.find("img").css("opacity", 0.2);
+                $("#" + data.idFile).find(".image-cancel-icon").css("marginTop", (this.$el.find("img").height() - 42) / 2);
+                $("#" + data.idFile).find(".image-cancel").css("display", "block");
+
+            } else {
+                this.model.set("blockPreviewImage", false);
+                this.model.set("fileInProgress", "");
+                this.$el.find("img").css("opacity", 1);
+                $("#" + data.idFile).find("progress").css("display", "none");
+                $("#" + data.idFile).find(".image-cancel").css("display", "none");
+            }
+            $("#" + data.idFile).find("progress")[0].value = data.value;
+        },
+
+        /**
+         * Listen OnclickEvent for preview a image
+         * @param event
+         * @returns {FileMobile}
+         */
+        onClickPreviewImage: function (event) {
+            var respData,
+                that = this,
+                project = this.model.get("project");
+            respData = {
+                idField: this.model.get("name"),
+                docUid: this.model.get("inp_doc_uid"),
+                idFile: event.currentTarget.id,
+                type: "image",
+                value: this.model.get("files"),
+                availableOffline: this.model.get("availableOffline")
+            };
+
+            this.model.get("project").requestManager.channelEvents({
+                handler: this.model.get("id"),
+                type: this.eventsMobile.DELETE,
+                bridge: false,
+                data: {},
+                callback: function (event) {
+                    that.model.deleteFile(event.idFile);
+                    that.deleteFileView(event.idFile);
+                }
+            });
+
+            if (this.model.get("blockPreviewImage") === false) {
+                this.model.get("project").requestManager.channelEvents({
+                    handler: this.model.get("id"),
+                    type: this.eventsMobile.PREVIEW,
+                    bridge: true,
+                    data: respData,
+                    callback: function (event) {
+                    }
+                });
+            } else if (this.model.get("fileInProgress") === event.currentTarget.id) {
+                this.onCancelUpload(event);
+            }
+            return this;
+        },
+        /**
+         * Validate a File Mobile Controls
+         * @returns {FileMobile}
+         */
+        validate: function () {
+            if (this.validator) {
+                this.validator.$el.remove();
+                if (_.isFunction(this.removeStyleError)) {
+                    this.removeStyleError();
+                }
+            }
+
+            this.model.validate();
+            if (!this.model.get("valid")) {
+                this.validator = new PMDynaform.view.Validator({
+                    model: new Backbone.Model({
+                        message: {
+                            required: this.model.get("requiredFieldErrorMessage") || this.messageRequired
+                        }
+                    })
+                });
+                this.$el.find(".pmdynaform-field-control").append(this.validator.$el);
+                if (_.isFunction(this.applyStyleError)) {
+                    this.applyStyleError();
+                }
+            }
+            return this;
+        },
+        /**
+         * This function apply style error in this field
+         * @returns {FileUpload}
+         */
+        applyStyleError: function () {
+            this.$el.addClass("has-error has-feedback");
+            this.$el.find(".pmdynaform-file-droparea-ext").addClass("file-mobile-error");
+            return this;
+        },
+        /**
+         * This function remove style error in this field
+         * @returns {FileUpload}
+         */
+        removeStyleError: function () {
+            this.$el.removeClass('has-error has-feedback');
+            this.$el.find(".pmdynaform-file-droparea-ext").removeClass("file-mobile-error");
+            return this;
+        },
+        /**
+         * Render component, in two format web and mobile
+         * @returns {ImageFieldView}
+         */
+        render: function () {
+            var dataFiles,
+                nameField,
+                options = _.extend(
+                    this.model.toJSON(),
+                    {
+                        dottedBox: !(this.model.get("mode") === "view" || (this.model.get("mode") === "parent" && this.model.get("parent").get("mode") === "view"))
+                    }
+                );
+
+            if (PMDynaform.core.ProjectMobile) {
+                if (this.model.get("mode") === "edit" || (this.model.get("mode") === "parent" && this.model.get("parent").get("mode") === "edit")) {
+                    this.boxPlus = $(this.templatePlusImage());
+                }
+                this.$el.html(this.template(options));
+                if (this.model.get("hint")) {
+                    this.enableTooltip();
+                }
+                this.$el.find(".pmdynaform-file-droparea-ext").append(this.boxPlus);
+            } else {
+                this.$el.html(this.template(options));
+                dataFiles = this.project.mobileDataControls;
+                nameField = this.model.get("name");
+                if (dataFiles.hasOwnProperty(nameField)) {
+                    this.renderWeb(dataFiles[nameField]);
+                }
+            }
+            PMDynaform.view.Field.prototype.render.apply(this, arguments);
+            return this;
+        },
+        /**
+         * controls renders video, audio and image, according to the values
+         * obtained from the mobile version.
+         * @param items, is the list of the elements multimedia.
+         * @returns {HTMLElement}
+         */
+        renderWeb: function (items) {
+            var ieVersion,
+                type = this.model.get("type"),
+                i,
+                viewFiles,
+                elements = [],
+                container = this.$el.find(".pmdynaform-file-control"),
+                downloadLink,
+                data,
+                linkService = "showDocument";
+            if (_.isArray(items)) {
+                this.model.set({"data": {"value": items}});
+                container.empty();
+                ieVersion = PMDynaform.core.Utils.checkValidIEVersion();
+                if (type === "imageMobile") {
+                    elements = this.model.remoteProxyData(items);
+                } else {
+                    for (i = 0; i < items.length; i += 1) {
+                        data = {
+                            uid: items[i],
+                            type: linkService
+                        };
+                        downloadLink = this.project.webServiceManager.showDocument(data);
+                        data = $.extend(true, this.model.urlFileStreaming(items[i]), {downloadLink: downloadLink});
+                        elements.push(data);
+                    }
+                }
+                viewFiles = this.templateRenderingWeb({
+                    elements: elements,
+                    type: type,
+                    ieVersion: ieVersion
+                });
+                container.append(viewFiles);
+            }
+        },
+        /**
+         * Set File data from mobile api
+         * @param arrayFiles
+         */
+        setFilesRFC: function (arrayFiles) {
+            var type = this.model.get("type"), max = arrayFiles.length ? arrayFiles.length : 0,
+                i,
+                response;
+
+            if (PMDynaform.core.ProjectMobile) {
+                response = arrayFiles;
+            } else {
+                if (max) {
+                    response = this.model.remoteProxyData(arrayFiles);
+                }
+            }
+            if (response && response.length) {
+                for (i = 0; i < response.length; i += 1) {
+                    this.updateFiles(response[i]);
+                }
+            }
+        },
+        /**
+         * Create box and update array of files
+         * @param item
+         * @returns {FileMobile}
+         */
+        updateFiles: function (item) {
+            if (_.isObject(item) && !_.isEmpty(item)) {
+                this.model.addItemFile(item);
+                this.createBoxFile(item);
+            }
+            return this;
+        },
+        /**
+         * setFiles Function for set files images, video and audio from a interface to mobile
+         * @param {[type]} arrayFiles [description]
+         */
+        setFiles: function (arrayFiles) {
+            var i;
+            for (i = 0; i < arrayFiles.length; i += 1) {
+                this.updateFiles(arrayFiles[i]);
+            }
+            this.validate();
+        },
+        /**
+         * Set data from Pmdynaform Project, from mobile api
+         * @param data
+         * @returns {ImageFieldView}
+         */
+        setData: function (data) {
+            if (data && data["value"]) {
+                this.setFilesRFC(data["value"]);
+            }
+            return this;
+        },
+        /**
+         * Create view for image
+         * @param file
+         * @returns {ImageFieldView}
+         */
+        createBoxFile: function (file) {
+            var template = _.template($("#tpl-thumbnail-image").html()),
+                tplResp,
+                newSrc;
+
+            if (file["filePath"]) {
+                newSrc = file["filePath"];
+            }
+            if (file["base64"]) {
+                newSrc = this.model.makeBase64Image(file["base64"]);
+            }
+
+            if (file["fileContent"]) {
+                newSrc = this.model.makeBase64Image(file["fileContent"]);
+            }
+
+            if (newSrc) {
+                tplResp = $(template({
+                    id: Math.floor((Math.random() * 100000) + 3),
+                    src: newSrc,
+                    idFile: file.id
+                }));
+
+                this.viewsFiles.push({
+                    "id": file.id,
+                    "data": tplResp
+                });
+                this.$el.find(".pmdynaform-file-containerimage.file-plus").before(tplResp);
+            }
+            return this;
+        },
+        /**
+         * Execute when after render PMDynaform, subscribe listener for thumbnails in Mobile
+         * @returns {ImageFieldView}
+         */
+        afterRender: function () {
+            var that = this,
+                data = this.model.get("data"),
+                prj = this.model.get("project");
+
+            if (PMDynaform.core.ProjectMobile) {
+                this.model.get("project").requestManager.channelEvents(
+                    {
+                        handler: this.model.get("id"),
+                        type: this.eventsMobile.THUMBNAIL,
+                        bridge: this.model.get("data").value.length == 0 ? false : true,
+                        data: {
+                            idField: this.model.get("id"),
+                            images: this.model.get("data").value
+                        },
+                        callback: function (imagesThumbnail) {
+                            var ims = [];
+                            _.forEach(imagesThumbnail, function (obj) {
+                                ims.push({
+                                    id: obj.fileId,
+                                    base64: obj.fileContent
+                                });
+                            })
+
+                            that.setFilesRFC(ims);
+                        }
+                    });
+
+
+            } else {
+                if (data && data.value && prj && prj.loadDataField) {
+                    this.setFilesRFC(data.value);
+                }
+            }
+            return this;
+        },
+        /**
+         * Enable the validation when only property required is true
+         * @returns {FileMobile}
+         */
+        enableValidation: function () {
+            if (this.model.get("required")) {
+                this.model.set("enableValidate", true);
+                this.showRequire();
+            }
+            return this;
+        },
+        /**
+         * Disable the validation when only property required is true
+         * @returns {FileMobile}
+         */
+        disableValidation: function () {
+            if (this.model.get("required")) {
+                this.model.set("enableValidate", false);
+                if (_.isFunction(this.removeStyleError)) {
+                    this.removeStyleError();
+                }
+                if (this.validator) {
+                    this.validator.$el.remove();
+                }
+                this.hideRequire();
+            }
+            return this;
+        },
+    });
+
+    PMDynaform.extendNamespace("PMDynaform.view.ImageFieldView", ImageFieldView);
 }());
 
 (function () {
@@ -17946,7 +18491,8 @@ xCase.extendNamespace = function (path, newClass) {
             /**
              *  @param {boolean}: stores the field loading status.
              */
-            loading: false
+            tabIndex: "",
+            ariaLabel: ""
         },
         initialize: function (options) {
             this.set("label", this.get("label"));
@@ -18130,8 +18676,7 @@ xCase.extendNamespace = function (path, newClass) {
          * @returns {Array}
          */
         getControl: function () {
-            var controlHtml = [];
-            return controlHtml;
+            return undefined;
         },
         parseLabel: function () {
             var currentLabel = this.get("label"),
@@ -18756,6 +19301,8 @@ xCase.extendNamespace = function (path, newClass) {
             required: false,
             emptyMessage: "No records".translate(),
             addRowText: "New".translate(),
+            addAriaLabel: "Add a new row to grid".translate(),
+            removeAriaLabel: "Remove row".translate(),
             hint: "",
             columnFileDelete: {},
             /**
@@ -19104,7 +19651,9 @@ xCase.extendNamespace = function (path, newClass) {
             type: "button",
             namespace: "pmdynaform",
             disabled: false,
-            colSpan: 12
+            colSpan: 12,
+            tabIndex: "",
+            ariaLabel: ""
         },
         getValue: function () {
             var label = this.get("label");
@@ -19129,6 +19678,8 @@ xCase.extendNamespace = function (path, newClass) {
             id: PMDynaform.core.Utils.generateID(),
             name: PMDynaform.core.Utils.generateName("dropdown"),
             label: "untitled label",
+            tabIndex: "",
+            ariaLabel: "",
             localOptions: [],
             mode: "edit",
             options: [],
@@ -19489,6 +20040,9 @@ xCase.extendNamespace = function (path, newClass) {
             disabled: false,
             defaultValue: "",
             label: "untitled label",
+            tabIndex: "",
+            ariaLabel: "",
+            ariaLabelVisible: true,
             localOptions: [],
             group: "form",
             hint: "",
@@ -19718,7 +20272,9 @@ xCase.extendNamespace = function (path, newClass) {
             type: "submit",
             namespace: "pmdynaform",
             disabled: false,
-            colSpan: 12
+            colSpan: 12,
+            tabIndex: "",
+            ariaLabel: ""
         },
         getValue: function () {
             var label = this.get("label");
@@ -19738,6 +20294,8 @@ xCase.extendNamespace = function (path, newClass) {
             colSpan: 12,
             value: "",
             defaultValue: "",
+            tabIndex: "",
+            ariaLabel: "",
             colSpanLabel: 3,
             colSpanControl: 9,
             namespace: "pmdynaform",
@@ -19959,6 +20517,8 @@ xCase.extendNamespace = function (path, newClass) {
             namespace: "pmdynaform",
             operation: null,
             tooltipLabel: "",
+            tabIndex: "",
+            ariaLabel: "",
             value: "",
             group: "form",
             defaultValue: "",
@@ -20246,6 +20806,8 @@ xCase.extendNamespace = function (path, newClass) {
             id: PMDynaform.core.Utils.generateID(),
             items: [],
             label: "Untitled label",
+            tabIndex: "",
+            ariaLabel: "",
             labelButton: "Choose Files",
             mode: "edit",
             multiple: false,
@@ -20473,6 +21035,9 @@ xCase.extendNamespace = function (path, newClass) {
             id: PMDynaform.core.Utils.generateID(),
             name: PMDynaform.core.Utils.generateName("checkgroup"),
             label: "untitled label",
+            tabIndex: "",
+            ariaLabel: "",
+            ariaLabelVisible: true,
             localOptions: [],
             maxLengthLabel: 15,
             mode: "edit",
@@ -20799,6 +21364,9 @@ xCase.extendNamespace = function (path, newClass) {
             id: PMDynaform.core.Utils.generateID(),
             name: PMDynaform.core.Utils.generateName("checkgroup"),
             label: "untitled label",
+            tabIndex: "",
+            ariaLabel: "",
+            ariaLabelVisible: true,
             localOptions: [],
             mode: "edit",
             options: [],
@@ -21041,6 +21609,8 @@ xCase.extendNamespace = function (path, newClass) {
             id: "",
             name: "",
             placeholder: "",
+            tabIndex: "",
+            ariaLabel: "",
             required: false,
             validator: null,
             originalType: null,
@@ -21374,6 +21944,8 @@ xCase.extendNamespace = function (path, newClass) {
             value: "",
             group: "form",
             defaultValue: "",
+            tabIndex: "",
+            ariaLabel: "",
             maxLengthLabel: 15,
             mode: "edit",
             tooltipLabel: "",
@@ -21569,6 +22141,8 @@ xCase.extendNamespace = function (path, newClass) {
             id: PMDynaform.core.Utils.generateID(),
             name: PMDynaform.core.Utils.generateName("link"),
             label: "untitled label",
+            tabIndex: "",
+            ariaLabel: "",
             mode: "edit",
             required: false,
             target: "_blank",
@@ -21701,7 +22275,8 @@ xCase.extendNamespace = function (path, newClass) {
             /**
              * @param {boolean}: supportedOptions
              */
-            supportedOptions: false
+            supportedOptions: false,
+            ariaLabel: ""
         },
         initialize: function (options) {
             var originalType = this.get("originalType"),
@@ -22266,6 +22841,7 @@ xCase.extendNamespace = function (path, newClass) {
         defaults: {
             type: "title",
             label: "untitled label",
+            ariaLabel: "",
             mode: "view",
             id: PMDynaform.core.Utils.generateID(),
             name: PMDynaform.core.Utils.generateName("title"),
@@ -22418,6 +22994,8 @@ xCase.extendNamespace = function (path, newClass) {
             id: PMDynaform.core.Utils.generateID(),
             name: PMDynaform.core.Utils.generateName("image"),
             label: "untitled label",
+            tabIndex: "",
+            ariaLabel: "",
             crossorigin: "anonymous",
             alt: "",
             src: "",
@@ -22570,7 +23148,8 @@ xCase.extendNamespace = function (path, newClass) {
             id: PMDynaform.core.Utils.generateID(),
             name: PMDynaform.core.Utils.generateName("title"),
             colSpan: 12,
-            namespace: "pmdynaform"
+            namespace: "pmdynaform",
+            ariaLabel: ""
         },
         initialize: function () {
             this.set("label", this.get("label"));
@@ -23008,6 +23587,303 @@ xCase.extendNamespace = function (path, newClass) {
 }());
 
 (function () {
+    var ImageFieldModel = PMDynaform.model.Field.extend({
+        defaults: {
+            autoUpload: false,
+            camera: true,
+            colSpan: 12,
+            colSpanLabel: 3,
+            colSpanControl: 9,
+            disabled: false,
+            dnd: false,
+            extensions: "pdf, png, jpg, mp3, doc, txt",
+            group: "form",
+            height: "100%",
+            hint: "",
+            id: PMDynaform.core.Utils.generateID(),
+            items: [],
+            label: "Untitled label",
+            labelButton: "Choose Files",
+            mode: "edit",
+            multiple: false,
+            name: PMDynaform.core.Utils.generateName("file"),
+            preview: false,
+            required: false,
+            size: 1, //1 MB
+            type: "file",
+            proxy: [],
+            valid: true,
+            validator: null,
+            value: "",
+            files: [],
+            data: {
+                value: [],
+                label: null
+            },
+            enableValidate: true,
+            blockPreviewImage: false, // block the preview image when image upload progress
+            deletedFiles: [], // Images deleted Array
+            fileInProgress: ""
+        },
+
+        initialize: function () {
+            this.attributes.files = [];
+            this.set("items", []);
+            this.set("proxy", []);
+            if (this.get("id") && this.get("id").trim().length !== 0) {
+                this.set("name", this.get("id"));
+            }
+        },
+        /**
+         * Get the data for this model
+         */
+        getAppData: function () {
+            var data,
+                idFiles = [],
+                respData = {};
+            data = this.get("data");
+            idFiles = _.isObject(data) && !_.isEmpty(data) && data.value ? data.value : idFiles;
+            respData[this.get("id")] = idFiles;
+            return respData;
+        },
+        /**
+         * Validate a file mobile
+         * @returns {FileMobile}
+         */
+        validate: function () {
+            var isValid = false,
+                value,
+                data = this.getAppData();
+
+            value = data[this.get("name")];
+            if (PMDynaform.core.ProjectMobile && this.get("required") && this.get("enableValidate")) {
+                if (value && _.isArray(value) && value.length > 0) {
+                    isValid = true;
+                }
+            } else {
+                isValid = true;
+            }
+            this.set("valid", isValid);
+            return this;
+        },
+        /**
+         * With the index, this method returns the id
+         * @param index
+         * @returns {*}
+         */
+        getIDImage: function (index) {
+            return this.attributes.images[index].id;
+        },
+        /**
+         * With the index return the base64 data image
+         * @param index
+         * @returns {*}
+         */
+        getBase64Image: function (index) {
+            return this.attributes.images[index].value;
+        },
+        /**
+         * This method returns a format for image tag base 64
+         * @param base64
+         * @returns {string}
+         */
+        makeBase64Image: function (base64) {
+            return "data:image/png;base64," + base64;
+        },
+        /**
+         * Request Array Image Data
+         * @param arrayImages
+         * @returns [{id:"123456789...", base64: "sdhfg%4hd/f24g.."}] || []
+         */
+        remoteProxyData: function (arrayImages) {
+            var project = this.get("project"),
+                response,
+                requestManager = project && PMDynaform.core.ProjectMobile ? project.getRequestManager() : null,
+                respData = [],
+                data;
+            data = this.formatArrayImagesToSend(arrayImages);
+            response = requestManager ? requestManager.imagesInfo(data) : project.webServiceManager.imagesInfo(data);
+            respData = this.formatArrayImages(response);
+            return respData;
+        },
+        /**
+         * Format structure of the array of objects(files)
+         * @param arrayImages
+         * @returns {Array}
+         */
+        formatArrayImagesToSend: function (arrayImages) {
+            var i,
+                item,
+                imageId,
+                defaultSize = 100,
+                dataToSend = [];
+            for (i = 0; i < arrayImages.length; i += 1) {
+                imageId = arrayImages[i];
+                item = {};
+                item.fileId = imageId;
+                item.version = 1;
+                if (PMDynaform.core.ProjectMobile) {
+                    item.width = defaultSize;
+                }
+                dataToSend.push(item);
+            }
+            return dataToSend;
+        },
+        /**
+         * Format response array
+         * @param arrayImages
+         * @returns {*}
+         */
+        formatArrayImages: function (arrayImages) {
+            var i;
+            for (i = 0; i < arrayImages.length; i += 1) {
+                arrayImages[i].id = arrayImages[i]['fileId'];
+                arrayImages[i].base64 = arrayImages[i]['fileContent'];
+                delete arrayImages[i].fileId;
+                delete arrayImages[i].fileContent;
+            }
+            return arrayImages;
+        },
+        /**
+         * Returns the url for get the image in tag html image
+         * @param id
+         * @returns {{filePath: *, id: *}}
+         */
+        urlFileStreaming: function (id) {
+            var prj = this.get("project"),
+                url,
+                dataToSend;
+            url = prj.webServiceManager.getFullURLStreaming(id);
+            dataToSend = {
+                id: id,
+                filePath: url
+            };
+            return dataToSend;
+        },
+        /**
+         * setAppData: Sets the corresponding data that is obtained from the
+         * service to the component
+         * @param data {object} valid data for this component
+         */
+        setAppData: function (data) {
+            var view = this.get("view");
+            if (data && view) {
+                view.setFilesRFC(data);
+            }
+            return this;
+        },
+        /**
+         * Get Array Files Image Control
+         */
+        getFiles: function () {
+            return this.get("files");
+        },
+        /**
+         * Set Array Files
+         * @param arrayFiles
+         * @returns {FileMobile}
+         */
+        setFiles: function (arrayFiles) {
+            if (arrayFiles.length) {
+                this.set("files", arrayFiles);
+            }
+            return this;
+        },
+        /**
+         * Delete file in files attribute and data
+         * @param idFile
+         */
+        deleteFile: function (idFile) {
+            var nfiles = _.reject(this.attributes.files, function (obj) {return obj.id === idFile;}),
+                narr = _.map(nfiles, function (obj) {return obj.id;});
+            this.addDeleteFileInProject(idFile);
+            this.set("files", nfiles);
+            this.set("data", {
+                label: "",
+                value: narr
+            });
+        },
+        /**
+         * Update data
+         * @param arrayFiles
+         * @returns {FileMobile}
+         */
+        updateData: function (arrayFiles) {
+            var i,
+                data,
+                values = this.get("data").value,
+                idFiles = [],
+                max = _.isArray(arrayFiles) ? arrayFiles.length : 0;
+            for (i = 0; i < max; i += 1) {
+                idFiles.push(arrayFiles[i].id);
+            }
+            this.set("data", {
+                value: idFiles,
+                label: null
+            });
+            return this;
+        },
+        /**
+         * The method add to data the object with the file information to delete when the submit is pressed
+         * @param fileId
+         * @returns {ImageFieldModel}
+         */
+        addDeleteFileInProject: function (fileId) {
+            var file,
+                fileDel,
+                prj = this.get("project"),
+                data = prj.getDataExtra("__VARIABLE_DOCUMENT_DELETE__");
+            if (prj) {
+                fileDel = {
+                    "appDocUid": fileId,
+                    "name": "",
+                    "version": 1
+                };
+                this.get("deletedFiles").push(fileDel);
+                data[this.get("id")] = this.get("deletedFiles");
+                prj.setDataExtra("__VARIABLE_DOCUMENT_DELETE__", data);
+            }
+            return this;
+        },
+        /**
+         * Add Item to Array Files
+         * @param item
+         */
+        addItemFile: function (item) {
+            var arrayFiles = this.getFiles();
+            if (item) {
+                arrayFiles.push(item);
+            }
+            this.setFiles(arrayFiles);
+            this.updateData(arrayFiles);
+            return this;
+        },
+        /**
+         * Change the file id with a "newID". Using the "oldId" to do that used only for offline purposes
+         * @param oldId
+         * @param newId
+         */
+        exchangeMobileDataId: function (oldId, newId) {
+            var dataArray = this.get('data').value,
+                filesArray = this.get('files'),
+                index = dataArray.indexOf(oldId);
+            if (index >= 0) {
+                dataArray[index] = newId;
+                // force to update files id
+                if (_.isArray(filesArray) && filesArray[index]) {
+                    filesArray[index].id = newId;
+                }
+            }
+            this.setFiles(filesArray);
+            this.updateData(filesArray);
+            return this;
+        }
+    });
+
+    PMDynaform.extendNamespace("PMDynaform.model.ImageFieldModel", ImageFieldModel);
+}());
+
+(function () {
     var GeoMobile = PMDynaform.model.Field.extend({
         defaults: {
             id: PMDynaform.core.Utils.generateID(),
@@ -23394,6 +24270,8 @@ xCase.extendNamespace = function (path, newClass) {
             hint: "",
             id: PMDynaform.core.Utils.generateID(),
             label: "Untitled label".translate(),
+            tabIndex: "",
+            ariaLabel: "",
             labelButton: "Choose Files".translate(),
             mode: "edit",
             name: PMDynaform.core.Utils.generateName("file"),
