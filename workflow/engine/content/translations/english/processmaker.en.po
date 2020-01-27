@@ -3330,6 +3330,12 @@ msgid "Case Demo"
 msgstr "Case Demo"
 
 # TRANSLATION
+# LABEL/ID_CASE_DELETE_SUCCESFULLY
+#: LABEL/ID_CASE_DELETE_SUCCESFULLY
+msgid "The Case was deleted successfully."
+msgstr "The Case was deleted successfully."
+
+# TRANSLATION
 # LABEL/ID_CASES
 #: LABEL/ID_CASES
 msgid "HOME"
@@ -3340,6 +3346,12 @@ msgstr "HOME"
 #: LABEL/ID_CASES1
 msgid "[LABEL/ID_CASES1] Cases"
 msgstr "Cases"
+
+# TRANSLATION
+# LABEL/ID_CASES_DELETE_SUCCESFULLY
+#: LABEL/ID_CASES_DELETE_SUCCESFULLY
+msgid "All Cases were deleted successfully."
+msgstr "All Cases were deleted successfully."
 
 # TRANSLATION
 # LABEL/ID_CASESLIST_APP_CURRENT_USER
@@ -5728,6 +5740,12 @@ msgstr "Deleted"
 #: LABEL/ID_DELETED_SUCCESSFULLY
 msgid "Deleted Successfully"
 msgstr "Deleted Successfully"
+
+# TRANSLATION
+# LABEL/ID_DELETE_ACTION
+#: LABEL/ID_DELETE_ACTION
+msgid "Delete case"
+msgstr "Delete case"
 
 # TRANSLATION
 # LABEL/ID_DELETE_ALL_FIELDS
@@ -19684,6 +19702,12 @@ msgstr "After routing notify the next assigned user(s)"
 #: LABEL/ID_NOTIFY_USERS_CASE
 msgid "Notify users of case"
 msgstr "Notify users of case"
+
+# TRANSLATION
+# LABEL/ID_NOT_ABLE_DELETE_CASES
+#: LABEL/ID_NOT_ABLE_DELETE_CASES
+msgid "You are not allowed to delete cases, please contact your System Administrator."
+msgstr "You are not allowed to delete cases, please contact your System Administrator."
 
 # TRANSLATION
 # LABEL/ID_NOT_ABLE_REASSIGN

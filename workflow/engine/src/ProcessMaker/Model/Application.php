@@ -27,29 +27,62 @@ class Application extends Model
     }
 
     /**
-     * Get Applications by PRO_UID, ordered by APP_NUMBER.
-     * @param string $proUid
-     * @return object
-     * @see ReportTables->populateTable()
+     * Scope for query to get the application by APP_UID.
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param string $appUid
+     * @return \Illuminate\Database\Eloquent\Builder
      */
-    public static function getByProUid($proUid)
+    public function scopeAppUid($query, $appUid)
     {
-        $query = Application::query()
-                ->select()
-                ->proUid($proUid)
-                ->orderBy('APP_NUMBER', 'ASC');
-        return $query->get();
+        $result = $query->where('APP_UID', '=', $appUid);
+        return $result;
     }
 
     /**
      * Scope for query to get the applications by PRO_UID.
+     *
      * @param \Illuminate\Database\Eloquent\Builder $query
      * @param string $proUid
+     *
      * @return \Illuminate\Database\Eloquent\Builder
      */
     public function scopeProUid($query, $proUid)
     {
         $result = $query->where('PRO_UID', '=', $proUid);
         return $result;
+    }
+
+    /**
+     * Get Applications by PRO_UID, ordered by APP_NUMBER.
+     *
+     * @param string $proUid
+     *
+     * @return object
+     * @see ReportTables->populateTable()
+     */
+    public static function getByProUid($proUid)
+    {
+        $query = Application::query()
+            ->select()
+            ->proUid($proUid)
+            ->orderBy('APP_NUMBER', 'ASC');
+        return $query->get();
+    }
+
+    /**
+     * Get information related to the created case
+     *
+     * @param string $appUid
+     *
+     * @return array|bool
+     */
+    public static function getCase($appUid)
+    {
+        $query = Application::query()->select(['APP_STATUS', 'APP_INIT_USER']);
+        $query->appUid($appUid);
+        $result = $query->get()->toArray();
+        $firstElement = head($result);
+
+        return $firstElement;
     }
 }

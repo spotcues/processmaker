@@ -1023,8 +1023,17 @@ class PmDynaform
                                 . " JOIN "
                                 . $dt[$key]["table"]
                                 . ($dt[$key]["table"] == $dt[$key]["alias"] ? "" : " " . $dt[$key]["alias"]) . " "
-                                . $dt[$key]["ref_type"] . " "
-                                . rtrim($dt[$key]["ref_clause"], " INNER");
+                                . $dt[$key]["ref_type"] . " ";
+
+                        // Get the last 6 chars of the string
+                        $tempString = mb_substr($dt[$key]["ref_clause"], -6);
+
+                        // If the last section is a "INNER" statement we need to remove it
+                        if (strcasecmp($tempString, " INNER") === 0) {
+                            $from .= mb_substr($dt[$key]["ref_clause"], 0, mb_strlen($dt[$key]["ref_clause"]) - 6);
+                        } else {
+                            $from .= $dt[$key]["ref_clause"];
+                        }
                     }
                 }
             }

@@ -545,3 +545,34 @@ function updateUserLastLogin($userLog, $keyLastLogin = 'LOG_INIT_DATE')
     }
 }
 
+/**
+ * Return raw query with the bindings replaced
+ *
+ * @param \Illuminate\Database\Eloquent\Builder $queryObject
+ * @return string
+ */
+function toSqlWithBindings(Illuminate\Database\Eloquent\Builder $queryObject) {
+    // Get some values from the object
+    $bindings = $queryObject->getBindings();
+    $originalQuery = $queryObject->toSql();
+
+    // If not exist bindings, return the original query
+    if (empty($bindings)) {
+        return $originalQuery;
+    }
+
+    // Initializing another variables
+    $queryParts = explode('?', $originalQuery);
+    $pdo = $queryObject->getConnection()->getPdo();
+    $query = '';
+
+    // Walking the parts of the query replacing the bindings
+    foreach ($queryParts as $index => $part) {
+        if ($index < count($queryParts) - 1) {
+            $query .= $part . $pdo->quote($bindings[$index]);
+        }
+    }
+
+    // Return query
+    return $query;
+}

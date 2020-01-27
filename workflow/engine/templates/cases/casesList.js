@@ -218,26 +218,31 @@ function deleteCase() {
                         _('ID_CONFIRM'),
                         (rows.length == 1) ? _('ID_MSG_CONFIRM_DELETE_CASE') : _('ID_MSG_CONFIRM_DELETE_CASES'),
                         function(btn, text){
-                            if ( btn == 'yes' ) {
-                                Ext.MessageBox.show({ msg: _('ID_DELETING_ELEMENTS'), wait:true,waitConfig: {interval:200} });
+                            if (btn == 'yes') {
+                                Ext.MessageBox.show({
+                                    msg: _('ID_DELETING_ELEMENTS'),
+                                    wait: true,
+                                    waitConfig: {interval: 200}
+                                });
                                 Ext.Ajax.request({
                                     url: 'cases_Delete',
-                                    success: function(response) {
+                                    success: function (response) {
                                         try {
                                             parent.updateCasesView(true);
-                                        }
-                                        catch (e) {
+                                        } catch (e) {
                                             // Nothing to do
                                         }
                                         Ext.MessageBox.hide();
                                         try {
                                             parent.updateCasesTree();
-                                        }
-                                        catch (e) {
+                                        } catch (e) {
                                             // Nothing to do
                                         }
+                                        if (typeof (response.responseText) != 'undefined') {
+                                            Ext.MessageBox.alert(_('ID_INFO'), response.responseText);
+                                        }
                                     },
-                                    params: {APP_UIDS:APP_UIDS}
+                                    params: {APP_UIDS: APP_UIDS}
                                 });
                             }
                         }
@@ -1858,10 +1863,12 @@ Ext.onReady ( function() {
 
         case 'draft':
             menuItems = [optionMenuPause, optionMenuSummary, optionMenuNotes];
-            if( varReassignCase == 'true' || varReassignCaseSupervisor == 'true'){
+            if (varReassignCase == 'true' || varReassignCaseSupervisor == 'true') {
                 menuItems.push(optionMenuReassign);
             }
-            menuItems.push(optionMenuDelete);
+            if (varDeleteCase == 'true') {
+                menuItems.push(optionMenuDelete);
+            }
 
             break;
 

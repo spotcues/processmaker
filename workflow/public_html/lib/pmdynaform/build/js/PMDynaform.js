@@ -18676,7 +18676,7 @@ xCase.extendNamespace = function (path, newClass) {
          * @returns {Array}
          */
         getControl: function () {
-            return undefined;
+            return this.get("mode") !== "edit" ? undefined : [];
         },
         parseLabel: function () {
             var currentLabel = this.get("label"),

@@ -130,6 +130,9 @@ $reassignCaseSup = ($RBAC->userCanAccess('PM_REASSIGNCASE_SUPERVISOR') == 1) ? '
 $headPublisher->assign('varReassignCase', $reassignCase);
 $headPublisher->assign('varReassignCaseSupervisor', $reassignCaseSup);
 
+$deleteCase = ($RBAC->userCanAccess('PM_DELETECASE') == 1) ? 'true' : 'false';
+$headPublisher->assign('varDeleteCase', $deleteCase);
+
 $c = new Configurations();
 $headPublisher->addExtJsScript('app/main', true);
 $headPublisher->addExtJsScript('cases/casesList', false); //adding a javascript file .js

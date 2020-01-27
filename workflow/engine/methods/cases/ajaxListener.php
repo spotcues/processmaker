@@ -197,9 +197,11 @@ class Ajax
                 } else {
                     $options[] = ['text' => G::LoadTranslation('ID_UNPAUSE'), 'fn' => 'unpauseCase'];
                 }
-
-                $options[] = ['text' => G::LoadTranslation('ID_DELETE'), 'fn' => 'deleteCase'];
-
+                // Check if the user has the permission for the action Delete Case
+                if ($RBAC->userCanAccess('PM_DELETECASE') == 1) {
+                    $options[] = ['text' => G::LoadTranslation('ID_DELETE'), 'fn' => 'deleteCase'];
+                }
+                // Check if the user has the permission for the action Reassign Case
                 if ($RBAC->userCanAccess('PM_REASSIGNCASE') == 1 || $RBAC->userCanAccess('PM_REASSIGNCASE_SUPERVISOR') == 1) {
                     if (!AppDelay::isPaused($appUid, $index)) {
                         $options[] = ['text' => G::LoadTranslation('ID_REASSIGN'), 'fn' => 'getUsersToReassign'];

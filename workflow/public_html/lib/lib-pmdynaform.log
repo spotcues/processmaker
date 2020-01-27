@@ -1,30 +1,30 @@
-[3 days ago] 8132a464  PMCORE-488:It can not be created new cases in iExplorer 11 when   installing Knauf-Patch in the server <Fabio Guachalla>
-[3 days ago] ea8b2e00  PMCORE-494:There is an space when I do click on textarea field <Fabio Guachalla>
-[2 weeks ago] f9ccdfb5  (origin/bugfix/PMC-1526) PMC-1526: PROD - 1251 -> An error occurs if you select display-mode = view of a web control <Rodrigo Quelca>
-[3 weeks ago] 339f4de9  PMC-1442:[19026, 18927]  Dropdown populated by an Array variable is not working. <Fabio Guachalla>
-[3 weeks ago] f2b84c07  (origin/bugfix/PMC-1509) PMC-1319: The addrow javascript function does not set the default value correctly in the suggestions fields <Rodrigo Quelca>
-[4 weeks ago] ee9be14f  (origin/bugfix/PMC-993) getControl() function does not work in view mode <Rodrigo Quelca>
-[4 weeks ago] aecc5d0a  (origin/feature/PMC-1463) PMC-1463: Dynaform Designer - Accessibility Improvements Stage 1 <Rodrigo Quelca>
-[5 weeks ago] 6e71cd3e  (origin/feature/PMC-1170) fix, error in delete images when press a thumbnail image <henry>
-[5 weeks ago] 78afdfbf  update code with the las observations in PR PMC-1170 <henry>
-[6 weeks ago] e405f60f  improve problem with delete images in offline mode <henry>
-[6 weeks ago] 7151fc7c  fix order in show images <henry>
-[7 weeks ago] ac147498  fix problems with offline images with 2 or more steps <henry>
-[7 weeks ago] 3a1585cb  update icon delete for images mobile <henry>
-[7 weeks ago] fb190148  update events preview image in image field <henry>
-[7 weeks ago] 0453c502  solve observations in pull request <henry>
-[7 weeks ago] 9ab106c6  (origin/bugfix/PMC-1319) PMC-1319: The addrow javascript function does not set the default value correctly in the suggestions fields <Rodrigo Quelca>
-[8 weeks ago] e2276949  update Delete images in PMdynaform <henry>
-[9 weeks ago] a508e099  (origin/bugfix/PMC-1330_B) PMC-1330: The Dropdown control displays a single item <Rodrigo Quelca>
-[9 weeks ago] 38c8fd9c  (origin/bugfix/PMC-1347) PMC-1347: Dependent in view mode was not loaded when the for was rendered. <Rodrigo Quelca>
-[2 months ago] 4e282455  (origin/bugfix/PMC-1318) PMC-1318 <Julio Cesar Laura Avendaño>
-[2 months ago] 1862b975  (origin/bugfix/PMC-1331) fix first option <Rodrigo Quelca>
-[2 months ago] 3b81265a  PMC-1331:Secondary dependent fields do not refresh data when changing the dropdowns. Also, always the first row of the SQL query set as default value in the dependent fields, and not the static empty value configured. <Rodrigo Quelca>
+[26 hours ago] 638f0136  PMCORE-1096:Multiple File Upload Control does not validate Required Field attribute <Fabio Guachalla>
+[2 weeks ago] 2cbeeef4  Words cut off in dynaform printed PDF <Fabio Guachalla>
+[3 weeks ago] 8132a464  PMCORE-488:It can not be created new cases in iExplorer 11 when   installing Knauf-Patch in the server <Fabio Guachalla>
+[3 weeks ago] ea8b2e00  PMCORE-494:There is an space when I do click on textarea field <Fabio Guachalla>
+[4 weeks ago] f9ccdfb5  (origin/bugfix/PMC-1526) PMC-1526: PROD - 1251 -> An error occurs if you select display-mode = view of a web control <Rodrigo Quelca>
+[5 weeks ago] 339f4de9  PMC-1442:[19026, 18927]  Dropdown populated by an Array variable is not working. <Fabio Guachalla>
+[5 weeks ago] f2b84c07  (origin/bugfix/PMC-1509) PMC-1319: The addrow javascript function does not set the default value correctly in the suggestions fields <Rodrigo Quelca>
+[6 weeks ago] ee9be14f  (origin/bugfix/PMC-993) getControl() function does not work in view mode <Rodrigo Quelca>
+[6 weeks ago] aecc5d0a  (origin/feature/PMC-1463) PMC-1463: Dynaform Designer - Accessibility Improvements Stage 1 <Rodrigo Quelca>
+[7 weeks ago] 6e71cd3e  (origin/feature/PMC-1170) fix, error in delete images when press a thumbnail image <henry>
+[7 weeks ago] 78afdfbf  update code with the las observations in PR PMC-1170 <henry>
+[8 weeks ago] e405f60f  improve problem with delete images in offline mode <henry>
+[9 weeks ago] 7151fc7c  fix order in show images <henry>
+[9 weeks ago] ac147498  fix problems with offline images with 2 or more steps <henry>
+[9 weeks ago] 3a1585cb  update icon delete for images mobile <henry>
+[9 weeks ago] fb190148  update events preview image in image field <henry>
+[9 weeks ago] 0453c502  solve observations in pull request <henry>
+[10 weeks ago] 9ab106c6  (origin/bugfix/PMC-1319) PMC-1319: The addrow javascript function does not set the default value correctly in the suggestions fields <Rodrigo Quelca>
+[2 months ago] e2276949  update Delete images in PMdynaform <henry>
+[3 months ago] a508e099  (origin/bugfix/PMC-1330_B) PMC-1330: The Dropdown control displays a single item <Rodrigo Quelca>
+[3 months ago] 38c8fd9c  (origin/bugfix/PMC-1347) PMC-1347: Dependent in view mode was not loaded when the for was rendered. <Rodrigo Quelca>
+[3 months ago] 4e282455  (origin/bugfix/PMC-1318) PMC-1318 <Julio Cesar Laura Avendaño>
+[3 months ago] 1862b975  (origin/bugfix/PMC-1331) fix first option <Rodrigo Quelca>
+[3 months ago] 3b81265a  PMC-1331:Secondary dependent fields do not refresh data when changing the dropdowns. Also, always the first row of the SQL query set as default value in the dependent fields, and not the static empty value configured. <Rodrigo Quelca>
 [3 months ago] 7ee7a12c  PMC-1317:Helper getUserInfo parameter  "userName" has in web, but in mobile has "username" <Fabio Guachalla>
-[3 months ago] d50a061c  PMC-1295:Helpers to retrieve the information of the current user <Fabio Guachalla>
-[3 months ago] 4475bab4  (origin/bugfix/PMC-1221) [7543] Dependent fields - Valeo's feedback over PMC-707 <Rodrigo Quelca>
-[4 months ago] 4d8761aa  (origin/bugfix/PMC-1184) PMC-1184: Automatic call setOnchange function <Rodrigo Quelca>
-[4 months ago] ed3d6979  PMC-1170: Preview images -  Create a bridge method (pmDynaform) to fire the preview action in the app. <Rodrigo Quelca>
-[4 months ago] 95461eb9  (origin/feature/PMC-1145) PMC-1145: pmDynaform - complete the view mode for mobile controls <Rodrigo Quelca>
-[4 months ago] f4d85b6c  (origin/bugfix/PMC-1121) PMC-1121: Dependent Fields:  The spinner does not disappear when the options are used. <Rodrigo Quelca>
-[5 months ago] 163311f9  PMC-1036:PROD-641 >> The getControl helper does not work for Suggest control <Fabio Guachalla>
+[4 months ago] d50a061c  PMC-1295:Helpers to retrieve the information of the current user <Fabio Guachalla>
+[4 months ago] 4475bab4  (origin/bugfix/PMC-1221) [7543] Dependent fields - Valeo's feedback over PMC-707 <Rodrigo Quelca>
+[5 months ago] 4d8761aa  (origin/bugfix/PMC-1184) PMC-1184: Automatic call setOnchange function <Rodrigo Quelca>
+[5 months ago] ed3d6979  PMC-1170: Preview images -  Create a bridge method (pmDynaform) to fire the preview action in the app. <Rodrigo Quelca>
+[5 months ago] 95461eb9  (origin/feature/PMC-1145) PMC-1145: pmDynaform - complete the view mode for mobile controls <Rodrigo Quelca>

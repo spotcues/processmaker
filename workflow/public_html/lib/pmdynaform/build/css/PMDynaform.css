@@ -703,7 +703,7 @@
     margin-top: 6px;
     vertical-align: top;
     word-wrap: break-word;
-    word-break: break-all;
+    word-break: break-word;
     text-align: left;
     padding: 0px 4px 0px 0px;
     list-style-type: none;
