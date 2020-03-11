@@ -73,7 +73,8 @@ class System
         'files_white_list' => '',
         'delay' => '0',
         'tries' => '10',
-        'retry_after' => '90'
+        'retry_after' => '90',
+        'mobile_offline_tables_download_interval' => 24
     ];
 
     /**
@@ -1015,7 +1016,10 @@ class System
                 "MESS_BACKGROUND" => "",
                 "MESS_PASSWORD_HIDDEN" => "",
                 "MESS_EXECUTE_EVERY" => "",
-                "MESS_SEND_MAX" => ""
+                "MESS_SEND_MAX" => "",
+                "OAUTH_CLIENT_ID" => $arrayEmailServerDefault["OAUTH_CLIENT_ID"],
+                "OAUTH_CLIENT_SECRET" => $arrayEmailServerDefault["OAUTH_CLIENT_SECRET"],
+                "OAUTH_REFRESH_TOKEN" => $arrayEmailServerDefault["OAUTH_REFRESH_TOKEN"]
             );
 
             //Return
@@ -1201,6 +1205,15 @@ class System
 
         if ($config['proxy_pass'] != '') {
             $config['proxy_pass'] = G::decrypt($config['proxy_pass'], 'proxy_pass');
+        }
+
+        /**
+         * Here if you validate if the type of data obtained from the configuration 
+         * files are valid, otherwise the default value is used.
+         */
+        $value = (string) $config['mobile_offline_tables_download_interval'];
+        if (!is_numeric($value)) {
+            $config['mobile_offline_tables_download_interval'] = self::$defaultConfig['mobile_offline_tables_download_interval'];
         }
 
         return $config;

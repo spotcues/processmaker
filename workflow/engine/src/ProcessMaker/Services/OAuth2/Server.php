@@ -3,6 +3,7 @@ namespace ProcessMaker\Services\OAuth2;
 
 use Luracast\Restler\iAuthenticate;
 use Luracast\Restler\RestException;
+use OAuth2\Request;
 use ProcessMaker\Core\System;
 
 class Server implements iAuthenticate
@@ -394,6 +395,19 @@ class Server implements iAuthenticate
 
     public static function getUserId()
     {
+        // If is empty, get the User Uid using the current request
+        if (empty(self::$userId) && !empty(self::$dsn)) {
+            // Get current request object
+            $request = Request::createFromGlobals();
+
+            // Get token data
+            $serverInstance = new Server();
+            $server = $serverInstance->getServer();
+            $tokenData = $server->getAccessTokenData($request);
+
+            // Set the User Uid
+            self::$userId = $tokenData['user_id'];
+        }
         return self::$userId;
     }
 

@@ -1,30 +1,30 @@
-[8 days ago] 7e54b0955  (origin/bugfix/PMCORE-1049) PMCORE-1049 <Julio Cesar Laura Avendaño>
-[11 days ago] c426d2b33  Merged in bugfix/PMCORE-490 (pull request #7206) <Paula Quispe>
-[2 weeks ago] 769c1e5c4  PMCORE-495 <Julio Cesar Laura Avendaño>
-[2 weeks ago] 3735bb638  Merged in feature/PMC-1492 (pull request #7191) <Julio Cesar Laura Avendaño>
-[2 weeks ago] e06a902a8  PMC-1341 <Julio Cesar Laura Avendaño>
-[2 weeks ago] 7c5b3659a  PMC-1394 <Paula Quispe>
-[3 weeks ago] f75744548  (origin/bugfix/PMC-1540) PMC-1540 <Paula Quispe>
-[5 weeks ago] 8a24a0a91  PMC-1459 It is not possible to export processes <Roly Rudy Gutierrez Pinto>
-[5 weeks ago] c87455335  (origin/bugfix/PMC-1396) PMC-1396 <Andrea Adamczyk>
-[5 weeks ago] de8ce865e  (origin/bugfix/PMC-1503) PMC-1503 <Andrea Adamczyk>
-[5 weeks ago] a4fdd3bfb  (origin/bugfix/PMC-1399) PMC-1399 <Andrea Adamczyk>
-[6 weeks ago] 635b36534  (origin/bugfix/PMC-1498) PMC-1498 <Paula Quispe>
-[6 weeks ago] 4a9a737b0  (origin/bugfix/PMC-1412) PMC-1412 <Andrea Adamczyk>
-[6 weeks ago] ccc8b0348  (origin/bugfix/PMC-1409) PMC-1409 <Julio Cesar Laura Avendaño>
-[6 weeks ago] 12fe9241f  (origin/bugfix/PMC-131) PMC-131 In section Admin->Users->Groups the second page of the list always shows double the corresponding amount of groups <Roly Rudy Gutierrez Pinto>
-[6 weeks ago] 17346f273  (origin/bugfix/PMC-1489) PMC-1489 ErrorException: Function create_function() is deprecated in PHP7.3 with smarty 2.6.30 <Roly Rudy Gutierrez Pinto>
-[6 weeks ago] e62aa45a2  (origin/bugfix/PMC-1442) PMC-1442 <Paula Quispe>
-[6 weeks ago] ce0fb8b1f  (origin/feature/PMC-1478) Update to ensure setting of cache entry for ee contents if cache does not have it stored. <Taylor Dondich>
-[7 weeks ago] 2178440c8  (origin/feature/PMC-1478-A) PMC-1478: Missing 'use' statementswq <Julio Cesar Laura Avendaño>
-[7 weeks ago] 217c340f4  PMC-1478 <Taylor Dondich>
-[7 weeks ago] 1302aec54  Add return null just for safety. <Taylor Dondich>
-[7 weeks ago] 3d5e3339b  Update one last place where EE is read. <Taylor Dondich>
-[7 weeks ago] a9f6bd25e  Update any references to reading ee file. Update code style. Update prefix of key for workspace specific. <Taylor Dondich>
-[7 weeks ago] 292c35c13  (origin/bugfix/PMC-1453-A) PMC-1453 <Paula Quispe>
-[7 weeks ago] 4d7ee8029  Update to have registerEE utilize cache behavior for loading and storing from ee file. <Taylor Dondich>
-[7 weeks ago] 95a0a9f0a  (origin/bugfix/PMC-1472) PMC-1472 <Paula Quispe>
-[8 weeks ago] 796405a01  (origin/bugfix/PMC-1452) PMC-1452 <Andrea Adamczyk>
-[8 weeks ago] 7fde8b45d  (origin/bugfix/PMC-1447) PMC-1447 Warning in processes_Import_Ajax.php <Roly Rudy Gutierrez Pinto>
-[8 weeks ago] b00def4ad  (origin/bugfix/PMC-1446) PMC-1446 PHP Warning: count(): Parameter must be an array or an object that implements Countable <Roly Rudy Gutierrez Pinto>
-[8 weeks ago] 96a29a453  (origin/bugfix/PMC-1445) PMC-1445 Update gitignore file <Roly Rudy Gutierrez Pinto>
+[24 hours ago] aa1732dad  (origin/bugfix/PMCORE-1262) PMCORE-1262 <Julio Cesar Laura Avendaño>
+[2 days ago] 13691fac7  (origin/bugfix/PMCORE-1142_A) PMCORE-1142_A Artisan stops sending emails if it is left for several hours doing nothing. <Roly Rudy Gutierrez Pinto>
+[7 days ago] dfd69155b  (origin/bugfix/PMCORE-543-A) PMCORE-543 <Paula Quispe>
+[2 weeks ago] 623ec2766  (origin/bugfix/PMCORE-864) PMCORE-864 <Julio Cesar Laura Avendaño>
+[4 weeks ago] 375d8b5bd  (origin/bugfix/PMCORE-546) PMCORE-546 <Paula Quispe>
+[5 weeks ago] 13866beeb  (origin/bugfix/PMCORE-598-A) PMCORE-598-A <Andrea Adamczyk>
+[5 weeks ago] 66f8655d4  (origin/bugfix/PMCORE-545) PMCORE-545 Public files in a process cannot be deleted (in Windows Server) when the process is imported <Roly Rudy Gutierrez Pinto>
+[5 weeks ago] 22083e0dd  (origin/bugfix/PMCORE-543) PMCORE-543 <Paula Quispe>
+[5 weeks ago] 3d8f37e9d  (origin/bugfix/PMCORE-1132) PMCORE-1132: [19520] Simpified UX doesn't redirect to inbox in IE after submitting a case <Rodrigo Quelca>
+[5 weeks ago] 2a5c22fc7  (origin/bugfix/PMCORE-598) PMCORE-598 <Andrea Adamczyk>
+[5 weeks ago] 2f4e1e013  Merged in feature/PMC-1332 (pull request #7136) <Paula Quispe>
+[6 weeks ago] 28d07e1a8  (origin/bugfix/PMCORE-542-B) PMCORE-542 <Paula Quispe>
+[6 weeks ago] 3fe6b432f  (origin/bugfix/PMCORE-1059) PMCORE-1059 <Paula Quispe>
+[6 weeks ago] 93818597e  (origin/bugfix/PMCORE-1034) PMCORE-1034 ProcessMaker is not running in Stack 270 <Roly Rudy Gutierrez Pinto>
+[6 weeks ago] fddd7bc9f  (origin/bugfix/PMCORE-542-A) PMCORE-542 <Paula Quispe>
+[6 weeks ago] 7ec37dcf4  (origin/feature/PMC-1332) . <Paula Quispe>
+[6 weeks ago] 6de700561  (origin/bugfix/PMCORE-764) PMCORE-764 No "test mail" is registered in "Logs" in the "Emails" option <Roly Rudy Gutierrez Pinto>
+[7 weeks ago] 0cea0ec40  (origin/bugfix/PMCORE-779) PMCORE-779 The "Client Secret" field modification produces the ProcessMaker Error page. <Roly Rudy Gutierrez Pinto>
+[7 weeks ago] 811db5b67  (origin/bugfix/PMCORE-534) PMCORE-534 <Andrea Adamczyk>
+[7 weeks ago] 35d9db2c1  (origin/bugfix/PMCORE-1095) PMCORE-1095 <Julio Cesar Laura Avendaño>
+[7 weeks ago] 686f0a86c  PMCORE-546 <Paulis>
+[7 weeks ago] 56bc985d3  (origin/bugfix/PMCORE-1057) PMCORE-1057 <Andrea Adamczyk>
+[7 weeks ago] 6b361487e  (origin/bugfix/PMCORE-1058) PMCORE-1058 <Julio Cesar Laura Avendaño>
+[8 weeks ago] 79b862676  (origin/bugfix/PMCORE-496) PMCORE-496 Review why the command ./gulliver has some problems in the version 3.x <Roly Rudy Gutierrez Pinto>
+[8 weeks ago] d8e2e9427  (origin/bugfix/PMCORE-493) PMCORE-493 Unit test solve issues Circle CI WorkflowTest <Roly Rudy Gutierrez Pinto>
+[8 weeks ago] 7d381b023  (origin/bugfix/PMCORE-497) PMCORE-497 Unit test solve issues CircleCI GroupsAjaxTest <Roly Rudy Gutierrez Pinto>
+[8 weeks ago] c1ddcb7ed  (origin/bugfix/PMCORE-1056) Improvement related to reload counters for Valeo <Julio Cesar Laura Avendaño>
+[8 weeks ago] cf5360ccc  PMCORE-1049 <Julio Cesar Laura Avendaño>
+[8 weeks ago] 7e54b0955  (origin/bugfix/PMCORE-1049) PMCORE-1049 <Julio Cesar Laura Avendaño>
+[8 weeks ago] c426d2b33  Merged in bugfix/PMCORE-490 (pull request #7206) <Paula Quispe>

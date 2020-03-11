@@ -31,9 +31,9 @@
         "laravel/framework": "5.7.*",
         "luracast/restler": "^3.0",
         "bshaffer/oauth2-server-php": "v1.0",
-        "colosa/pmUI": "release/3.4.0-dev",
-        "colosa/MichelangeloFE": "release/3.4.0-dev",
-        "colosa/pmdynaform": "release/3.4.0-dev",
+        "colosa/pmui": "release/3.4.5-dev",
+        "colosa/michelangelofe": "release/3.4.5-dev",
+        "colosa/pmdynaform": "release/3.4.5-dev",
         "google/apiclient": "1.1.6",
         "dapphp/securimage": "^3.6",
         "psr/log": "1.0.0",
@@ -51,6 +51,8 @@
         "php-imap/php-imap": "^3.0",
         "nikic/php-parser": "3.1.5",
         "laravel/tinker": "^1.0",
+        "league/oauth2-client": "^2.4",
+        "league/oauth2-google": "^3.0",
         "tecnickcom/tcpdf": "6.3.*"
     },
     "require-dev": {

@@ -1,30 +1,30 @@
-[26 hours ago] 638f0136  PMCORE-1096:Multiple File Upload Control does not validate Required Field attribute <Fabio Guachalla>
-[2 weeks ago] 2cbeeef4  Words cut off in dynaform printed PDF <Fabio Guachalla>
-[3 weeks ago] 8132a464  PMCORE-488:It can not be created new cases in iExplorer 11 when   installing Knauf-Patch in the server <Fabio Guachalla>
-[3 weeks ago] ea8b2e00  PMCORE-494:There is an space when I do click on textarea field <Fabio Guachalla>
-[4 weeks ago] f9ccdfb5  (origin/bugfix/PMC-1526) PMC-1526: PROD - 1251 -> An error occurs if you select display-mode = view of a web control <Rodrigo Quelca>
-[5 weeks ago] 339f4de9  PMC-1442:[19026, 18927]  Dropdown populated by an Array variable is not working. <Fabio Guachalla>
-[5 weeks ago] f2b84c07  (origin/bugfix/PMC-1509) PMC-1319: The addrow javascript function does not set the default value correctly in the suggestions fields <Rodrigo Quelca>
-[6 weeks ago] ee9be14f  (origin/bugfix/PMC-993) getControl() function does not work in view mode <Rodrigo Quelca>
-[6 weeks ago] aecc5d0a  (origin/feature/PMC-1463) PMC-1463: Dynaform Designer - Accessibility Improvements Stage 1 <Rodrigo Quelca>
-[7 weeks ago] 6e71cd3e  (origin/feature/PMC-1170) fix, error in delete images when press a thumbnail image <henry>
-[7 weeks ago] 78afdfbf  update code with the las observations in PR PMC-1170 <henry>
-[8 weeks ago] e405f60f  improve problem with delete images in offline mode <henry>
-[9 weeks ago] 7151fc7c  fix order in show images <henry>
-[9 weeks ago] ac147498  fix problems with offline images with 2 or more steps <henry>
-[9 weeks ago] 3a1585cb  update icon delete for images mobile <henry>
-[9 weeks ago] fb190148  update events preview image in image field <henry>
-[9 weeks ago] 0453c502  solve observations in pull request <henry>
-[10 weeks ago] 9ab106c6  (origin/bugfix/PMC-1319) PMC-1319: The addrow javascript function does not set the default value correctly in the suggestions fields <Rodrigo Quelca>
-[2 months ago] e2276949  update Delete images in PMdynaform <henry>
-[3 months ago] a508e099  (origin/bugfix/PMC-1330_B) PMC-1330: The Dropdown control displays a single item <Rodrigo Quelca>
-[3 months ago] 38c8fd9c  (origin/bugfix/PMC-1347) PMC-1347: Dependent in view mode was not loaded when the for was rendered. <Rodrigo Quelca>
-[3 months ago] 4e282455  (origin/bugfix/PMC-1318) PMC-1318 <Julio Cesar Laura Avendaño>
-[3 months ago] 1862b975  (origin/bugfix/PMC-1331) fix first option <Rodrigo Quelca>
-[3 months ago] 3b81265a  PMC-1331:Secondary dependent fields do not refresh data when changing the dropdowns. Also, always the first row of the SQL query set as default value in the dependent fields, and not the static empty value configured. <Rodrigo Quelca>
-[3 months ago] 7ee7a12c  PMC-1317:Helper getUserInfo parameter  "userName" has in web, but in mobile has "username" <Fabio Guachalla>
-[4 months ago] d50a061c  PMC-1295:Helpers to retrieve the information of the current user <Fabio Guachalla>
-[4 months ago] 4475bab4  (origin/bugfix/PMC-1221) [7543] Dependent fields - Valeo's feedback over PMC-707 <Rodrigo Quelca>
-[5 months ago] 4d8761aa  (origin/bugfix/PMC-1184) PMC-1184: Automatic call setOnchange function <Rodrigo Quelca>
-[5 months ago] ed3d6979  PMC-1170: Preview images -  Create a bridge method (pmDynaform) to fire the preview action in the app. <Rodrigo Quelca>
-[5 months ago] 95461eb9  (origin/feature/PMC-1145) PMC-1145: pmDynaform - complete the view mode for mobile controls <Rodrigo Quelca>
+[25 hours ago] 35cfeeca  PMCORE-541:New lines are not taken into account in printed dynaform <Fabio Guachalla>
+[2 days ago] e8ea435d  (origin/bugfix/PMCORE-1249) PMCORE-1249: When you select a control option with the "setValue" method, more "execute-query" requests are executed. <Rodrigo Quelca>
+[2 days ago] b9090f1a  (origin/bugfix/PMCORE-1245) PMCORE-1245 <henry>
+[5 days ago] 7570efbf  (origin/bugfix/PMCORE-1248) PMCORE-1248: The suggest control does not retrieve the correct text, within a grid <Rodrigo Quelca>
+[5 days ago] 76cc789f  (origin/bugfix/PMCORE-1247) PMCORE-1247: Dependent fields with helper setText is not working properly <Rodrigo Quelca>
+[7 days ago] 3931aaeb  (origin/bugfix/PMCORE-1228) SetOnChange helper >> The console displays errors and the Dynaform is not rendered. <Rodrigo Quelca>
+[9 days ago] 7e5e5c00  (origin/bugfix/PMCORE-866-A) improve PMDynaform Event Bus <henry>
+[4 weeks ago] 340b11c7  (origin/feature/PMCORE-1137-B) PMCORE-1137-A <henry>
+[4 weeks ago] 507bb2ba  (origin/bugfix/PMCORE-1148) PMCORE-1148: PM 3.4.3 with the new Patch3_Knauf is not working in the IE11 browser <Rodrigo Quelca>
+[4 weeks ago] 01a5207a  PMCORE-1137 <henry>
+[5 weeks ago] e770b868  (origin/bugfix/PMCORE-1130) PMCORE-1130 <henry>
+[5 weeks ago] da9c0731  (origin/bugfix/PMCORE-1111_C) PMCORE-111: Dependent fields in grids lose its values <Rodrigo Quelca>
+[6 weeks ago] dc282b97  (origin/feature/PMCORE-1127) PMCORE-1127 <henry>
+[6 weeks ago] 6629d170  PMCORE-541: New lines are not taken into account in printed dynaform <Fabio Guachalla>
+[6 weeks ago] bb507c9c  FBI-1580: Tooltips in grids are being hidden in middle and small screens or when more than 6 elements are added <alex>
+[6 weeks ago] 26000aa5  (origin/bugfix/PMCORE-1113) PMCORE-1113 <henry>
+[6 weeks ago] 21a74c78  (origin/bugfix/PMCORE-1111) PMCORE-1111: Dependent fields in grids lose its values <Rodrigo Quelca>
+[7 weeks ago] 638f0136  PMCORE-1096:Multiple File Upload Control does not validate Required Field attribute <Fabio Guachalla>
+[7 weeks ago] e1e7137b  (origin/bugfix/PMCORE-522) PMCORE-522 <henry>
+[8 weeks ago] 0021eb5c  (origin/feature/PMCORE-1054) PMCORE-1054 <henry>
+[8 weeks ago] a9b5f45e  (origin/bugfix/PMCORE-1035) PMCORE-1035 <henry>
+[8 weeks ago] 3b913de7  (origin/bugfix/PMCORE-1019-A) PMCORE-1019 <henry>
+[9 weeks ago] 2cbeeef4  Words cut off in dynaform printed PDF <Fabio Guachalla>
+[9 weeks ago] 742d0259  Words cut off in dynaform printed PDF <Fabio Guachalla>
+[9 weeks ago] 8132a464  PMCORE-488:It can not be created new cases in iExplorer 11 when   installing Knauf-Patch in the server <Fabio Guachalla>
+[9 weeks ago] ea8b2e00  PMCORE-494:There is an space when I do click on textarea field <Fabio Guachalla>
+[3 months ago] f9ccdfb5  (origin/bugfix/PMC-1526) PMC-1526: PROD - 1251 -> An error occurs if you select display-mode = view of a web control <Rodrigo Quelca>
+[3 months ago] 1dc20e06  (origin/bugfix/PMC-1533) change the execution of suggest Field Offline mode <henry>
+[3 months ago] 339f4de9  PMC-1442:[19026, 18927]  Dropdown populated by an Array variable is not working. <Fabio Guachalla>
+[3 months ago] 387e0f66  (origin/bugfix/PRE-669) PRE-669 fix dependents fields in the second row of the grid <henry>

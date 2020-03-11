@@ -1086,6 +1086,7 @@ class AdditionalTables extends BaseAdditionalTables
         $criteria->addSelectColumn(AdditionalTablesPeer::ADD_TAB_DESCRIPTION);
         $criteria->addSelectColumn(AdditionalTablesPeer::ADD_TAB_TYPE);
         $criteria->addSelectColumn(AdditionalTablesPeer::ADD_TAB_TAG);
+        $criteria->addSelectColumn(AdditionalTablesPeer::ADD_TAB_OFFLINE);
         $criteria->addSelectColumn(AdditionalTablesPeer::PRO_UID);
         $criteria->addSelectColumn(AdditionalTablesPeer::DBS_UID);
 

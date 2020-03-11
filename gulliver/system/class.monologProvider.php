@@ -425,6 +425,9 @@ class MonologProvider
         if (isset(static::$levels[$levelDebug])) {
             $level = static::$levels[$levelDebug];
             $this->levelDebug = $level;
+        } else {
+            //If is other value like NONE will set with empty level
+            $this->levelDebug = '';
         }
     }
 
@@ -467,7 +470,8 @@ class MonologProvider
     }
 
     /**
-     * Register log
+     * Register log if the level correspond to the logging_level defined
+     * In other way return false if the log was turn off or the actions does not logged
      *
      * @access public
      *
@@ -475,12 +479,14 @@ class MonologProvider
      * @param string $message The log message
      * @param array $context The log context
      *
-     * @return void
+     * @return bool
      */
     public function addLog($level, $message, $context)
     {
-        if (!empty($this->getLevelDebug())) {
-            $this->getLogger()->addRecord($level, $message, $context);
+        if (!empty($this->getLevelDebug()) && $level >= $this->getLevelDebug()) {
+            return $this->getLogger()->addRecord($level, $message, $context);
+        } else {
+            return false;
         }
     }
 }

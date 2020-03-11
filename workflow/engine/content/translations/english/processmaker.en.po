@@ -2756,6 +2756,18 @@ msgid "AVAILABLE MEMBERS"
 msgstr "AVAILABLE MEMBERS"
 
 # TRANSLATION
+# LABEL/ID_AVAILABLE_OFFLINE
+#: LABEL/ID_AVAILABLE_OFFLINE
+msgid "Available offline"
+msgstr "Available offline"
+
+# TRANSLATION
+# LABEL/ID_AVAILABLE_OFFLINE_THE_MOBILE_APPLICATIONS
+#: LABEL/ID_AVAILABLE_OFFLINE_THE_MOBILE_APPLICATIONS
+msgid "Available offline, the mobile applications will download this table for offline use"
+msgstr "Available offline, the mobile applications will download this table for offline use"
+
+# TRANSLATION
 # LABEL/ID_AVAILABLE_PERMISSIONS
 #: LABEL/ID_AVAILABLE_PERMISSIONS
 msgid "AVAILABLE PERMISSIONS"
@@ -4318,6 +4330,18 @@ msgstr "Click the lock to make changes."
 #: LABEL/ID_CLICK_UNLOCK
 msgid "Click the lock to prevent further changes."
 msgstr "Click the lock to prevent further changes."
+
+# TRANSLATION
+# LABEL/ID_CLIENT_ID
+#: LABEL/ID_CLIENT_ID
+msgid "Client ID"
+msgstr "Client ID"
+
+# TRANSLATION
+# LABEL/ID_CLIENT_SECRET
+#: LABEL/ID_CLIENT_SECRET
+msgid "Client Secret"
+msgstr "Client Secret"
 
 # TRANSLATION
 # LABEL/ID_CLOSE
@@ -7052,8 +7076,8 @@ msgstr "The email was resend to"
 # TRANSLATION
 # LABEL/ID_EMAIL_SERVER_ACCOUNT_FROM
 #: LABEL/ID_EMAIL_SERVER_ACCOUNT_FROM
-msgid "Sender Account"
-msgstr "Sender Account"
+msgid "From Account"
+msgstr "From Account"
 
 # TRANSLATION
 # LABEL/ID_EMAIL_SERVER_CONFIRM_DELETE
@@ -18690,6 +18714,12 @@ msgid "SMTP (OpenMail)"
 msgstr "SMTP (OpenMail)"
 
 # TRANSLATION
+# LABEL/ID_MESS_ENGINE_TYPE_4
+#: LABEL/ID_MESS_ENGINE_TYPE_4
+msgid "OAUTH (GMail OAuth)"
+msgstr "OAUTH (GMail OAuth)"
+
+# TRANSLATION
 # LABEL/ID_MESS_SEND_MAX_REQUIRED
 #: LABEL/ID_MESS_SEND_MAX_REQUIRED
 msgid "The maximum number of attempts to send mail is a required field."
@@ -20098,6 +20128,24 @@ msgstr "User has been updated successfully"
 #: LABEL/ID_OFF
 msgid "Off"
 msgstr "Off"
+
+# TRANSLATION
+# LABEL/ID_OFFLINE_TABLES
+#: LABEL/ID_OFFLINE_TABLES
+msgid "Offline Tables"
+msgstr "Offline Tables"
+
+# TRANSLATION
+# LABEL/ID_OFFLINE_TABLES_ENABLE
+#: LABEL/ID_OFFLINE_TABLES_ENABLE
+msgid "Set Offline"
+msgstr "Set Offline"
+
+# TRANSLATION
+# LABEL/ID_OFFLINE_TABLES_DISABLE
+#: LABEL/ID_OFFLINE_TABLES_DISABLE
+msgid "Set Online"
+msgstr "Set Online"
 
 # TRANSLATION
 # LABEL/ID_OF_THE_MONTH

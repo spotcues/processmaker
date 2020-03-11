@@ -1,12 +1,14 @@
 <?php
 namespace ProcessMaker\BusinessModel;
 
+use EmailEventPeer;
 use Exception;
 use G;
 use Criteria;
 use ProcessFiles;
 use ProcessFilesPeer;
 use ProcessPeer;
+use ResultSet;
 use TaskPeer;
 
 class FilesManager
@@ -671,62 +673,60 @@ class FilesManager
     }
 
     /**
-     *
-     * @param string $sProcessUID {@min 32} {@max 32}
+     * Deletes the physical file and its corresponding record in the database.
+     * @param string $proUid {@min 32} {@max 32}
      * @param string $prfUid {@min 32} {@max 32}
-     *
-     *
+     * @param bool $verifyingRelationship
      * @access public
+     * @throws Exception
      */
-    public function deleteProcessFilesManager($sProcessUID, $prfUid, $verifyingRelationship = false)
+    public function deleteProcessFilesManager($proUid, $prfUid, $verifyingRelationship = false)
     {
         try {
             $path = '';
-            $criteriaPf = new \Criteria("workflow");
-            $criteriaPf->addSelectColumn(\ProcessFilesPeer::PRF_PATH);
-            $criteriaPf->add(\ProcessFilesPeer::PRF_UID, $prfUid, \Criteria::EQUAL);
-            $rsCriteria = \ProcessFilesPeer::doSelectRS($criteriaPf);
-            $rsCriteria->setFetchmode(\ResultSet::FETCHMODE_ASSOC);
-            $rsCriteria->next();
-            while ($aRow = $rsCriteria->getRow()) {
-                $path = $aRow['PRF_PATH'];
-                $rsCriteria->next();
+            $criteriaProcessFiles = new Criteria("workflow");
+            $criteriaProcessFiles->addSelectColumn(ProcessFilesPeer::PRF_PATH);
+            $criteriaProcessFiles->add(ProcessFilesPeer::PRF_UID, $prfUid, Criteria::EQUAL);
+            $resultSet1 = ProcessFilesPeer::doSelectRS($criteriaProcessFiles);
+            $resultSet1->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+            $resultSet1->next();
+            while ($row = $resultSet1->getRow()) {
+                $path = $row['PRF_PATH'];
+                $resultSet1->next();
             }
             if ($path == '') {
-                throw new \Exception(\G::LoadTranslation("ID_INVALID_VALUE_FOR", array('prf_uid')));
+                throw new Exception(G::LoadTranslation("ID_INVALID_VALUE_FOR", array('prf_uid')));
             }
 
             $relationshipEmailEvent = false;
-            $criteria = new \Criteria("workflow");
-            $criteria->addSelectColumn(\EmailEventPeer::PRF_UID);
-            $criteria->add(\EmailEventPeer::PRF_UID, $prfUid, \Criteria::EQUAL);
-            $rsCriteria = \EmailEventPeer::doSelectRS($criteria);
-            $rsCriteria->setFetchmode(\ResultSet::FETCHMODE_ASSOC);
-            $rsCriteria->next();
-            while ($aRow = $rsCriteria->getRow()) {
+            $criteria = new Criteria("workflow");
+            $criteria->addSelectColumn(EmailEventPeer::PRF_UID);
+            $criteria->add(EmailEventPeer::PRF_UID, $prfUid, Criteria::EQUAL);
+            $resultSet2 = EmailEventPeer::doSelectRS($criteria);
+            $resultSet2->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+            $resultSet2->next();
+            while ($row = $resultSet2->getRow()) {
                 $relationshipEmailEvent = true;
-                $rsCriteria->next();
+                $resultSet2->next();
             }
-            $explodePath = explode(DIRECTORY_SEPARATOR,$path);
+
+            $path = str_replace("\\", "/", $path);
+            $fileName = basename($path);
             if ($relationshipEmailEvent && !$verifyingRelationship) {
-                throw new \Exception(\G::LoadTranslation(G::LoadTranslation('ID_CANNOT_REMOVE_TEMPLATE_EMAIL_EVENT',
-                    [end($explodePath)])));
+                throw new Exception(G::LoadTranslation(G::LoadTranslation('ID_CANNOT_REMOVE_TEMPLATE_EMAIL_EVENT', [$fileName])));
             }
 
-            $sFile = end($explodePath);
-            $path = PATH_DATA_MAILTEMPLATES.$sProcessUID.DIRECTORY_SEPARATOR.$sFile;
-
+            $path = PATH_DATA_MAILTEMPLATES . $proUid . "/" . $fileName;
             if (file_exists($path) && !is_dir($path)) {
                 unlink($path);
             } else {
-              $path = PATH_DATA_PUBLIC.$sProcessUID.DIRECTORY_SEPARATOR.$sFile;
-
-              if (file_exists($path) && !is_dir($path)) {
-                  unlink($path);
-              }
+                $path = PATH_DATA_PUBLIC . $proUid . "/" . $fileName;
+                if (file_exists($path) && !is_dir($path)) {
+                    unlink($path);
+                }
             }
 
-            $rs = \ProcessFilesPeer::doDelete($criteriaPf);
+            ProcessFilesPeer::doDelete($criteriaProcessFiles);
         } catch (Exception $e) {
             throw $e;
         }

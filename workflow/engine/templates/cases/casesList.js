@@ -2561,12 +2561,6 @@ Ext.onReady ( function() {
         // Nothing to do
     }
 
-    try {
-        parent.updateCasesTree();
-    }
-    catch (e) {
-        // Nothing to do
-    }
     if (action === "search") {
         comboCategory.setValue(
             typeof filtersValues !== 'undefined' && filtersValues.advanced && filtersValues.advanced.category ?

@@ -48,6 +48,7 @@ return array(
     'Nexmo\\' => array($vendorDir . '/nexmo/client-core/src'),
     'Monolog\\' => array($vendorDir . '/monolog/monolog/src/Monolog'),
     'Maveriks\\' => array($baseDir . '/framework/src/Maveriks'),
+    'League\\OAuth2\\Client\\' => array($vendorDir . '/league/oauth2-client/src', $vendorDir . '/league/oauth2-google/src'),
     'League\\Flysystem\\' => array($vendorDir . '/league/flysystem/src'),
     'Lcobucci\\JWT\\' => array($vendorDir . '/lcobucci/jwt/src'),
     'Laravel\\Tinker\\' => array($vendorDir . '/laravel/tinker/src'),

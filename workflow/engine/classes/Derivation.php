@@ -1228,6 +1228,8 @@ class Derivation
                 if($this->flagControlMulInstance){
                     $criteriaMulti = new Criteria("workflow");
                     $criteriaMulti->addSelectColumn(AppDelegationPeer::DEL_PREVIOUS);
+                    $criteriaMulti->add(AppDelegationPeer::APP_UID, $currentDelegation['APP_UID'], Criteria::EQUAL);
+                    $criteriaMulti->add(AppDelegationPeer::DEL_INDEX, $currentDelegation['DEL_INDEX'], Criteria::EQUAL);
                     $criteriaMulti->add(AppDelegationPeer::TAS_UID, $currentDelegation['TAS_UID'], Criteria::EQUAL);
                     $criteriaMultiR = AppDelegationPeer::doSelectRS($criteriaMulti);
                     $criteriaMultiR->setFetchmode(ResultSet::FETCHMODE_ASSOC);

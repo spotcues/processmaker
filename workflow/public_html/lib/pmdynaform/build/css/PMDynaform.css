@@ -707,10 +707,15 @@
     text-align: left;
     padding: 0px 4px 0px 0px;
     list-style-type: none;
+    white-space: pre-line;
   }
 
   .content-print li {
     list-style-type: none;
+  }
+
+  .content-print {
+    white-space: pre-wrap !important;
   }
 }
 @page {

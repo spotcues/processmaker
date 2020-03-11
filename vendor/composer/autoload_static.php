@@ -4,7 +4,7 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInitc4f4268acc3f4ca56ca8d95910554c95
+class ComposerStaticInita8460c9bf5cb02c5c16cedda6b2f8bce
 {
     public static $files = array (
         '0e6d7bf4a5811bfa5cf40c5ccd6fae6a' => __DIR__ . '/..' . '/symfony/polyfill-mbstring/bootstrap.php',
@@ -12,11 +12,11 @@ class ComposerStaticInitc4f4268acc3f4ca56ca8d95910554c95
         '25072dd6e2470089de65ae7bf11d3109' => __DIR__ . '/..' . '/symfony/polyfill-php72/bootstrap.php',
         'f598d06aa772fa33d905e87be6398fb1' => __DIR__ . '/..' . '/symfony/polyfill-intl-idn/bootstrap.php',
         '0d59ee240a4cd96ddbb4ff164fccea4d' => __DIR__ . '/..' . '/symfony/polyfill-php73/bootstrap.php',
-        '667aeda72477189d0494fecd327c3641' => __DIR__ . '/..' . '/symfony/var-dumper/Resources/functions/dump.php',
         '7b11c4dc42b3b3023073cb14e519683c' => __DIR__ . '/..' . '/ralouphie/getallheaders/src/getallheaders.php',
         'c964ee0ededf28c96ebd9db5099ef910' => __DIR__ . '/..' . '/guzzlehttp/promises/src/functions_include.php',
         'a0edc8309cc5e1d60e3047b5df6b7052' => __DIR__ . '/..' . '/guzzlehttp/psr7/src/functions_include.php',
         '37a3dc5111fe8f707ab4c132ef1dbc62' => __DIR__ . '/..' . '/guzzlehttp/guzzle/src/functions_include.php',
+        '667aeda72477189d0494fecd327c3641' => __DIR__ . '/..' . '/symfony/var-dumper/Resources/functions/dump.php',
         'def43f6c87e4f8dfd0c9e1b1bab14fe8' => __DIR__ . '/..' . '/symfony/polyfill-iconv/bootstrap.php',
         'cf97c57bfe0f23854afd2f3818abb7a0' => __DIR__ . '/..' . '/zendframework/zend-diactoros/src/functions/create_uploaded_file.php',
         '9bf37a3d0dad93e29cb4e1b1bfab04e9' => __DIR__ . '/..' . '/zendframework/zend-diactoros/src/functions/marshal_headers_from_sapi.php',
@@ -113,6 +113,7 @@ class ComposerStaticInitc4f4268acc3f4ca56ca8d95910554c95
         ),
         'L' => 
         array (
+            'League\\OAuth2\\Client\\' => 21,
             'League\\Flysystem\\' => 17,
             'Lcobucci\\JWT\\' => 13,
             'Laravel\\Tinker\\' => 15,
@@ -329,6 +330,11 @@ class ComposerStaticInitc4f4268acc3f4ca56ca8d95910554c95
         'Maveriks\\' => 
         array (
             0 => __DIR__ . '/../..' . '/framework/src/Maveriks',
+        ),
+        'League\\OAuth2\\Client\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/league/oauth2-client/src',
+            1 => __DIR__ . '/..' . '/league/oauth2-google/src',
         ),
         'League\\Flysystem\\' => 
         array (
@@ -6009,15 +6015,15 @@ class ComposerStaticInitc4f4268acc3f4ca56ca8d95910554c95
         'soapNtlm' => __DIR__ . '/../..' . '/gulliver/system/class.soapNtlm.php',
         'soap_fault' => __DIR__ . '/../..' . '/thirdparty/pear/class.soap_fault.php',
         'soap_fault_colosa' => __DIR__ . '/../..' . '/thirdparty/pear/nusoap.colosa.php',
-        'soap_parser' => __DIR__ . '/../..' . '/thirdparty/pear/class.soap_parser.php',
+        'soap_parser' => __DIR__ . '/../..' . '/thirdparty/pear/nusoap.php',
         'soap_parser_colosa' => __DIR__ . '/../..' . '/thirdparty/pear/nusoap.colosa.php',
-        'soap_server' => __DIR__ . '/../..' . '/thirdparty/pear/nusoap.php',
+        'soap_server' => __DIR__ . '/../..' . '/thirdparty/pear/class.soap_server.php',
         'soap_server_colosa' => __DIR__ . '/../..' . '/thirdparty/pear/nusoap.colosa.php',
         'soap_transport_http' => __DIR__ . '/../..' . '/thirdparty/pear/nusoap.colosa.php',
         'soapclient' => __DIR__ . '/../..' . '/thirdparty/pear/nusoap.php',
         'soapclient_colosa' => __DIR__ . '/../..' . '/thirdparty/pear/nusoap.colosa.php',
         'soapclientmime' => __DIR__ . '/../..' . '/thirdparty/pear/nusoapmime.php',
-        'soapval' => __DIR__ . '/../..' . '/thirdparty/pear/class.soap_val.php',
+        'soapval' => __DIR__ . '/../..' . '/thirdparty/pear/nusoap.colosa.php',
         'stepDetail' => __DIR__ . '/../..' . '/workflow/engine/classes/class.plugin.php',
         'subscriberInfo' => __DIR__ . '/../..' . '/thirdparty/pear/SOAP/Interop/registrationAndNotification.php',
         'taskExtendedProperty' => __DIR__ . '/../..' . '/workflow/engine/classes/class.plugin.php',
@@ -6036,12 +6042,12 @@ class ComposerStaticInitc4f4268acc3f4ca56ca8d95910554c95
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInitc4f4268acc3f4ca56ca8d95910554c95::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInitc4f4268acc3f4ca56ca8d95910554c95::$prefixDirsPsr4;
-            $loader->fallbackDirsPsr4 = ComposerStaticInitc4f4268acc3f4ca56ca8d95910554c95::$fallbackDirsPsr4;
-            $loader->prefixesPsr0 = ComposerStaticInitc4f4268acc3f4ca56ca8d95910554c95::$prefixesPsr0;
-            $loader->fallbackDirsPsr0 = ComposerStaticInitc4f4268acc3f4ca56ca8d95910554c95::$fallbackDirsPsr0;
-            $loader->classMap = ComposerStaticInitc4f4268acc3f4ca56ca8d95910554c95::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticInita8460c9bf5cb02c5c16cedda6b2f8bce::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInita8460c9bf5cb02c5c16cedda6b2f8bce::$prefixDirsPsr4;
+            $loader->fallbackDirsPsr4 = ComposerStaticInita8460c9bf5cb02c5c16cedda6b2f8bce::$fallbackDirsPsr4;
+            $loader->prefixesPsr0 = ComposerStaticInita8460c9bf5cb02c5c16cedda6b2f8bce::$prefixesPsr0;
+            $loader->fallbackDirsPsr0 = ComposerStaticInita8460c9bf5cb02c5c16cedda6b2f8bce::$fallbackDirsPsr0;
+            $loader->classMap = ComposerStaticInita8460c9bf5cb02c5c16cedda6b2f8bce::$classMap;
 
         }, null, ClassLoader::class);
     }

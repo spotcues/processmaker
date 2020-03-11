@@ -534,9 +534,10 @@ class Delegation extends Model
         $selfServiceTasks = TaskUser::getSelfServicePerUser($usrUid);
 
         if (!empty($selfServiceTasks)) {
-            // Start the first query
+            // Start the second query
             $query2 = Delegation::query()->select('APP_NUMBER');
             $query2->tasksIn($selfServiceTasks);
+            $query2->isThreadOpen();
             $query2->noUserInThread();
 
             // Build the complex query that uses "UNION DISTINCT" clause

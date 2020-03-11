@@ -543,45 +543,36 @@ class Ajax
         G::RenderPage('publish', 'extJs');
     }
 
+    /**
+     * Cancel case from actions menu
+     *
+     * @link https://wiki.processmaker.com/3.3/Cases/Actions#Cancel
+     *
+     * @return void
+     */
     public function cancelCase()
     {
-        $oCase = new Cases();
-        $multiple = false;
-
-        if (isset($_POST['APP_UID']) && isset($_POST['DEL_INDEX'])) {
-            $APP_UID = $_POST['APP_UID'];
-            $DEL_INDEX = $_POST['DEL_INDEX'];
-
-            $appUids = explode(',', $APP_UID);
-            $delIndexes = explode(',', $DEL_INDEX);
-            if (count($appUids) > 1 && count($delIndexes) > 1) {
-                $multiple = true;
+        try {
+            $appUid = !empty($_SESSION['APPLICATION']) ? $_SESSION['APPLICATION'] : '';
+            $index = !empty($_SESSION['INDEX']) ? $_SESSION['INDEX'] : '';
+            $usrUid = !empty($_SESSION['USER_LOGGED']) ? $_SESSION['USER_LOGGED'] : '';
+            $result = new stdclass();
+            if (!empty($appUid) && !empty($index) && !empty($usrUid)) {
+                $ws = new WsBase();
+                $response = (object)$ws->cancelCase($appUid, $index, $usrUid);
+                // Review if the case was cancelled, true if the case was cancelled
+                $result->status = ($response->status_code == 0) ? true : false;
+                $result->msg = $response->message;
+            } else {
+                $result->status = false;
+                $result->msg = G::LoadTranslation("ID_CASE_USER_INVALID_CANCEL_CASE", [$usrUid]);
             }
-        } elseif (isset($_POST['sApplicationUID']) && isset($_POST['iIndex'])) {
-            $APP_UID = $_POST['sApplicationUID'];
-            $DEL_INDEX = $_POST['iIndex'];
-        } else {
-            $APP_UID = $_SESSION['APPLICATION'];
-            $DEL_INDEX = $_SESSION['INDEX'];
+        } catch (Exception $e) {
+            $result->status = false;
+            $result->msg = $e->getMessage();
         }
 
-        // Save the note pause reason
-        if ($_POST['NOTE_REASON'] != '') {
-            require_once("classes/model/AppNotes.php");
-            $appNotes = new AppNotes();
-            $noteContent = addslashes($_POST['NOTE_REASON']);
-            $appNotes->postNewNote($APP_UID, $_SESSION['USER_LOGGED'], $noteContent, $_POST['NOTIFY_PAUSE']);
-        }
-        // End save
-
-
-        if ($multiple) {
-            foreach ($appUids as $i => $appUid) {
-                $oCase->cancelCase($appUid, $delIndexes[$i], $_SESSION['USER_LOGGED']);
-            }
-        } else {
-            $oCase->cancelCase($APP_UID, $DEL_INDEX, $_SESSION['USER_LOGGED']);
-        }
+        print G::json_encode($result);
     }
 
     public function getUsersToReassign()

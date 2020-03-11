@@ -13,7 +13,7 @@ if (isset($_SESSION['USR_USERNAME'])) {
 }
 
 // Initializing variables
-$action = $_POST['action'];
+$action = !empty($_POST['action']) ? $_POST['action'] : '';
 $result = new StdClass();
 
 // Try to execute the requested action
