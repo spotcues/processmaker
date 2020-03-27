@@ -15120,6 +15120,12 @@ msgid "Monthly"
 msgstr "Monthly"
 
 # TRANSLATION
+# LABEL/ID_MAFE_90589c47f06eb971d548591f23c285af
+#: LABEL/ID_MAFE_90589c47f06eb971d548591f23c285af
+msgid "Custom"
+msgstr "Custom"
+
+# TRANSLATION
 # LABEL/ID_MAFE_9060587edeb01a63e3d3edc959678d1e
 #: LABEL/ID_MAFE_9060587edeb01a63e3d3edc959678d1e
 msgid "[LABEL/ID_MAFE_9060587edeb01a63e3d3edc959678d1e] Before"
@@ -18058,12 +18064,6 @@ msgstr "There are problems updating the Timer Event, please try again."
 #: LABEL/ID_MAFE_f4ae7ce97eda9edfe1541b3fdea115b6
 msgid "Group or User"
 msgstr "Group or User"
-
-# TRANSLATION
-# LABEL/ID_MAFE_f4b5974fd11406f8410fa7e8502a26a3
-#: LABEL/ID_MAFE_f4b5974fd11406f8410fa7e8502a26a3
-msgid "Granular"
-msgstr "Granular"
 
 # TRANSLATION
 # LABEL/ID_MAFE_f4ee0932c0b3cdb0af6d4407fc915b28

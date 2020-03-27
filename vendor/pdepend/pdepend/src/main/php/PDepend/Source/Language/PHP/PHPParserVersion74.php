@@ -43,22 +43,13 @@
 
 namespace PDepend\Source\Language\PHP;
 
+use PDepend\Source\AST\ASTFieldDeclaration;
+use PDepend\Source\AST\ASTType;
+use PDepend\Source\Parser\UnexpectedTokenException;
+use PDepend\Source\Tokenizer\Tokens;
+
 /**
  * Concrete parser implementation that supports features up to PHP version 7.4.
- *
- * TODO: Check or implement features support for:
- * - Typed properties
- *   https://www.php.net/manual/en/migration74.new-features.php#migration74.new-features.core.typed-properties
- * - Arrow functions
- *   https://www.php.net/manual/en/migration74.new-features.php#migration74.new-features.core.arrow-functions
- * - Limited return type covariance and argument type contravariance
- *   https://www.php.net/manual/en/migration74.new-features.php#migration74.new-features.core.type-variance
- * - Null coalescing assignment operator
- *   https://www.php.net/manual/en/migration74.new-features.php#migration74.new-features.core.null-coalescing-assignment-operator
- * - Unpacking inside arrays
- *   https://www.php.net/manual/en/migration74.new-features.php#migration74.new-features.core.unpack-inside-array
- * - Numeric literal separator
- *   https://www.php.net/manual/en/migration74.new-features.php#migration74.new-features.core.numeric-literal-separator
  *
  * @copyright 2008-2017 Manuel Pichler. All rights reserved.
  * @license http://www.opensource.org/licenses/bsd-license.php BSD License
@@ -66,4 +57,72 @@ namespace PDepend\Source\Language\PHP;
  */
 abstract class PHPParserVersion74 extends PHPParserVersion73
 {
+    protected function parseUnknownDeclaration($tokenType, $modifiers)
+    {
+        /**
+         * Typed properties
+         * https://www.php.net/manual/en/migration74.new-features.php#migration74.new-features.core.typed-properties
+         */
+        if (in_array($tokenType, array(
+            Tokens::T_STRING,
+            Tokens::T_ARRAY,
+            Tokens::T_QUESTION_MARK,
+            Tokens::T_BACKSLASH,
+            Tokens::T_CALLABLE,
+            Tokens::T_SELF,
+        ))) {
+            return $this->parseTypeHint();
+        }
+
+        return parent::parseUnknownDeclaration($tokenType, $modifiers);
+    }
+
+    protected function parseMethodOrFieldDeclaration($modifiers = 0)
+    {
+        $field = parent::parseMethodOrFieldDeclaration($modifiers);
+
+        if ($field instanceof ASTType) {
+            $type = $field;
+
+            $field = parent::parseMethodOrFieldDeclaration($modifiers);
+
+            if (!($field instanceof ASTFieldDeclaration)) {
+                throw new UnexpectedTokenException($this->tokenizer->prevToken(), $this->tokenizer->getSourceFile());
+            }
+
+            $field->prependChild($type);
+        }
+
+        return $field;
+    }
+
+    protected function parseLambdaFunctionDeclaration()
+    {
+        $this->tokenStack->push();
+
+        if (Tokens::T_FN === $this->tokenizer->peek()) {
+            $this->consumeToken(Tokens::T_FN);
+        }
+
+        $closure = $this->builder->buildAstClosure();
+        $closure->setReturnsByReference($this->parseOptionalByReference());
+        $closure->addChild($this->parseFormalParameters());
+
+        $closure->addChild(
+            $this->buildReturnStatement(
+                $this->consumeToken(Tokens::T_DOUBLE_ARROW)
+            )
+        );
+
+        return $this->setNodePositionsAndReturn($closure);
+    }
+
+    /**
+     * Override PHP 7.3 checkEllipsisInExpressionSupport to stop throwing the
+     * parsing exception.
+     */
+    protected function checkEllipsisInExpressionSupport()
+    {
+        // Do not throw the exception from parent PHP 7.3
+    }
 }

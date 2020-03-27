@@ -90,25 +90,3 @@ $factory->state(\ProcessMaker\Model\EmailServerModel::class, 'GMAILAPI', functio
         'OAUTH_REFRESH_TOKEN' => $faker->regexify("/[a-z]{7}[a-zA-Z0-9]{355}==/")
     ];
 });
-
-$factory->state(\ProcessMaker\Model\EmailServerModel::class, 'OPENMAIL', function ($faker) {
-    return [
-        'MESS_UID' => G::generateUniqueID(),
-        'MESS_ENGINE' => 'OPENMAIL',
-        'MESS_PORT' => 0,
-        'MESS_INCOMING_SERVER' => '',
-        'MESS_INCOMING_PORT' => 0,
-        'MESS_RAUTH' => 1,
-        'MESS_ACCOUNT' => $faker->email,
-        'MESS_PASSWORD' => $faker->password,
-        'MESS_FROM_MAIL' => $faker->email,
-        'MESS_FROM_NAME' => $faker->name,
-        'SMTPSECURE' => 'ssl',
-        'MESS_TRY_SEND_INMEDIATLY' => 0,
-        'MAIL_TO' => $faker->email,
-        'MESS_DEFAULT' => 0,
-        'OAUTH_CLIENT_ID' => '',
-        'OAUTH_CLIENT_SECRET' => '',
-        'OAUTH_REFRESH_TOKEN' => ''
-    ];
-});

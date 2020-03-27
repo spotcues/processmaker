@@ -89,6 +89,9 @@ $oHeadPublisher->assign('SYS_SKIN', SYS_SKIN);
 $oHeadPublisher->assign('HTTP_SERVER_HOSTNAME', System::getHttpServerHostnameRequestsFrontEnd());
 $oHeadPublisher->assign('credentials', base64_encode(G::json_encode($designer->getCredentials())));
 
+$userUid = (isset($_SESSION['USER_LOGGED']) && $_SESSION['USER_LOGGED'] != '') ? $_SESSION['USER_LOGGED'] : null;
+$oHeadPublisher->assign('userUid', $userUid);
+
 $deleteCasesFlag = false;
 global $RBAC;
 if ($RBAC->userCanAccess('PM_DELETE_PROCESS_CASES') === 1) {

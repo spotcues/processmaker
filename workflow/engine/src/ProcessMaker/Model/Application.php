@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\DB;
 class Application extends Model
 {
     protected $table = "APPLICATION";
+    protected $primaryKey = 'APP_NUMBER';
+    public $incrementing = false;
     // No timestamps
     public $timestamps = false;
 
@@ -16,20 +18,22 @@ class Application extends Model
         return $this->hasMany(Delegation::class, 'APP_UID', 'APP_UID');
     }
 
-    public function parent()
-    {
-        return $this->hasOne(Application::class, 'APP_PARENT', 'APP_UID');
-    }
-
     public function currentUser()
     {
-        return $this->hasOne(User::class, 'APP_CUR_USER', 'USR_UID');
+        return $this->belongsTo(User::class, 'APP_CUR_USER', 'USR_UID');
+    }
+
+    public function creatorUser()
+    {
+        return $this->belongsTo(User::class, 'APP_INIT_USER', 'USR_UID');
     }
 
     /**
      * Scope for query to get the application by APP_UID.
+     *
      * @param \Illuminate\Database\Eloquent\Builder $query
      * @param string $appUid
+     *
      * @return \Illuminate\Database\Eloquent\Builder
      */
     public function scopeAppUid($query, $appUid)
@@ -84,5 +88,27 @@ class Application extends Model
         $firstElement = head($result);
 
         return $firstElement;
+    }
+
+    /**
+     * Update properties
+     *
+     * @param string $appUid
+     * @param array $fields
+     *
+     * @return array
+    */
+    public static function updateColumns($appUid, $fields)
+    {
+        $properties = [];
+        $properties['APP_ROUTING_DATA'] = !empty($fields['APP_ROUTING_DATA']) ? serialize($fields['APP_ROUTING_DATA']) : serialize([]);
+
+        // This column will to update only when the thread is related to the user
+        if (!empty($fields['APP_CUR_USER'])) {
+            $properties['APP_CUR_USER'] = $fields['APP_CUR_USER'];
+        }
+        Application::query()->appUid($appUid)->update($properties);
+
+        return $properties;
     }
 }

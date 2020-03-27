@@ -1,30 +1,30 @@
-[24 hours ago] aa1732dad  (origin/bugfix/PMCORE-1262) PMCORE-1262 <Julio Cesar Laura Avendaño>
-[2 days ago] 13691fac7  (origin/bugfix/PMCORE-1142_A) PMCORE-1142_A Artisan stops sending emails if it is left for several hours doing nothing. <Roly Rudy Gutierrez Pinto>
-[7 days ago] dfd69155b  (origin/bugfix/PMCORE-543-A) PMCORE-543 <Paula Quispe>
-[2 weeks ago] 623ec2766  (origin/bugfix/PMCORE-864) PMCORE-864 <Julio Cesar Laura Avendaño>
-[4 weeks ago] 375d8b5bd  (origin/bugfix/PMCORE-546) PMCORE-546 <Paula Quispe>
-[5 weeks ago] 13866beeb  (origin/bugfix/PMCORE-598-A) PMCORE-598-A <Andrea Adamczyk>
-[5 weeks ago] 66f8655d4  (origin/bugfix/PMCORE-545) PMCORE-545 Public files in a process cannot be deleted (in Windows Server) when the process is imported <Roly Rudy Gutierrez Pinto>
-[5 weeks ago] 22083e0dd  (origin/bugfix/PMCORE-543) PMCORE-543 <Paula Quispe>
-[5 weeks ago] 3d8f37e9d  (origin/bugfix/PMCORE-1132) PMCORE-1132: [19520] Simpified UX doesn't redirect to inbox in IE after submitting a case <Rodrigo Quelca>
-[5 weeks ago] 2a5c22fc7  (origin/bugfix/PMCORE-598) PMCORE-598 <Andrea Adamczyk>
-[5 weeks ago] 2f4e1e013  Merged in feature/PMC-1332 (pull request #7136) <Paula Quispe>
-[6 weeks ago] 28d07e1a8  (origin/bugfix/PMCORE-542-B) PMCORE-542 <Paula Quispe>
-[6 weeks ago] 3fe6b432f  (origin/bugfix/PMCORE-1059) PMCORE-1059 <Paula Quispe>
-[6 weeks ago] 93818597e  (origin/bugfix/PMCORE-1034) PMCORE-1034 ProcessMaker is not running in Stack 270 <Roly Rudy Gutierrez Pinto>
-[6 weeks ago] fddd7bc9f  (origin/bugfix/PMCORE-542-A) PMCORE-542 <Paula Quispe>
-[6 weeks ago] 7ec37dcf4  (origin/feature/PMC-1332) . <Paula Quispe>
-[6 weeks ago] 6de700561  (origin/bugfix/PMCORE-764) PMCORE-764 No "test mail" is registered in "Logs" in the "Emails" option <Roly Rudy Gutierrez Pinto>
-[7 weeks ago] 0cea0ec40  (origin/bugfix/PMCORE-779) PMCORE-779 The "Client Secret" field modification produces the ProcessMaker Error page. <Roly Rudy Gutierrez Pinto>
-[7 weeks ago] 811db5b67  (origin/bugfix/PMCORE-534) PMCORE-534 <Andrea Adamczyk>
-[7 weeks ago] 35d9db2c1  (origin/bugfix/PMCORE-1095) PMCORE-1095 <Julio Cesar Laura Avendaño>
-[7 weeks ago] 686f0a86c  PMCORE-546 <Paulis>
-[7 weeks ago] 56bc985d3  (origin/bugfix/PMCORE-1057) PMCORE-1057 <Andrea Adamczyk>
-[7 weeks ago] 6b361487e  (origin/bugfix/PMCORE-1058) PMCORE-1058 <Julio Cesar Laura Avendaño>
-[8 weeks ago] 79b862676  (origin/bugfix/PMCORE-496) PMCORE-496 Review why the command ./gulliver has some problems in the version 3.x <Roly Rudy Gutierrez Pinto>
-[8 weeks ago] d8e2e9427  (origin/bugfix/PMCORE-493) PMCORE-493 Unit test solve issues Circle CI WorkflowTest <Roly Rudy Gutierrez Pinto>
-[8 weeks ago] 7d381b023  (origin/bugfix/PMCORE-497) PMCORE-497 Unit test solve issues CircleCI GroupsAjaxTest <Roly Rudy Gutierrez Pinto>
-[8 weeks ago] c1ddcb7ed  (origin/bugfix/PMCORE-1056) Improvement related to reload counters for Valeo <Julio Cesar Laura Avendaño>
-[8 weeks ago] cf5360ccc  PMCORE-1049 <Julio Cesar Laura Avendaño>
-[8 weeks ago] 7e54b0955  (origin/bugfix/PMCORE-1049) PMCORE-1049 <Julio Cesar Laura Avendaño>
-[8 weeks ago] c426d2b33  Merged in bugfix/PMCORE-490 (pull request #7206) <Paula Quispe>
+[4 hours ago] 2d842c450  (origin/bugfix/PMCORE-1205_D) MCORE-1205: Columns from process list are not correctly displayed - depending on the other columns width could get hidden <Rodrigo Quelca>
+[3 days ago] b45a73b0f  (origin/bugfix/PMCORE-1205_B) PMCORE-1205 Columns from process list are not correctly displayed - depending on the other columns width could get hidden <Rodrigo Quelca>
+[6 days ago] a4ced1a09  (origin/bugfix/PMCORE-1203) PMCORE-1203 Help on how batch routing feature works and help to debug the code with a client <Roly Rudy Gutierrez Pinto>
+[10 days ago] ed4e1447c  (origin/bugfix/PMCORE-1171) PMCORE-1171 <Andrea Adamczyk>
+[2 weeks ago] bd6099def  (origin/bugfix/PMCORE-1268) PMCORE-1268 <Andrea Adamczyk>
+[2 weeks ago] aa1732dad  (origin/bugfix/PMCORE-1262) PMCORE-1262 <Julio Cesar Laura Avendaño>
+[2 weeks ago] 13691fac7  (origin/bugfix/PMCORE-1142_A) PMCORE-1142_A Artisan stops sending emails if it is left for several hours doing nothing. <Roly Rudy Gutierrez Pinto>
+[3 weeks ago] dfd69155b  (origin/bugfix/PMCORE-543-A) PMCORE-543 <Paula Quispe>
+[3 weeks ago] dcd0dfd10  PMCORE-1198 <Andrea Adamczyk>
+[3 weeks ago] cac4da2c2  (origin/bugfix/PMCORE-1224) PMCORE-1224 <Paula Quispe>
+[4 weeks ago] 1bc6dfdb6  PMCORE-1205:Columns from process list are not correctly displayed - depending on the other columns width could get hidden <Fabio Guachalla>
+[4 weeks ago] 623ec2766  (origin/bugfix/PMCORE-864) PMCORE-864 <Julio Cesar Laura Avendaño>
+[5 weeks ago] 8d390df60  (origin/bugfix/PMCORE-532) PMCORE-532 <Andrea Adamczyk>
+[5 weeks ago] e99adc704  (origin/bugfix/PMCORE-1186) PMCORE-1186 Invalid required validation inside Email Server creation <Roly Rudy Gutierrez Pinto>
+[5 weeks ago] 87cd23a42  (origin/bugfix/PMCORE-1160) PMCORE-1160 <Paula Quispe>
+[5 weeks ago] d4e737807  (origin/bugfix/PMCORE-525) PMCORE-525 Two different labels for the same action (Promotion Manager export) <Roly Rudy Gutierrez Pinto>
+[5 weeks ago] 5a8649058  (origin/bugfix/PMCORE-540) PMCORE-540 <Paula Quispe>
+[5 weeks ago] 3acb486e0  (origin/bugfix/PMCORE-1159) PMCORE-1159 SpoolRunTest: Solve the incomplete test <Roly Rudy Gutierrez Pinto>
+[5 weeks ago] d115645c7  PMCORE-583:[Zendesk - 15866] Remove the + cue when moving files in Documents Tab <Fabio Guachalla>
+[5 weeks ago] 825ee0ee2  (origin/bugfix/PMCORE-1165) PMCORE-1165 ProjectTest: Solve this incomplete test <Roly Rudy Gutierrez Pinto>
+[5 weeks ago] c4c1362ac  (origin/bugfix/PMCORE-1166) PMCORE-1166 GmailOAuthTest: Solve the incomplete test <Roly Rudy Gutierrez Pinto>
+[5 weeks ago] 96b155a20  (origin/bugfix/PMCORE-1139) PMCORE-1139 Gmail API fields are not required <Roly Rudy Gutierrez Pinto>
+[6 weeks ago] 4bd10c00d  (origin/bugfix/PMCORE-1164) PMCORE-1164 LightTest: Solve the incomplete test <Roly Rudy Gutierrez Pinto>
+[6 weeks ago] c85754d0e  (origin/bugfix/PMCORE-1162) PMCORE-1162 XmlImporterTest: solve the incomplete test <Roly Rudy Gutierrez Pinto>
+[6 weeks ago] 54fb8f22b  (origin/bugfix/PMCORE-1158) PMCORE-1158 ReportTablesTest: Solve the incomplete test <Roly Rudy Gutierrez Pinto>
+[6 weeks ago] 19b324ab0  (origin/bugfix/PMCORE-1163) PMCORE-1163 <Paula Quispe>
+[6 weeks ago] 04d37c41d  (origin/bugfix/PMPCORE-1157) PMCORE-1157 ProcessesTest: Solve the incomplete test <Roly Rudy Gutierrez Pinto>
+[6 weeks ago] 7758c9f11  (origin/bugfix/PMCORE-1167) PMCORE-1167 <Paula Quispe>
+[6 weeks ago] 48b2168b3  (origin/bugfix/PMCORE-1152) PMCORE-1152 Unit test: Solve the issue in the execution pmfunction <Roly Rudy Gutierrez Pinto>
+[6 weeks ago] 77c3d6048  (origin/bugfix/PMCORE-643) PMCORE-643 <Paula Quispe>

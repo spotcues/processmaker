@@ -1,6 +1,8 @@
 <?php
 
 /**
+ * cron_single.php
+ *
  * @see workflow/engine/bin/cron.php
  * @see workflow/engine/bin/messageeventcron.php
  * @see workflow/engine/bin/timereventcron.php
@@ -26,8 +28,6 @@ register_shutdown_function(function () {
         Propel::close();
     }
 });
-
-ini_set('memory_limit', '512M');
 
 try {
     //Verify data
@@ -66,30 +66,33 @@ try {
     require_once(PATH_HOME . 'engine' . PATH_SEP . 'config' . PATH_SEP . 'paths.php');
     require_once(PATH_TRUNK . 'framework' . PATH_SEP . 'src' . PATH_SEP . 'Maveriks' . PATH_SEP . 'Util' . PATH_SEP . 'ClassLoader.php');
 
-    //Class Loader - /ProcessMaker/BusinessModel
+    // Class Loader - /ProcessMaker/BusinessModel
     $classLoader = \Maveriks\Util\ClassLoader::getInstance();
     $classLoader->add(PATH_TRUNK . 'framework' . PATH_SEP . 'src' . PATH_SEP, 'Maveriks');
     $classLoader->add(PATH_TRUNK . 'workflow' . PATH_SEP . 'engine' . PATH_SEP . 'src' . PATH_SEP, 'ProcessMaker');
     $classLoader->add(PATH_TRUNK . 'workflow' . PATH_SEP . 'engine' . PATH_SEP . 'src' . PATH_SEP);
 
-    //Add vendors to autoloader
+    // Add vendors to autoloader
     $classLoader->addClass('Bootstrap', PATH_TRUNK . 'gulliver' . PATH_SEP . 'system' . PATH_SEP . 'class.bootstrap.php');
-
     $classLoader->addModelClassPath(PATH_TRUNK . 'workflow' . PATH_SEP . 'engine' . PATH_SEP . 'classes' . PATH_SEP . 'model' . PATH_SEP);
 
+    // Get the configurations related to the workspace
     $arraySystemConfiguration = System::getSystemConfiguration('', '', $workspace);
 
+    // Define the debug value
     $e_all = (defined('E_DEPRECATED')) ? E_ALL & ~E_DEPRECATED : E_ALL;
     $e_all = (defined('E_STRICT')) ? $e_all & ~E_STRICT : $e_all;
     $e_all = ($arraySystemConfiguration['debug']) ? $e_all : $e_all & ~E_NOTICE;
 
-    //In community version the default value is 0
+    // In community version the default value is 0
     $_SESSION['__SYSTEM_UTC_TIME_ZONE__'] = (int)($arraySystemConfiguration['system_utc_time_zone']) == 1;
 
     app()->useStoragePath(realpath(PATH_DATA));
     app()->make(Kernel::class)->bootstrap();
     restore_error_handler();
-    //Do not change any of these settings directly, use env.ini instead
+
+    // Do not change any of these settings directly, use env.ini instead
+    ini_set('memory_limit', $arraySystemConfiguration['memory_limit']);
     ini_set('display_errors', $arraySystemConfiguration['debug']);
     ini_set('error_reporting', $e_all);
     ini_set('short_open_tag', 'On');
@@ -238,8 +241,7 @@ try {
             define('DB_PASS', $DB_PASS);
         }
         if (!defined('SYS_SKIN')) {
-            $config = System::getSystemConfiguration();
-            define('SYS_SKIN', $config['default_skin']);
+            define('SYS_SKIN', $arraySystemConfiguration['default_skin']);
         }
 
         $dateSystem = date('Y-m-d H:i:s');

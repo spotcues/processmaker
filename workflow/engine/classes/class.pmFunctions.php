@@ -350,14 +350,9 @@ function executeQuery ($SqlStatement, $DBConnectionUID = 'workflow', $aParameter
     } catch (SQLException $sqle) {
         //Logger
         $aContext['action'] = 'execute-query';
-        $aContext['exception'] = (array)$sqle;
+        $aContext['SQLExceptionMessage'] = $sqle->getMessage();
         \Bootstrap::registerMonolog('sqlExecution', 400, 'Sql Execution', $aContext, $sysSys, 'processmaker.log');
 
-        if (isset($sqle->xdebug_message)) {
-            error_log(print_r($sqle->xdebug_message, true));
-        } else {
-            error_log(print_r($sqle, true));
-        }
         $con->rollback();
         throw $sqle;
     }

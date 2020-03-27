@@ -684,42 +684,6 @@ class SpoolRun
                             $this->updateSpoolError($error->getMessage());
                         }
                         break;
-                    case 'OPENMAIL':
-                        $pack = new package($this->fileData);
-                        $header = $pack->returnHeader();
-                        $body = $pack->returnBody();
-                        $send = new smtp();
-                        $send->setServer($this->config['MESS_SERVER']);
-                        $send->setPort($this->config['MESS_PORT']);
-                        $send->setUsername($this->config['MESS_ACCOUNT']);
-
-                        $passwd = $this->config['MESS_PASSWORD'];
-                        $passwdDec = G::decrypt($passwd, 'EMAILENCRYPT');
-                        $auxPass = explode('hash:', $passwdDec);
-
-                        if (count($auxPass) > 1) {
-                            if (count($auxPass) == 2) {
-                                $passwd = $auxPass[1];
-                            } else {
-                                array_shift($auxPass);
-                                $passwd = implode('', $auxPass);
-                            }
-                        }
-
-                        $this->config['MESS_PASSWORD'] = $passwd;
-                        $send->setPassword($this->config['MESS_PASSWORD']);
-                        $send->setReturnPath($this->fileData['from_email']);
-                        $send->setHeaders($header);
-                        $send->setBody($body);
-                        $send->setEnvelopeTo($this->fileData['envelope_to']);
-                        if ($send->sendMessage()) {
-                            $this->error = '';
-                            $this->status = 'sent';
-                        } else {
-                            $this->error = implode(', ', $send->returnErrors());
-                            $this->status = 'failed';
-                        }
-                        break;
                 }
             }
         }

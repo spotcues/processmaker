@@ -10912,6 +10912,7 @@ xCase.extendNamespace = function (path, newClass) {
             var value,
                 parent = this.parent,
                 item,
+                that = this,
                 data = {},
                 dependency,
                 i,
@@ -10932,10 +10933,11 @@ xCase.extendNamespace = function (path, newClass) {
                         }
                     }
                     this.model.set("showDependentSpinners", false);
-                    this.model.recoverySyncRemoteOptions(data, postRender);
+                    this.model.recoverySyncRemoteOptions(data, postRender, function () {
+                        that.tagControl.val(value);
+                        that.dirty = true;
+                    });
                     this.model.trigger("change:options");
-                    this.tagControl.val(value);
-                    this.dirty = true;
                 }
                 this.firstLoad = false;
             }
@@ -13935,7 +13937,7 @@ xCase.extendNamespace = function (path, newClass) {
                 label: data.text
             });
             this.updateHiddenInput(this.model.get("data"));
-            $(id).append(newOpt);
+            $(id).append(newOpt).trigger("change");
             return this;
         },
         /**
@@ -19576,6 +19578,9 @@ xCase.extendNamespace = function (path, newClass) {
             this.set("optionsSql", remoteOpt);
             options = localOpt.concat(remoteOpt);
             this.set("options", options);
+            if (this.get("view") && this.get("view").firstLoad) {
+                this.trigger('change:options', this.model, options);
+            }
             this.updateJsonOptions({
                 optionsSql: remoteOpt
             });
@@ -20392,7 +20397,7 @@ xCase.extendNamespace = function (path, newClass) {
          * Clear the options and optionsSql property of a field (dropdown).
          * @chainable
          */
-        clearOptions: function() {
+        clearOptions: function () {
             this.set('options', []);
             this.set('optionsSql', []);
             return this;
@@ -20467,7 +20472,7 @@ xCase.extendNamespace = function (path, newClass) {
          * @param data {object}: Data of the fields on which it depends
          * @param postRender {boolean}: Checks if the call is after the view exists
          */
-        recoverySyncRemoteOptions: function (data, postRender) {
+        recoverySyncRemoteOptions: function (data, postRender, callback) {
             var dependentsManager = this.getDependentsManager(),
                 that = this,
                 response,
@@ -20489,6 +20494,9 @@ xCase.extendNamespace = function (path, newClass) {
                                         if (_.isArray(response)) {
                                             that.mergeRemoteOptions(response);
                                             that.get("view").switchSpinnerByControl();
+                                            if (_.isFunction(callback)) {
+                                                callback();
+                                            }
                                         }
                                     }
                                 });
@@ -20499,6 +20507,9 @@ xCase.extendNamespace = function (path, newClass) {
                     if (_.isArray(response)) {
                         this.mergeRemoteOptions(response);
                         this.get("view").switchSpinnerByControl();
+                        if (_.isFunction(callback)) {
+                            callback();
+                        }
                     }
                 }
             }
