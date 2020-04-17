@@ -1010,6 +1010,9 @@ class AdditionalTables extends BaseAdditionalTables
                 . ")";
         $buildNumberRows = clone $criteria;
         $buildNumberRows->clear();
+        $buildNumberRows->addSelectColumn(AdditionalTablesPeer::PRO_UID);
+        $buildNumberRows->addSelectColumn(AdditionalTablesPeer::DBS_UID);
+        $buildNumberRows->addSelectColumn(AdditionalTablesPeer::ADD_TAB_CLASS_NAME);
         $buildNumberRows->addSelectColumn(AdditionalTablesPeer::ADD_TAB_NAME);
         $buildNumberRows->addAsColumn("EXISTS_TABLE", $stringSql);
         $dataset1 = AdditionalTablesPeer::doSelectRS($buildNumberRows);
@@ -1019,6 +1022,27 @@ class AdditionalTables extends BaseAdditionalTables
             $stringCount = "'" . G::LoadTranslation('ID_TABLE_NOT_FOUND') . "'";
             if ($row["EXISTS_TABLE"] === "1") {
                 $stringCount = "(SELECT COUNT(*) FROM " . $row["ADD_TAB_NAME"] . ")";
+            }
+            if ($row["EXISTS_TABLE"] === "0") {
+                $className = $row['ADD_TAB_CLASS_NAME'];
+                $pathWorkspace = PATH_DB . config("system.workspace") . PATH_SEP;
+                if (file_exists($pathWorkspace . 'classes/' . $className . '.php')) {
+                    $_SESSION['PROCESS'] = $row['PRO_UID']; //is required by method Propel::getConnection()
+                    require_once $pathWorkspace . 'classes/' . $className . '.php';
+                    $externalCriteria = new Criteria(PmTable::resolveDbSource($row['DBS_UID']));
+                    $externalCriteria->addSelectColumn(($className . "Peer")::COUNT);
+                    //if the external database is not available we catch the exception.
+                    try {
+                        $externalResultSet = ($className . "Peer")::doSelectRS($externalCriteria);
+                        if ($externalResultSet->next()) {
+                            $stringCount = $externalResultSet->getInt(1);
+                        }
+                    } catch (Exception $externalException) {
+                        $context = Bootstrap::getDefaultContextLog();
+                        $context = array_merge($context, $row);
+                        Bootstrap::registerMonolog("additional tables", 400, $externalException->getMessage(), $context);
+                    }
+                }
             }
             $stringBuild = $stringBuild
                     . "WHEN '" . $row["ADD_TAB_NAME"]

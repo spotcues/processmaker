@@ -3230,6 +3230,7 @@ class Cases
         $arrayApplicationData = $this->getApplicationRecordByPk($applicationUid, [], false);
         $arrayApplicationData['APP_DATA'] = $case->unserializeData($arrayApplicationData['APP_DATA']);
         $flagDelete = false;
+        $arrayVariableDocumentToDelete = $this->validateAppDocUid($arrayVariableDocumentToDelete);
 
         foreach ($arrayVariableDocumentToDelete as $key => $value) {
             if (is_array($value) && !empty($value)) {
@@ -3313,6 +3314,24 @@ class Cases
         if ($flagDelete) {
             $result = $case->updateCase($applicationUid, $arrayApplicationData);
         }
+    }
+
+    /**
+     * Validate if all documents have appDocUid
+     * 
+     * @param array $arrayVariableDocument
+     * 
+     * @return array
+     */
+    public function validateAppDocUid(array $arrayVariableDocument)
+    {
+        $newArrayVariableDocument = [];
+        foreach ($arrayVariableDocument as $value) {
+            if (array_key_exists('appDocUid', $value)) {
+                $newArrayVariableDocument[] = $value;
+            }
+        }
+        return $newArrayVariableDocument;
     }
 
     /**

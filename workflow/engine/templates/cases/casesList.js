@@ -18,19 +18,19 @@ new Ext.KeyMap(document, {
 
 
 /*** global variables **/
-var storeCases;
-var storeReassignCases;
-var grid;
-var textJump;
-var ids = '';
-var winReassignInCasesList;
-var casesNewTab;
-var mask;
-var loadingMessage;
-var timeoutMark = false;
-var processProxy;
-var processStore;
-var comboCategory;
+var storeCases,
+    storeReassignCases,
+    grid,
+    textJump,
+    ids = '',
+    winReassignInCasesList,
+    casesNewTab,
+    mask,
+    loadingMessage,
+    timeoutMark = false,
+    processProxy,
+    processStore,
+    comboCategory;
 
 function formatAMPM(date, initVal, calendarDate) {
 
@@ -2205,6 +2205,7 @@ Ext.onReady ( function() {
     grid = new Ext.grid.GridPanel({
         region: 'center',
         id: 'casesGrid',
+        stateId : workspace + parent._action + window.userUid + 'gridProcessMain',
         store: storeCases,
         cm: cm,
         loadMask: mask,

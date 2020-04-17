@@ -3,10 +3,11 @@
 use Faker\Generator as Faker;
 
 $factory->define(\ProcessMaker\Model\AdditionalTables::class, function(Faker $faker) {
+    $name = $faker->regexify("/[a-zA-Z]{6}/");
     return [
         'ADD_TAB_UID' => G::generateUniqueID(),
-        'ADD_TAB_NAME' => $faker->name,
-        'ADD_TAB_CLASS_NAME' => $faker->name,
+        'ADD_TAB_NAME' => 'PMT_' . strtoupper($name),
+        'ADD_TAB_CLASS_NAME' => 'Pmt' . $name,
         'ADD_TAB_DESCRIPTION' => $faker->text,
         'ADD_TAB_SDW_LOG_INSERT' => 0,
         'ADD_TAB_SDW_LOG_UPDATE' => 0,

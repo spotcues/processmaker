@@ -80,7 +80,6 @@ $oHeadPublisher->assign("arrayFlagImportFileExtension", $arrayFlagImportFileExte
 $oHeadPublisher->assign("arrayFlagMenuNewOption", $arrayFlagMenuNewOption);
 $oHeadPublisher->assign("arrayMenuNewOptionPlugin", $arrayMenuNewOptionPlugin);
 $oHeadPublisher->assign("arrayContextMenuOptionPlugin", $arrayContextMenuOptionPlugin);
-$oHeadPublisher->assign('extJsViewState', $oHeadPublisher->getExtJsViewState());
 
 $designer = new Designer();
 $oHeadPublisher->assign('SYS_SYS', config("system.workspace"));
@@ -91,6 +90,7 @@ $oHeadPublisher->assign('credentials', base64_encode(G::json_encode($designer->g
 
 $userUid = (isset($_SESSION['USER_LOGGED']) && $_SESSION['USER_LOGGED'] != '') ? $_SESSION['USER_LOGGED'] : null;
 $oHeadPublisher->assign('userUid', $userUid);
+$oHeadPublisher->assign('workspace', config('system.workspace'));
 
 $deleteCasesFlag = false;
 global $RBAC;

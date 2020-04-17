@@ -1,29 +1,29 @@
-[2 weeks ago] 90e07f19  (origin/bugfix/PMCORE-1236) PMCORE-1236 <henry>
-[2 weeks ago] 35cfeeca  PMCORE-541:New lines are not taken into account in printed dynaform <Fabio Guachalla>
-[2 weeks ago] e8ea435d  (origin/bugfix/PMCORE-1249) PMCORE-1249: When you select a control option with the "setValue" method, more "execute-query" requests are executed. <Rodrigo Quelca>
-[2 weeks ago] b9090f1a  (origin/bugfix/PMCORE-1245) PMCORE-1245 <henry>
-[3 weeks ago] 7570efbf  (origin/bugfix/PMCORE-1248) PMCORE-1248: The suggest control does not retrieve the correct text, within a grid <Rodrigo Quelca>
-[3 weeks ago] 76cc789f  (origin/bugfix/PMCORE-1247) PMCORE-1247: Dependent fields with helper setText is not working properly <Rodrigo Quelca>
-[3 weeks ago] 3931aaeb  (origin/bugfix/PMCORE-1228) SetOnChange helper >> The console displays errors and the Dynaform is not rendered. <Rodrigo Quelca>
-[3 weeks ago] 7e5e5c00  (origin/bugfix/PMCORE-866-A) improve PMDynaform Event Bus <henry>
-[5 weeks ago] 88ffe480  (origin/feature/PMCORE-1168) PMCORE-1168 <henry>
-[6 weeks ago] 340b11c7  (origin/feature/PMCORE-1137-B) PMCORE-1137-A <henry>
-[6 weeks ago] 507bb2ba  (origin/bugfix/PMCORE-1148) PMCORE-1148: PM 3.4.3 with the new Patch3_Knauf is not working in the IE11 browser <Rodrigo Quelca>
-[6 weeks ago] 01a5207a  PMCORE-1137 <henry>
-[7 weeks ago] 8d9def5f  (origin/feature/PMCORE-1137-A) PMCORE-1137-A <henry>
-[7 weeks ago] 66394771  PMCORE-1137 <henry>
-[7 weeks ago] e770b868  (origin/bugfix/PMCORE-1130) PMCORE-1130 <henry>
-[7 weeks ago] da9c0731  (origin/bugfix/PMCORE-1111_C) PMCORE-111: Dependent fields in grids lose its values <Rodrigo Quelca>
-[8 weeks ago] dc282b97  (origin/feature/PMCORE-1127) PMCORE-1127 <henry>
-[8 weeks ago] 6629d170  PMCORE-541: New lines are not taken into account in printed dynaform <Fabio Guachalla>
-[8 weeks ago] bb507c9c  FBI-1580: Tooltips in grids are being hidden in middle and small screens or when more than 6 elements are added <alex>
-[8 weeks ago] 26000aa5  (origin/bugfix/PMCORE-1113) PMCORE-1113 <henry>
-[8 weeks ago] 21a74c78  (origin/bugfix/PMCORE-1111) PMCORE-1111: Dependent fields in grids lose its values <Rodrigo Quelca>
-[9 weeks ago] 638f0136  PMCORE-1096:Multiple File Upload Control does not validate Required Field attribute <Fabio Guachalla>
-[9 weeks ago] e1e7137b  (origin/bugfix/PMCORE-522) PMCORE-522 <henry>
-[2 months ago] 0021eb5c  (origin/feature/PMCORE-1054) PMCORE-1054 <henry>
-[2 months ago] a9b5f45e  (origin/bugfix/PMCORE-1035) PMCORE-1035 <henry>
-[2 months ago] 3b913de7  (origin/bugfix/PMCORE-1019-A) PMCORE-1019 <henry>
+[5 weeks ago] 90e07f19  (origin/bugfix/PMCORE-1236) PMCORE-1236 <henry>
+[5 weeks ago] 35cfeeca  PMCORE-541:New lines are not taken into account in printed dynaform <Fabio Guachalla>
+[5 weeks ago] e8ea435d  (origin/bugfix/PMCORE-1249) PMCORE-1249: When you select a control option with the "setValue" method, more "execute-query" requests are executed. <Rodrigo Quelca>
+[5 weeks ago] b9090f1a  (origin/bugfix/PMCORE-1245) PMCORE-1245 <henry>
+[6 weeks ago] 7570efbf  (origin/bugfix/PMCORE-1248) PMCORE-1248: The suggest control does not retrieve the correct text, within a grid <Rodrigo Quelca>
+[6 weeks ago] 76cc789f  (origin/bugfix/PMCORE-1247) PMCORE-1247: Dependent fields with helper setText is not working properly <Rodrigo Quelca>
+[6 weeks ago] 3931aaeb  (origin/bugfix/PMCORE-1228) SetOnChange helper >> The console displays errors and the Dynaform is not rendered. <Rodrigo Quelca>
+[6 weeks ago] 7e5e5c00  (origin/bugfix/PMCORE-866-A) improve PMDynaform Event Bus <henry>
+[8 weeks ago] 88ffe480  (origin/feature/PMCORE-1168) PMCORE-1168 <henry>
+[9 weeks ago] 340b11c7  (origin/feature/PMCORE-1137-B) PMCORE-1137-A <henry>
+[9 weeks ago] 507bb2ba  (origin/bugfix/PMCORE-1148) PMCORE-1148: PM 3.4.3 with the new Patch3_Knauf is not working in the IE11 browser <Rodrigo Quelca>
+[9 weeks ago] 01a5207a  PMCORE-1137 <henry>
+[2 months ago] 8d9def5f  (origin/feature/PMCORE-1137-A) PMCORE-1137-A <henry>
+[2 months ago] 66394771  PMCORE-1137 <henry>
+[2 months ago] e770b868  (origin/bugfix/PMCORE-1130) PMCORE-1130 <henry>
+[2 months ago] da9c0731  (origin/bugfix/PMCORE-1111_C) PMCORE-111: Dependent fields in grids lose its values <Rodrigo Quelca>
+[3 months ago] dc282b97  (origin/feature/PMCORE-1127) PMCORE-1127 <henry>
+[3 months ago] 6629d170  PMCORE-541: New lines are not taken into account in printed dynaform <Fabio Guachalla>
+[3 months ago] bb507c9c  FBI-1580: Tooltips in grids are being hidden in middle and small screens or when more than 6 elements are added <alex>
+[3 months ago] 26000aa5  (origin/bugfix/PMCORE-1113) PMCORE-1113 <henry>
+[3 months ago] 21a74c78  (origin/bugfix/PMCORE-1111) PMCORE-1111: Dependent fields in grids lose its values <Rodrigo Quelca>
+[3 months ago] 638f0136  PMCORE-1096:Multiple File Upload Control does not validate Required Field attribute <Fabio Guachalla>
+[3 months ago] e1e7137b  (origin/bugfix/PMCORE-522) PMCORE-522 <henry>
+[3 months ago] 0021eb5c  (origin/feature/PMCORE-1054) PMCORE-1054 <henry>
+[3 months ago] a9b5f45e  (origin/bugfix/PMCORE-1035) PMCORE-1035 <henry>
+[3 months ago] 3b913de7  (origin/bugfix/PMCORE-1019-A) PMCORE-1019 <henry>
 [3 months ago] 2cbeeef4  Words cut off in dynaform printed PDF <Fabio Guachalla>
 [3 months ago] 742d0259  Words cut off in dynaform printed PDF <Fabio Guachalla>
 [3 months ago] 8132a464  PMCORE-488:It can not be created new cases in iExplorer 11 when   installing Knauf-Patch in the server <Fabio Guachalla>

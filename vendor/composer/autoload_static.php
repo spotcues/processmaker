@@ -4,7 +4,7 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInit822818421133bfa8a5a06a3188fa54a5
+class ComposerStaticInit7eea9cc72aedfb4c8ccea63e1b8135f6
 {
     public static $files = array (
         '0e6d7bf4a5811bfa5cf40c5ccd6fae6a' => __DIR__ . '/..' . '/symfony/polyfill-mbstring/bootstrap.php',
@@ -5888,7 +5888,7 @@ class ComposerStaticInit822818421133bfa8a5a06a3188fa54a5
         'XMLPHPUnit2ResultFormatter' => __DIR__ . '/../..' . '/thirdparty/phing/tasks/ext/phpunit2/XMLPHPUnit2ResultFormatter.php',
         'XMLRPCClient' => __DIR__ . '/../..' . '/thirdparty/html2ps_pdf/classes/org/active-link/xml/XMLRPCClient.php',
         'XMLResult' => __DIR__ . '/../..' . '/workflow/engine/classes/XMLResult.php',
-        'XMLSchema' => __DIR__ . '/../..' . '/thirdparty/pear/class.xmlschema.php',
+        'XMLSchema' => __DIR__ . '/../..' . '/thirdparty/pear/nusoap.colosa.php',
         'XML_' => __DIR__ . '/../..' . '/thirdparty/html2ps_pdf/classes/org/active-link/xml/XML.php',
         'XML_Parser' => __DIR__ . '/../..' . '/thirdparty/pear/XML/Parser.php',
         'XML_Parser_Error' => __DIR__ . '/../..' . '/thirdparty/pear/XML/Parser.php',
@@ -6015,15 +6015,15 @@ class ComposerStaticInit822818421133bfa8a5a06a3188fa54a5
         'soapNtlm' => __DIR__ . '/../..' . '/gulliver/system/class.soapNtlm.php',
         'soap_fault' => __DIR__ . '/../..' . '/thirdparty/pear/class.soap_fault.php',
         'soap_fault_colosa' => __DIR__ . '/../..' . '/thirdparty/pear/nusoap.colosa.php',
-        'soap_parser' => __DIR__ . '/../..' . '/thirdparty/pear/class.soap_parser.php',
+        'soap_parser' => __DIR__ . '/../..' . '/thirdparty/pear/nusoap.php',
         'soap_parser_colosa' => __DIR__ . '/../..' . '/thirdparty/pear/nusoap.colosa.php',
         'soap_server' => __DIR__ . '/../..' . '/thirdparty/pear/nusoap.php',
         'soap_server_colosa' => __DIR__ . '/../..' . '/thirdparty/pear/nusoap.colosa.php',
-        'soap_transport_http' => __DIR__ . '/../..' . '/thirdparty/pear/class.soap_transport_http.php',
+        'soap_transport_http' => __DIR__ . '/../..' . '/thirdparty/pear/nusoap.colosa.php',
         'soapclient' => __DIR__ . '/../..' . '/thirdparty/pear/nusoap.php',
         'soapclient_colosa' => __DIR__ . '/../..' . '/thirdparty/pear/nusoap.colosa.php',
         'soapclientmime' => __DIR__ . '/../..' . '/thirdparty/pear/nusoapmime.php',
-        'soapval' => __DIR__ . '/../..' . '/thirdparty/pear/class.soap_val.php',
+        'soapval' => __DIR__ . '/../..' . '/thirdparty/pear/nusoap.colosa.php',
         'stepDetail' => __DIR__ . '/../..' . '/workflow/engine/classes/class.plugin.php',
         'subscriberInfo' => __DIR__ . '/../..' . '/thirdparty/pear/SOAP/Interop/registrationAndNotification.php',
         'taskExtendedProperty' => __DIR__ . '/../..' . '/workflow/engine/classes/class.plugin.php',
@@ -6031,7 +6031,7 @@ class ComposerStaticInit822818421133bfa8a5a06a3188fa54a5
         'triggerDetail' => __DIR__ . '/../..' . '/workflow/engine/classes/class.plugin.php',
         'uploadDocumentData' => __DIR__ . '/../..' . '/workflow/engine/classes/class.plugin.php',
         'webEntryProxy' => __DIR__ . '/../..' . '/workflow/engine/controllers/webEntryProxy.php',
-        'wsdl' => __DIR__ . '/../..' . '/thirdparty/pear/class.wsdl.php',
+        'wsdl' => __DIR__ . '/../..' . '/thirdparty/pear/nusoap.colosa.php',
         'wsdlcache' => __DIR__ . '/../..' . '/thirdparty/pear/class.wsdlcache.php',
         'x_Employee' => __DIR__ . '/../..' . '/thirdparty/pear/SOAP/Interop/params_classes.php',
         'x_Person' => __DIR__ . '/../..' . '/thirdparty/pear/SOAP/Interop/params_classes.php',
@@ -6042,12 +6042,12 @@ class ComposerStaticInit822818421133bfa8a5a06a3188fa54a5
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInit822818421133bfa8a5a06a3188fa54a5::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInit822818421133bfa8a5a06a3188fa54a5::$prefixDirsPsr4;
-            $loader->fallbackDirsPsr4 = ComposerStaticInit822818421133bfa8a5a06a3188fa54a5::$fallbackDirsPsr4;
-            $loader->prefixesPsr0 = ComposerStaticInit822818421133bfa8a5a06a3188fa54a5::$prefixesPsr0;
-            $loader->fallbackDirsPsr0 = ComposerStaticInit822818421133bfa8a5a06a3188fa54a5::$fallbackDirsPsr0;
-            $loader->classMap = ComposerStaticInit822818421133bfa8a5a06a3188fa54a5::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticInit7eea9cc72aedfb4c8ccea63e1b8135f6::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInit7eea9cc72aedfb4c8ccea63e1b8135f6::$prefixDirsPsr4;
+            $loader->fallbackDirsPsr4 = ComposerStaticInit7eea9cc72aedfb4c8ccea63e1b8135f6::$fallbackDirsPsr4;
+            $loader->prefixesPsr0 = ComposerStaticInit7eea9cc72aedfb4c8ccea63e1b8135f6::$prefixesPsr0;
+            $loader->fallbackDirsPsr0 = ComposerStaticInit7eea9cc72aedfb4c8ccea63e1b8135f6::$fallbackDirsPsr0;
+            $loader->classMap = ComposerStaticInit7eea9cc72aedfb4c8ccea63e1b8135f6::$classMap;
 
         }, null, ClassLoader::class);
     }

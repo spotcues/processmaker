@@ -149,12 +149,16 @@ class PmDynaform
         return $labelsPo;
     }
 
-    public function getDynaformTitle($idDynaform)
+    /**
+     * Get the title of a Dynaform
+     *
+     * @param string $dynUid
+     * @return string
+     */
+    public function getDynaformTitle($dynUid)
     {
-        $d = new Dynaform();
-        $d->setDynUid($idDynaform);
-        $titleDynaform = $d->getDynTitle();
-        return $titleDynaform;
+        $dynaform = ModelDynaform::getByDynUid($dynUid);
+        return $dynaform->DYN_TITLE;
     }
 
     /**

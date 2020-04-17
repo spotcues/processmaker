@@ -683,49 +683,52 @@ class FilesManager
     public function deleteProcessFilesManager($proUid, $prfUid, $verifyingRelationship = false)
     {
         try {
-            $path = '';
-            $criteriaProcessFiles = new Criteria("workflow");
-            $criteriaProcessFiles->addSelectColumn(ProcessFilesPeer::PRF_PATH);
-            $criteriaProcessFiles->add(ProcessFilesPeer::PRF_UID, $prfUid, Criteria::EQUAL);
-            $resultSet1 = ProcessFilesPeer::doSelectRS($criteriaProcessFiles);
-            $resultSet1->setFetchmode(ResultSet::FETCHMODE_ASSOC);
-            $resultSet1->next();
-            while ($row = $resultSet1->getRow()) {
-                $path = $row['PRF_PATH'];
-                $resultSet1->next();
-            }
-            if ($path == '') {
-                throw new Exception(G::LoadTranslation("ID_INVALID_VALUE_FOR", array('prf_uid')));
-            }
-
             $relationshipEmailEvent = false;
-            $criteria = new Criteria("workflow");
-            $criteria->addSelectColumn(EmailEventPeer::PRF_UID);
-            $criteria->add(EmailEventPeer::PRF_UID, $prfUid, Criteria::EQUAL);
-            $resultSet2 = EmailEventPeer::doSelectRS($criteria);
-            $resultSet2->setFetchmode(ResultSet::FETCHMODE_ASSOC);
-            $resultSet2->next();
-            while ($row = $resultSet2->getRow()) {
-                $relationshipEmailEvent = true;
-                $resultSet2->next();
-            }
+            if ($verifyingRelationship) {
+                $criteriaEmailEvent = new Criteria('workflow');
+                $criteriaEmailEvent->addSelectColumn(EmailEventPeer::PRF_UID);
+                $criteriaEmailEvent->add(EmailEventPeer::PRF_UID, $prfUid, Criteria::EQUAL);
+                $resultSet1 = EmailEventPeer::doSelectRS($criteriaEmailEvent);
+                $resultSet1->setFetchmode(ResultSet::FETCHMODE_ASSOC);
 
-            $path = str_replace("\\", "/", $path);
-            $fileName = basename($path);
-            if ($relationshipEmailEvent && !$verifyingRelationship) {
-                throw new Exception(G::LoadTranslation(G::LoadTranslation('ID_CANNOT_REMOVE_TEMPLATE_EMAIL_EVENT', [$fileName])));
-            }
-
-            $path = PATH_DATA_MAILTEMPLATES . $proUid . "/" . $fileName;
-            if (file_exists($path) && !is_dir($path)) {
-                unlink($path);
-            } else {
-                $path = PATH_DATA_PUBLIC . $proUid . "/" . $fileName;
-                if (file_exists($path) && !is_dir($path)) {
-                    unlink($path);
+                if ($resultSet1->next()) {
+                    $relationshipEmailEvent = true;
                 }
             }
 
+            $criteriaProcessFiles = new Criteria('workflow');
+            $criteriaProcessFiles->addSelectColumn(ProcessFilesPeer::PRF_PATH);
+            $criteriaProcessFiles->add(ProcessFilesPeer::PRF_UID, $prfUid, Criteria::EQUAL);
+            $resultSet2 = ProcessFilesPeer::doSelectRS($criteriaProcessFiles);
+            $resultSet2->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+
+            if ($resultSet2->next()) {
+                $row = $resultSet2->getRow();
+                $path = $row['PRF_PATH'];
+
+                if (!empty($path)) {
+                    $path = str_replace("\\", "/", $path);
+                    $fileName = basename($path);
+                    if ($relationshipEmailEvent) {
+                        throw new Exception(G::LoadTranslation(
+                            G::LoadTranslation('ID_CANNOT_REMOVE_TEMPLATE_EMAIL_EVENT',
+                                [$fileName]
+                            )));
+                    }
+
+                    $path = PATH_DATA_MAILTEMPLATES . $proUid . "/" . $fileName;
+
+                    if (file_exists($path) && !is_dir($path)) {
+                        unlink($path);
+                    } else {
+                        $path = PATH_DATA_PUBLIC . $proUid . "/" . $fileName;
+
+                        if (file_exists($path) && !is_dir($path)) {
+                            unlink($path);
+                        }
+                    }
+                }
+            }
             ProcessFilesPeer::doDelete($criteriaProcessFiles);
         } catch (Exception $e) {
             throw $e;

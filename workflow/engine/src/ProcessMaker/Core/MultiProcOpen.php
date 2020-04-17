@@ -63,6 +63,9 @@ class MultiProcOpen
         sleep($this->sleepTime); //this sleep is very important
         $i = 0;
         $n = count($processes);
+        if ($n === 0) {
+            return [];
+        }
         $outputs = [];
         do {
             $index = $i % $n;

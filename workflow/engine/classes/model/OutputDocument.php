@@ -928,8 +928,10 @@ class OutputDocument extends BaseOutputDocument
         if (preg_match('/[\x{30FF}\x{3040}-\x{309F}\x{4E00}-\x{9FFF}\x{0E00}-\x{0E7F}]/u', $content, $matches)) {
             // The additional fonts should be in "shared/fonts" folder
             $fileArialUniTTF = PATH_DATA . "fonts" . PATH_SEP . "arialuni.ttf";
-            $pdf->SetFont((!file_exists($fileArialUniTTF)) ? "kozminproregular" :
-                $pdf->addTTFfont($fileArialUniTTF, "TrueTypeUnicode", "", 32));
+            if (file_exists($fileArialUniTTF)) {
+                $font = TCPDF_FONTS::addTTFfont($fileArialUniTTF, 'TrueTypeUnicode');
+                $pdf->SetFont($font);
+            }
         }
 
         // Convert the encoding of the content if is UTF-8
