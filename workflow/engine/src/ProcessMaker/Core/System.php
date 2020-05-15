@@ -74,7 +74,8 @@ class System
         'delay' => '0',
         'tries' => '10',
         'retry_after' => '90',
-        'mobile_offline_tables_download_interval' => 24
+        'mobile_offline_tables_download_interval' => 24,
+        'disable_advanced_search_case_title_fulltext' => 0
     ];
 
     /**

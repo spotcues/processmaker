@@ -46,7 +46,7 @@ if (empty($_GET['v'])) {
 //Send the parameter a = Case UID
 if ($RBAC->userCanAccess('PM_FOLDERS_ALL') != 1 && defined('DISABLE_DOWNLOAD_DOCUMENTS_SESSION_VALIDATION') && DISABLE_DOWNLOAD_DOCUMENTS_SESSION_VALIDATION == 0) {
     if (!$oAppDocument->canDownloadInput($_SESSION['USER_LOGGED'], $_GET['a'], $docVersion)) {
-        G::header('Location: /errors/error403.php');
+        G::header('Location: /errors/error403.php?url=' . urlencode($_SERVER['REQUEST_URI']));
         die();
     }
 }

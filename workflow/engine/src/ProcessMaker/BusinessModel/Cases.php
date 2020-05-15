@@ -1126,26 +1126,26 @@ class Cases
         Validator::isString($appUid, '$app_uid');
         Validator::appUid($appUid, '$app_uid');
 
-        // Review the permission for delete case
-        global $RBAC;
-        if ($RBAC->userCanAccess('PM_DELETECASE') != 1) {
-            throw new Exception(G::LoadTranslation('ID_NOT_ABLE_DELETE_CASES'));
-        }
-        // Review the status and user
+        // Review the status and owner
         $caseInfo = ModelApplication::getCase($appUid);
-        if (!empty($caseInfo)){
+        if (!empty($caseInfo)) {
+            // Check if the requester is the owner
+            if ($caseInfo['APP_INIT_USER'] !== $usrUid) {
+                global $RBAC;
+                // If no we need to review if have the permission
+                if ($RBAC->userCanAccess('PM_DELETECASE') != 1) {
+                    throw new Exception(G::LoadTranslation('ID_NOT_ABLE_DELETE_CASES'));
+                }
+            }
+
             // Review the status
             if ($caseInfo['APP_STATUS'] != 'DRAFT') {
                 throw new Exception(G::LoadTranslation("ID_DELETE_CASE_NO_STATUS"));
             }
-            // Review the user requester
-            if ($caseInfo['APP_INIT_USER'] != $usrUid) {
-                throw new Exception(G::LoadTranslation("ID_DELETE_CASE_NO_OWNER"));
-            }
-        }
 
-        $case = new ClassesCases();
-        $case->removeCase($appUid);
+            $case = new ClassesCases();
+            $case->removeCase($appUid);
+        }
     }
 
     /**
@@ -3230,8 +3230,6 @@ class Cases
         $arrayApplicationData = $this->getApplicationRecordByPk($applicationUid, [], false);
         $arrayApplicationData['APP_DATA'] = $case->unserializeData($arrayApplicationData['APP_DATA']);
         $flagDelete = false;
-        $arrayVariableDocumentToDelete = $this->validateAppDocUid($arrayVariableDocumentToDelete);
-
         foreach ($arrayVariableDocumentToDelete as $key => $value) {
             if (is_array($value) && !empty($value)) {
                 $type = '';
@@ -3256,13 +3254,15 @@ class Cases
                         $arrayDocumentDelete = $value;
 
                         foreach ($arrayDocumentDelete as $value2) {
-                            $appDocument->remove($value2['appDocUid'], (int)($value2['version']));
+                            if ($value2['appDocUid'] !== "") {
+                                $appDocument->remove($value2['appDocUid'], (int)($value2['version']));
 
-                            $arrayApplicationData['APP_DATA'] = $this->applicationDataDeleteMultipleFile(
-                                $arrayApplicationData['APP_DATA'], $variable, null, $type, $value2
-                            );
+                                $arrayApplicationData['APP_DATA'] = $this->applicationDataDeleteMultipleFile(
+                                    $arrayApplicationData['APP_DATA'], $variable, null, $type, $value2
+                                );
 
-                            $flagDelete = true;
+                                $flagDelete = true;
+                            }
                         }
                         break;
                     case 'GRID':
@@ -3274,13 +3274,15 @@ class Cases
                                 $arrayDocumentDelete = $value3;
 
                                 foreach ($arrayDocumentDelete as $value4) {
-                                    $appDocument->remove($value4['appDocUid'], (int)($value4['version']));
+                                    if ($value4['appDocUid'] !== "") {
+                                        $appDocument->remove($value4['appDocUid'], (int)($value4['version']));
 
-                                    $arrayApplicationData['APP_DATA'] = $this->applicationDataDeleteMultipleFile(
-                                        $arrayApplicationData['APP_DATA'], $grid, $variable, $type, $value4
-                                    );
+                                        $arrayApplicationData['APP_DATA'] = $this->applicationDataDeleteMultipleFile(
+                                            $arrayApplicationData['APP_DATA'], $grid, $variable, $type, $value4
+                                        );
 
-                                    $flagDelete = true;
+                                        $flagDelete = true;
+                                    }
                                 }
                             }
                         }
@@ -3314,24 +3316,6 @@ class Cases
         if ($flagDelete) {
             $result = $case->updateCase($applicationUid, $arrayApplicationData);
         }
-    }
-
-    /**
-     * Validate if all documents have appDocUid
-     * 
-     * @param array $arrayVariableDocument
-     * 
-     * @return array
-     */
-    public function validateAppDocUid(array $arrayVariableDocument)
-    {
-        $newArrayVariableDocument = [];
-        foreach ($arrayVariableDocument as $value) {
-            if (array_key_exists('appDocUid', $value)) {
-                $newArrayVariableDocument[] = $value;
-            }
-        }
-        return $newArrayVariableDocument;
     }
 
     /**

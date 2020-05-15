@@ -105,7 +105,8 @@
             "archive",
             "laravel",
             "zip"
-        ]
+        ],
+        "abandoned": true
     },
     {
         "name": "colosa/MichelangeloFE",
@@ -546,6 +547,58 @@
         ]
     },
     {
+        "name": "fzaninotto/faker",
+        "version": "v1.9.1",
+        "version_normalized": "1.9.1.0",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/fzaninotto/Faker.git",
+            "reference": "fc10d778e4b84d5bd315dad194661e091d307c6f"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/fzaninotto/Faker/zipball/fc10d778e4b84d5bd315dad194661e091d307c6f",
+            "reference": "fc10d778e4b84d5bd315dad194661e091d307c6f",
+            "shasum": ""
+        },
+        "require": {
+            "php": "^5.3.3 || ^7.0"
+        },
+        "require-dev": {
+            "ext-intl": "*",
+            "phpunit/phpunit": "^4.8.35 || ^5.7",
+            "squizlabs/php_codesniffer": "^2.9.2"
+        },
+        "time": "2019-12-12T13:22:17+00:00",
+        "type": "library",
+        "extra": {
+            "branch-alias": {
+                "dev-master": "1.9-dev"
+            }
+        },
+        "installation-source": "dist",
+        "autoload": {
+            "psr-4": {
+                "Faker\\": "src/Faker/"
+            }
+        },
+        "notification-url": "https://packagist.org/downloads/",
+        "license": [
+            "MIT"
+        ],
+        "authors": [
+            {
+                "name": "François Zaninotto"
+            }
+        ],
+        "description": "Faker is a PHP library that generates fake data for you.",
+        "keywords": [
+            "data",
+            "faker",
+            "fixtures"
+        ]
+    },
+    {
         "name": "geshi/geshi",
         "version": "dev-master",
         "version_normalized": "9999999-dev",
@@ -869,7 +922,8 @@
                 "name": "Jakub Onderka",
                 "email": "jakub.onderka@gmail.com"
             }
-        ]
+        ],
+        "abandoned": "php-parallel-lint/php-console-color"
     },
     {
         "name": "jakub-onderka/php-console-highlighter",
@@ -917,7 +971,8 @@
                 "homepage": "http://www.acci.cz/"
             }
         ],
-        "description": "Highlight PHP code in terminal"
+        "description": "Highlight PHP code in terminal",
+        "abandoned": "php-parallel-lint/php-console-highlighter"
     },
     {
         "name": "kylekatarnls/update-helper",
@@ -1655,7 +1710,7 @@
             "twig/twig": "Restler can render HtmlView using twig templates (see require-dev for details)",
             "zendframework/zendamf": "Support for the amf document format  (see require-dev for details)"
         },
-        "time": "2020-02-13T18:25:17+00:00",
+        "time": "2019-05-12T15:05:48+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {

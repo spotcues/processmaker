@@ -183,14 +183,14 @@ class Ajax
         $c->add(AppThreadPeer::APP_THREAD_STATUS, 'OPEN');
         $cant = AppThreadPeer::doCount($c);
 
-        $oCase = new Cases();
-        $aFields = $oCase->loadCase($appUid, $index);
+        $case = new Cases();
+        $fields = $case->loadCase($appUid, $index);
 
         global $RBAC;
 
         $options = [];
 
-        switch ($aFields['APP_STATUS']) {
+        switch ($fields['APP_STATUS']) {
             case 'DRAFT':
                 if (!AppDelay::isPaused($appUid, $index)) {
                     $options[] = ['text' => G::LoadTranslation('ID_PAUSED_CASE'), 'fn' => 'setUnpauseCaseDate'];
@@ -200,6 +200,11 @@ class Ajax
                 // Check if the user has the permission for the action Delete Case
                 if ($RBAC->userCanAccess('PM_DELETECASE') == 1) {
                     $options[] = ['text' => G::LoadTranslation('ID_DELETE'), 'fn' => 'deleteCase'];
+                } else {
+                    // Check if the user is the owner
+                    if ($fields['APP_INIT_USER'] === $RBAC->aUserInfo['USER_INFO']['USR_UID']) {
+                        $options[] = ['text' => G::LoadTranslation('ID_DELETE'), 'fn' => 'deleteCase'];
+                    }
                 }
                 // Check if the user has the permission for the action Reassign Case
                 if ($RBAC->userCanAccess('PM_REASSIGNCASE') == 1 || $RBAC->userCanAccess('PM_REASSIGNCASE_SUPERVISOR') == 1) {
@@ -247,7 +252,7 @@ class Ajax
         }
 
         if ($_SESSION["TASK"] != "" && $_SESSION["TASK"] != "-1") {
-            $oTask = new Task();
+            $task = new Task();
             $tasksInParallel = explode('|', $_SESSION['TASK']);
             $tasksInParallel = array_filter($tasksInParallel, function ($value) {
                 return !empty($value);
@@ -255,12 +260,12 @@ class Ajax
             $nTasksInParallel = count($tasksInParallel);
 
             if ($nTasksInParallel > 1) {
-                $aTask = $oTask->load($tasksInParallel[$nTasksInParallel - 1]);
+                $taskProperties = $task->load($tasksInParallel[$nTasksInParallel - 1]);
             } else {
-                $aTask = $oTask->load($_SESSION['TASK']);
+                $taskProperties = $task->load($_SESSION['TASK']);
             }
 
-            if ($aTask['TAS_TYPE'] == 'ADHOC') {
+            if ($taskProperties['TAS_TYPE'] == 'ADHOC') {
                 $options[] = ['text' => G::LoadTranslation('ID_ADHOC_ASSIGNMENT'), 'fn' => 'adhocAssignmentUsers'];
             }
         }

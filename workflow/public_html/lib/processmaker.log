@@ -1,30 +1,30 @@
-[6 hours ago] 12d94a4f6  (HEAD -> release/3.4.10, origin/release/3.4.10) Revert "PMCORE-1129 (pull request #7298)" <Paula Quispe>
-[8 days ago] 8d0307ef2  PMCORE-1198:The columns in process list change for all users if any other user remove/hide the columns <fabio>
-[13 days ago] 443bb3c13  (origin/bugfix/PMCORE-1151) PMCORE-1151 <paulis>
-[13 days ago] f1d6f250c  (origin/bugfix/PMCORE-876) PMCORE-876 The files are not shown, when we create a PM_Table from an external DB <Roly Gutierrez>
-[2 weeks ago] 3527e6103  (origin/bugfix/PMCORE-548) PMCORE-548 <Andrea Adamczyk>
-[2 weeks ago] cd5564955  (origin/bugfix/PMCORE-547) PMCORE-547 Mapping User Information Between Active Directory and ProcessMaker allows selecting USR_ID in the User Field and breaks the correlative numeration of the USR_ID field in table USERS. <Roly Gutierrez>
-[2 weeks ago] a4399d97c  (origin/bugfix/PMCORE-1129) PMCORE-1129 <Andrea Adamczyk>
-[2 weeks ago] 765535491  PMCORE-1140:Unsupported Media Type on Multiple file control PM3.4.6 <fabio>
-[3 weeks ago] 08b2842e3  (origin/bugfix/PMCORE-624) PMCORE-624 <Julio Cesar Laura Avendaño>
-[3 weeks ago] c986d6ce1  (origin/bugfix/PMCORE-635) PMCORE-635 <Julio Cesar Laura Avendaño>
-[3 weeks ago] 2d842c450  (origin/bugfix/PMCORE-1205_D) MCORE-1205: Columns from process list are not correctly displayed - depending on the other columns width could get hidden <Rodrigo Quelca>
-[3 weeks ago] ec46af1e8  (origin/bugfix/PMCORE-1279) PMCORE-1279 <Paula Quispe>
-[3 weeks ago] b45a73b0f  (origin/bugfix/PMCORE-1205_B) PMCORE-1205 Columns from process list are not correctly displayed - depending on the other columns width could get hidden <Rodrigo Quelca>
-[3 weeks ago] 277d89f22  (origin/bugfix/PMCORE-1289) PMCORE-1289 <Julio Cesar Laura Avendaño>
-[4 weeks ago] a4ced1a09  (origin/bugfix/PMCORE-1203) PMCORE-1203 Help on how batch routing feature works and help to debug the code with a client <Roly Rudy Gutierrez Pinto>
-[4 weeks ago] ed4e1447c  (origin/bugfix/PMCORE-1171) PMCORE-1171 <Andrea Adamczyk>
-[5 weeks ago] bd6099def  (origin/bugfix/PMCORE-1268) PMCORE-1268 <Andrea Adamczyk>
-[5 weeks ago] aa1732dad  (origin/bugfix/PMCORE-1262) PMCORE-1262 <Julio Cesar Laura Avendaño>
-[5 weeks ago] 13691fac7  (origin/bugfix/PMCORE-1142_A) PMCORE-1142_A Artisan stops sending emails if it is left for several hours doing nothing. <Roly Rudy Gutierrez Pinto>
-[6 weeks ago] dfd69155b  (origin/bugfix/PMCORE-543-A) PMCORE-543 <Paula Quispe>
-[6 weeks ago] dcd0dfd10  PMCORE-1198 <Andrea Adamczyk>
-[6 weeks ago] cac4da2c2  (origin/bugfix/PMCORE-1224) PMCORE-1224 <Paula Quispe>
-[7 weeks ago] 1bc6dfdb6  PMCORE-1205:Columns from process list are not correctly displayed - depending on the other columns width could get hidden <Fabio Guachalla>
-[7 weeks ago] 623ec2766  (origin/bugfix/PMCORE-864) PMCORE-864 <Julio Cesar Laura Avendaño>
-[8 weeks ago] 8d390df60  (origin/bugfix/PMCORE-532) PMCORE-532 <Andrea Adamczyk>
-[8 weeks ago] e99adc704  (origin/bugfix/PMCORE-1186) PMCORE-1186 Invalid required validation inside Email Server creation <Roly Rudy Gutierrez Pinto>
-[8 weeks ago] 87cd23a42  (origin/bugfix/PMCORE-1160) PMCORE-1160 <Paula Quispe>
-[8 weeks ago] d4e737807  (origin/bugfix/PMCORE-525) PMCORE-525 Two different labels for the same action (Promotion Manager export) <Roly Rudy Gutierrez Pinto>
-[8 weeks ago] 5a8649058  (origin/bugfix/PMCORE-540) PMCORE-540 <Paula Quispe>
-[8 weeks ago] 3acb486e0  (origin/bugfix/PMCORE-1159) PMCORE-1159 SpoolRunTest: Solve the incomplete test <Roly Rudy Gutierrez Pinto>
+[4 days ago] a3b294e54  (origin/feature/PMCORE-1463) PMCORE-1463 <Julio Cesar Laura Avendaño>
+[12 days ago] 4f54f0c89  PMCORE-1435:APP_DOC_STATUS is kept as ACTIVE when files in multiple file upload control are deleted <fabio>
+[12 days ago] b55ead0e6  (origin/bugfix/PMCORE-631-B) PMCORE-631 <Paula Quispe>
+[3 weeks ago] 278ef8a0b  (origin/bugfix/PMCORE-631-A) PMCORE-631-A <Paula Quispe>
+[3 weeks ago] 0d089bfe0  (origin/bugfix/PMCORE-1254-A) PMCORE-1254 <Paula Quispe>
+[4 weeks ago] c0a8cea5c  (origin/revert-pr-7298) Revert "PMCORE-1129 (pull request #7298)" <Paula Quispe>
+[4 weeks ago] 93fe2c1ae  (origin/bugfix/PMCORE-1338) PMCORE-1338 <Paula Quispe>
+[4 weeks ago] fc6094ec7  (origin/bugfix/PMCORE-1181) PMCORE-1181 Is possible to get an access token without send a valid 'client_id' and 'client_secret' <Roly Rudy Gutierrez Pinto>
+[4 weeks ago] 2475c515c  (origin/bugfix/PMCORE-1191) PMCORE-1191 <Andrea Adamczyk>
+[4 weeks ago] dae4ca5b7  (origin/bugfix/PMCORE-1353) PMCORE-1353 <Julio Cesar Laura Avendaño>
+[4 weeks ago] 38993060d  (origin/bugfix/PMCORE-631) PMCORE-631 <Paula Quispe>
+[5 weeks ago] 252c97567  (origin/bugfix/PMCORE-1288) PMCORE-1288 <Taylor Dondich>
+[5 weeks ago] 98e04ce1a  (origin/bugfix/PMCORE-999) PMCORE-999 <Paula Quispe>
+[5 weeks ago] 399db5240  (origin/bugfix/PMCORE-487-A) PMCORE-487 <Julio Cesar Laura Avendaño>
+[5 weeks ago] 8d0307ef2  PMCORE-1198:The columns in process list change for all users if any other user remove/hide the columns <fabio>
+[5 weeks ago] fe87db50d  (origin/bugfix/PMCORE-1254) PMCORE-1254 <Paula Quispe>
+[5 weeks ago] 0243fddbd  (origin/bugfix/PMCORE-548-A) PMCORE-548-A <Andrea Adamczyk>
+[5 weeks ago] 443bb3c13  (origin/bugfix/PMCORE-1151) PMCORE-1151 <paulis>
+[5 weeks ago] f1d6f250c  (origin/bugfix/PMCORE-876) PMCORE-876 The files are not shown, when we create a PM_Table from an external DB <Roly Gutierrez>
+[6 weeks ago] 3527e6103  (origin/bugfix/PMCORE-548) PMCORE-548 <Andrea Adamczyk>
+[6 weeks ago] cd5564955  (origin/bugfix/PMCORE-547) PMCORE-547 Mapping User Information Between Active Directory and ProcessMaker allows selecting USR_ID in the User Field and breaks the correlative numeration of the USR_ID field in table USERS. <Roly Gutierrez>
+[6 weeks ago] a4399d97c  (origin/bugfix/PMCORE-1129) PMCORE-1129 <Andrea Adamczyk>
+[6 weeks ago] 765535491  PMCORE-1140:Unsupported Media Type on Multiple file control PM3.4.6 <fabio>
+[6 weeks ago] 08b2842e3  (origin/bugfix/PMCORE-624) PMCORE-624 <Julio Cesar Laura Avendaño>
+[6 weeks ago] c986d6ce1  (origin/bugfix/PMCORE-635) PMCORE-635 <Julio Cesar Laura Avendaño>
+[7 weeks ago] 2d842c450  (origin/bugfix/PMCORE-1205_D) MCORE-1205: Columns from process list are not correctly displayed - depending on the other columns width could get hidden <Rodrigo Quelca>
+[7 weeks ago] ec46af1e8  (origin/bugfix/PMCORE-1279) PMCORE-1279 <Paula Quispe>
+[7 weeks ago] b45a73b0f  (origin/bugfix/PMCORE-1205_B) PMCORE-1205 Columns from process list are not correctly displayed - depending on the other columns width could get hidden <Rodrigo Quelca>
+[7 weeks ago] 277d89f22  (origin/bugfix/PMCORE-1289) PMCORE-1289 <Julio Cesar Laura Avendaño>
+[7 weeks ago] a4ced1a09  (origin/bugfix/PMCORE-1203) PMCORE-1203 Help on how batch routing feature works and help to debug the code with a client <Roly Rudy Gutierrez Pinto>

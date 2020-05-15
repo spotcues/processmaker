@@ -10934,10 +10934,10 @@ xCase.extendNamespace = function (path, newClass) {
                     }
                     this.model.set("showDependentSpinners", false);
                     this.model.recoverySyncRemoteOptions(data, postRender, function () {
-                        that.tagControl.val(value);
                         that.dirty = true;
+                        that.model.trigger("change:options");
+                        that.tagControl.val(value);
                     });
-                    this.model.trigger("change:options");
                 }
                 this.firstLoad = false;
             }

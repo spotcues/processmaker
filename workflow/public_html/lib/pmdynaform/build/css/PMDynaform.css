@@ -717,6 +717,13 @@
   .content-print {
     white-space: pre-wrap !important;
   }
+
+  @-moz-document url-prefix() {
+    .content-print {
+      position: absolute;
+      overflow: visible !important;
+    }
+  }
 }
 @page {
   margin-top: 1cm;

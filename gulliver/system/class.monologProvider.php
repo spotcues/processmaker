@@ -241,6 +241,7 @@ class MonologProvider
      */
     public function setStream($fileLog)
     {
+        // ONLY initialize a new RotatingFileHandler if the fileLog is DIFFERENT.
         //Set Routating Handler
         $this->streamRoutating = new RotatingFileHandler($this->getPathFile() . $fileLog,
             $this->getMaxFiles(),
@@ -446,7 +447,6 @@ class MonologProvider
     {
         if (self::$instance === null) {
             self::$instance = new MonologProvider($channel, $fileLog, $readLoggingLevel);
-        } else {
             self::$instance->setConfig($channel, $fileLog, $readLoggingLevel);
         }
         return self::$instance;
@@ -488,5 +488,13 @@ class MonologProvider
         } else {
             return false;
         }
+    }
+
+    /**
+     * Set the instance property
+     */
+    static function setInstance($instance)
+    {
+        self::$instance = $instance;
     }
 }
