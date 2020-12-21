@@ -4,7 +4,7 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInit432cb8593440ee07889e7be562e78062
+class ComposerStaticInit28815c8def0ddb0f0d61b90a7cc14d31
 {
     public static $files = array (
         '0e6d7bf4a5811bfa5cf40c5ccd6fae6a' => __DIR__ . '/..' . '/symfony/polyfill-mbstring/bootstrap.php',
@@ -5958,7 +5958,7 @@ class ComposerStaticInit432cb8593440ee07889e7be562e78062
         'XMLPHPUnit2ResultFormatter' => __DIR__ . '/../..' . '/thirdparty/phing/tasks/ext/phpunit2/XMLPHPUnit2ResultFormatter.php',
         'XMLRPCClient' => __DIR__ . '/../..' . '/thirdparty/html2ps_pdf/classes/org/active-link/xml/XMLRPCClient.php',
         'XMLResult' => __DIR__ . '/../..' . '/workflow/engine/classes/XMLResult.php',
-        'XMLSchema' => __DIR__ . '/../..' . '/thirdparty/pear/nusoap.php',
+        'XMLSchema' => __DIR__ . '/../..' . '/thirdparty/pear/class.xmlschema.php',
         'XML_' => __DIR__ . '/../..' . '/thirdparty/html2ps_pdf/classes/org/active-link/xml/XML.php',
         'XML_Parser' => __DIR__ . '/../..' . '/thirdparty/pear/XML/Parser.php',
         'XML_Parser_Error' => __DIR__ . '/../..' . '/thirdparty/pear/XML/Parser.php',
@@ -6087,13 +6087,13 @@ class ComposerStaticInit432cb8593440ee07889e7be562e78062
         'soap_fault_colosa' => __DIR__ . '/../..' . '/thirdparty/pear/nusoap.colosa.php',
         'soap_parser' => __DIR__ . '/../..' . '/thirdparty/pear/nusoap.php',
         'soap_parser_colosa' => __DIR__ . '/../..' . '/thirdparty/pear/nusoap.colosa.php',
-        'soap_server' => __DIR__ . '/../..' . '/thirdparty/pear/nusoap.php',
+        'soap_server' => __DIR__ . '/../..' . '/thirdparty/pear/class.soap_server.php',
         'soap_server_colosa' => __DIR__ . '/../..' . '/thirdparty/pear/nusoap.colosa.php',
-        'soap_transport_http' => __DIR__ . '/../..' . '/thirdparty/pear/nusoap.php',
+        'soap_transport_http' => __DIR__ . '/../..' . '/thirdparty/pear/class.soap_transport_http.php',
         'soapclient' => __DIR__ . '/../..' . '/thirdparty/pear/nusoap.php',
         'soapclient_colosa' => __DIR__ . '/../..' . '/thirdparty/pear/nusoap.colosa.php',
         'soapclientmime' => __DIR__ . '/../..' . '/thirdparty/pear/nusoapmime.php',
-        'soapval' => __DIR__ . '/../..' . '/thirdparty/pear/nusoap.php',
+        'soapval' => __DIR__ . '/../..' . '/thirdparty/pear/class.soap_val.php',
         'stepDetail' => __DIR__ . '/../..' . '/workflow/engine/classes/class.plugin.php',
         'subscriberInfo' => __DIR__ . '/../..' . '/thirdparty/pear/SOAP/Interop/registrationAndNotification.php',
         'taskExtendedProperty' => __DIR__ . '/../..' . '/workflow/engine/classes/class.plugin.php',
@@ -6112,12 +6112,12 @@ class ComposerStaticInit432cb8593440ee07889e7be562e78062
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInit432cb8593440ee07889e7be562e78062::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInit432cb8593440ee07889e7be562e78062::$prefixDirsPsr4;
-            $loader->fallbackDirsPsr4 = ComposerStaticInit432cb8593440ee07889e7be562e78062::$fallbackDirsPsr4;
-            $loader->prefixesPsr0 = ComposerStaticInit432cb8593440ee07889e7be562e78062::$prefixesPsr0;
-            $loader->fallbackDirsPsr0 = ComposerStaticInit432cb8593440ee07889e7be562e78062::$fallbackDirsPsr0;
-            $loader->classMap = ComposerStaticInit432cb8593440ee07889e7be562e78062::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticInit28815c8def0ddb0f0d61b90a7cc14d31::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInit28815c8def0ddb0f0d61b90a7cc14d31::$prefixDirsPsr4;
+            $loader->fallbackDirsPsr4 = ComposerStaticInit28815c8def0ddb0f0d61b90a7cc14d31::$fallbackDirsPsr4;
+            $loader->prefixesPsr0 = ComposerStaticInit28815c8def0ddb0f0d61b90a7cc14d31::$prefixesPsr0;
+            $loader->fallbackDirsPsr0 = ComposerStaticInit28815c8def0ddb0f0d61b90a7cc14d31::$fallbackDirsPsr0;
+            $loader->classMap = ComposerStaticInit28815c8def0ddb0f0d61b90a7cc14d31::$classMap;
 
         }, null, ClassLoader::class);
     }
