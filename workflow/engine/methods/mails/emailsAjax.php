@@ -133,6 +133,8 @@ switch ($req) {
             $row = $result->getRow();
             $row['APP_MSG_STATUS'] = ucfirst($row['APP_MSG_STATUS']);
             $row['APP_MSG_DATE'] = DateTime::convertUtcToTimeZone($row['APP_MSG_DATE']);
+            $row['APP_MSG_TO'] = htmlentities($row['APP_MSG_TO'], ENT_HTML5, "UTF-8");
+            $row['APP_MSG_ERROR'] = htmlentities($row['APP_MSG_ERROR'], ENT_HTML5, "UTF-8");
 
             switch ($filterBy) {
                 case 'CASES':

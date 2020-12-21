@@ -17208,6 +17208,7 @@ PMShape.prototype.refreshChildrenPositions = function (onCommand, delta) {
     for (i = 0; i < children.getSize(); i += 1) {
         child = children.get(i);
         child.setPosition(child.getX(), child.getY());
+        child.refreshConnections(false, true);
         if (onCommand) {
             child.refreshAllMovedConnections(false, delta);
         }
@@ -18745,7 +18746,7 @@ PMConnectionDropBehavior.prototype.onDragEnter = function (customShape) {
             }
         } else {
             shapeRelative = customShape.canvas.dragConnectHandlers.get(0).relativeShape;
-            if (shapeRelative.id !== customShape.id) {
+            if (shapeRelative && customShape && shapeRelative.id !== customShape.id) {
                 if (ui.helper && ui.helper.hasClass("dragConnectHandler")) {
                     for (i = 0; i < 10; i += 1) {
                         connectHandler = customShape.canvas.dropConnectHandlers.get(i);
@@ -18778,205 +18779,11 @@ PMConnectionDropBehavior.prototype.onDragEnter = function (customShape) {
 PMConnectionDropBehavior.prototype.onDrop = function (shape) {
     var that = this;
     return function (e, ui) {
-        return false;
-        var canvas = shape.getCanvas(),
-            id = ui.draggable.attr('id'),
-            x,
-            y,
-            currLeft,
-            currTop,
-            startPoint,
-            sourceShape,
-            sourcePort,
-            endPort,
-            endPortXCoord,
-            endPortYCoord,
-            connection,
-            currentConnection = canvas.currentConnection,
-            srcPort,
-            dstPort,
-            port,
-            prop,
-            command,
-            aux;
-        shape.entered = false;
-        if (!shape.drop.dropStartHook(shape, e, ui)) {
-            return false;
-        }
-        if (shape.getConnectionType() === "none") {
-            return true;
-        }
-
-        if (currentConnection) {
-            srcPort = currentConnection.srcPort;
-            dstPort = currentConnection.destPort;
-            if (srcPort.id === id) {
-                port = srcPort;
-            } else if (dstPort.id === id) {
-                port = dstPort;
-            } else {
-                port = null;
-            }
-        }
-        if (ui.helper && ui.helper.attr('id') === "drag-helper") {
-            //if its the helper then we need to create two ports and draw a
-            // connection
-            //we get the points and the corresponding shapes involved
-            startPoint = shape.canvas.connectionSegment.startPoint;
-            sourceShape = shape.canvas.connectionSegment.pointsTo;
-            //determine the points where the helper was created
-            if (sourceShape.parent && sourceShape.parent.id === shape.id) {
-                return true;
-            }
-            sourceShape.setPosition(sourceShape.oldX, sourceShape.oldY);
-            startPoint.x = startPoint.portX;
-            startPoint.y = startPoint.portY;
-            //create the ports
-            sourcePort = new PMUI.draw.Port({
-                width: 10,
-                height: 10
-            });
-            endPort = new PMUI.draw.Port({
-                width: 10,
-                height: 10
-            });
-
-            //determine the position where the helper was dropped
-            endPortXCoord = ui.offset.left - shape.canvas.getX() -
-                shape.getAbsoluteX() + shape.canvas.getLeftScroll();
-            endPortYCoord = ui.offset.top - shape.canvas.getY() -
-                shape.getAbsoluteY() + shape.canvas.getTopScroll();
-            // add ports to the corresponding shapes
-            // addPort() determines the position of the ports
-            sourceShape.addPort(sourcePort, startPoint.x, startPoint.y);
-            shape.addPort(endPort, endPortXCoord, endPortYCoord,
-                false, sourcePort);
-
-            //add ports to the canvas array for regularShapes
-            //shape.canvas.regularShapes.insert(sourcePort).insert(endPort);
-            //create the connection
-            connection = new PMFlow({
-                srcPort: sourcePort,
-                destPort: endPort,
-                segmentColor: new PMUI.util.Color(0, 0, 0),
-                name: "",
-                canvas: shape.canvas,
-                segmentStyle: shape.connectionType.segmentStyle,
-                flo_type: shape.connectionType.type
-            });
-
-            connection.setSrcDecorator(new PMUI.draw.ConnectionDecorator({
-                width: 1,
-                height: 1,
-                canvas: canvas,
-                decoratorPrefix: (typeof shape.connectionType.srcDecorator !== 'undefined'
-                && shape.connectionType.srcDecorator !== null) ?
-                    shape.connectionType.srcDecorator : "mafe-decorator",
-                decoratorType: "source",
-                parent: connection
-            }));
-
-            connection.setDestDecorator(new PMUI.draw.ConnectionDecorator({
-                width: 1,
-                height: 1,
-                canvas: canvas,
-                decoratorPrefix: (typeof shape.connectionType.destDecorator !== 'undefined'
-                && shape.connectionType.destDecorator !== null) ?
-                    shape.connectionType.destDecorator : "mafe-decorator",
-                decoratorType: "target",
-                style: {
-                    cssClasses: [
-                        "mafe-connection-decoration-target"
-                    ]
-                },
-                parent: connection
-            }));
-            connection.canvas.commandStack.add(new PMUI.command.CommandConnect(connection));
-
-            //connect the two ports
-            connection.connect();
-            connection.setSegmentMoveHandlers();
-
-            //add the connection to the canvas, that means insert its html to
-            // the DOM and adding it to the connections array
-            canvas.addConnection(connection);
-
-            // Filling PMFlow fields
-            connection.setTargetShape(endPort.parent);
-            connection.setOriginShape(sourcePort.parent);
-            connection.savePoints();
-
-            // now that the connection was drawn try to create the intersections
-            connection.checkAndCreateIntersectionsWithAll();
-
-            //attaching port listeners
-            sourcePort.attachListeners(sourcePort);
-            endPort.attachListeners(endPort);
-
-            // finally trigger createEvent
-            canvas.triggerCreateEvent(connection, []);
-        } else if (port) {
-            connection = port.getConnection();
-            if (connection.srcPort.getID() === port.getID()) {
-                prop = PMConnectionDropBehavior.prototype.validate(
-                    shape,
-                    connection.destPort.getParent()
-                );
-            } else {
-                prop = PMConnectionDropBehavior.prototype.validate(
-                    connection.srcPort.getParent(),
-                    shape
-                );
-            }
-
-            if (prop) {
-                port.setOldParent(port.getParent());
-                port.setOldX(port.getX());
-                port.setOldY(port.getY());
-
-                x = ui.position.left;
-                y = ui.position.top;
-                port.setPosition(x, y);
-                shape.dragging = false;
-                if (shape.getID() !== port.parent.getID()) {
-                    port.parent.removePort(port);
-                    currLeft = ui.offset.left - canvas.getX() -
-                        shape.absoluteX + shape.canvas.getLeftScroll();
-                    currTop = ui.offset.top - canvas.getY() - shape.absoluteY +
-                        shape.canvas.getTopScroll();
-                    shape.addPort(port, currLeft, currTop, true);
-                    canvas.regularShapes.insert(port);
-                } else {
-                    shape.definePortPosition(port, port.getPoint(true));
-                }
-
-                // LOGIC: when portChangeEvent is triggered it gathers the state
-                // of the connection but since at this point there's only a segment
-                // let's paint the connection, gather the state and then disconnect
-                // it (the connection is later repainted on, I don't know how)
-                aux = {
-                    before: {
-                        condition: connection.flo_condition,
-                        type: connection.flo_type,
-                        segmentStyle: connection.segmentStyle,
-                        srcDecorator: connection.srcDecorator.getDecoratorPrefix(),
-                        destDecorator: connection.destDecorator.getDecoratorPrefix()
-                    },
-                    after: {
-                        type: prop.type,
-                        segmentStyle: prop.connection,
-                        srcDecorator: prop.srcDecorator,
-                        destDecorator: prop.destDecorator
-                    }
-                };
-                connection.connect();
-                canvas.triggerPortChangeEvent(port);
-                command = new PMCommandReconnect(port, aux);
-                canvas.commandStack.add(command);
-                canvas.hideDropConnectHandlers();
-
-            } else {
-                return false;
+        var customShape,
+            id = ui.draggable.attr('id');
+        if (shape.getType() === "PMParticipant" && !(customShape = shape.canvas.shapeFactory(id))) {
+            if (customShape = shape.canvas.customShapes.find('id', id)) {
+                customShape.dropOnParticipant = true;
             }
         }
         return false;
@@ -19008,7 +18815,7 @@ PMCustomShapeDragBehavior.prototype.attachDragBehavior = function (customShape) 
         drag: this.onDrag(customShape, true),
         stop: this.onDragEnd(customShape, true)
     };
-    $customShape.draggable({'cursor': "move"});
+    $customShape.draggable({ 'cursor': "move" });
     $customShape.draggable(dragOptions);
 };
 /**
@@ -19092,10 +18899,10 @@ PMCustomShapeDragBehavior.prototype.onDragProcedure = function (customShape, roo
         customShape.previousYDragPosition = customShape.y;
 
         for (i = 0; i < customShape.canvas.currentSelection.getSize(); i += 1) {
-             sibling = customShape.canvas.currentSelection.get(i);
-             if (sibling.id !== customShape.id) {
+            sibling = customShape.canvas.currentSelection.get(i);
+            if (sibling.id !== customShape.id) {
                 sibling.setPosition(sibling.x + diffX, sibling.y + diffY);
-             }
+            }
         }
     } else {
         customShape.setPosition(customShape.x, customShape.y);
@@ -19224,19 +19031,19 @@ PMCustomShapeDragBehavior.prototype.dragEndProcedure = function (customShape, ro
         customShape.canvas.isDragging = false;
 
         // validate lasso limits
-        if (canvas.lassoLimits.x.shape && canvas.lassoLimits.x.shape.getX() < 0) {
+        if (canvas.lassoEnabled && canvas.lassoLimits.x.shape && canvas.lassoLimits.x.shape.getX() < 0) {
             diffX -= canvas.lassoLimits.x.shape.getX();
         }
-        if (canvas.lassoLimits.y.shape && canvas.lassoLimits.y.shape.getY() < 0) {
+        if (canvas.lassoEnabled && canvas.lassoLimits.y.shape && canvas.lassoLimits.y.shape.getY() < 0) {
             diffY -= canvas.lassoLimits.y.shape.getY();
         }
 
         for (i = 0; i < customShape.canvas.currentSelection.getSize();
-             i += 1) {
+            i += 1) {
             sibling = customShape.canvas.currentSelection.get(i);
             // if dragging with lasso is rebasing the limit
             if (diffX > 0 || diffY > 0) {
-                sibling.setPosition(sibling.getX() + diffX,  sibling.getY() + diffY);
+                sibling.setPosition(sibling.getX() + diffX, sibling.getY() + diffY);
             }
             for (j = 0; j < sibling.children.getSize(); j += 1) {
                 child = sibling.children.get(j);
@@ -19255,7 +19062,7 @@ PMCustomShapeDragBehavior.prototype.dragEndProcedure = function (customShape, ro
     // connections
     if (root) {
         for (i = 0; i < customShape.canvas.currentSelection.getSize();
-             i += 1) {
+            i += 1) {
             sibling = customShape.canvas.currentSelection.get(i);
             for (j = 0; j < sibling.ports.getSize(); j += 1) {
                 // for each port update its absolute position and repaint
@@ -19266,7 +19073,7 @@ PMCustomShapeDragBehavior.prototype.dragEndProcedure = function (customShape, ro
                 port.setPosition(port.x, port.y);
 
                 if (customShape.canvas.sharedConnections.
-                        find('id', connection.getID())) {
+                    find('id', connection.getID())) {
                     // move the segments of this connections
                     if (connection.srcPort.parent.getID() ===
                         sibling.getID()) {
@@ -19304,7 +19111,7 @@ PMCustomShapeDragBehavior.prototype.dragEndProcedure = function (customShape, ro
 
             port.setPosition(port.x, port.y);
             if (customShape.canvas.sharedConnections.
-                    find('id', connection.getID())) {
+                find('id', connection.getID())) {
                 // to avoid moving the connection twice
                 // (two times per shape), move it only if the shape
                 // holds the sourcePort
@@ -19341,13 +19148,14 @@ PMCustomShapeDragBehavior.prototype.onDragEnd = function (customShape) {
         customShape.canvas.verticalSnapper.hide();
         customShape.canvas.horizontalSnapper.hide();
         if (!customShape.changedContainer) {
-            if (customShape.parent.getType() === 'PMLane') {
+            if (customShape.parent.getType() === 'PMLane' && !customShape.dropOnParticipant) {
                 command = new PMCommandMoveInLane(customShape.canvas.currentSelection);
             } else {
                 command = new PMUI.command.CommandMove(customShape.canvas.currentSelection);
             }
             command.execute();
             customShape.canvas.commandStack.add(command);
+            customShape.dropOnParticipant = false;
         }
         customShape.changedContainer = false;
         // decrease the zIndex of the oldParent of customShape
@@ -26835,6 +26643,8 @@ var PMTiny = function (options) {
     this.processID = null;
     this.domainURL = null;
     this.baseURL = null;
+    this.contentCss = null;
+    this.themeAdvancedFonts = null;
     PMTiny.prototype.init.call(this, options);
 };
 
@@ -26860,7 +26670,9 @@ PMTiny.prototype.init = function (options) {
         skinVariant: "silver",
         processID: null,
         domainURL: "/sys" + WORKSPACE + "/" + LANG + "/" + SKIN + "/",
-        baseURL: "/js/tinymce/jscripts/tiny_mce"
+        baseURL: "/js/tinymce/jscripts/tiny_mce",
+        contentCss: "",
+        themeAdvancedFonts: "Andale Mono=andale mono,times;Arial=arial,helvetica,sans-serif;Arial Black=arial black,avant garde;Book Antiqua=book antiqua,palatino;Comic Sans MS=comic sans ms,sans-serif;Courier New=courier new,courier;Georgia=georgia,palatino;Helvetica=helvetica;Impact=impact,chicago;Symbol=symbol;Tahoma=tahoma,arial,helvetica,sans-serif;Terminal=terminal,monaco;Times New Roman=times new roman,times;Trebuchet MS=trebuchet ms,geneva;Verdana=verdana,geneva;Webdings=webdings;Wingdings=wingdings,zapf dingbats;"
     };
 
     jQuery.extend(true, defaults, options);
@@ -26880,7 +26692,9 @@ PMTiny.prototype.init = function (options) {
         .setDomainURL(defaults.domainURL)
         .setBaseURL(defaults.baseURL)
         .setHeightTiny(defaults.heightTiny)
-        .setWidthTiny(defaults.widthTiny);
+        .setWidthTiny(defaults.widthTiny)
+        .setContentCss(defaults.contentCss)
+        .setThemeAdvancedFonts(defaults.themeAdvancedFonts);
 };
 
 PMTiny.prototype.setTheme = function (theme) {
@@ -26947,6 +26761,26 @@ PMTiny.prototype.setHeightTiny = function (heightTiny) {
     this.heightTiny = heightTiny;
     return this;
 };
+/**
+ * Set CSS used in the content editor
+ *
+ * @param string contentCss
+ * @returns {PMTiny}
+ */
+PMTiny.prototype.setContentCss = function (contentCss) {
+    this.contentCss = contentCss;
+    return this;
+};
+/**
+ * Set fonts list for the advanced theme
+ *
+ * @param string themeAdvancedFonts
+ * @returns {PMTiny}
+ */
+PMTiny.prototype.setThemeAdvancedFonts = function (themeAdvancedFonts) {
+    this.themeAdvancedFonts = themeAdvancedFonts;
+    return this;
+};
 
 
 PMTiny.prototype.setParameterTiny = function () {
@@ -26970,6 +26804,8 @@ PMTiny.prototype.setParameterTiny = function () {
         relative_urls: false,
         remove_script_host: false,
         convert_urls: this.convert_urls,
+        content_css: this.contentCss,
+        theme_advanced_fonts: this.themeAdvancedFonts,
         oninit: function () {
             tinyMCE.activeEditor.processID = PMDesigner.project.id;
             tinyMCE.activeEditor.domainURL = domainURL;
@@ -27076,7 +26912,9 @@ PMTinyField.prototype.init = function (settings) {
         skinVariant: "silver",
         processID: null,
         domainURL: "/sys" + WORKSPACE + "/" + LANG + "/" + SKIN + "/",
-        baseURL: "/js/tinymce/jscripts/tiny_mce"
+        baseURL: "/js/tinymce/jscripts/tiny_mce",
+        contentCss: "",
+        themeAdvancedFonts: "Andale Mono=andale mono,times;Arial=arial,helvetica,sans-serif;Arial Black=arial black,avant garde;Book Antiqua=book antiqua,palatino;Comic Sans MS=comic sans ms,sans-serif;Courier New=courier new,courier;Georgia=georgia,palatino;Helvetica=helvetica;Impact=impact,chicago;Symbol=symbol;Tahoma=tahoma,arial,helvetica,sans-serif;Terminal=terminal,monaco;Times New Roman=times new roman,times;Trebuchet MS=trebuchet ms,geneva;Verdana=verdana,geneva;Webdings=webdings;Wingdings=wingdings,zapf dingbats;"
     };
 
     jQuery.extend(true, defaults, settings);
@@ -27097,6 +26935,8 @@ PMTinyField.prototype.init = function (settings) {
         .setBaseURL(defaults.baseURL)
         .setHeightTiny(defaults.heightTiny)
         .setWidthTiny(defaults.widthTiny)
+        .setContentCss(defaults.contentCss)
+        .setThemeAdvancedFonts(defaults.themeAdvancedFonts)
         .hideLabel(true);
 };
 
@@ -27163,6 +27003,26 @@ PMTinyField.prototype.setWidthTiny = function (widthTiny) {
 };
 PMTinyField.prototype.setHeightTiny = function (heightTiny) {
     this.controls[0].setHeightTiny(heightTiny);
+    return this;
+};
+/**
+ * Set CSS used in the content editor
+ *
+ * @param string contentCss
+ * @returns {PMTinyField}
+ */
+PMTinyField.prototype.setContentCss = function (contentCss) {
+    this.controls[0].setContentCss(contentCss);
+    return this;
+};
+/**
+ * Set fonts list for the advanced theme
+ *
+ * @param string themeAdvancedFonts
+ * @returns {PMTinyField}
+ */
+PMTinyField.prototype.setThemeAdvancedFonts = function (themeAdvancedFonts) {
+    this.controls[0].setThemeAdvancedFonts(themeAdvancedFonts);
     return this;
 };
 PMTinyField.prototype.hideLabel = function (value) {
@@ -28399,7 +28259,7 @@ PMAction.prototype.setTooltip = function (message) {
     if (typeof message === "string") {
         this.tooltip = message;
         jQuery(this.selector).attr("title", "");
-        jQuery(this.selector).tooltip({content: that.tooltip, tooltipClass: "mafe-action-tooltip"});
+        jQuery(this.selector).tooltip({ content: that.tooltip, tooltipClass: "mafe-action-tooltip" });
     }
     return this;
 };
@@ -28424,8 +28284,10 @@ PMAction.prototype.addEventListener = function () {
                 throw new Error('After action '.translate() + e.message);
             }
         });
+        if (this.label.text !== "") {
+            jQuery(this.label.selector).text(this.label.text);
+        }
 
-        jQuery(this.label.selector).text(this.label.text);
         this.eventsDefined = true;
     }
     return this;
@@ -31538,7 +31400,7 @@ PMPool.prototype.updateOnRemoveLane = function (lane) {
             nextLane.style.removeProperties(['border-top', 'border-left']);
         }
         if (i > 0) {
-            newY += this.bpmnLanes.get(i - 1).getHeight();
+            newY = this.getNewPositionY(i);
         }
         nextLane.setPosition(lane.getX(), newY);
         nextLane.setRelPosition(nextLane.getRelPosition() - 1);
@@ -31551,6 +31413,23 @@ PMPool.prototype.updateOnRemoveLane = function (lane) {
 
     return this;
 };
+
+/**
++ * Get the new position in Y axis for a lane
++ * @param index
++ * @returns {integer}
++ */
+PMPool.prototype.getNewPositionY = function (index) {
+    var i,
+        nextLane,
+        newY = 0;
+    for (i = 0; i < index; i += 1) {
+        nextLane = this.bpmnLanes.get(i);
+        newY += this.bpmnLanes.get(i).getHeight();
+    }
+    return newY;
+};
+
 /**
  * Updates all bpmn child lanes when resize event has been finished
  */
@@ -32617,16 +32496,15 @@ PMLane.prototype.stringify = function () {
 
 PMLane.prototype.createBpmn = function (type) {
     var bpmnLaneset;
-    if (!this.businessObject.elem) {
-        if (!this.parent.businessObject.elem) {
-            this.parent.createBusinesObject();
-        }
-        bpmnLaneset = this.createLaneset();
-        this.createWithBpmn('bpmn:Lane', 'businessObject');
-        this.updateBounds(this.businessObject.di);
-        this.updateSemanticParent(this.businessObject, {elem: bpmnLaneset});
-        this.updateDiParent(this.businessObject.di, this.parent.parent.businessObject.di);
+    if (!this.parent.businessObject.elem) {
+        this.parent.createBusinesObject();
     }
+    bpmnLaneset = this.createLaneset();
+    this.createWithBpmn('bpmn:Lane', 'businessObject');
+    this.updateBounds(this.businessObject.di);
+    this.updateSemanticParent(this.businessObject, { elem: bpmnLaneset });
+    this.updateDiParent(this.businessObject.di, this.parent.parent.businessObject.di);
+
 };
 
 PMLane.prototype.createLaneset = function () {
@@ -33623,6 +33501,9 @@ PMCommandDelete.prototype.undo = function () {
         shapeBefore = null;
         // add to the canvas array of regularShapes and customShapes
         shape.canvas.addToList(shape);
+        shape.getChildren().asArray().forEach(function (e) {
+            shape.canvas.addToList(e);
+        });
         // add to the children of the parent
         shape.parent.getChildren().insert(shape);
         shape.showOrHideResizeHandlers(false);
@@ -33645,7 +33526,7 @@ PMCommandDelete.prototype.undo = function () {
             }
             shape.setRelPosition(this.beforeRelPositions[shape.getID()]);
             shape.parent.bpmnLanes.insert(shape);
-            shape.parent.bpmnLanes.sort(shape.parent.comparisonFunction);
+            shape.parent.bpmnLanes.bubbleSort(shape.parent.comparisonFunction);
             shape.parent.updateAllLaneDimension();
         }
         if (shape.getType() === 'PMPool') {
@@ -33656,7 +33537,9 @@ PMCommandDelete.prototype.undo = function () {
                 shape.updateAllLaneDimension();
             }
         }
-        shape.corona.hide();
+        if(shape.corona){
+            shape.corona.hide();
+        }
     }
     // reconnect using the stack of commandConnect
     for (i = this.stackCommandConnect.length - 1; i >= 0; i -= 1) {
@@ -33672,6 +33555,7 @@ PMCommandDelete.prototype.undo = function () {
     }
     return this;
 };
+
 /**
  * Executes the command (a.k.a redo)
  * @chainable
@@ -36111,6 +35995,7 @@ var SuggestField = function (settings) {
     this.containerList = null;
     this.width = settings.width || "auto";
     this.messageRequired = null;
+    this.messageRequiredExtended = null;
     this.searchLoad = null;
     this.helper = settings.helper || null;
     this.html = null;
@@ -36290,6 +36175,7 @@ SuggestField.prototype.atachListener = function () {
         value = this.value;
         if (value) {
             that.hideMessageRequired();
+            that.hideMessageRequiredExtended();
             that.containerList.css({
                 top: $(e.target).position().top + 18,
                 "margin-left": $(e.target).position().left - 10
@@ -36517,9 +36403,32 @@ SuggestField.prototype.showMessageRequired = function () {
     }
 };
 
+/**
+  * Prepare the message for the required suggested field
+ */
+SuggestField.prototype.showMessageRequiredExtended = function () {
+    if (this.messageRequiredExtended === null) {
+        var messageRequiredExtended = $('<span class="pmui-field-message" style="display: block; margin-left: 35.2%;"><span class="pmui pmui-textlabel" style="left: 0px; top: 0px; width:auto; height: auto; position: relative; z-index: auto;">' + "This field is required.".translate() + '</span></span>');
+        this.messageRequiredExtended = messageRequiredExtended;
+        this.html.find('ul').after(messageRequiredExtended);
+    } else {
+        this.messageRequiredExtended.show();
+    }
+    this.html.find("input").css({ border: "1px solid white", "border-radius": "2px", outline: "1px solid #ecc3c2" });
+};
+
 SuggestField.prototype.hideMessageRequired = function () {
     if (this.messageRequired != null) {
         this.messageRequired.hide();
+    }
+};
+
+/**
+ * Hide the message required extended when it is no longer needed
+ */
+SuggestField.prototype.hideMessageRequiredExtended = function () {
+    if (this.messageRequiredExtended != null) {
+        this.messageRequiredExtended.hide();
     }
 };
 
@@ -36528,6 +36437,24 @@ SuggestField.prototype.isValid = function () {
         return false
     }
     return true;
+};
+
+/**
+ * Set the style for the input field
+ * 
+ * @param {string} border 
+ * @param {string} borderRadius 
+ * @param {string} color 
+ * @param {string} outline 
+ */
+SuggestField.prototype.repaint = function (border, borderRadius, color, outline) {
+    var that = this;
+    that.html.find("input").css({
+        border: border,
+        "border-radius": borderRadius,
+        color: color,
+        outline: outline
+    });
 };
 var CreateShapeHelper = function (options) {
     this.html = null;
@@ -37521,10 +37448,17 @@ FormDesigner.leftPad = function (string, length, fill) {
         this.properties.setDisabled(disabled);
     };
     FormItem.prototype.setVariable = function (variable) {
-        var that = this, b;
+        var that = this,
+            b,
+            label;
         that.variable = variable;
+        label = this.defaultLabel(variable);
+        that.properties.set("label", label);
         that.properties.set("var_uid", variable.var_uid);
         b = that.properties.set("variable", variable.var_name);
+        if (b.node) {
+            that.properties.label.node.value = label;
+        }
         if (b.node)
             b.node.textContent = variable.var_name;
         b = that.properties.set("dataType", variable.var_field_type);
@@ -37647,6 +37581,43 @@ FormDesigner.leftPad = function (string, length, fill) {
         } else {
             this.deprecatedIcon.hide();
         }
+    };
+
+    /**
+     * Get a default label from a variable
+     * @param {object} variable
+     * @returns {string}
+     */
+    FormItem.prototype.defaultLabel = function (variable) {
+        var name = variable.var_name,
+            stringAux,
+            flagUpper = true,
+            i = 1;
+        name = name.replace(/_/g, " ");
+        if (name === name.toUpperCase()) {
+            name = name.toLowerCase();
+        }
+        stringAux = name.charAt(0).toUpperCase();
+        while (i < name.length) {
+            if (name.charAt(i) !== " ") {
+                if (name.charAt(i) !== name.charAt(i).toUpperCase()) {
+                    stringAux += name.charAt(i);
+                    flagUpper = true;
+                } else {
+                    if (flagUpper) {
+                        stringAux += " " + name.charAt(i);
+                    } else {
+                        stringAux +=  name.charAt(i).toLowerCase();
+                    }
+                    flagUpper = false;
+                }
+            } else {
+                i += 1;    
+                stringAux += " " + name.charAt(i).toUpperCase();
+            }
+            i += 1;
+        }
+        return stringAux;
     };
     FormDesigner.extendNamespace('FormDesigner.main.FormItem', FormItem);
 }());
@@ -37780,7 +37751,12 @@ FormDesigner.leftPad = function (string, length, fill) {
         this.data = {label: "data".translate(), value: [], type: "hidden"};
         this.dataType = {label: "variable data type".translate(), value: "", type: "label"};
         this.value = {label: "value".translate(), value: "", type: "text"};
-        this.defaultValue = {label: "default value".translate(), value: "", type: "text"};
+        this.defaultValue = {
+            label: "default value".translate(),
+            value: "",
+            type: "text",
+            helpButton: "Allows setting a default value manually<br>or variables permitted using prefixes @@, @=, @#".translate()
+        };
         this.textTransform = {
             label: "text transform to".translate(), value: "none", type: "select", items: [
                 {value: "none", label: "none".translate()},
@@ -37897,6 +37873,7 @@ FormDesigner.leftPad = function (string, length, fill) {
         };
         this.dbConnection = {label: "", value: "workflow", type: "hidden"};
         this.sql = {label: "sql".translate(), value: "", type: "labelbutton", labelButton: "..."};
+        this.memoryCache = {label: "Memory cache".translate(), value: false, type: "checkbox"};
         this.dataVariable = {
             label: "data variable".translate(),
             value: "",
@@ -37940,7 +37917,7 @@ FormDesigner.leftPad = function (string, length, fill) {
             label: "min date".translate(),
             value: "",
             type: "datepicker",
-            helpButton: "Allows date selection after this date<br>(in YYYY-MM-DD HH:MM:SS format)".translate(),
+            helpButton: "Allows date selection after this date<br>(in YYYY-MM-DD HH:MM:SS format)<br>Variables permitted @@, @=<br>(must use the same date format for dependencies)".translate(),
             clearButton: "clear".translate(),
             regExp: /^[1-9][0-9][0-9][0-9]-(0[1-9]|1[0-2])-(0[1-9]|1[0-9]|2[0-9]|3[0-1])$|^(@@|@#|@%|@=|@\?|@\$)[a-zA-Z]+[0-9a-zA-Z_]*$|^$|^[1-9][0-9][0-9][0-9]-(0[1-9]|1[0-2])-(0[1-9]|1[0-9]|2[0-9]|3[0-1])\s(0[0-9]|1[0-9]|2[0-3]):(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9]):(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])$|^[1-9][0-9][0-9][0-9]-(0[1-9]|1[0-2])-(0[1-9]|1[0-9]|2[0-9]|3[0-1])\s(0[0-9]|1[0-9]|2[0-3])$|^[1-9][0-9][0-9][0-9]-(0[1-9]|1[0-2])-(0[1-9]|1[0-9]|2[0-9]|3[0-1])\s(0[0-9]|1[0-9]|2[0-3]):(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])$/
         };
@@ -37948,7 +37925,7 @@ FormDesigner.leftPad = function (string, length, fill) {
             label: "max date".translate(),
             value: "",
             type: "datepicker",
-            helpButton: "Allows date selection before this date<br>(in YYYY-MM-DD HH:MM:SS format)".translate(),
+            helpButton: "Allows date selection before this date<br>(in YYYY-MM-DD HH:MM:SS format)<br>Variables permitted @@, @=<br>(must use the same date format for dependencies)".translate(),
             clearButton: "clear".translate(),
             regExp: /^[1-9][0-9][0-9][0-9]-(0[1-9]|1[0-2])-(0[1-9]|1[0-9]|2[0-9]|3[0-1])$|^(@@|@#|@%|@=|@\?|@\$)[a-zA-Z]+[0-9a-zA-Z_]*$|^$|^[1-9][0-9][0-9][0-9]-(0[1-9]|1[0-2])-(0[1-9]|1[0-9]|2[0-9]|3[0-1])\s(0[0-9]|1[0-9]|2[0-3]):(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9]):(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])$|^[1-9][0-9][0-9][0-9]-(0[1-9]|1[0-2])-(0[1-9]|1[0-9]|2[0-9]|3[0-1])\s(0[0-9]|1[0-9]|2[0-3])$|^[1-9][0-9][0-9][0-9]-(0[1-9]|1[0-2])-(0[1-9]|1[0-9]|2[0-9]|3[0-1])\s(0[0-9]|1[0-9]|2[0-3]):(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])$/
         };
@@ -37999,7 +37976,7 @@ FormDesigner.leftPad = function (string, length, fill) {
             label: "default date".translate(),
             value: "",
             type: "datepicker",
-            helpButton: "Set the date picker to this date by default<br>(in YYYY-MM-DD HH:MM:SS format)".translate(),
+            helpButton: "Set the date picker to this date by default<br>(in YYYY-MM-DD HH:MM:SS format)<br>Variables permitted @@, @=<br>(must use the same date format for dependencies)".translate(),
             clearButton: "clear".translate(),
             regExp: /^[1-9][0-9][0-9][0-9]-(0[1-9]|1[0-2])-(0[1-9]|1[0-9]|2[0-9]|3[0-1])$|^(@@|@#|@%|@=|@\?|@\$)[a-zA-Z]+[0-9a-zA-Z_]*$|^$|^[1-9][0-9][0-9][0-9]-(0[1-9]|1[0-2])-(0[1-9]|1[0-9]|2[0-9]|3[0-1])\s(0[0-9]|1[0-9]|2[0-3]):(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9]):(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])$|^[1-9][0-9][0-9][0-9]-(0[1-9]|1[0-2])-(0[1-9]|1[0-9]|2[0-9]|3[0-1])\s(0[0-9]|1[0-9]|2[0-3])$|^[1-9][0-9][0-9][0-9]-(0[1-9]|1[0-2])-(0[1-9]|1[0-9]|2[0-9]|3[0-1])\s(0[0-9]|1[0-9]|2[0-3]):(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])$/
         };
@@ -38080,6 +38057,7 @@ FormDesigner.leftPad = function (string, length, fill) {
             accepts: "string or jQuery object".translate()
         };
         this.keepOpen = {label: "keep open".translate(), value: false, type: "hidden"};
+        this.fixedLocation = {label: "Fixed location".translate(), value: false, type: "checkbox"};
 
         //custom properties
         if (this.owner instanceof FormDesigner.main.GridItem) {
@@ -38172,7 +38150,7 @@ FormDesigner.leftPad = function (string, length, fill) {
             this.pf = ["type", "variable", "var_uid", "dataType", "protectedValue", "id", "name", "label", "tabIndex",
                 "defaultValue", "placeholder", "hint", "ariaLabel", "required", "requiredFieldErrorMessage", "textTransform",
                 "validate", "validateMessage", "maxLength", "formula", "mode", "operation", "dbConnection",
-                "dbConnectionLabel", "sql"];
+                "dbConnectionLabel", "sql", "memoryCache"];
             if (this.owner instanceof FormDesigner.main.FormItem) {
                 this.operation.type = "hidden";
             }
@@ -38185,7 +38163,7 @@ FormDesigner.leftPad = function (string, length, fill) {
         if (type === FormDesigner.main.TypesControl.textarea) {
             this.pf = ["type", "variable", "var_uid", "dataType", "protectedValue", "id", "name", "label", "tabIndex",
                 "defaultValue", "placeholder", "hint", "ariaLabel", "required", "requiredFieldErrorMessage", "validate",
-                "validateMessage", "mode", "dbConnection", "dbConnectionLabel", "sql", "rows"];
+                "validateMessage", "mode", "dbConnection", "dbConnectionLabel", "sql", "memoryCache", "rows"];
             if (this.owner instanceof FormDesigner.main.GridItem) {
                 this.pf.push("columnWidth");
                 this.tabIndex.type = "hidden";
@@ -38195,7 +38173,7 @@ FormDesigner.leftPad = function (string, length, fill) {
         if (type === FormDesigner.main.TypesControl.dropdown) {
             this.pf = ["type", "variable", "var_uid", "dataType", "protectedValue", "id", "name", "label", "tabIndex",
                 "defaultValue", "placeholder", "hint", "ariaLabel", "required", "requiredFieldErrorMessage", "mode", "datasource",
-                "dbConnection", "dbConnectionLabel", "sql", "dataVariable", "options"];
+                "dbConnection", "dbConnectionLabel", "sql", "memoryCache", "dataVariable", "options"];
             if (this.owner instanceof FormDesigner.main.GridItem) {
                 this.pf.push("columnWidth");
                 this.tabIndex.type = "hidden";
@@ -38206,6 +38184,7 @@ FormDesigner.leftPad = function (string, length, fill) {
             this.pf = ["type", "variable", "var_uid", "dataType", "protectedValue", "id", "name", "label", "tabIndex",
                 "defaultValue", "hint", "ariaLabel", "ariaLabelVisible", "required", "requiredFieldErrorMessage", "mode", "options"];
             this.defaultValue.type = "checkbox";
+            this.defaultValue.helpButton = "";
             if (this.owner instanceof FormDesigner.main.FormItem) {
                 this.options.type = "hidden";
             }
@@ -38223,12 +38202,12 @@ FormDesigner.leftPad = function (string, length, fill) {
         if (type === FormDesigner.main.TypesControl.checkgroup) {
             this.pf = ["type", "variable", "var_uid", "dataType", "protectedValue", "id", "name", "label", "tabIndex",
                 "defaultValue", "hint", "ariaLabel", "ariaLabelVisible", "required", "requiredFieldErrorMessage", "mode", "datasource", "dbConnection",
-                "dbConnectionLabel", "sql", "dataVariable", "options"];
+                "dbConnectionLabel", "sql", "memoryCache", "dataVariable", "options"];
         }
         if (type === FormDesigner.main.TypesControl.radio) {
             this.pf = ["type", "variable", "var_uid", "dataType", "protectedValue", "id", "name", "label", "tabIndex",
                 "defaultValue", "hint", "ariaLabel", "ariaLabel", "ariaLabelVisible", "required", "requiredFieldErrorMessage", "mode", "datasource", "dbConnection",
-                "dbConnectionLabel", "sql", "dataVariable", "options"];
+                "dbConnectionLabel", "sql", "memoryCache", "dataVariable", "options"];
         }
         if (type === FormDesigner.main.TypesControl.datetime) {
             this.pf = ["type", "variable", "var_uid", "dataType", "protectedValue", "id", "name", "label", "tabIndex",
@@ -38249,7 +38228,7 @@ FormDesigner.leftPad = function (string, length, fill) {
         if (type === FormDesigner.main.TypesControl.suggest) {
             this.pf = ["type", "variable", "var_uid", "dataType", "protectedValue", "id", "name", "label", "tabIndex",
                 "defaultValue", "placeholder", "hint", "ariaLabel", "required", "requiredFieldErrorMessage", "mode", "datasource",
-                "dbConnection", "dbConnectionLabel", "sql", "dataVariable", "options", "delay", "resultsLimit",
+                "dbConnection", "dbConnectionLabel", "sql", "memoryCache", "dataVariable", "options", "delay", "resultsLimit",
                 "forceSelection"];
             if (this.owner instanceof FormDesigner.main.GridItem) {
                 this.pf.push("columnWidth");
@@ -38274,7 +38253,7 @@ FormDesigner.leftPad = function (string, length, fill) {
             this.pf = ["type"];
         }
         if (type === FormDesigner.main.TypesControl.geomap) {
-            this.pf = ["type", "variable", "var_uid", "protectedValue", "id", "name", "label", "hint"];
+            this.pf = ["type", "variable", "var_uid", "protectedValue", "id", "name", "label", "hint", "fixedLocation"];
             this.label.type = "text";
         }
         if (type === FormDesigner.main.TypesControl.qrcode) {
@@ -39376,8 +39355,11 @@ FormDesigner.leftPad = function (string, length, fill) {
     };
     Designer.prototype.hide = function () {
         var a = document.body.childNodes;
-        for (var i = 0; i < a.length; i++)
-            $(a[i]).show();
+        for (var i = 0; i < a.length; i++) {
+            if (!($(a[i]).hasClass("ui-datepicker") || $(a[i]).hasClass("ui-autocomplete"))) {
+                $(a[i]).show();
+            }
+        }
         $(this.container).remove();
         this._disposeAuxForm();
         $(".loader").hide();
@@ -41144,6 +41126,7 @@ FormDesigner.leftPad = function (string, length, fill) {
         this.table.append(this.tbody);
         this.body = $("<div></div>");
         this.body.append(this.table);
+        this.cache = {};
     };
     ListProperties.prototype.addItem = function (propertiesGot, property, properties) {
         var input,
@@ -41257,16 +41240,16 @@ FormDesigner.leftPad = function (string, length, fill) {
                 input = $("<input type='text' style='" + width.replace("100%", "50%") + "' id='" + id + "'/><select style='" + width.replace("100%", "50%") + "'></select>");
                 $(input[0]).val(propertiesGot[property].value.text);
                 $(input[0]).on("keyup", function () {
-                    properties.set(property, {text: this.value, select: $(input[1]).val()});
+                    properties.set(property, { text: this.value, select: $(input[1]).val() });
                 });
                 $(input[0]).attr("placeholder", propertiesGot[property].placeholder ? propertiesGot[property].placeholder : "");
                 for (i = 0; i < propertiesGot[property].items.length; i++)
                     $(input[1]).append("<option value='" + propertiesGot[property].items[i].value + "'>" + propertiesGot[property].items[i].label + "</option>");
                 $(input[1]).val(propertiesGot[property].value.select);
                 $(input[1]).on("change", function () {
-                    properties.set(property, {text: $(input[0]).val(), select: this.value});
+                    properties.set(property, { text: $(input[0]).val(), select: this.value });
                 });
-                properties.setNode(property, {text: $(input[0]).val(), select: $(input[1]).val()});
+                properties.setNode(property, { text: $(input[0]).val(), select: $(input[1]).val() });
                 break;
         }
         if (propertiesGot[property].type !== "hidden") {
@@ -41286,7 +41269,7 @@ FormDesigner.leftPad = function (string, length, fill) {
                 button[0].title = propertiesGot[property].helpButton.translate();
                 button.tooltip({
                     tooltipClass: propertiesGot[property].helpButtonCss ? propertiesGot[property].helpButtonCss : null,
-                    position: {my: "left+15 center", at: "right center"},
+                    position: { my: "left+15 center", at: "right center" },
                     content: function () {
                         return $(this).prop('title');
                     },
@@ -41317,42 +41300,43 @@ FormDesigner.leftPad = function (string, length, fill) {
                 cellValue[0].style.paddingRight = n + "px";
             }
             if (propertiesGot[property].type === "datepicker") {
-                button = $("<img src='" + $.imgUrl + "fd-calendar.png' style='cursor:pointer;position:absolute;top:0;right:" + n + "px;' title='" + "datepicker".translate() + "'>");
-                button.on("click", function (e) {
-                    e.stopPropagation();
-                    if ($(e.target).data("disabled") === true)
-                        return;
-                    if ($(e.target).data("disabledTodayOption") === true)
-                        return;
-                    switch (property) {
-                        case "defaultDate":
-                            minDate = that.getDateByParam(cellValue, "minDate");
-                            maxDate = that.getDateByParam(cellValue, "maxDate");
-                            break;
-                        case "minDate":
-                            maxDate = that.getDateByParam(cellValue, "maxDate");
-                            break;
-                        case "maxDate":
-                            minDate = that.getDateByParam(cellValue, "minDate");
-                            break;
-                    }
-
-                    that.datepicker = that.dateComponentFactory(cellValue, {
-                        minDate: minDate,
-                        maxDate: maxDate,
-                        onSelect: function (dateText, inst) {
-                            properties.set(property, dateText, cellValue.find("input[type='text']")[0]);
-                        },
-                        onClose: function (dateText, inst) {
-                            that.datepicker.datepicker("destroy");
-                            $("#ui-datepicker-div").remove();
+                // init jQuery datepicker
+                that.datepicker = that.dateComponentFactory(cellValue, {
+                    minDate: minDate,
+                    maxDate: maxDate,
+                    onSelect: function (dateText, inst) {
+                        properties.set(property, dateText, cellValue.find("input[type='text']")[0]);
+                    },
+                    onClose: function (dateText, inst) {
+                        $("#ui-datepicker-div").hide();
+                    },
+                    beforeShow: function () {
+                        var params = null;
+                        switch (property) {
+                            case "maxDate":
+                                params = {
+                                    minDate: that.getDateByParam(cellValue, "minDate")
+                                }
+                                break;
+                            case "minDate":
+                                params = {
+                                    maxDate: that.getDateByParam(cellValue, "maxDate")
+                                }
+                                break;
+                            case "defaultDate":
+                                params = {
+                                    maxDate: that.getDateByParam(cellValue, "maxDate"),
+                                    minDate: that.getDateByParam(cellValue, "minDate")
+                                }
+                                break;
                         }
-                    });
-                    cellValue.find(".ui-datepicker-trigger").hide();
+                        return params;
+                    }
                 });
-                cellValue.append(button);
                 n = n + 16;
                 cellValue[0].style.paddingRight = n + "px";
+                // init jQuery autocomplete
+                this.autoCopleteFactory(cellValue, "datetime");
             }
             if (propertiesGot[property].type === "datepicker" && propertiesGot[property].todayOption) {
                 cellValue.append("<span style='text-decoration:underline;'><input type='checkbox'/>" + propertiesGot[property].todayOption + "</span>");
@@ -41373,7 +41357,7 @@ FormDesigner.leftPad = function (string, length, fill) {
         scope.find("span,img").each(function (i, e) {
             $(e).data("disabled", disabled);
         });
-        if (!propertiesGot[property].disabled && property === "requiredFieldErrorMessage"){
+        if (!propertiesGot[property].disabled && property === "requiredFieldErrorMessage") {
             scope.find("textarea").prop("disabled", !propertiesGot["required"].value);
         }
         if (!propertiesGot[property].disabled && propertiesGot.type.value === 'multipleFile' &&
@@ -41389,6 +41373,58 @@ FormDesigner.leftPad = function (string, length, fill) {
                 $(e).data("disabledTodayOption", propertiesGot[property].disabledTodayOption);
             });
         }
+        if (property === "defaultValue") {
+            // init jQuery autocomplete
+            var dataTypeMap = {
+                text: "string",
+                textarea: "string",
+                dropdown: "string",
+                checkbox: "boolean",
+                checkgroup: "array",
+                radio: "string",
+                suggest: "string",
+                hidden: "string"
+            };
+            this.autoCopleteFactory(cellValue, dataTypeMap[propertiesGot["type"].value] || "string");
+        }
+    };
+    ListProperties.prototype.autoCopleteFactory = function (cellValue, type) {
+        var that = this;
+        // implement autocomple widget
+        cellValue.find("input[type='text']").autocomplete({
+            minLength: 2,
+            source: function (request, response) {
+                var term = request.term,
+                    cachekey = type + "-" + request.term,
+                    regExg = /[@][@#=]+[a-zA-Z]?/;
+
+                // To validate prefix @@ @# @=
+                if (!regExg.test(term)) {
+                    return;
+                }
+                cellValue.find("input[type='text']").datepicker('hide');
+                if (cachekey in that.cache) {
+                    response(that.cache[cachekey]);
+                    return;
+                }
+                // add a new rule to validate
+                term = term.substring(1) !== "@" ? term[0] + encodeURIComponent(term.substring(1)) : term;
+                $.ajax({
+                    url: HTTP_SERVER_HOSTNAME + "/api/1.0/" + WORKSPACE + "/project/" + PMDesigner.project.id + "/process-variables/" + type + "/paged/?search=" + term,
+                    processData: false,
+                    success: function (json) {
+                        that.cache[cachekey] = json;
+                        response(json);
+                    },
+                    error: function (XMLHttpRequest, textStatus, errorThrown) {
+                        console.error(errorThrown);
+                    },
+                    beforeSend: function (xhr) {
+                        xhr.setRequestHeader("Authorization", "Bearer " + PMDesigner.project.keys.access_token);
+                    }
+                });
+            }
+        });
     };
     ListProperties.prototype.load = function (properties) {
         var that = this, property;
@@ -41408,42 +41444,47 @@ FormDesigner.leftPad = function (string, length, fill) {
      */
     ListProperties.prototype.dateComponentFactory = function (control, options) {
         var defaults = {
-                showOtherMonths: true,
-                selectOtherMonths: true,
-                dateFormat: "yy-mm-dd",
-                changeMonth: true,
-                changeYear: true,
-                yearRange: "-100:+100",
-                minDate: '',
-                maxDate: '',
-                onSelect: function() {},
-                onClose: function() {}
-            },
+            showOtherMonths: true,
+            selectOtherMonths: true,
+            dateFormat: "yy-mm-dd",
+            changeMonth: true,
+            changeYear: true,
+            yearRange: "-100:+100",
+            minDate: '',
+            maxDate: '',
+            onSelect: function () { },
+            onClose: function () { },
+            beforeShow: function () { }
+        },
             datePicker;
         $.extend(true, defaults, options);
         // append the date picker to the control component
-            datePicker = control
-                .find("input[type='text']")
-                .datepicker({
-                    showOtherMonths: defaults.showOtherMonths,
-                    selectOtherMonths: defaults.selectOtherMonths,
-                    dateFormat: defaults.dateFormat,
-                    showOn: defaults.showOn,
-                    changeMonth: defaults.changeMonth,
-                    changeYear: defaults.changeYear,
-                    yearRange: defaults.yearRange,
-                    minDate: defaults.minDate,
-                    maxDate: defaults.maxDate,
-                    onSelect: defaults.onSelect,
-                    onClose: defaults.onClose
-          });
-        datePicker.datepicker("show");
+        datePicker = control
+            .find("input[type='text']")
+            .datepicker({
+                buttonImage: $.imgUrl + "fd-calendar.png",
+                buttonImageOnly: true,
+                constrainInput: false,
+                buttonText: "Select date",
+                showOn: "button",
+                showOtherMonths: defaults.showOtherMonths,
+                selectOtherMonths: defaults.selectOtherMonths,
+                dateFormat: defaults.dateFormat,
+                changeMonth: defaults.changeMonth,
+                changeYear: defaults.changeYear,
+                yearRange: defaults.yearRange,
+                minDate: defaults.minDate,
+                maxDate: defaults.maxDate,
+                onSelect: defaults.onSelect,
+                onClose: defaults.onClose,
+                beforeShow: defaults.beforeShow
+            }).next(".ui-datepicker-trigger").addClass("datetime-gadget-class");
         return datePicker;
     };
     /**
      * Gets the date according to the passed param
      */
-    ListProperties.prototype.getDateByParam = function(control, param) {
+    ListProperties.prototype.getDateByParam = function (control, param) {
         var varRegex = /\@(?:([\@\%\#\?\$\=\&Qq\!])([a-zA-Z\_]\w*)|([a-zA-Z\_][\w\-\>\:]*)\(((?:[^\\\\\)]*(?:[\\\\][\w\W])?)*)\))((?:\s*\[['"]?\w+['"]?\])+|\-\>([a-zA-Z\_]\w*))?/,
             value = '';
         if (control && param) {

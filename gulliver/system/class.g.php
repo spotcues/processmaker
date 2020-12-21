@@ -1,7 +1,8 @@
 <?php
 
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Request;
 use ProcessMaker\Core\System;
-use ProcessMaker\AuditLog\AuditLog;
 use ProcessMaker\Plugins\PluginRegistry;
 use ProcessMaker\Services\OAuth2\Server;
 use ProcessMaker\Validation\ValidationUploadedFiles;
@@ -331,6 +332,9 @@ class G
             $ip = getenv('HTTP_X_FORWARDED_FOR');
         } else {
             $ip = getenv('REMOTE_ADDR');
+        }
+        if ($ip === false) {
+            $ip = Request::ip();
         }
         return $ip;
     }
@@ -1180,12 +1184,21 @@ class G
                     if ($download) {
                         G::sendHeaders($filename, 'text/plain', $download, $downloadFileName);
                     } else {
-                        if (\Bootstrap::getDisablePhpUploadExecution() === 0) {
-                            \Bootstrap::registerMonologPhpUploadExecution('phpExecution', 200, 'Php Execution', $filename);
+                        if (Bootstrap::getDisablePhpUploadExecution() === 0) {
+                            $message = 'Php Execution';
+                            $context = [
+                                'filename' => $filename,
+                                'url' => $_SERVER["REQUEST_URI"] ?? ''
+                            ];
+                            Log::channel(':phpExecution')->info($message, Bootstrap::context($context));
                             require_once($filename);
                         } else {
                             $message = G::LoadTranslation('ID_THE_PHP_FILES_EXECUTION_WAS_DISABLED');
-                            \Bootstrap::registerMonologPhpUploadExecution('phpExecution', 550, $message, $filename);
+                            $context = [
+                                'filename' => $filename,
+                                'url' => $_SERVER["REQUEST_URI"] ?? ''
+                            ];
+                            Log::channel(':phpExecution')->alert($message, Bootstrap::context($context));
                             echo $message;
                         }
                         return;
@@ -2750,11 +2763,6 @@ class G
         if (!array_key_exists("channels", $imageInfo)) {
             $imageInfo["channels"] = 3;
         }
-        $memoryNeeded = Round(($imageInfo[0] * $imageInfo[1] * $imageInfo['bits'] * $imageInfo['channels'] + Pow(2, 16)) * 1.95) / (1024 * 1024);
-        if ($memoryNeeded < 80) {
-            $memoryNeeded = 80;
-        }
-        ini_set('memory_limit', intval($memoryNeeded) . 'M');
 
         $functions = array(IMAGETYPE_GIF => array('imagecreatefromgif', 'imagegif'
             ), IMAGETYPE_JPEG => array('imagecreatefromjpeg', 'imagejpeg'), IMAGETYPE_PNG => array('imagecreatefrompng', 'imagepng'));
@@ -6061,26 +6069,24 @@ class G
     public static function logTriggerExecution($data, $error = 'NO-ERROR', $typeError = '', $executionTime = 0)
     {
         if ((!empty($data['_CODE_']) || $typeError == 'FATAL_ERROR') && empty($data['_DATA_TRIGGER_']['_TRI_LOG_'])) {
-            $lg = Bootstrap::getDefaultContextLog();
-            $lg['triTitle'] = isset($data['_DATA_TRIGGER_']['TRI_TITLE']) ? $data['_DATA_TRIGGER_']['TRI_TITLE'] : '';
-            $lg['triUid'] = isset($data['_DATA_TRIGGER_']['TRI_UID']) ? $data['_DATA_TRIGGER_']['TRI_UID'] : '';
-            $lg['triCode'] = isset($data['_DATA_TRIGGER_']['TRI_WEBBOT']) ? $data['_DATA_TRIGGER_']['TRI_WEBBOT'] : '';
-            $lg['triExecutionTime'] = $executionTime;
-            $lg['triMessageError'] = $error;
-            $lg['appUid'] = isset($data['APPLICATION']) ? $data['APPLICATION'] : '';
-            $lg['proUid'] = isset($data['PROCESS']) ? $data['PROCESS'] : '';
-            $lg['tasUid'] = isset($data['TASK']) ? $data['TASK'] : '';
-            $lg['usrUid'] = isset($data['USER_LOGGED']) ? $data['USER_LOGGED'] : '';
-
-            Bootstrap::registerMonolog(
-                (empty($error)) ? 'TriggerExecution' : 'TriggerExecutionError',
-                (empty($error)) ? 200 : 400,
-                (empty($error)) ? 'Trigger Execution' : 'Trigger Execution Error',
-                $lg,
-                $lg['workspace'],
-                'processmaker.log'
-            );
-
+            $context = [
+                'triTitle' => isset($data['_DATA_TRIGGER_']['TRI_TITLE']) ? $data['_DATA_TRIGGER_']['TRI_TITLE'] : '',
+                'triUid' => isset($data['_DATA_TRIGGER_']['TRI_UID']) ? $data['_DATA_TRIGGER_']['TRI_UID'] : '',
+                'triCode' => isset($data['_DATA_TRIGGER_']['TRI_WEBBOT']) ? $data['_DATA_TRIGGER_']['TRI_WEBBOT'] : '',
+                'triExecutionTime' => $executionTime,
+                'triMessageError' => $error,
+                'appUid' => isset($data['APPLICATION']) ? $data['APPLICATION'] : '',
+                'proUid' => isset($data['PROCESS']) ? $data['PROCESS'] : '',
+                'tasUid' => isset($data['TASK']) ? $data['TASK'] : '',
+                'usrUid' => isset($data['USER_LOGGED']) ? $data['USER_LOGGED'] : '',
+            ];
+            if (empty($error)) {
+                $message = 'Trigger Execution';
+                Log::channel(':TriggerExecution')->info($message, Bootstrap::context($context));
+            } else {
+                $message = 'Trigger Execution Error';
+                Log::channel(':TriggerExecutionError')->error($message, Bootstrap::context($context));
+            }
             $_SESSION['_DATA_TRIGGER_']['_TRI_LOG_'] = true;
         }
     }
@@ -6185,5 +6191,18 @@ class G
             return $portion;
         }, $string);
         return $string;
+    }
+
+    /**
+     * This function is used to create a legal SQL string that you can use in an SQL statement. 
+     * The given string is encoded to an escaped SQL string, taking into account the current 
+     * character set of the connection.
+     * @param string $string
+     * @return string
+     */
+    public static function realEscapeString(string $string): string
+    {
+        $resource = Propel::getConnection('workflow')->getResource();
+        return mysqli_real_escape_string($resource, $string);
     }
 }

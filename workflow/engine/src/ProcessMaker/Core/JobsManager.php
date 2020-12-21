@@ -5,7 +5,6 @@ namespace ProcessMaker\Core;
 use Bootstrap;
 use Exception;
 use Illuminate\Support\Facades\Log;
-use ProcessMaker\BusinessModel\Factories\Jobs;
 use ProcessMaker\Core\System;
 use Propel;
 
@@ -50,6 +49,7 @@ class JobsManager
         '__SYSTEM_UTC_TIME_ZONE__',
         'USER_LOGGED',
         'USR_USERNAME',
+        'USR_TIME_ZONE',
         'APPLICATION',
         'INDEX',
         'PROCESS',
@@ -127,6 +127,11 @@ class JobsManager
             'constants' => $constants['user'],
             'session' => $session,
             'server' => $_SERVER,
+            'phpEnv' => [
+                'HTTP_CLIENT_IP' => getenv('HTTP_CLIENT_IP'),
+                'HTTP_X_FORWARDED_FOR' => getenv('HTTP_X_FORWARDED_FOR'),
+                'REMOTE_ADDR' => getenv('REMOTE_ADDR'),
+            ],
         ];
     }
 
@@ -149,6 +154,13 @@ class JobsManager
 
         Propel::close();
         Propel::init(PATH_CONFIG . "databases.php");
+
+        foreach ($environment['phpEnv'] as $key => $value) {
+            if (empty($value)) {
+                continue;
+            }
+            putenv("{$key}={$value}");
+        }
     }
 
     /**
@@ -186,18 +198,22 @@ class JobsManager
     public function dispatch($name, $callback)
     {
         $environment = $this->getDataSnapshot();
-
-        $instance = Jobs::create($name, function() use ($callback, $environment) {
+        global $RBAC;
+        $referrerRBAC = $RBAC;
+        $instance = $name::dispatch(function() use ($callback, $environment, $referrerRBAC) {
                     try {
+                        global $RBAC;
+                        $RBAC = $referrerRBAC;
+
                         $this->recoverDataSnapshot($environment);
                         $callback($environment);
                     } catch (Exception $e) {
-                        Log::error($e->getMessage() . ": " . $e->getTraceAsString());
+                        $message = $e->getMessage();
                         $context = [
                             "trace" => $e->getTraceAsString(),
                             "workspace" => $environment["constants"]["SYS_SYS"]
                         ];
-                        Bootstrap::registerMonolog("queue:work", 400, $e->getMessage(), $context, "");
+                        Log::channel(':queue-work')->error($message, Bootstrap::context($context));
                         throw $e;
                     }
                 });

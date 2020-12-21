@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Foundation\Http\Kernel;
+use Illuminate\Support\Facades\Log;
 use ProcessMaker\Core\AppEvent;
 use ProcessMaker\Core\JobsManager;
 use ProcessMaker\Plugins\PluginRegistry;
@@ -309,7 +310,6 @@ ini_set('display_errors', $config['display_errors']);
 ini_set('error_reporting', $config['error_reporting']);
 ini_set('short_open_tag', 'On');
 ini_set('default_charset', "UTF-8");
-ini_set('memory_limit', $config['memory_limit']);
 ini_set('soap.wsdl_cache_enabled', $config['wsdl_cache']);
 ini_set('date.timezone',
     (isset($_SESSION['__SYSTEM_UTC_TIME_ZONE__']) && $_SESSION['__SYSTEM_UTC_TIME_ZONE__']) ? 'UTC' : $config['time_zone']); //Set Time Zone
@@ -329,6 +329,7 @@ define('DISABLE_DOWNLOAD_DOCUMENTS_SESSION_VALIDATION', $config['disable_downloa
 define('LOGS_MAX_FILES', $config['logs_max_files']);
 define('LOGS_LOCATION', $config['logs_location']);
 define('LOGGING_LEVEL', $config['logging_level']);
+define('EXT_AJAX_TIMEOUT', $config['ext_ajax_timeout']);
 define('TIME_ZONE', ini_get('date.timezone'));
 
 // IIS Compatibility, SERVER_ADDR doesn't exist on that env, so we need to define it.
@@ -561,7 +562,6 @@ ini_set('display_errors', $config['display_errors']);
 ini_set('error_reporting', $config['error_reporting']);
 ini_set('short_open_tag', 'On');
 ini_set('default_charset', "UTF-8");
-ini_set('memory_limit', $config['memory_limit']);
 ini_set('soap.wsdl_cache_enabled', $config['wsdl_cache']);
 ini_set('date.timezone', TIME_ZONE); //Set Time Zone
 
@@ -812,13 +812,22 @@ if (substr(SYS_COLLECTION, 0, 8) === 'gulliver') {
         $isWebEntry = \ProcessMaker\BusinessModel\WebEntry::isWebEntry(SYS_COLLECTION, $phpFile);
         if (\Bootstrap::getDisablePhpUploadExecution() === 1 && !$isWebEntry) {
             $message = \G::LoadTranslation('ID_THE_PHP_FILES_EXECUTION_WAS_DISABLED');
-            \Bootstrap::registerMonologPhpUploadExecution('phpExecution', 550, $message, $phpFile);
+            $context = [
+                'filename' => $phpFile,
+                'url' => $_SERVER["REQUEST_URI"] ?? ''
+            ];
+            Log::channel(':phpExecution')->alert($message, \Bootstrap::context($context));
             echo $message;
             die();
         } else {
             //Backward compatibility: Preload PmDynaform for old generated webentry files.
             class_exists('PmDynaform');
-            \Bootstrap::registerMonologPhpUploadExecution('phpExecution', 200, 'Php Execution', $phpFile);
+            $message = 'Php Execution';
+            $context = [
+                'filename' => $phpFile,
+                'url' => $_SERVER["REQUEST_URI"] ?? ''
+            ];
+            Log::channel(':phpExecution')->info($message, \Bootstrap::context($context));
         }
 
         $avoidChangedWorkspaceValidation = true;
@@ -960,6 +969,7 @@ if (!defined('EXECUTE_BY_CRON')) {
         $noLoginFiles[] = 'cases_SaveData';
         $noLoginFiles[] = 'cases_Derivate';
         $noLoginFiles[] = 'cases_NextStep';
+        $noLoginFiles[] = 'casesShowCaseNotes';
         $noLoginFiles[] = 'genericAjax';
         $noLoginFiles[] = 'casesSaveDataView';
         $noLoginFiles[] = 'propelTableAjax';

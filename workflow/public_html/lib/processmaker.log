@@ -1,30 +1,30 @@
-[4 days ago] a3b294e54  (origin/feature/PMCORE-1463) PMCORE-1463 <Julio Cesar Laura Avendaño>
-[12 days ago] 4f54f0c89  PMCORE-1435:APP_DOC_STATUS is kept as ACTIVE when files in multiple file upload control are deleted <fabio>
-[12 days ago] b55ead0e6  (origin/bugfix/PMCORE-631-B) PMCORE-631 <Paula Quispe>
-[3 weeks ago] 278ef8a0b  (origin/bugfix/PMCORE-631-A) PMCORE-631-A <Paula Quispe>
-[3 weeks ago] 0d089bfe0  (origin/bugfix/PMCORE-1254-A) PMCORE-1254 <Paula Quispe>
-[4 weeks ago] c0a8cea5c  (origin/revert-pr-7298) Revert "PMCORE-1129 (pull request #7298)" <Paula Quispe>
-[4 weeks ago] 93fe2c1ae  (origin/bugfix/PMCORE-1338) PMCORE-1338 <Paula Quispe>
-[4 weeks ago] fc6094ec7  (origin/bugfix/PMCORE-1181) PMCORE-1181 Is possible to get an access token without send a valid 'client_id' and 'client_secret' <Roly Rudy Gutierrez Pinto>
-[4 weeks ago] 2475c515c  (origin/bugfix/PMCORE-1191) PMCORE-1191 <Andrea Adamczyk>
-[4 weeks ago] dae4ca5b7  (origin/bugfix/PMCORE-1353) PMCORE-1353 <Julio Cesar Laura Avendaño>
-[4 weeks ago] 38993060d  (origin/bugfix/PMCORE-631) PMCORE-631 <Paula Quispe>
-[5 weeks ago] 252c97567  (origin/bugfix/PMCORE-1288) PMCORE-1288 <Taylor Dondich>
-[5 weeks ago] 98e04ce1a  (origin/bugfix/PMCORE-999) PMCORE-999 <Paula Quispe>
-[5 weeks ago] 399db5240  (origin/bugfix/PMCORE-487-A) PMCORE-487 <Julio Cesar Laura Avendaño>
-[5 weeks ago] 8d0307ef2  PMCORE-1198:The columns in process list change for all users if any other user remove/hide the columns <fabio>
-[5 weeks ago] fe87db50d  (origin/bugfix/PMCORE-1254) PMCORE-1254 <Paula Quispe>
-[5 weeks ago] 0243fddbd  (origin/bugfix/PMCORE-548-A) PMCORE-548-A <Andrea Adamczyk>
-[5 weeks ago] 443bb3c13  (origin/bugfix/PMCORE-1151) PMCORE-1151 <paulis>
-[5 weeks ago] f1d6f250c  (origin/bugfix/PMCORE-876) PMCORE-876 The files are not shown, when we create a PM_Table from an external DB <Roly Gutierrez>
-[6 weeks ago] 3527e6103  (origin/bugfix/PMCORE-548) PMCORE-548 <Andrea Adamczyk>
-[6 weeks ago] cd5564955  (origin/bugfix/PMCORE-547) PMCORE-547 Mapping User Information Between Active Directory and ProcessMaker allows selecting USR_ID in the User Field and breaks the correlative numeration of the USR_ID field in table USERS. <Roly Gutierrez>
-[6 weeks ago] a4399d97c  (origin/bugfix/PMCORE-1129) PMCORE-1129 <Andrea Adamczyk>
-[6 weeks ago] 765535491  PMCORE-1140:Unsupported Media Type on Multiple file control PM3.4.6 <fabio>
-[6 weeks ago] 08b2842e3  (origin/bugfix/PMCORE-624) PMCORE-624 <Julio Cesar Laura Avendaño>
-[6 weeks ago] c986d6ce1  (origin/bugfix/PMCORE-635) PMCORE-635 <Julio Cesar Laura Avendaño>
-[7 weeks ago] 2d842c450  (origin/bugfix/PMCORE-1205_D) MCORE-1205: Columns from process list are not correctly displayed - depending on the other columns width could get hidden <Rodrigo Quelca>
-[7 weeks ago] ec46af1e8  (origin/bugfix/PMCORE-1279) PMCORE-1279 <Paula Quispe>
-[7 weeks ago] b45a73b0f  (origin/bugfix/PMCORE-1205_B) PMCORE-1205 Columns from process list are not correctly displayed - depending on the other columns width could get hidden <Rodrigo Quelca>
-[7 weeks ago] 277d89f22  (origin/bugfix/PMCORE-1289) PMCORE-1289 <Julio Cesar Laura Avendaño>
-[7 weeks ago] a4ced1a09  (origin/bugfix/PMCORE-1203) PMCORE-1203 Help on how batch routing feature works and help to debug the code with a client <Roly Rudy Gutierrez Pinto>
+[2 weeks ago] c3135802b  (HEAD -> release/3.5.6, origin/release/3.5.6) Solving conflicts in cherry-pick for PMCORE-2424 <Julio Cesar Laura Avendaño>
+[2 weeks ago] d157ba58c  PMCORE-2390 <Julio Cesar Laura Avendaño>
+[8 weeks ago] 8297cdd26  update default timezones <Henry Jordan>
+[8 weeks ago] 29c91bf5e  (origin/release/3.5.4) PMCORE-561-A <Andrea Adamczyk>
+[8 weeks ago] e952badcd  (origin/bugfix/PMCORE-561-A) PMCORE-561-A <Andrea Adamczyk>
+[9 weeks ago] f6fe0c152  (origin/bugfix/PMCORE-2324) PMCORE-2324 SQL Injection via 'Category' parameter in proxyNewCasesList endpoint <Roly Rudy Gutierrez Pinto>
+[9 weeks ago] 138504741  (origin/bugfix/PMCORE-2342) PMCORE-2342 <Paula Quispe>
+[9 weeks ago] 73487eedd  PMCORE-2325:Stored Cross-Site Scripting in cases email form <fabio>
+[9 weeks ago] 7558aa9a9  (origin/bugfix/PMCORE-2326) PMCORE-2326 <Henry Jordan>
+[9 weeks ago] f01aa054e  (origin/bugfix/PMCORE-2320) PMCORE-2320 <Julio Cesar Laura Avendaño>
+[9 weeks ago] 96b449dc2  (origin/bugfix/PMCORE-1884-A) PMCORE-1884 <Paula Quispe>
+[9 weeks ago] f6aac2d16  (origin/bugfix/PMCORE-2308) PMCORE-2308 <Andrea Adamczyk>
+[10 weeks ago] e592cbe06  PMCORE-2175 <Henry Jordan>
+[10 weeks ago] e3fc39e53  (origin/bugfix/PMCORE-2297) PMCORE-2297 The server response a 500 error by trying to login with SAML plugin <Roly Rudy Gutierrez Pinto>
+[10 weeks ago] d60bf88cd  (origin/bugfix/PMCORE-1207) PMCORE-1207 Generic message for wrong credentials and AD users <Roly Rudy Gutierrez Pinto>
+[10 weeks ago] 95058efa9  (origin/feature/PMCORE-2197) feature/PMCORE-2197 <Henry Jordan>
+[10 weeks ago] 8012f6e9e  (origin/bugfix/PMCORE-2267) PMCORE-2267 Unit test: Failed asserting that exception of type "Exception" is thrown. <Roly Rudy Gutierrez Pinto>
+[2 months ago] d007a1e16  (origin/bugfix/PMCORE-529) PMCORE-529 <Andrea Adamczyk>
+[2 months ago] eb2c4cb32  (origin/bugfix/PMCORE-1884) PMCORE-1884 <Paula Quispe>
+[3 months ago] 90ba93f07  (origin/bugfix/PMCORE-1451) PMCORE-1451 La validación de contraseñas también comprueba las políticas de las contraseñas de Active Directory. <Roly Rudy Gutierrez Pinto>
+[3 months ago] cd8930910  (origin/bugfix/PMCORE-2149) PMCORE-2149 <Paula Quispe>
+[3 months ago] 3d5d11987  (origin/feature/PMCORE-2199) PMCORE-2199 <Julio Cesar Laura Avendaño>
+[3 months ago] d748e45eb  (origin/bugfix/PMCORE-561) PMCORE-561 <Andrea Adamczyk>
+[3 months ago] 3db929c75  (origin/bugfix/PMCORE-737) PMCORE-737 <Paula Quispe>
+[3 months ago] 7d682da3f  (origin/bugfix/PMCORE-1751) PMCORE-1751 <Andrea Adamczyk>
+[3 months ago] a04673622  (origin/bugfix/PMCORE-530) PMCORE-530 <Andrea Adamczyk>
+[3 months ago] 60be91dc5  (origin/bugfix/PMCORE-2179) PMCORE-2179 <Julio Cesar Laura Avendaño>
+[3 months ago] 1241225d3  (origin/bugfix/PMCORE-2150) PMCORE-2150 PMFUpdateUser() function doesn't update due date to all users in RBAC_USERS <Roly Rudy Gutierrez Pinto>
+[3 months ago] e7d251772  (origin/bugfix/PMCORE-2128) PMCORE-2128 <Julio Cesar Laura Avendaño>
+[3 months ago] 5f040aec9  PMCORE-2133 <Julio Cesar Laura Avendaño>

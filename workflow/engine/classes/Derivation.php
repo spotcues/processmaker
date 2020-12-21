@@ -1,10 +1,8 @@
 <?php
 
-/**
- * Route case
-*/
-
+use Illuminate\Support\Facades\Log;
 use ProcessMaker\Model\Application as ModelApplication;
+use ProcessMaker\Model\SubApplication as ModelSubApplication;
 
 class Derivation
 {
@@ -137,8 +135,8 @@ class Derivation
 
             $arrayApplicationData = $this->case->loadCase($arrayData["APP_UID"]);
 
-            $arrayNextTask = array();
-            $arrayNextTaskDefault = array();
+            $arrayNextTask = [];
+            $arrayNextTaskDefault = [];
             $i = 0;
 
             $criteria = new Criteria("workflow");
@@ -167,7 +165,7 @@ class Derivation
             $rsCriteria->setFetchmode(ResultSet::FETCHMODE_ASSOC);
 
             $flagDefault = false;
-            $aSecJoin = array();
+            $aSecJoin = [];
             $count = 0;
 
             while ($rsCriteria->next()) {
@@ -227,7 +225,7 @@ class Derivation
             //Check Task GATEWAYTOGATEWAY, END-MESSAGE-EVENT, END-EMAIL-EVENT
             $arrayNextTaskBackup = $arrayNextTask;
 
-            $arrayNextTask = array();
+            $arrayNextTask = [];
             $i = 0;
             foreach ($arrayNextTaskBackup as $value) {
                 $arrayNextTaskData = $value;
@@ -693,7 +691,7 @@ class Derivation
             }
 
             //Element origin and dest
-            $arrayElement = array();
+            $arrayElement = [];
             $elementTaskRelation = new \ProcessMaker\BusinessModel\ElementTaskRelation();
             $arrayElementTaskRelationData = $elementTaskRelation->getElementTaskRelationWhere(
                     [
@@ -704,7 +702,7 @@ class Derivation
                     true
             );
             if(is_null($arrayElementTaskRelationData)){
-                $arrayOtherElement = array();
+                $arrayOtherElement = [];
                 $arrayOtherElement = $bpmn->getElementsBetweenElementOriginAndElementDest(
                     $elementOriUid,
                     "bpmnActivity",
@@ -730,9 +728,9 @@ class Derivation
             $arrayEventExecute = ["BEFORE" => $flagEventExecuteBeforeGateway, "AFTER" => $flagEventExecuteAfterGateway];
             $positionEventExecute = "BEFORE";
 
-            $aContext = $this->context;
-            $aContext['appUid'] = $applicationData["APP_UID"];
-            $aContext['proUid'] = $applicationData["PRO_UID"];
+            $context = $this->context;
+            $context['appUid'] = $applicationData["APP_UID"];
+            $context['proUid'] = $applicationData["PRO_UID"];
             if(sizeof($arrayElement)){
                 foreach ($arrayElement as $value) {
                     switch ($value['type']) {
@@ -745,24 +743,26 @@ class Derivation
                                         //Message-Application throw
                                         $result = $messageApplication->create($applicationData["APP_UID"], $applicationData["PRO_UID"], $value['uid'], $applicationData);
 
-                                        $aContext['envUid'] = $value['uid'];
-                                        $aContext['envType'] = $event->getEvnType();
-                                        $aContext['envMarker'] = $event->getEvnMarker();
-                                        $aContext['action'] = 'Message application throw';
+                                        $context['envUid'] = $value['uid'];
+                                        $context['envType'] = $event->getEvnType();
+                                        $context['envMarker'] = $event->getEvnMarker();
+                                        $context['action'] = 'Message application throw';
                                         //Logger
-                                        Bootstrap::registerMonolog('CaseDerivation', 200, 'Case Derivation', $aContext, $this->sysSys, 'processmaker.log');
+                                        $message = 'Case Derivation';
+                                        Log::channel(':CaseDerivation')->info($message, Bootstrap::context($context));
                                     }
 
                                     if (preg_match("/^(?:END|INTERMEDIATE)$/", $event->getEvnType()) && $event->getEvnMarker() === 'EMAIL') {
                                         //Email-Event throw
                                         $result = $emailEvent->sendEmail($applicationData["APP_UID"], $applicationData["PRO_UID"], $value['uid'], $applicationData, $tasId);
 
-                                        $aContext['envUid'] = $value['uid'];
-                                        $aContext['envType'] = $event->getEvnType();
-                                        $aContext['envMarker'] = $event->getEvnMarker();
-                                        $aContext['action'] = 'Email event throw';
+                                        $context['envUid'] = $value['uid'];
+                                        $context['envType'] = $event->getEvnType();
+                                        $context['envMarker'] = $event->getEvnMarker();
+                                        $context['action'] = 'Email event throw';
                                         //Logger
-                                        Bootstrap::registerMonolog('CaseDerivation', 200, 'Case Derivation', $aContext, $this->sysSys, 'processmaker.log');
+                                        $message = 'Case Derivation';
+                                        Log::channel(':CaseDerivation')->info($message, Bootstrap::context($context));
                                     }
                                 }
                             }
@@ -815,7 +815,7 @@ class Derivation
         $nextTasks = $oRoute->mergeDataDerivation($tasks, $aPInformation, $rouType);
 
         //Get all route types
-        $aRouteTypes = array();
+        $aRouteTypes = [];
         foreach ($aPInformation as $key => $value) {
             $aRouteTypes[$key]['ROU_NEXT_TASK'] = $value['ROU_NEXT_TASK'];
             $aRouteTypes[$key]['ROU_TYPE'] = $value['ROU_TYPE'];
@@ -846,8 +846,8 @@ class Derivation
     function derivate(array $currentDelegation, array $nextDelegations, $removeList = true)
     {
         $this->sysSys = (!empty(config("system.workspace")))? config("system.workspace") : "Undefined";
-        $this->context = Bootstrap::getDefaultContextLog();
-        $aContext = $this->context;
+        $this->context = Bootstrap::context();
+        $context = $this->context;
         $this->removeList = $removeList;
         $arrayDerivationResult = [];
 
@@ -859,12 +859,12 @@ class Derivation
             define( 'TASK_FINISH_TASK', - 2 );
         }
 
-        $this->case = new cases();
+        $this->case = new Cases();
 
         //Get data for this DEL_INDEX current
         $appFields = $this->case->loadCase( $currentDelegation['APP_UID'], $currentDelegation['DEL_INDEX'] );
-        $aContext['appUid'] = $currentDelegation['APP_UID'];
-        $aContext['delIndex'] = $currentDelegation['DEL_INDEX'];
+        $context['appUid'] = $currentDelegation['APP_UID'];
+        $context['delIndex'] = $currentDelegation['DEL_INDEX'];
 
         // Remove the fields that will update with the thread creation
         unset($appFields['APP_ROUTING_DATA']);
@@ -893,7 +893,7 @@ class Derivation
         $currentDelegation["TAS_MI_COMPLETE_VARIABLE"] = $task->getTasMiCompleteVariable();
         $currentDelegation["TAS_MI_INSTANCE_VARIABLE"] = $task->getTasMiInstanceVariable();
 
-        $arrayNextDerivation = array();
+        $arrayNextDerivation = [];
         $flagFirstIteration = true;
 
         foreach ($nextDelegations as $nextDel) {
@@ -935,7 +935,7 @@ class Derivation
 
             $this->flagUpdateList = true;
 
-            $aContext['tasUid'] = $nextDel['TAS_UID'];
+            $context['tasUid'] = $nextDel['TAS_UID'];
             switch ($nextDel['TAS_UID']) {
                 case TASK_FINISH_PROCESS:
                     $this->finishProcess(
@@ -943,7 +943,7 @@ class Derivation
                         $nextDel,
                         $appFields,
                         $flagFirstIteration,
-                        $aContext
+                        $context
                     );
                     break;
                 case TASK_FINISH_TASK:
@@ -953,7 +953,7 @@ class Derivation
                         $appFields,
                         $flagFirstIteration,
                         $flagTaskAssignTypeIsMultipleInstance,
-                        $aContext
+                        $context
                     );
                     break;
                 default:
@@ -1134,7 +1134,6 @@ class Derivation
                 $this->verifyIsCaseChild($currentDelegation["APP_UID"], $currentDelegation["DEL_INDEX"]);
             }
             $flagUpdateCase = true;
-
         }
 
         //The variable $iNewDelIndex will be true if we created a new index the variable
@@ -1175,7 +1174,7 @@ class Derivation
      * @param array $appFields
      * @param array $aSP
      *
-     * @return integer $iNewDelIndex
+     * @return integer
      * @throws /Exception
      */
     function doDerivation ($currentDelegation, $nextDel, $appFields, $aSP = null)
@@ -1309,84 +1308,10 @@ class Derivation
 
         //if there are SubProcess to create
         if (isset($aSP)) {
-            //Check if is SelfService the task in the SubProcess
-            $isSelfService = (empty($aSP['USR_UID'])) ? true : false;
+            // Create case in the subprocess
+            $subProcessFields = $this->subProcessCreation($aSP, $appFields, $currentDelegation, $iNewDelIndex, $iAppThreadIndex);
 
-            //Create the new case in the sub-process
-            //Set the initial date to null the time its created
-            $aNewCase = $this->case->startCase( $aSP['TAS_UID'], $aSP['USR_UID'], true, $appFields, $isSelfService);
-
-            //Load the TAS_UID related to the SubProcess
-            $taskNextDel = TaskPeer::retrieveByPK($aSP["TAS_UID"]); //Sub-Process
-
-            //Copy case variables to sub-process case
-            $aFields = unserialize( $aSP['SP_VARIABLES_OUT'] );
-            $aNewFields = array ();
-            $aOldFields = $this->case->loadCase( $aNewCase['APPLICATION'] );
-
-            foreach ($aFields as $sOriginField => $sTargetField) {
-                $sOriginField = trim($sOriginField, " @#%?$=&");
-                $sTargetField = trim($sTargetField, " @#%?$=&");
-
-                $aNewFields[$sTargetField] = isset( $appFields['APP_DATA'][$sOriginField] ) ? $appFields['APP_DATA'][$sOriginField] : '';
-
-                if (array_key_exists($sOriginField . '_label', $appFields['APP_DATA'])) {
-                    $aNewFields[$sTargetField . '_label'] = $appFields['APP_DATA'][$sOriginField . '_label'];
-                }
-            }
-
-            //We will to update the new case
-            $aOldFields['APP_DATA'] = array_merge( $aOldFields['APP_DATA'], $aNewFields );
-            $aOldFields['APP_STATUS'] = 'TO_DO';
-            $this->case->updateCase(
-                $aNewCase['APPLICATION'],
-                $aOldFields
-            );
-
-            //Create a registry in SUB_APPLICATION table
-            $aSubApplication = array (
-                'APP_UID' => $aNewCase['APPLICATION'],
-                'APP_PARENT' => $currentDelegation['APP_UID'],
-                'DEL_INDEX_PARENT' => $iNewDelIndex,
-                'DEL_THREAD_PARENT' => $iAppThreadIndex,
-                'SA_STATUS' => 'ACTIVE',
-                'SA_VALUES_OUT' => serialize($aNewFields),
-                'SA_INIT_DATE' => date('Y-m-d H:i:s')
-            );
-            if ($aSP['SP_SYNCHRONOUS'] == 0) {
-                $aSubApplication['SA_STATUS'] = 'FINISHED';
-                $aSubApplication['SA_FINISH_DATE'] = $aSubApplication['SA_INIT_DATE'];
-            }
-            $oSubApplication = new SubApplication();
-            $oSubApplication->create( $aSubApplication );
-
-            //Update the AppDelegation to execute the update trigger
-            $AppDelegation = AppDelegationPeer::retrieveByPK( $aNewCase['APPLICATION'], $aNewCase['INDEX'] );
-            $AppDelegation->save();
-
-            //Create record in table APP_ASSIGN_SELF_SERVICE_VALUE
-            if ($taskNextDel->getTasAssignType() == "SELF_SERVICE" && trim($taskNextDel->getTasGroupVariable()) != "") {
-                $nextTaskGroupVariable = trim($taskNextDel->getTasGroupVariable(), " @#");
-
-                if (isset($aOldFields["APP_DATA"][$nextTaskGroupVariable])) {
-                    $dataVariable = $aOldFields["APP_DATA"][$nextTaskGroupVariable];
-                    $dataVariable = (is_array($dataVariable))? $dataVariable : trim($dataVariable);
-
-                    if (!empty($dataVariable)) {
-                        $appAssignSelfServiceValue = new AppAssignSelfServiceValue();
-
-                        $appAssignSelfServiceValue->create($aNewCase["APPLICATION"], $aNewCase["INDEX"], array("PRO_UID" => $aNewCase["PROCESS"], "TAS_UID" => $aSP["TAS_UID"], "GRP_UID" => ""), $dataVariable);
-                    }
-                }
-            }
-
-            //We will to send the notifications
-            $sendNotificationsMobile = $this->sendNotificationsMobile($aOldFields, $aSP, $aNewCase['INDEX']);
-            $nextTaskData = $taskNextDel->toArray(BasePeer::TYPE_FIELDNAME);
-            $nextTaskData['USR_UID'] = $aSP['USR_UID'];
-            $sendNotifications = $this->notifyAssignedUser($appFields, $nextTaskData, $aNewCase['INDEX']);
-
-            //If is ASYNCHRONOUS we will to route the case master
+            // If is ASYNCHRONOUS we will to route the case master
             if ($aSP['SP_SYNCHRONOUS'] == 0) {
                 $this->case->setDelInitDate( $currentDelegation['APP_UID'], $iNewDelIndex );
                 $aDeriveTasks = $this->prepareInformation(
@@ -1399,7 +1324,7 @@ class Derivation
 
                 if (isset($aDeriveTasks[1])) {
                     if ($aDeriveTasks[1]['ROU_TYPE'] != 'SELECT') {
-                        $nextDelegations2 = array();
+                        $nextDelegations2 = [];
                         foreach ($aDeriveTasks as $aDeriveTask) {
                             $nextDelegations2[] = array(
                                 'TAS_UID' => $aDeriveTask['NEXT_TASK']['TAS_UID'],
@@ -1427,9 +1352,9 @@ class Derivation
                         if ($openThreads == 0) {
                             $this->derivate($currentDelegation2, $nextDelegations2);
                         } else {
-                            $oSubApplication = new SubApplication();
-                            $aSubApplication['SA_STATUS'] = 'ACTIVE';
-                            $oSubApplication->update($aSubApplication);
+                            $subApplication = new SubApplication();
+                            $subProcessFields['SA_STATUS'] = 'ACTIVE';
+                            $subApplication->update($subProcessFields);
                         }
                     }
                 }
@@ -1445,6 +1370,104 @@ class Derivation
             $this->notifyAssignedUser($appFields, $nextTaskData, $iNewDelIndex);
         }
         return $iNewDelIndex;
+    }
+
+    /**
+     * Create the sub-process
+     * 
+     * @param array $subProcessInfo
+     * @param array $appFields
+     * @param array $currentDelegation
+     * @param int $delIndex
+     * @param int $threadIndex
+     * 
+     * @return array
+     */
+    protected function subProcessCreation(array $subProcessInfo, array $appFields, array $currentDelegation, $delIndex, $threadIndex)
+    {
+        // Check if is SelfService the task in the SubProcess
+        $isSelfService = empty($subProcessInfo['USR_UID']) ? true : false;
+
+        // Create the new case in the sub-process
+        // Set the initial date to null the time its created
+        // The DelThreadStatus will create with CLOSED value for avoid to open the case without all the execution
+        $newCase = $this->case->startCase($subProcessInfo['TAS_UID'], $subProcessInfo['USR_UID'], true, $appFields, $isSelfService);
+
+        // Load the TAS_UID related to the SubProcess
+        $taskNextDel = TaskPeer::retrieveByPK($subProcessInfo["TAS_UID"]); //Sub-Process
+
+        // Copy case variables to sub-process case
+        $fields = unserialize($subProcessInfo['SP_VARIABLES_OUT']);
+        $newFields = [];
+        $oldFields = $this->case->loadCase($newCase['APPLICATION']);
+
+        foreach ($fields as $originField => $targetField) {
+            $originField = trim($originField, " @#%?$=&");
+            $targetField = trim($targetField, " @#%?$=&");
+            $newFields[$targetField] = isset($appFields['APP_DATA'][$originField]) ? $appFields['APP_DATA'][$originField] : '';
+
+            if (array_key_exists($originField . '_label', $appFields['APP_DATA'])) {
+                $newFields[$targetField . '_label'] = $appFields['APP_DATA'][$originField . '_label'];
+            }
+        }
+
+        // We will to update the new case
+        $oldFields['APP_DATA'] = array_merge($oldFields['APP_DATA'], $newFields);
+        $oldFields['APP_STATUS'] = 'TO_DO';
+        $this->case->updateCase(
+            $newCase['APPLICATION'],
+            $oldFields
+        );
+
+        // Create a registry in SUB_APPLICATION table
+        $attributes = [
+            'APP_UID' => $newCase['APPLICATION'],
+            'APP_PARENT' => $currentDelegation['APP_UID'],
+            'DEL_INDEX_PARENT' => $delIndex,
+            'DEL_THREAD_PARENT' => $threadIndex,
+            'SA_STATUS' => 'ACTIVE',
+            'SA_VALUES_OUT' => serialize($newFields),
+            'SA_INIT_DATE' => date('Y-m-d H:i:s')
+        ];
+        if ($subProcessInfo['SP_SYNCHRONOUS'] == 0) {
+            $attributes['SA_STATUS'] = 'FINISHED';
+            $attributes['SA_FINISH_DATE'] = $attributes['SA_INIT_DATE'];
+        }
+        $subprocess = ModelSubApplication::create($attributes);
+
+        // Update the AppDelegation to execute the update trigger
+        // Update the DelThreadStatus, the thread is ready for continue
+        $appDelegation = AppDelegationPeer::retrieveByPK($newCase['APPLICATION'], $newCase['INDEX']);
+        $appDelegation->setDelThreadStatus('OPEN');
+        $appDelegation->save();
+
+        // Create record in table APP_ASSIGN_SELF_SERVICE_VALUE
+        $tasGroupVariable = $taskNextDel->getTasGroupVariable();
+        if ($taskNextDel->getTasAssignType() == "SELF_SERVICE" && !empty(trim($tasGroupVariable))) {
+            $nextTaskGroupVariable = trim($tasGroupVariable, " @#");
+
+            if (isset($oldFields["APP_DATA"][$nextTaskGroupVariable])) {
+                $dataVariable = $oldFields["APP_DATA"][$nextTaskGroupVariable];
+                $dataVariable = (is_array($dataVariable))? $dataVariable : trim($dataVariable);
+
+                if (!empty($dataVariable)) {
+                    $appAssignSelfServiceValue = new AppAssignSelfServiceValue();
+                    $appAssignSelfServiceValue->create(
+                        $newCase["APPLICATION"],
+                        $newCase["INDEX"],
+                        ["PRO_UID" => $newCase["PROCESS"], "TAS_UID" => $subProcessInfo["TAS_UID"], "GRP_UID" => ""],
+                        $dataVariable
+                    );
+                }
+            }
+        }
+        // We will to send the notifications
+        $sendNotificationsMobile = $this->sendNotificationsMobile($oldFields, $subProcessInfo, $newCase['INDEX']);
+        $nextTaskData = $taskNextDel->toArray(BasePeer::TYPE_FIELDNAME);
+        $nextTaskData['USR_UID'] = $subProcessInfo['USR_UID'];
+        $sendNotifications = $this->notifyAssignedUser($appFields, $nextTaskData, $newCase['INDEX']);
+
+        return $attributes;
     }
 
     /**
@@ -1812,7 +1835,7 @@ class Derivation
     {
         try {
             if ($nextDel['TAS_RECEIVE_LAST_EMAIL'] == 'TRUE') {
-                $taskData = array();
+                $taskData = [];
                 $userLogged = $this->userLogged->load($appFields['APP_DATA']['USER_LOGGED']);
                 $fromName = $userLogged['USR_FIRSTNAME'] . ' ' . $userLogged['USR_LASTNAME'];
                 $sFromData = $fromName . ($userLogged['USR_EMAIL'] != '' ? ' <' . $userLogged['USR_EMAIL'] . '>' : '');
@@ -1842,10 +1865,10 @@ class Derivation
      * @param array $appFields
      * @param boolean $flagFirstIteration
      * @param boolean $flagTaskAssignTypeIsMultipleInstance
-     * @param array $aContext
+     * @param array $context
      * @return void
      */
-    public function finishTask($currentDelegation, $nextDel, $appFields, $flagFirstIteration = true, $flagTaskAssignTypeIsMultipleInstance = false, $aContext = array()) {
+    public function finishTask($currentDelegation, $nextDel, $appFields, $flagFirstIteration = true, $flagTaskAssignTypeIsMultipleInstance = false, $context = []) {
         $iAppThreadIndex = $appFields['DEL_THREAD'];
         $this->case->closeAppThread($currentDelegation['APP_UID'], $iAppThreadIndex);
         if (isset($nextDel["TAS_UID_DUMMY"])) {
@@ -1883,9 +1906,10 @@ class Derivation
                 );
             }
         }
-        $aContext['action'] = 'finish-task';
+        $context['action'] = 'finish-task';
         //Logger
-        Bootstrap::registerMonolog('CaseDerivation', 200, 'Case Derivation', $aContext, $this->sysSys, 'processmaker.log');
+        $message = 'Case Derivation';
+        Log::channel(':CaseDerivation')->info($message, Bootstrap::context($context));
     }
 
     /**
@@ -1895,10 +1919,10 @@ class Derivation
      * @param array $nextDel
      * @param array $appFields
      * @param boolean $flagFirstIteration
-     * @param array $aContext
+     * @param array $context
      * @return void
      */
-    public function finishProcess($currentDelegation, $nextDel, $appFields, $flagFirstIteration = true, $aContext = array()){
+    public function finishProcess($currentDelegation, $nextDel, $appFields, $flagFirstIteration = true, $context = []){
         /*Close all delegations of $currentDelegation['APP_UID'] */
         $this->case->closeAllDelegations( $currentDelegation['APP_UID'] );
         $this->case->closeAllThreads( $currentDelegation['APP_UID'] );
@@ -1930,9 +1954,10 @@ class Derivation
                 );
             }
         }
-        $aContext['action'] = 'end-process';
+        $context['action'] = 'end-process';
         //Logger
-        Bootstrap::registerMonolog('CaseDerivation', 200, 'Case Derivation', $aContext, $this->sysSys, 'processmaker.log');
+        $message = 'Case Derivation';
+        Log::channel(':CaseDerivation')->info($message, Bootstrap::context($context));
     }
 
     /**
@@ -1946,7 +1971,7 @@ class Derivation
     */
     public function getNextInfoSubProcess($nextDel, $proUid)
     {
-        $newNextDel = array();
+        $newNextDel = [];
         $oCriteria = new Criteria('workflow');
         $oCriteria->add(SubProcessPeer::PRO_PARENT, $proUid);
         $oCriteria->add(SubProcessPeer::TAS_PARENT, $nextDel['TAS_PARENT']);
@@ -2025,7 +2050,7 @@ class Derivation
      */
     public function canRouteTypeSecJoin($flagMultipleInstance, $flagTypeMultipleInstance, $currentDelegation, $appFields, $nextDel)
     {
-        $arrayOpenThread = ($flagMultipleInstance && $flagTypeMultipleInstance)? $this->case->searchOpenPreviousTasks($currentDelegation["TAS_UID"], $currentDelegation["APP_UID"]) : array();
+        $arrayOpenThread = ($flagMultipleInstance && $flagTypeMultipleInstance)? $this->case->searchOpenPreviousTasks($currentDelegation["TAS_UID"], $currentDelegation["APP_UID"]) : [];
 
         if (
             $flagMultipleInstance
@@ -2163,7 +2188,7 @@ class Derivation
      */
     public function routePrepareInformationNextTask($currentDelegation, $iNewDelIndex, $nextDel)
     {
-        $nextDelegationsAux   = array();
+        $nextDelegationsAux   = [];
         $taskNextDelNextDelRouType = "";
         $i = 0;
         //Get for $nextDel["TAS_UID"] your next Task
@@ -2239,7 +2264,7 @@ class Derivation
      * @param boolean $flagFirstIteration
      * @return void
      */
-    public function doRouteWithoutThread($appFields, $currentDelegation, $nextDel, $arraySiblings = array(), $flagMultipleInstance = false, $flagTypeMultipleInstance = false, $flagFirstIteration = false)
+    public function doRouteWithoutThread($appFields, $currentDelegation, $nextDel, $arraySiblings = [], $flagMultipleInstance = false, $flagTypeMultipleInstance = false, $flagFirstIteration = false)
     {
         $iAppThreadIndex = $appFields['DEL_THREAD'];
         $routeType = $currentDelegation["ROU_TYPE"];

@@ -92,7 +92,6 @@ try {
     restore_error_handler();
 
     // Do not change any of these settings directly, use env.ini instead
-    ini_set('memory_limit', $arraySystemConfiguration['memory_limit']);
     ini_set('display_errors', $arraySystemConfiguration['debug']);
     ini_set('error_reporting', $e_all);
     ini_set('short_open_tag', 'On');
