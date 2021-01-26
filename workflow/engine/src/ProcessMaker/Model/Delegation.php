@@ -689,7 +689,7 @@ class Delegation extends Model
             }
             $items = $query->get();
             $items->each(function ($item) use (&$data) {
-                $data[] = get_object_vars($item);
+                $data[] = $item->toArray();
             });
         } else {
             // Set offset and limit if were sent

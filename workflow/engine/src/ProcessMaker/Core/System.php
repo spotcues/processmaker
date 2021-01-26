@@ -82,7 +82,8 @@ class System
         'report_table_batch_regeneration' => 1000,
         'report_table_floating_number' => 4,
         'report_table_double_number' => 4,
-        'ext_ajax_timeout' => 600000
+        'ext_ajax_timeout' => 600000,
+        'disable_task_manager_routing_async' => '0'
     ];
 
     /**
@@ -1237,6 +1238,11 @@ class System
         $value = $config['highlight_home_folder_scope'];
         if ($value !== "unassigned") { // Currently only this value is validated
             $config['highlight_home_folder_scope'] = self::$defaultConfig['highlight_home_folder_scope'];
+        }
+
+        $value = $config['disable_task_manager_routing_async'];
+        if (!is_numeric($value) || !in_array($value, [0, 1])) {
+            $config['disable_task_manager_routing_async'] = self::$defaultConfig['disable_task_manager_routing_async'];
         }
 
         return $config;
