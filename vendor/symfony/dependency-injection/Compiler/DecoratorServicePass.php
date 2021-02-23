@@ -29,7 +29,7 @@ class DecoratorServicePass implements CompilerPassInterface
     public function process(ContainerBuilder $container)
     {
         $definitions = new \SplPriorityQueue();
-        $order = \PHP_INT_MAX;
+        $order = PHP_INT_MAX;
 
         foreach ($container->getDefinitions() as $id => $definition) {
             if (!$decorated = $definition->getDecoratedService()) {
@@ -78,18 +78,8 @@ class DecoratorServicePass implements CompilerPassInterface
 
             if (isset($decoratingDefinitions[$inner])) {
                 $decoratingDefinition = $decoratingDefinitions[$inner];
-
-                $decoratingTags = $decoratingDefinition->getTags();
-                $resetTags = [];
-
-                if (isset($decoratingTags['container.service_locator'])) {
-                    // container.service_locator has special logic and it must not be transferred out to decorators
-                    $resetTags = ['container.service_locator' => $decoratingTags['container.service_locator']];
-                    unset($decoratingTags['container.service_locator']);
-                }
-
-                $definition->setTags(array_merge($decoratingTags, $definition->getTags()));
-                $decoratingDefinition->setTags($resetTags);
+                $definition->setTags(array_merge($decoratingDefinition->getTags(), $definition->getTags()));
+                $decoratingDefinition->setTags([]);
                 $decoratingDefinitions[$inner] = $definition;
             }
 

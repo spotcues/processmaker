@@ -181,9 +181,6 @@ class AppDelegation extends BaseAppDelegation
         $criteriaUpdate->add(AppDelegationPeer::DEL_LAST_INDEX, 0);
         BasePeer::doUpdate($criteria, $criteriaUpdate, Propel::getConnection('workflow'));
 
-        // Define the status of the thread, if is subprocess we need to CLOSED the thread
-        $theadStatus = !$isSubprocess ? 'OPEN' : 'CLOSED';
-
         $this->setAppUid($sAppUid);
         $this->setProUid($sProUid);
         $this->setTasUid($sTasUid);
@@ -194,7 +191,7 @@ class AppDelegation extends BaseAppDelegation
         $this->setDelType('NORMAL');
         $this->setDelPriority(($iPriority != '' ? $iPriority : '3'));
         $this->setDelThread($sAppThread);
-        $this->setDelThreadStatus($theadStatus);
+        $this->setDelThreadStatus('OPEN');
         $this->setDelDelegateDate('now');
         $this->setAppNumber($appNumber);
         $this->setTasId($taskId);

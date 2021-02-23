@@ -1,8 +1,6 @@
 <?php
 
-use Illuminate\Support\Facades\Log;
 use ProcessMaker\BusinessModel\EmailEvent;
-use ProcessMaker\BusinessModel\Variable as BmVariable;
 use ProcessMaker\Core\System;
 
 class Processes
@@ -1865,21 +1863,8 @@ class Processes
                 $criteria = new Criteria(ProcessVariablesPeer::DATABASE_NAME);
                 $criteria->add(ProcessVariablesPeer::VAR_UID, $row['VAR_UID']);
                 $criteria->add(ProcessVariablesPeer::PRJ_UID, $row['PRJ_UID']);
-                // Load the PRO_ID
-                $process = new Process();
-                if ($process->processExists($row['PRJ_UID'])) {
-                    $processRow = $process->load($row['PRJ_UID']);
-                    $row['PRO_ID'] = $processRow['PRO_ID'];
-                    if (!empty($row['PRO_ID'])) {
-                        $criteria->add(ProcessVariablesPeer::PRO_ID, $row['PRO_ID']);
-                    }
-                }
                 $criteria->add(ProcessVariablesPeer::VAR_NAME, $row['VAR_NAME']);
                 $criteria->add(ProcessVariablesPeer::VAR_FIELD_TYPE, $row['VAR_FIELD_TYPE']);
-                if (empty($row['VAR_FIELD_TYPE_ID'])) {
-                    $row['VAR_FIELD_TYPE_ID'] = BmVariable::$varTypesValues[$row["VAR_FIELD_TYPE"]];
-                }
-                $criteria->add(ProcessVariablesPeer::VAR_FIELD_TYPE_ID, $row['VAR_FIELD_TYPE_ID']);
                 $criteria->add(ProcessVariablesPeer::VAR_FIELD_SIZE, $row['VAR_FIELD_SIZE']);
                 $criteria->add(ProcessVariablesPeer::VAR_LABEL, $row['VAR_LABEL']);
                 $criteria->add(ProcessVariablesPeer::VAR_DBCONNECTION, $row['VAR_DBCONNECTION']);
@@ -3418,26 +3403,24 @@ class Processes
     /**
      * Get DB Connections Rows for a Process
      *
-     * @param string $proUid
-     * @return array $connections
+     * @param array $sProUid
+     * @return array $aConnections
      */
-    public function getDBConnectionsRows($proUid)
+    public function getDBConnectionsRows($sProUid)
     {
         try {
-            $connections = [];
-            $criteria = new Criteria('workflow');
-            $criteria->add(DbSourcePeer::PRO_UID, $proUid);
-            $dataset = DbSourcePeer::doSelectRS($criteria);
-            $dataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
-            $dataset->next();
-            while ($row = $dataset->getRow()) {
-                $connection = new DbSource();
-                $infoConnection = $connection->Load($row['DBS_UID'], $row['PRO_UID']);
-                unset($infoConnection['DBS_ID']);
-                $connections[] = $infoConnection;
-                $dataset->next();
+            $aConnections = array();
+            $oCriteria = new Criteria('workflow');
+            $oCriteria->add(DbSourcePeer::PRO_UID, $sProUid);
+            $oDataset = DbSourcePeer::doSelectRS($oCriteria);
+            $oDataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+            $oDataset->next();
+            while ($aRow = $oDataset->getRow()) {
+                $oConnection = new DbSource();
+                $aConnections[] = $oConnection->Load($aRow['DBS_UID'], $aRow['PRO_UID']);
+                $oDataset->next();
             }
-            return $connections;
+            return $aConnections;
         } catch (Exception $oError) {
             throw $oError;
         }
@@ -3626,8 +3609,6 @@ class Processes
             $oDataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
             $oDataset->next();
             while ($aRow = $oDataset->getRow()) {
-                unset($aRow['VAR_ID']);
-                unset($aRow['PRO_ID']);
                 $aVars[] = $aRow;
                 $oDataset->next();
             }
@@ -4492,8 +4473,7 @@ class Processes
                 try {
                     $result = $scriptTask->create($processUid, $record);
                 } catch (Exception $e) {
-                    $message = $e->getMessage();
-                    Log::channel(':DataError')->error($message, Bootstrap::context($record));
+                    Bootstrap::registerMonolog('DataError', 400, $e->getMessage(), $record, config("system.workspace"), 'processmaker.log');
                 }
             }
         } catch (Exception $e) {
@@ -5408,14 +5388,16 @@ class Processes
                         }
                         if ($bytesSaved != $fsContent) {
                             $channel = "writingMailTemplate";
-                            $context = [];
+                            $context = \Bootstrap::getDefaultContextLog();
                             $context['action'] = $channel;
                             if (defined("SYS_CURRENT_URI") && defined("SYS_CURRENT_PARMS")) {
                                 $context['url'] = SYS_CURRENT_URI . '?' . SYS_CURRENT_PARMS;
                             }
                             $context['usrUid'] = isset($_SESSION['USER_LOGGED']) ? $_SESSION['USER_LOGGED'] : '';
+                            $sysSys = !empty(config("system.workspace")) ? config("system.workspace") : "Undefined";
                             $message = 'The imported template has a number of byes different than the original template, please verify if the file \'' . $newFileName . '\' is correct.';
-                            Log::channel(':' . $channel)->error($message, Bootstrap::context($context));
+                            $level = 400;
+                            Bootstrap::registerMonolog($channel, $level, $message, $context, $sysSys, 'processmaker.log');
                         }
                     }
                 }

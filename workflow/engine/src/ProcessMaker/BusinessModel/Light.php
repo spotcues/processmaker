@@ -17,7 +17,6 @@ use database;
 use Exception;
 use G;
 use GulliverBasePeer;
-use Illuminate\Support\Facades\Log;
 use InputDocument;
 use PmLicenseManager;
 use PMmemcached;
@@ -346,12 +345,9 @@ class Light
             $response['caseNumber'] = $aData['CASE_NUMBER'];
 
             //Log
-            $message = 'Create case';
-            $context = [
-                'application_uid' => $aData['APPLICATION'],
-                'usr_uid' => $userId
-            ];
-            Log::channel(':MobileCreateCase')->info($message, Bootstrap::context($context));
+            Bootstrap::registerMonolog('MobileCreateCase', 200, "Create case",
+                ['application_uid' => $aData['APPLICATION'], 'usr_uid' => $userId], config("system.workspace"),
+                'processmaker.log');
         } catch (Exception $e) {
             $response['status'] = 'failure';
             $response['message'] = $e->getMessage();
@@ -439,7 +435,7 @@ class Light
         $Fields['CURRENT_DYNAFORM'] = $step_uid_obj;
         $Fields['USER_UID'] = $usr_uid;
         $Fields['PRO_UID'] = $prj_uid;
-        $oCase->updateCase($cas_uid, $Fields);
+        $oCase->updateCase($cas_uid, $Fields,true);
         $response = array('status' => 'ok');
 
         return $response;
@@ -621,12 +617,9 @@ class Light
             }
 
             //Log
-            $message = 'Route case';
-            $context = [
-                'application_uid' => $applicationUid,
-                'usr_uid' => $userUid
-            ];
-            Log::channel(':MobileRouteCase')->info($message, Bootstrap::context($context));
+            Bootstrap::registerMonolog('MobileRouteCase', 200, 'Route case',
+                ['application_uid' => $applicationUid, 'usr_uid' => $userUid], config("system.workspace"),
+                'processmaker.log');
         } catch (Exception $e) {
             throw $e;
         }
@@ -1115,12 +1108,7 @@ class Light
                             ->status(415)
                             ->message(G::LoadTranslation('ID_UPLOAD_INVALID_DOC_TYPE_FILE', [$inpDocTypeFile]))
                             ->log(function($rule) {
-                                $message = $rule->getMessage();
-                                $context = [
-                                    'filename' => $rule->getData()->filename,
-                                    'url' => $_SERVER["REQUEST_URI"] ?? ''
-                                ];
-                                Log::channel(':phpUpload')->notice($message, Bootstrap::context($context));
+                                Bootstrap::registerMonologPhpUploadExecution('phpUpload', 250, $rule->getMessage(), $rule->getData()->filename);
                             });
 
                     //rule: maximum file size
@@ -1138,12 +1126,7 @@ class Light
                             ->status(413)
                             ->message(G::LoadTranslation("ID_UPLOAD_INVALID_DOC_MAX_FILESIZE", [$inpDocMaxFilesize . $inpDocMaxFilesizeUnit]))
                             ->log(function($rule) {
-                                $message = $rule->getMessage();
-                                $context = [
-                                    'filename' => $rule->getData()->filename,
-                                    'url' => $_SERVER["REQUEST_URI"] ?? ''
-                                ];
-                                Log::channel(':phpUpload')->notice($message, Bootstrap::context($context));
+                                Bootstrap::registerMonologPhpUploadExecution('phpUpload', 250, $rule->getMessage(), $rule->getData()->filename);
                             });
                     $validator->validate();
                     if ($validator->fails()) {

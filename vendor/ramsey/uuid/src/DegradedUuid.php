@@ -40,7 +40,7 @@ class DegradedUuid extends Uuid
         $ts = new BigNumber($time, 20);
         $ts->subtract('122192928000000000');
         $ts->divide('10000000.0');
-        $ts->floor();
+        $ts->round();
         $unixTime = $ts->getValue();
 
         return new DateTime("@{$unixTime}");

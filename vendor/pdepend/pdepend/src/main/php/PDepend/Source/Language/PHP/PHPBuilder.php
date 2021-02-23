@@ -935,7 +935,7 @@ class PHPBuilder implements Builder
      * -------------
      * </code>
      *
-     * @return \PDepend\Source\AST\ASTPrintExpression
+     * @return \PDepend\Source\AST\ASTConditionalExpression
      * @since 2.3
      */
     public function buildAstPrintExpression()
@@ -2098,13 +2098,11 @@ class PHPBuilder implements Builder
     protected function findType(array $instances, $qualifiedName)
     {
         $classOrInterfaceName = $this->extractTypeName($qualifiedName);
-        $caseInsensitiveName = strtolower($classOrInterfaceName);
-        if (!isset($instances[$caseInsensitiveName])) {
-            return null;
-        }
-
         $namespaceName = $this->extractNamespaceName($qualifiedName);
-        if ($namespaceName === null) {
+
+        $caseInsensitiveName = strtolower($classOrInterfaceName);
+
+        if (!isset($instances[$caseInsensitiveName])) {
             return null;
         }
 
@@ -2366,7 +2364,7 @@ class PHPBuilder implements Builder
      *
      * @param string $qualifiedName The qualified PHP 5.3 class identifier.
      *
-     * @return string|null
+     * @return string
      */
     protected function extractNamespaceName($qualifiedName)
     {

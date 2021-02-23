@@ -690,7 +690,7 @@ class Dynaform extends BaseDynaform
             $oCriteria->add(DynaformPeer::DYN_UID, $sDynUid);
         }
         $oCriteria->add( DynaformPeer::DYN_TITLE, $sNameDyanform );
-        $oDataset = DynaformPeer::doSelectRS( $oCriteria );
+        $oDataset = DynaformPeer::doSelectRS( $oCriteria, Propel::getDbConnection('workflow_ro'));
         $oDataset->setFetchmode( ResultSet::FETCHMODE_ASSOC );
         $oDataset->next();
         $aRow = $oDataset->getRow();
@@ -713,7 +713,7 @@ class Dynaform extends BaseDynaform
         $oCriteria->add(DynaformPeer::PRO_UID, $proUid);
         $oCriteria->add(DynaformPeer::DYN_UID, $dynUid, Criteria::NOT_EQUAL);
         $oCriteria->add(DynaformPeer::DYN_CONTENT, "%" . $dynUid . "%", Criteria::LIKE);
-        $oDataset = DynaformPeer::doSelectRS($oCriteria);
+        $oDataset = DynaformPeer::doSelectRS($oCriteria, Propel::getDbConnection('workflow_ro'));
         $oDataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
         while ($oDataset->next()) {
             $res[] = $oDataset->getRow();

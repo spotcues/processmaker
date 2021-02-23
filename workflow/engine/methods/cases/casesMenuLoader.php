@@ -16,71 +16,71 @@ function getLoadTreeMenuData()
 {
     header("content-type: text/xml");
 
-    $menuInstance = new Menu();
-    $menuInstance->load('cases');
+    global $G_TMP_MENU;
+    $oMenu = new Menu();
+    $oMenu->load('cases');
 
-    $types = ['to_do', 'draft', 'cancelled', 'sent', 'paused', 'completed'];
-    $typesId = ['CASES_INBOX' => 'to_do', 'CASES_DRAFT' => 'draft', 'CASES_CANCELLED' => 'cancelled',
-        'CASES_SENT' => 'sent', 'CASES_PAUSED' => 'paused', 'CASES_COMPLETED' => 'completed'];
-
-    // If the feature for highlight the home folders is disabled, add unassigned list to tree options with counters
-    if (!HIGHLIGHT_HOME_FOLDER_ENABLE) {
-        $types[] = 'selfservice';
-        $typesId['CASES_SELFSERVICE'] = 'selfservice';
-    }
+    $oCases = new Cases();
+    $aTypes = array('to_do','draft','cancelled','sent','paused','completed','selfservice');
+    //'to_revise',
+    //'to_reassign'
+    $aTypesID = array('CASES_INBOX' => 'to_do','CASES_DRAFT' => 'draft','CASES_CANCELLED' => 'cancelled','CASES_SENT' => 'sent','CASES_PAUSED' => 'paused','CASES_COMPLETED' => 'completed','CASES_SELFSERVICE' => 'selfservice');
 
 
-    $list = [];
+    //'CASES_TO_REVISE'=>'to_revise',
+    //'CASES_TO_REASSIGN'=>'to_reassign'
+    $list = array();
     $list['count'] = ' ';
 
-    $empty = [];
-    foreach ($types as $key => $val) {
+    $empty = array();
+    foreach ($aTypes as $key => $val) {
         $empty[$val] = $list;
     }
 
-    $count = $empty;
+    $aCount = $empty; //$oCases->getAllConditionCasesCount($aTypes, true);
+    $processNameMaxSize = 20;
 
-    // Now drawing the tree view using the menu options from menu/cases.php
-    $menuCases = [];
-    for ($i = 0; $i < count($menuInstance->Options); $i++) {
-        if ($menuInstance->Types[$i] == 'blockHeader') {
-            $currentBlockID = $menuInstance->Id[$i];
-            $menuCases[$currentBlockID]['blockTitle'] = $menuInstance->Labels[$i];
-            if ($menuInstance->Options[$i] != "") {
-                $menuCases[$currentBlockID]['link'] = $menuInstance->Options[$i];
+    //now drawing the treeview using the menu options from menu/cases.php
+    $menuCases = array();
+    for ($i = 0; $i < count($oMenu->Options); $i++) {
+        if ($oMenu->Types[$i] == 'blockHeader') {
+            $CurrentBlockID = $oMenu->Id[$i];
+            $menuCases[$CurrentBlockID]['blockTitle'] = $oMenu->Labels[$i];
+            if ($oMenu->Options[$i] != "") {
+                $menuCases[$CurrentBlockID]['link'] = $oMenu->Options[$i];
             }
-        } elseif ($menuInstance->Types[$i] == 'blockNestedTree') {
-            $currentBlockID = $menuInstance->Id[$i];
-            $menuCases[$currentBlockID]['blockTitle'] = $menuInstance->Labels[$i];
-            $menuCases[$currentBlockID]['blockType'] = $menuInstance->Types[$i];
-            $menuCases[$currentBlockID]['loaderurl'] = $menuInstance->Options[$i];
-        } elseif ($menuInstance->Types[$i] == 'blockHeaderNoChild') {
-            $currentBlockID = $menuInstance->Id[$i];
-            $menuCases[$currentBlockID]['blockTitle'] = $menuInstance->Labels[$i];
-            $menuCases[$currentBlockID]['blockType'] = $menuInstance->Types[$i];
-            $menuCases[$currentBlockID]['link'] = $menuInstance->Options[$i];
-        } elseif ($menuInstance->Types[$i] == 'rootNode') {
-            $menuCases[$currentBlockID]['blockItems'][$menuInstance->Id[$i]] = [
-                'label' => $menuInstance->Labels[$i],
-                'link' => $menuInstance->Options[$i],
-                'icon' => (isset($menuInstance->Icons[$i]) && $menuInstance->Icons[$i] != '') ? $menuInstance->Icons[$i] : 'kcmdf.png'
-            ];
+        } elseif ($oMenu->Types[$i] == 'blockNestedTree') {
+            $CurrentBlockID = $oMenu->Id[$i];
+            $menuCases[$CurrentBlockID]['blockTitle'] = $oMenu->Labels[$i];
+            $menuCases[$CurrentBlockID]['blockType'] = $oMenu->Types[$i];
+            $menuCases[$CurrentBlockID]['loaderurl'] = $oMenu->Options[$i];
+        } elseif ($oMenu->Types[$i] == 'blockHeaderNoChild') {
+            $CurrentBlockID = $oMenu->Id[$i];
+            $menuCases[$CurrentBlockID]['blockTitle'] = $oMenu->Labels[$i];
+            $menuCases[$CurrentBlockID]['blockType'] = $oMenu->Types[$i];
+            $menuCases[$CurrentBlockID]['link'] = $oMenu->Options[$i];
+        } elseif ($oMenu->Types[$i] == 'rootNode') {
+            $menuCases[$CurrentBlockID]['blockItems'][$oMenu->Id[$i]] = array(
+                'label' => $oMenu->Labels[$i],
+                'link' => $oMenu->Options[$i],
+                'icon' => (isset($oMenu->Icons[$i]) && $oMenu->Icons[$i] != '') ? $oMenu->Icons[$i] : 'kcmdf.png'
+            );
 
             $index = $i;
-            list($childs, $index) = getChilds($menuInstance, ++$index);
+            list($childs, $index) = getChilds($oMenu, ++$index);
 
-            $menuCases[$currentBlockID]['blockItems'][$menuInstance->Id[$i]]['childs'] = $childs;
+            $menuCases[$CurrentBlockID]['blockItems'][$oMenu->Id[$i]]['childs'] = $childs;
 
             $i = $index;
         } else {
-            $menuCases[$currentBlockID]['blockItems'][$menuInstance->Id[$i]] = [
-                'label' => $menuInstance->Labels[$i],
-                'link' => $menuInstance->Options[$i],
-                'icon' => (isset($menuInstance->Icons[$i]) && $menuInstance->Icons[$i] != '') ? $menuInstance->Icons[$i] : 'kcmdf.png'
-            ];
+            $menuCases[$CurrentBlockID]['blockItems'][$oMenu->Id[$i]] = array(
+                'label' => $oMenu->Labels[$i],
+                'link' => $oMenu->Options[$i],
+                'icon' => (isset($oMenu->Icons[$i]) && $oMenu->Icons[$i] != '') ? $oMenu->Icons[$i] : 'kcmdf.png'
+            );
 
-            if (isset($typesId[$menuInstance->Id[$i]])) {
-                $menuCases[$currentBlockID]['blockItems'][$menuInstance->Id[$i]]['cases_count'] = $count[$typesId[$menuInstance->Id[$i]]]['count'];
+            if (isset($aTypesID[$oMenu->Id[$i]])) {
+                $menuCases[$CurrentBlockID]['blockItems'][$oMenu->Id[$i]]['cases_count'] = $aCount[$aTypesID[$oMenu->Id[$i]]]['count'];
             }
         }
     }
@@ -102,8 +102,8 @@ function getLoadTreeMenuData()
             }
         }
 
-        // This function generates an xml, so it prevents the output of a badly formed xml
-        // by cleaning any content prior to this function with ob_clean
+        //This function generates an xml, so it prevents the output of a badly formed xml
+        //by cleaning any content prior to this function with ob_clean
         ob_clean();
         echo $xml->asXML();
         die;
@@ -122,7 +122,7 @@ function getLoadTreeMenuData()
                 $menuBlockNode->addAttribute('url', $menuBlock['link']);
             }
 
-            // Adding "menu_block" child nodes
+            // adding "menu_block" childs nodes
             foreach ($menuBlock['blockItems'] as $id => $menu) {
                 if (! empty($menu['childs'])) {
                     $rootNode = $menuBlockNode->addChild('menu_block');
@@ -165,8 +165,8 @@ function getLoadTreeMenuData()
         }
     }
 
-    // This function generates an xml, so it prevents the output of a badly formed xml
-    // by cleaning any content prior to this function with ob_clean
+    //This function generates an xml, so it prevents the output of a badly formed xml
+    //by cleaning any content prior to this function with ob_clean
     ob_clean();
     echo $xml->asXML();
     die;

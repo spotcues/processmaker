@@ -374,7 +374,7 @@ PMPool.prototype.updateOnRemoveLane = function (lane) {
             nextLane.style.removeProperties(['border-top', 'border-left']);
         }
         if (i > 0) {
-            newY = this.getNewPositionY(i);
+            newY += this.bpmnLanes.get(i - 1).getHeight();
         }
         nextLane.setPosition(lane.getX(), newY);
         nextLane.setRelPosition(nextLane.getRelPosition() - 1);
@@ -387,23 +387,6 @@ PMPool.prototype.updateOnRemoveLane = function (lane) {
 
     return this;
 };
-
-/**
-+ * Get the new position in Y axis for a lane
-+ * @param index
-+ * @returns {integer}
-+ */
-PMPool.prototype.getNewPositionY = function (index) {
-    var i,
-        nextLane,
-        newY = 0;
-    for (i = 0; i < index; i += 1) {
-        nextLane = this.bpmnLanes.get(i);
-        newY += this.bpmnLanes.get(i).getHeight();
-    }
-    return newY;
-};
-
 /**
  * Updates all bpmn child lanes when resize event has been finished
  */

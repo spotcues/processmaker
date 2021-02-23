@@ -364,7 +364,7 @@ if (!function_exists('mssql_get_last_message') && extension_loaded('sqlsrv')) {
     function mssql_get_last_message()
     {
         $errors = sqlsrv_errors();
-        if (!empty($errors) && is_array($errors)) {
+        if (count($errors)) {
             return $errors[0]['message'];
         }
         return null;

@@ -91,7 +91,7 @@ class Translator implements LegacyTranslatorInterface, TranslatorInterface, Tran
     public function __construct(?string $locale, MessageFormatterInterface $formatter = null, string $cacheDir = null, bool $debug = false, array $cacheVary = [])
     {
         if (null === $locale) {
-            @trigger_error(sprintf('Passing "null" as the $locale argument to %s() is deprecated since Symfony 4.4.', __METHOD__), \E_USER_DEPRECATED);
+            @trigger_error(sprintf('Passing "null" as the $locale argument to %s() is deprecated since Symfony 4.4.', __METHOD__), E_USER_DEPRECATED);
         }
 
         $this->setLocale($locale, false);
@@ -139,7 +139,7 @@ class Translator implements LegacyTranslatorInterface, TranslatorInterface, Tran
         }
 
         if (null === $locale) {
-            @trigger_error(sprintf('Passing "null" to the third argument of the "%s" method has been deprecated since Symfony 4.4 and will throw an error in 5.0.', __METHOD__), \E_USER_DEPRECATED);
+            @trigger_error(sprintf('Passing "null" to the third argument of the "%s" method has been deprecated since Symfony 4.4 and will throw an error in 5.0.', __METHOD__), E_USER_DEPRECATED);
         }
 
         $this->assertValidLocale($locale);
@@ -159,11 +159,11 @@ class Translator implements LegacyTranslatorInterface, TranslatorInterface, Tran
     public function setLocale($locale)
     {
         if (null === $locale && (2 > \func_num_args() || func_get_arg(1))) {
-            @trigger_error(sprintf('Passing "null" as the $locale argument to %s() is deprecated since Symfony 4.4.', __METHOD__), \E_USER_DEPRECATED);
+            @trigger_error(sprintf('Passing "null" as the $locale argument to %s() is deprecated since Symfony 4.4.', __METHOD__), E_USER_DEPRECATED);
         }
 
         $this->assertValidLocale($locale);
-        $this->locale = $locale ?? (class_exists(\Locale::class) ? \Locale::getDefault() : 'en');
+        $this->locale = $locale;
     }
 
     /**
@@ -188,7 +188,7 @@ class Translator implements LegacyTranslatorInterface, TranslatorInterface, Tran
 
         foreach ($locales as $locale) {
             if (null === $locale) {
-                @trigger_error(sprintf('Passing "null" as the $locale argument to %s() is deprecated since Symfony 4.4.', __METHOD__), \E_USER_DEPRECATED);
+                @trigger_error(sprintf('Passing "null" as the $locale argument to %s() is deprecated since Symfony 4.4.', __METHOD__), E_USER_DEPRECATED);
             }
             $this->assertValidLocale($locale);
         }
@@ -246,7 +246,7 @@ class Translator implements LegacyTranslatorInterface, TranslatorInterface, Tran
      */
     public function transChoice($id, $number, array $parameters = [], $domain = null, $locale = null)
     {
-        @trigger_error(sprintf('The "%s()" method is deprecated since Symfony 4.2, use the trans() one instead with a "%%count%%" parameter.', __METHOD__), \E_USER_DEPRECATED);
+        @trigger_error(sprintf('The "%s()" method is deprecated since Symfony 4.2, use the trans() one instead with a "%%count%%" parameter.', __METHOD__), E_USER_DEPRECATED);
 
         if ('' === $id = (string) $id) {
             return '';
@@ -428,11 +428,7 @@ EOF
         if (isset($this->resources[$locale])) {
             foreach ($this->resources[$locale] as $resource) {
                 if (!isset($this->loaders[$resource[0]])) {
-                    if (\is_string($resource[1])) {
-                        throw new RuntimeException(sprintf('No loader is registered for the "%s" format when loading the "%s" resource.', $resource[0], $resource[1]));
-                    }
-
-                    throw new RuntimeException(sprintf('No loader is registered for the "%s" format.', $resource[0]));
+                    throw new RuntimeException(sprintf('The "%s" translation loader is not registered.', $resource[0]));
                 }
                 $this->catalogues[$locale]->addCatalogue($this->loaders[$resource[0]]->load($resource[1], $locale, $resource[2]));
             }
@@ -460,7 +456,7 @@ EOF
     protected function computeFallbackLocales($locale)
     {
         if (null === $this->parentLocales) {
-            $this->parentLocales = json_decode(file_get_contents(__DIR__.'/Resources/data/parents.json'), true);
+            $parentLocales = json_decode(file_get_contents(__DIR__.'/Resources/data/parents.json'), true);
         }
 
         $locales = [];
@@ -473,19 +469,12 @@ EOF
         }
 
         while ($locale) {
-            $parent = $this->parentLocales[$locale] ?? null;
+            $parent = $parentLocales[$locale] ?? null;
 
-            if ($parent) {
-                $locale = 'root' !== $parent ? $parent : null;
-            } elseif (\function_exists('locale_parse')) {
-                $localeSubTags = locale_parse($locale);
-                $locale = null;
-                if (1 < \count($localeSubTags)) {
-                    array_pop($localeSubTags);
-                    $locale = locale_compose($localeSubTags) ?: null;
-                }
-            } elseif ($i = strrpos($locale, '_') ?: strrpos($locale, '-')) {
-                $locale = substr($locale, 0, $i);
+            if (!$parent && false !== strrchr($locale, '_')) {
+                $locale = substr($locale, 0, -\strlen(strrchr($locale, '_')));
+            } elseif ('root' !== $parent) {
+                $locale = $parent;
             } else {
                 $locale = null;
             }

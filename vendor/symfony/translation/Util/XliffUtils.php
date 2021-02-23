@@ -41,7 +41,7 @@ class XliffUtils
             $namespace = $xliff->attributes->getNamedItem('xmlns');
             if ($namespace) {
                 if (0 !== substr_compare('urn:oasis:names:tc:xliff:document:', $namespace->nodeValue, 0, 34)) {
-                    throw new InvalidArgumentException(sprintf('Not a valid XLIFF namespace "%s".', $namespace));
+                    throw new InvalidArgumentException(sprintf('Not a valid XLIFF namespace "%s"', $namespace));
                 }
 
                 return substr($namespace, 34);
@@ -61,22 +61,16 @@ class XliffUtils
     {
         $xliffVersion = static::getVersionNumber($dom);
         $internalErrors = libxml_use_internal_errors(true);
-        if (\LIBXML_VERSION < 20900) {
-            $disableEntities = libxml_disable_entity_loader(false);
-        }
+        $disableEntities = libxml_disable_entity_loader(false);
 
         $isValid = @$dom->schemaValidateSource(self::getSchema($xliffVersion));
         if (!$isValid) {
-            if (\LIBXML_VERSION < 20900) {
-                libxml_disable_entity_loader($disableEntities);
-            }
+            libxml_disable_entity_loader($disableEntities);
 
             return self::getXmlErrors($internalErrors);
         }
 
-        if (\LIBXML_VERSION < 20900) {
-            libxml_disable_entity_loader($disableEntities);
-        }
+        libxml_disable_entity_loader($disableEntities);
 
         $dom->normalizeDocument();
 
@@ -92,7 +86,7 @@ class XliffUtils
 
         foreach ($xmlErrors as $error) {
             $errorsAsString .= sprintf("[%s %s] %s (in %s - line %d, column %d)\n",
-                \LIBXML_ERR_WARNING === $error['level'] ? 'WARNING' : 'ERROR',
+                LIBXML_ERR_WARNING === $error['level'] ? 'WARNING' : 'ERROR',
                 $error['code'],
                 $error['message'],
                 $error['file'],
@@ -152,7 +146,7 @@ class XliffUtils
         $errors = [];
         foreach (libxml_get_errors() as $error) {
             $errors[] = [
-                'level' => \LIBXML_ERR_WARNING == $error->level ? 'WARNING' : 'ERROR',
+                'level' => LIBXML_ERR_WARNING == $error->level ? 'WARNING' : 'ERROR',
                 'code' => $error->code,
                 'message' => trim($error->message),
                 'file' => $error->file ?: 'n/a',

@@ -15,14 +15,6 @@ use Symfony\Component\HttpFoundation\Exception\ConflictingHeadersException;
 use Symfony\Component\HttpFoundation\Exception\SuspiciousOperationException;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
-// Help opcache.preload discover always-needed symbols
-class_exists(AcceptHeader::class);
-class_exists(FileBag::class);
-class_exists(HeaderBag::class);
-class_exists(HeaderUtils::class);
-class_exists(ParameterBag::class);
-class_exists(ServerBag::class);
-
 /**
  * Request represents an HTTP request.
  *
@@ -511,7 +503,7 @@ class Request
                 throw $e;
             }
 
-            return trigger_error($e, \E_USER_ERROR);
+            return trigger_error($e, E_USER_ERROR);
         }
 
         $cookieHeader = '';
@@ -659,7 +651,7 @@ class Request
         parse_str($qs, $qs);
         ksort($qs);
 
-        return http_build_query($qs, '', '&', \PHP_QUERY_RFC3986);
+        return http_build_query($qs, '', '&', PHP_QUERY_RFC3986);
     }
 
     /**
@@ -732,8 +724,8 @@ class Request
         }
 
         if (null === $session) {
-            @trigger_error(sprintf('Calling "%s()" when no session has been set is deprecated since Symfony 4.1 and will throw an exception in 5.0. Use "hasSession()" instead.', __METHOD__), \E_USER_DEPRECATED);
-            // throw new \BadMethodCallException('Session has not been set.');
+            @trigger_error(sprintf('Calling "%s()" when no session has been set is deprecated since Symfony 4.1 and will throw an exception in 5.0. Use "hasSession()" instead.', __METHOD__), E_USER_DEPRECATED);
+            // throw new \BadMethodCallException('Session has not been set');
         }
 
         return $session;
@@ -1469,7 +1461,7 @@ class Request
     public function isMethodSafe()
     {
         if (\func_num_args() > 0) {
-            @trigger_error(sprintf('Passing arguments to "%s()" has been deprecated since Symfony 4.4; use "%s::isMethodCacheable()" to check if the method is cacheable instead.', __METHOD__, __CLASS__), \E_USER_DEPRECATED);
+            @trigger_error(sprintf('Passing arguments to "%s()" has been deprecated since Symfony 4.4; use "%s::isMethodCacheable()" to check if the method is cacheable instead.', __METHOD__, __CLASS__), E_USER_DEPRECATED);
         }
 
         return \in_array($this->getMethod(), ['GET', 'HEAD', 'OPTIONS', 'TRACE']);
@@ -1575,7 +1567,7 @@ class Request
      */
     public function getETags()
     {
-        return preg_split('/\s*,\s*/', $this->headers->get('if_none_match'), null, \PREG_SPLIT_NO_EMPTY);
+        return preg_split('/\s*,\s*/', $this->headers->get('if_none_match'), null, PREG_SPLIT_NO_EMPTY);
     }
 
     /**
@@ -1589,10 +1581,8 @@ class Request
     /**
      * Gets the preferred format for the response by inspecting, in the following order:
      *   * the request format set using setRequestFormat
-     *   * the values of the Accept HTTP header.
-     *
-     * Note that if you use this method, you should send the "Vary: Accept" header
-     * in the response to prevent any issues with intermediary HTTP caches.
+     *   * the values of the Accept HTTP header
+     *   * the content type of the body of the request.
      */
     public function getPreferredFormat(?string $default = 'html'): ?string
     {
@@ -2074,7 +2064,7 @@ class Request
                 $clientIps[$key] = $clientIp = substr($clientIp, 1, $i - 1);
             }
 
-            if (!filter_var($clientIp, \FILTER_VALIDATE_IP)) {
+            if (!filter_var($clientIp, FILTER_VALIDATE_IP)) {
                 unset($clientIps[$key]);
 
                 continue;

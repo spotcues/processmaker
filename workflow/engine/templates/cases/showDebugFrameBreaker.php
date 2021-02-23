@@ -3,8 +3,7 @@
 $filter = new InputFilter();
 if (isset($_POST['NextStep'])) {
     $nextStep = $filter->xssFilterHard($_POST['NextStep'], "url");
-    $refresh = $nextStep == 'cases_Step?breakpoint=triggerdebug' ? 'try {parent.parent.updateCasesTree();' .
-        'parent.parent.highlightCasesTree();} catch(e) {}' : '';
+    $refresh = $nextStep == 'cases_Step?breakpoint=triggerdebug' ? 'try {parent.parent.updateCasesTree();} catch(e) {}' : '';
 ?>
     <div class="ui-widget-header ui-corner-all" width="100%" align="center">
     Processmaker - Debugger (Break Point)&nbsp;&nbsp;&nbsp;&nbsp;
@@ -13,3 +12,4 @@ if (isset($_POST['NextStep'])) {
     </div>
     <?php
       }
+

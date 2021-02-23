@@ -76,7 +76,7 @@ switch ($actionAjax) {
                 &&
                 (
                     $appMessageArray[$index]['DEL_INDEX'] == 0
-                    || in_array($appMessageArray[$index]['DEL_INDEX'], $delIndex) || empty($respMess)
+                    || in_array($appMessageArray[$index]['DEL_INDEX'], $delIndex)
                 )
             ) {
                 //Define the label with translation

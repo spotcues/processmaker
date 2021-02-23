@@ -3,26 +3,15 @@
 use Faker\Generator as Faker;
 
 $factory->define(\ProcessMaker\Model\Delegation::class, function(Faker $faker) {
-    $user = factory(\ProcessMaker\Model\User::class)->create();
-    $process = factory(\ProcessMaker\Model\Process::class)->create();
-    $task = factory(\ProcessMaker\Model\Task::class)->create([
-        'PRO_UID' => $process->PRO_UID,
-        'PRO_ID' => $process->PRO_ID
-    ]);
-    $application = factory(\ProcessMaker\Model\Application::class)->create([
-        'PRO_UID' => $process->PRO_UID,
-        'APP_INIT_USER' => $user->USR_UID,
-        'APP_CUR_USER' => $user->USR_UID
-    ]);
     // Return with default values
     return [
-        'APP_UID' => $application->APP_UID,
+        'APP_UID' => G::generateUniqueID(),
         'DEL_INDEX' => 1,
-        'APP_NUMBER' => $application->APP_NUMBER,
+        'APP_NUMBER' => $faker->unique()->numberBetween(1, 100000),
         'DEL_PREVIOUS' => 0,
-        'PRO_UID' => $process->PRO_UID,
-        'TAS_UID' => $task->TAS_UID,
-        'USR_UID' => $user->USR_UID,
+        'PRO_UID' => G::generateUniqueID(),
+        'TAS_UID' => G::generateUniqueID(),
+        'USR_UID' => G::generateUniqueID(),
         'DEL_TYPE' => 'NORMAL',
         'DEL_THREAD' => 1,
         'DEL_THREAD_STATUS' => 'OPEN',
@@ -31,9 +20,9 @@ $factory->define(\ProcessMaker\Model\Delegation::class, function(Faker $faker) {
         'DEL_INIT_DATE' => $faker->dateTime(),
         'DEL_TASK_DUE_DATE' => $faker->dateTime(),
         'DEL_RISK_DATE' => $faker->dateTime(),
-        'USR_ID' => $user->USR_ID,
-        'PRO_ID' => $process->PRO_ID,
-        'TAS_ID' => $task->TAS_ID,
+        'USR_ID' => 0,
+        'PRO_ID' => 0,
+        'TAS_ID' => 0,
         'DEL_DATA' => ''
     ];
 });
@@ -41,17 +30,10 @@ $factory->define(\ProcessMaker\Model\Delegation::class, function(Faker $faker) {
 // Create a delegation with the foreign keys
 $factory->state(\ProcessMaker\Model\Delegation::class, 'foreign_keys', function (Faker $faker) {
     // Create values in the foreign key relations
-    $user = factory(\ProcessMaker\Model\User::class)->create();
+    $application = factory(\ProcessMaker\Model\Application::class)->create();
     $process = factory(\ProcessMaker\Model\Process::class)->create();
-    $task = factory(\ProcessMaker\Model\Task::class)->create([
-        'PRO_UID' => $process->PRO_UID,
-        'PRO_ID' => $process->PRO_ID
-    ]);
-    $application = factory(\ProcessMaker\Model\Application::class)->create([
-        'PRO_UID' => $process->PRO_UID,
-        'APP_INIT_USER' => $user->USR_UID,
-        'APP_CUR_USER' => $user->USR_UID
-    ]);
+    $task = factory(\ProcessMaker\Model\Task::class)->create();
+    $user = factory(\ProcessMaker\Model\User::class)->create();
 
     // Return with default values
     return [

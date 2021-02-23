@@ -28,12 +28,6 @@ abstract class BaseDbSource extends BaseObject implements Persistent
     protected static $peer;
 
     /**
-     * The value for the dbs_id field.
-     * @var        int
-     */
-    protected $dbs_id;
-
-    /**
      * The value for the dbs_uid field.
      * @var        string
      */
@@ -44,12 +38,6 @@ abstract class BaseDbSource extends BaseObject implements Persistent
      * @var        string
      */
     protected $pro_uid = '0';
-
-    /**
-     * The value for the pro_id field.
-     * @var        int
-     */
-    protected $pro_id = 0;
 
     /**
      * The value for the dbs_type field.
@@ -120,17 +108,6 @@ abstract class BaseDbSource extends BaseObject implements Persistent
     protected $alreadyInValidation = false;
 
     /**
-     * Get the [dbs_id] column value.
-     * 
-     * @return     int
-     */
-    public function getDbsId()
-    {
-
-        return $this->dbs_id;
-    }
-
-    /**
      * Get the [dbs_uid] column value.
      * 
      * @return     string
@@ -150,17 +127,6 @@ abstract class BaseDbSource extends BaseObject implements Persistent
     {
 
         return $this->pro_uid;
-    }
-
-    /**
-     * Get the [pro_id] column value.
-     * 
-     * @return     int
-     */
-    public function getProId()
-    {
-
-        return $this->pro_id;
     }
 
     /**
@@ -263,28 +229,6 @@ abstract class BaseDbSource extends BaseObject implements Persistent
     }
 
     /**
-     * Set the value of [dbs_id] column.
-     * 
-     * @param      int $v new value
-     * @return     void
-     */
-    public function setDbsId($v)
-    {
-
-        // Since the native PHP type for this column is integer,
-        // we will cast the input value to an int (if it is not).
-        if ($v !== null && !is_int($v) && is_numeric($v)) {
-            $v = (int) $v;
-        }
-
-        if ($this->dbs_id !== $v) {
-            $this->dbs_id = $v;
-            $this->modifiedColumns[] = DbSourcePeer::DBS_ID;
-        }
-
-    } // setDbsId()
-
-    /**
      * Set the value of [dbs_uid] column.
      * 
      * @param      string $v new value
@@ -327,28 +271,6 @@ abstract class BaseDbSource extends BaseObject implements Persistent
         }
 
     } // setProUid()
-
-    /**
-     * Set the value of [pro_id] column.
-     * 
-     * @param      int $v new value
-     * @return     void
-     */
-    public function setProId($v)
-    {
-
-        // Since the native PHP type for this column is integer,
-        // we will cast the input value to an int (if it is not).
-        if ($v !== null && !is_int($v) && is_numeric($v)) {
-            $v = (int) $v;
-        }
-
-        if ($this->pro_id !== $v || $v === 0) {
-            $this->pro_id = $v;
-            $this->modifiedColumns[] = DbSourcePeer::PRO_ID;
-        }
-
-    } // setProId()
 
     /**
      * Set the value of [dbs_type] column.
@@ -565,38 +487,34 @@ abstract class BaseDbSource extends BaseObject implements Persistent
     {
         try {
 
-            $this->dbs_id = $rs->getInt($startcol + 0);
+            $this->dbs_uid = $rs->getString($startcol + 0);
 
-            $this->dbs_uid = $rs->getString($startcol + 1);
+            $this->pro_uid = $rs->getString($startcol + 1);
 
-            $this->pro_uid = $rs->getString($startcol + 2);
+            $this->dbs_type = $rs->getString($startcol + 2);
 
-            $this->pro_id = $rs->getInt($startcol + 3);
+            $this->dbs_server = $rs->getString($startcol + 3);
 
-            $this->dbs_type = $rs->getString($startcol + 4);
+            $this->dbs_database_name = $rs->getString($startcol + 4);
 
-            $this->dbs_server = $rs->getString($startcol + 5);
+            $this->dbs_username = $rs->getString($startcol + 5);
 
-            $this->dbs_database_name = $rs->getString($startcol + 6);
+            $this->dbs_password = $rs->getString($startcol + 6);
 
-            $this->dbs_username = $rs->getString($startcol + 7);
+            $this->dbs_port = $rs->getInt($startcol + 7);
 
-            $this->dbs_password = $rs->getString($startcol + 8);
+            $this->dbs_encode = $rs->getString($startcol + 8);
 
-            $this->dbs_port = $rs->getInt($startcol + 9);
+            $this->dbs_connection_type = $rs->getString($startcol + 9);
 
-            $this->dbs_encode = $rs->getString($startcol + 10);
-
-            $this->dbs_connection_type = $rs->getString($startcol + 11);
-
-            $this->dbs_tns = $rs->getString($startcol + 12);
+            $this->dbs_tns = $rs->getString($startcol + 10);
 
             $this->resetModified();
 
             $this->setNew(false);
 
             // FIXME - using NUM_COLUMNS may be clearer.
-            return $startcol + 13; // 13 = DbSourcePeer::NUM_COLUMNS - DbSourcePeer::NUM_LAZY_LOAD_COLUMNS).
+            return $startcol + 11; // 11 = DbSourcePeer::NUM_COLUMNS - DbSourcePeer::NUM_LAZY_LOAD_COLUMNS).
 
         } catch (Exception $e) {
             throw new PropelException("Error populating DbSource object", $e);
@@ -801,42 +719,36 @@ abstract class BaseDbSource extends BaseObject implements Persistent
     {
         switch($pos) {
             case 0:
-                return $this->getDbsId();
-                break;
-            case 1:
                 return $this->getDbsUid();
                 break;
-            case 2:
+            case 1:
                 return $this->getProUid();
                 break;
-            case 3:
-                return $this->getProId();
-                break;
-            case 4:
+            case 2:
                 return $this->getDbsType();
                 break;
-            case 5:
+            case 3:
                 return $this->getDbsServer();
                 break;
-            case 6:
+            case 4:
                 return $this->getDbsDatabaseName();
                 break;
-            case 7:
+            case 5:
                 return $this->getDbsUsername();
                 break;
-            case 8:
+            case 6:
                 return $this->getDbsPassword();
                 break;
-            case 9:
+            case 7:
                 return $this->getDbsPort();
                 break;
-            case 10:
+            case 8:
                 return $this->getDbsEncode();
                 break;
-            case 11:
+            case 9:
                 return $this->getDbsConnectionType();
                 break;
-            case 12:
+            case 10:
                 return $this->getDbsTns();
                 break;
             default:
@@ -859,19 +771,17 @@ abstract class BaseDbSource extends BaseObject implements Persistent
     {
         $keys = DbSourcePeer::getFieldNames($keyType);
         $result = array(
-            $keys[0] => $this->getDbsId(),
-            $keys[1] => $this->getDbsUid(),
-            $keys[2] => $this->getProUid(),
-            $keys[3] => $this->getProId(),
-            $keys[4] => $this->getDbsType(),
-            $keys[5] => $this->getDbsServer(),
-            $keys[6] => $this->getDbsDatabaseName(),
-            $keys[7] => $this->getDbsUsername(),
-            $keys[8] => $this->getDbsPassword(),
-            $keys[9] => $this->getDbsPort(),
-            $keys[10] => $this->getDbsEncode(),
-            $keys[11] => $this->getDbsConnectionType(),
-            $keys[12] => $this->getDbsTns(),
+            $keys[0] => $this->getDbsUid(),
+            $keys[1] => $this->getProUid(),
+            $keys[2] => $this->getDbsType(),
+            $keys[3] => $this->getDbsServer(),
+            $keys[4] => $this->getDbsDatabaseName(),
+            $keys[5] => $this->getDbsUsername(),
+            $keys[6] => $this->getDbsPassword(),
+            $keys[7] => $this->getDbsPort(),
+            $keys[8] => $this->getDbsEncode(),
+            $keys[9] => $this->getDbsConnectionType(),
+            $keys[10] => $this->getDbsTns(),
         );
         return $result;
     }
@@ -904,42 +814,36 @@ abstract class BaseDbSource extends BaseObject implements Persistent
     {
         switch($pos) {
             case 0:
-                $this->setDbsId($value);
-                break;
-            case 1:
                 $this->setDbsUid($value);
                 break;
-            case 2:
+            case 1:
                 $this->setProUid($value);
                 break;
-            case 3:
-                $this->setProId($value);
-                break;
-            case 4:
+            case 2:
                 $this->setDbsType($value);
                 break;
-            case 5:
+            case 3:
                 $this->setDbsServer($value);
                 break;
-            case 6:
+            case 4:
                 $this->setDbsDatabaseName($value);
                 break;
-            case 7:
+            case 5:
                 $this->setDbsUsername($value);
                 break;
-            case 8:
+            case 6:
                 $this->setDbsPassword($value);
                 break;
-            case 9:
+            case 7:
                 $this->setDbsPort($value);
                 break;
-            case 10:
+            case 8:
                 $this->setDbsEncode($value);
                 break;
-            case 11:
+            case 9:
                 $this->setDbsConnectionType($value);
                 break;
-            case 12:
+            case 10:
                 $this->setDbsTns($value);
                 break;
         } // switch()
@@ -966,55 +870,47 @@ abstract class BaseDbSource extends BaseObject implements Persistent
         $keys = DbSourcePeer::getFieldNames($keyType);
 
         if (array_key_exists($keys[0], $arr)) {
-            $this->setDbsId($arr[$keys[0]]);
+            $this->setDbsUid($arr[$keys[0]]);
         }
 
         if (array_key_exists($keys[1], $arr)) {
-            $this->setDbsUid($arr[$keys[1]]);
+            $this->setProUid($arr[$keys[1]]);
         }
 
         if (array_key_exists($keys[2], $arr)) {
-            $this->setProUid($arr[$keys[2]]);
+            $this->setDbsType($arr[$keys[2]]);
         }
 
         if (array_key_exists($keys[3], $arr)) {
-            $this->setProId($arr[$keys[3]]);
+            $this->setDbsServer($arr[$keys[3]]);
         }
 
         if (array_key_exists($keys[4], $arr)) {
-            $this->setDbsType($arr[$keys[4]]);
+            $this->setDbsDatabaseName($arr[$keys[4]]);
         }
 
         if (array_key_exists($keys[5], $arr)) {
-            $this->setDbsServer($arr[$keys[5]]);
+            $this->setDbsUsername($arr[$keys[5]]);
         }
 
         if (array_key_exists($keys[6], $arr)) {
-            $this->setDbsDatabaseName($arr[$keys[6]]);
+            $this->setDbsPassword($arr[$keys[6]]);
         }
 
         if (array_key_exists($keys[7], $arr)) {
-            $this->setDbsUsername($arr[$keys[7]]);
+            $this->setDbsPort($arr[$keys[7]]);
         }
 
         if (array_key_exists($keys[8], $arr)) {
-            $this->setDbsPassword($arr[$keys[8]]);
+            $this->setDbsEncode($arr[$keys[8]]);
         }
 
         if (array_key_exists($keys[9], $arr)) {
-            $this->setDbsPort($arr[$keys[9]]);
+            $this->setDbsConnectionType($arr[$keys[9]]);
         }
 
         if (array_key_exists($keys[10], $arr)) {
-            $this->setDbsEncode($arr[$keys[10]]);
-        }
-
-        if (array_key_exists($keys[11], $arr)) {
-            $this->setDbsConnectionType($arr[$keys[11]]);
-        }
-
-        if (array_key_exists($keys[12], $arr)) {
-            $this->setDbsTns($arr[$keys[12]]);
+            $this->setDbsTns($arr[$keys[10]]);
         }
 
     }
@@ -1028,20 +924,12 @@ abstract class BaseDbSource extends BaseObject implements Persistent
     {
         $criteria = new Criteria(DbSourcePeer::DATABASE_NAME);
 
-        if ($this->isColumnModified(DbSourcePeer::DBS_ID)) {
-            $criteria->add(DbSourcePeer::DBS_ID, $this->dbs_id);
-        }
-
         if ($this->isColumnModified(DbSourcePeer::DBS_UID)) {
             $criteria->add(DbSourcePeer::DBS_UID, $this->dbs_uid);
         }
 
         if ($this->isColumnModified(DbSourcePeer::PRO_UID)) {
             $criteria->add(DbSourcePeer::PRO_UID, $this->pro_uid);
-        }
-
-        if ($this->isColumnModified(DbSourcePeer::PRO_ID)) {
-            $criteria->add(DbSourcePeer::PRO_ID, $this->pro_id);
         }
 
         if ($this->isColumnModified(DbSourcePeer::DBS_TYPE)) {
@@ -1145,10 +1033,6 @@ abstract class BaseDbSource extends BaseObject implements Persistent
      */
     public function copyInto($copyObj, $deepCopy = false)
     {
-
-        $copyObj->setDbsId($this->dbs_id);
-
-        $copyObj->setProId($this->pro_id);
 
         $copyObj->setDbsType($this->dbs_type);
 

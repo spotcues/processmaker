@@ -1,44 +1,16 @@
-pdepend-2.8.0 (2020/05/25)
+pdepend-2.6.1 (2019/12/19)
 ==========================
 
-- Added [\#458](https://github.com/pdepend/pdepend/pull/458) Support trait insteadof overrides. (Issue [\#367](https://github.com/pdepend/pdepend/issues/367) and [\#320](https://github.com/pdepend/pdepend/issues/320) )
-- Added [\#466](https://github.com/pdepend/pdepend/pull/466) Allow to configure file cache ttl in configuration file. (Issue [\#465](https://github.com/pdepend/pdepend/issues/465))
-- Added [\#487](https://github.com/pdepend/pdepend/pull/484) Support arrow functions return type hints.
-- Fixed [\#467](https://github.com/pdepend/pdepend/pull/467) Use the HOME env variable also for Windows. (Issue [\#447](https://github.com/pdepend/pdepend/issue/447) )
-- Fixed [\#475](https://github.com/pdepend/pdepend/pull/475) Fixed [\#474](https://github.com/pdepend/pdepend/issues/474) typed property visibility 
-- Fixed [\#476](https://github.com/pdepend/pdepend/pull/476) Fixed [\#473](https://github.com/pdepend/pdepend/issues/473) handle skipped variable in destructuring array
-- Fixed [\#478](https://github.com/pdepend/pdepend/pull/478) Fixed [\#472](https://github.com/pdepend/pdepend/issues/472) Use the current token instead of the first inner one to determine the class start.
-- Fixed [\#483](https://github.com/pdepend/pdepend/pull/483) Fixed bool flip in parseEscapedAstLiteralString()
-- Fixed [\#479](https://github.com/pdepend/pdepend/pull/479) Fixed [\#299](https://github.com/pdepend/pdepend/issues/299) Class constant expression declaration.
-- Changed: Tidelift language ( [\#460](https://github.com/pdepend/pdepend/pull/460), [\#461](https://github.com/pdepend/pdepend/pull/461) and [\#462](https://github.com/pdepend/pdepend/pull/462) )
-- Changed: Interal cleanup with refactoring and adding missing PHPDoc ( [\#477](https://github.com/pdepend/pdepend/pull/477), [\#484](https://github.com/pdepend/pdepend/pull/484) and [\#485](https://github.com/pdepend/pdepend/pull/485) ) 
-
-pdepend-2.7.1 (2020/02/12)
-==========================
-
-- Fixed [\#453](https://github.com/pdepend/pdepend/pull/453) Support for typed properties (nullable, array, FQN, scalar)
-- Fixed [\#446](https://github.com/pdepend/pdepend/pull/446) Suppress E_NOTICE thrown by unserialize() 
-
-pdepend-2.7.0 (2020/01/24)
-==========================
-
-- Added [\#362](https://github.com/pdepend/pdepend/pull/362) Support for php:// stream wrappers
-- Added [\#427](https://github.com/pdepend/pdepend/pull/427) PHP 7.4 features support 
-
-pdepend-2.6.1 (2019/12/21)
-==========================
-
-- Added [\#398](https://github.com/pdepend/pdepend/pull/398) Support for Symfony 5
-- Fixed [\#299](https://github.com/pdepend/pdepend/pull/299) Array concatenation in constant declaration
+- Added #398 Support for Symfony 5
 
 pdepend-2.6.0 (2019/12/16)
 ==========================
 
-- Added [\#383](https://github.com/pdepend/pdepend/pull/383) Support of PHP 7.1 syntax
-- Fixed [\#386](https://github.com/pdepend/pdepend/pull/386) PHP 7 and parsing some return types
-- Fixed [\#381](https://github.com/pdepend/pdepend/pull/381) Unexpected token error with invokable
-- Fixed [\#365](https://github.com/pdepend/pdepend/pull/365) unable to call method on newly created and invoked class
-- Removed not needed files from the export used by composer
+- Added #383 Support of PHP 7.1 syntax
+- Fixed #386 PHP 7 and parsing some return types
+- Fixed #381 Unexpected token error with invokable
+- Fixed #365 unable to call method on newly created and invoked class
+- Removed #388 not needed files from the export used by composer
 
 pdepend-2.5.2 (2017/12/13)
 ==========================
@@ -659,3 +631,4 @@ archive as distribution format.
   refactoring done. Parser moved into a version specific parser class.
 - Implemented #178: Provide configuration option for the cache 
   directory. Implemented in commit #00ed8ec.
+

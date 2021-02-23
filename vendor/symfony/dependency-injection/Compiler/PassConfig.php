@@ -52,7 +52,7 @@ class PassConfig
             new ValidateEnvPlaceholdersPass(),
             new ResolveChildDefinitionsPass(),
             new RegisterServiceSubscribersPass(),
-            new ResolveParameterPlaceHoldersPass(false, false),
+            new ResolveParameterPlaceHoldersPass(false),
             new ResolveFactoryClassPass(),
             new ResolveNamedArgumentsPass(),
             new AutowireRequiredMethodsPass(),

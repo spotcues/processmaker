@@ -66,16 +66,14 @@ class ASTTraitUseStatement extends ASTStatement
      */
     public function getAllMethods()
     {
-        if ($this->allMethods === null) {
+        if (false === is_array($this->allMethods)) {
             $this->allMethods = array();
-
             foreach ($this->nodes as $node) {
                 if ($node instanceof ASTTraitReference) {
                     $this->collectMethods($node);
                 }
             }
         }
-
         return $this->allMethods;
     }
 
@@ -99,16 +97,13 @@ class ASTTraitUseStatement extends ASTStatement
             if (strtolower($precedence->getImage()) !== $methodName) {
                 continue;
             }
-
             $children = $precedence->getChildren();
-
             for ($i = 1, $count = count($children); $i < $count; ++$i) {
                 if ($methodParent === $children[$i]->getType()) {
                     return true;
                 }
             }
         }
-
         return false;
     }
 

@@ -1,12 +1,10 @@
 <?php
 namespace ProcessMaker\Importer;
 
-use Process as ModelProcess;
 use Processes;
 use ProcessMaker\BusinessModel\Migrator;
 use ProcessMaker\BusinessModel\Migrator\ImportException;
 use ProcessMaker\Model\Process;
-use ProcessMaker\Model\ProcessVariables;
 use ProcessMaker\Project;
 use ProcessMaker\Project\Adapter;
 use ProcessMaker\Util;
@@ -98,7 +96,6 @@ abstract class Importer
         //Verify data
         switch ($option) {
             case self::IMPORT_OPTION_CREATE_NEW:
-                $keepCreateDate = true;
                 if ($this->targetExists()) {
                     throw new \Exception(
                         \G::LoadTranslation(
@@ -237,20 +234,17 @@ abstract class Importer
         }
 
         $result = $this->doImport($generateUid);
-        $this->updateProcessInformation($result);
+        $this->updateTheProcessOwner($result);
         return $result;
     }
     
     /**
-     * This updates information related to the process
-     * 
+     * This updates the process owner.
      * @param string $proUid
-     * 
      * @return void
      */
-    private function updateProcessInformation(string $proUid): void
+    private function updateTheProcessOwner(string $proUid): void
     {
-        // Update the process owner
         $processOwner = $this->data["usr_uid"];
 
         $currentProcess = $this->getCurrentProcess();
@@ -261,17 +255,6 @@ abstract class Importer
         $process->update([
             'PRO_CREATE_USER' => $processOwner
         ]);
-
-        // Update the process Variables with the PRO_ID related
-        $process = new ModelProcess();
-        if ($process->processExists($proUid)) {
-            $processRow = $process->load($proUid);
-            $proId = $processRow['PRO_ID'];
-            $processVar = ProcessVariables::where('PRJ_UID', '=', $proUid);
-            $processVar->update([
-                'PRO_ID' => $proId
-            ]);
-        }
     }
 
     /**
@@ -796,7 +779,7 @@ abstract class Importer
             $this->importData["tables"]["workflow"]["process"] = $this->importData["tables"]["workflow"]["process"][0];
 
             $result = $this->doImport(true, false);
-            $this->updateProcessInformation($result);
+            $this->updateTheProcessOwner($result);
             return ['prj_uid' => $result];
         } catch (\Exception $e) {
             return $e->getMessage();

@@ -1,30 +1,30 @@
-[6 weeks ago] 66a14701  (HEAD, origin/release/3.5.8, origin/release/3.5.7, origin/release/3.5.6) PMCORE-2526:Radio control does not update after use "setValue" helper to clean the control <fabio>
-[8 weeks ago] 71439824  PMCORE-2378: Error opening Dynaform after saving with saveForm () <Rodrigo Quelca>
-[8 weeks ago] 5ea6113a  PMCORE-2425: Dynaform - Grid Control - Delete button is not working as expected <Rodrigo Quelca>
-[8 weeks ago] fcd75b65  PMCORE-2462: Set empty value to Radio buttons is not working <Rodrigo Quelca>
-[3 months ago] 7237fd1a  PMCORE-1773:[20214 ] GetValue() method is returning the label instead of the Key for radio fields in Mobile. <fabio>
-[3 months ago] 731e77a1  (origin/bugfix/PMCORE-1341-A) PMCORE-1341-A <Henry Jordan>
-[4 months ago] 2073d30c  [20214 ] GetValue() method is returning the label instead of the Key for radio fields in Mobile. <fabio>
-[4 months ago] 18035a13  PMCORE-1773:[20214 ] GetValue() method is returning the label instead of the Key for radio fields in Mobile. <fabio>
-[4 months ago] b41c162e  (origin/bugfix/PMCORE-2161) PMCORE-2161: Wrong functionality of the dropdown controls in grid <Rodrigo Quelca>
-[4 months ago] aa024a7a  (origin/bugfix/PMCORE-1234) PMCORE-1234 <Henry Jordan>
-[5 months ago] 3728a520  (origin/bugfix/PMCORE-1751) PMCORE-1751 <Andrea Adamczyk>
-[5 months ago] c580864a  (origin/escapeSelector) escapeSelector methos was created <Rodrigo Quelca>
-[5 months ago] 7565b8cc  (origin/bugfix/PMCORE-2061) PMCORE-2061 <Henry Jordan>
-[5 months ago] c2246d87  (origin/feature/PMCORE-2114) PMCORE-2114: Javascript Helper functions for geomap control <Rodrigo Quelca>
-[5 months ago] 1966b2ef  (origin/bugfix/PMCORE-1961) PMCORE-1961 <Henry Jordan>
-[5 months ago] 4d3a8804  (origin/bugfix/PMCORE-759) PMCORE-759 <Henry Jordan>
-[5 months ago] 96ab5933  PMCORE-537:Bug with rows of the grid and multiple file <fabio>
-[5 months ago] 0cf32fc3  (origin/bugfix/PMCORE-2052) PMCORE-2052 <Henry Jordan>
-[5 months ago] 8db9a803  (origin/bugfix/PMCORE-2045) PMCORE-2045 <Henry Jordan>
-[5 months ago] 8dc912cc  (origin/bugfix/PMCORE-2004, origin/bigfix/PMCORE-2004) PMCORE-2004: IE 11>> Values of suggest control are lost in the second task <Rodrigo Quelca>
-[5 months ago] a03762cf  (origin/bugfix/PMCORE-1998) PMCORE-1998 <Henry Jordan>
-[5 months ago] 7eef0679  (origin/bugfix/PMCORE-2009) PMCORE-2009: IE 11 >> Date time control validation does not disappear, when it is corrected <Rodrigo Quelca>
-[5 months ago] 5c92fd62  (origin/bugfix/PMCORE-1112-A) PMCORE-1112-A <Henry Jordan>
-[5 months ago] 555883b5  (origin/bugfix/PMCORE-1837) PMCORE-1837 <Henry Jordan>
-[5 months ago] 570fa814  (origin/bugfix/PMCORE-559) PMCORE-559: [ZenDesk 11723] Date Time Control - Initial Selection Date Property when setting the format HH:mm is not displaying the time correctly <Rodrigo Quelca>
-[6 months ago] a79bc677  (origin/bugfix/PMCORE-1112) PMCORE-1112 <Henry Jordan>
-[6 months ago] 8c8d2ba7  (origin/bugfix/PMCORE-1607-B) update v2 <Henry Jordan>
-[6 months ago] 87a2a94b  update <Henry Jordan>
-[6 months ago] 09ae2de3  PMCORE-1607-B <Henry Jordan>
-[6 months ago] 6ccfe4bf  PMCORE-1607-B <Henry Jordan>
+[4 days ago] da9c0731  (origin/bugfix/PMCORE-1111_C) PMCORE-111: Dependent fields in grids lose its values <Rodrigo Quelca>
+[10 days ago] 26000aa5  (origin/bugfix/PMCORE-1113) PMCORE-1113 <henry>
+[10 days ago] 21a74c78  (origin/bugfix/PMCORE-1111) PMCORE-1111: Dependent fields in grids lose its values <Rodrigo Quelca>
+[2 weeks ago] 638f0136  PMCORE-1096:Multiple File Upload Control does not validate Required Field attribute <Fabio Guachalla>
+[2 weeks ago] e1e7137b  (origin/bugfix/PMCORE-522) PMCORE-522 <henry>
+[3 weeks ago] 0021eb5c  (origin/feature/PMCORE-1054) PMCORE-1054 <henry>
+[3 weeks ago] a9b5f45e  (origin/bugfix/PMCORE-1035) PMCORE-1035 <henry>
+[4 weeks ago] 3b913de7  (origin/bugfix/PMCORE-1019-A) PMCORE-1019 <henry>
+[4 weeks ago] 2cbeeef4  Words cut off in dynaform printed PDF <Fabio Guachalla>
+[4 weeks ago] 742d0259  Words cut off in dynaform printed PDF <Fabio Guachalla>
+[5 weeks ago] 8132a464  PMCORE-488:It can not be created new cases in iExplorer 11 when   installing Knauf-Patch in the server <Fabio Guachalla>
+[5 weeks ago] ea8b2e00  PMCORE-494:There is an space when I do click on textarea field <Fabio Guachalla>
+[6 weeks ago] f9ccdfb5  (origin/bugfix/PMC-1526) PMC-1526: PROD - 1251 -> An error occurs if you select display-mode = view of a web control <Rodrigo Quelca>
+[7 weeks ago] 1dc20e06  (origin/bugfix/PMC-1533) change the execution of suggest Field Offline mode <henry>
+[7 weeks ago] 339f4de9  PMC-1442:[19026, 18927]  Dropdown populated by an Array variable is not working. <Fabio Guachalla>
+[7 weeks ago] 387e0f66  (origin/bugfix/PRE-669) PRE-669 fix dependents fields in the second row of the grid <henry>
+[7 weeks ago] f2b84c07  (origin/bugfix/PMC-1509) PMC-1319: The addrow javascript function does not set the default value correctly in the suggestions fields <Rodrigo Quelca>
+[7 weeks ago] 4a751fce  remove : <henry>
+[7 weeks ago] f20b3e89  (origin/feature/PMC-1486) Dependents field in offline mode <henry>
+[8 weeks ago] ee9be14f  (origin/bugfix/PMC-993) getControl() function does not work in view mode <Rodrigo Quelca>
+[8 weeks ago] aecc5d0a  (origin/feature/PMC-1463) PMC-1463: Dynaform Designer - Accessibility Improvements Stage 1 <Rodrigo Quelca>
+[9 weeks ago] 6e71cd3e  (origin/feature/PMC-1170) fix, error in delete images when press a thumbnail image <henry>
+[9 weeks ago] 78afdfbf  update code with the las observations in PR PMC-1170 <henry>
+[2 months ago] e405f60f  improve problem with delete images in offline mode <henry>
+[2 months ago] 7151fc7c  fix order in show images <henry>
+[3 months ago] ac147498  fix problems with offline images with 2 or more steps <henry>
+[3 months ago] 3a1585cb  update icon delete for images mobile <henry>
+[3 months ago] fb190148  update events preview image in image field <henry>
+[3 months ago] 0453c502  solve observations in pull request <henry>
+[3 months ago] 9ab106c6  (origin/bugfix/PMC-1319) PMC-1319: The addrow javascript function does not set the default value correctly in the suggestions fields <Rodrigo Quelca>

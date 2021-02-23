@@ -251,9 +251,6 @@ PMCommandDelete.prototype.undo = function () {
         shapeBefore = null;
         // add to the canvas array of regularShapes and customShapes
         shape.canvas.addToList(shape);
-        shape.getChildren().asArray().forEach(function (e) {
-            shape.canvas.addToList(e);
-        });
         // add to the children of the parent
         shape.parent.getChildren().insert(shape);
         shape.showOrHideResizeHandlers(false);
@@ -276,7 +273,7 @@ PMCommandDelete.prototype.undo = function () {
             }
             shape.setRelPosition(this.beforeRelPositions[shape.getID()]);
             shape.parent.bpmnLanes.insert(shape);
-            shape.parent.bpmnLanes.bubbleSort(shape.parent.comparisonFunction);
+            shape.parent.bpmnLanes.sort(shape.parent.comparisonFunction);
             shape.parent.updateAllLaneDimension();
         }
         if (shape.getType() === 'PMPool') {
@@ -287,9 +284,7 @@ PMCommandDelete.prototype.undo = function () {
                 shape.updateAllLaneDimension();
             }
         }
-        if(shape.corona){
-            shape.corona.hide();
-        }
+        shape.corona.hide();
     }
     // reconnect using the stack of commandConnect
     for (i = this.stackCommandConnect.length - 1; i >= 0; i -= 1) {
@@ -305,7 +300,6 @@ PMCommandDelete.prototype.undo = function () {
     }
     return this;
 };
-
 /**
  * Executes the command (a.k.a redo)
  * @chainable

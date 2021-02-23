@@ -27,13 +27,8 @@ if (isset($_GET["url"]) && $_GET["url"] != "") {
     }
 
     if ($sysSys != "" && $sysLang != "" && $sysSkin != "") {
-        if (count($url) > 4) {
-            $urlLogin = $http . "://" . $host . "/sys" . $sysSys . "/" . $sysLang . "/" . $sysSkin . "/login/login" . "?url=" . implode("/", $url);
-            $urlHome =  $http . "://" . $host . "/sys" . $sysSys . "/" . $sysLang . "/" . $sysSkin . "/cases/main" . "?url=" . implode("/", $url);
-        } else {
-            $urlLogin = $http . "://" . $host . "/sys" . $sysSys . "/" . $sysLang . "/" . $sysSkin . "/login/login";
-            $urlHome =  $http . "://" . $host . "/sys" . $sysSys . "/" . $sysLang . "/" . $sysSkin . "/cases/main";
-        }
+        $urlLogin = $http . "://" . $host . "/sys" . $sysSys . "/" . $sysLang . "/" . $sysSkin . "/login/login";
+        $urlHome =  $http . "://" . $host . "/sys" . $sysSys . "/" . $sysLang . "/" . $sysSkin . "/cases/main";
     }
 }
 

@@ -258,7 +258,8 @@ class Applications
         $configuration = true,
         $paged = true,
         $newerThan = '',
-        $oldestThan = ''
+        $oldestThan = '',
+        $isDraftEnabled = false
     ) {
         $callback = isset($callback)? $callback : "stcCallback1001";
         $dir = isset($dir)? $dir : "DESC";
@@ -301,6 +302,9 @@ class Applications
                 break;
             case "sent":
                 $Criteria = $oAppCache->getSentListCriteria($userUid);
+                if($isDraftEnabled == "false"){
+                    $Criteria->add(AppCacheViewPeer::APP_STATUS, 'DRAFT', Criteria::NOT_EQUAL);
+                }
                 $CriteriaCount = $oAppCache->getSentCountCriteria($userUid);
 
                 if (!empty($status)) {
@@ -416,6 +420,16 @@ class Applications
         $Criteria->addAsColumn('USR_FIRSTNAME', 'CU.USR_FIRSTNAME');
         $Criteria->addAsColumn('USR_LASTNAME', 'CU.USR_LASTNAME');
         $Criteria->addAsColumn('USR_USERNAME', 'CU.USR_USERNAME');
+
+
+
+
+        $Criteria->addAlias('APPCTN', 'APPLICATION');
+        $Criteria->addJoin(AppCacheViewPeer::APP_UID, 'APPCTN.APP_UID', Criteria::LEFT_JOIN);
+        $Criteria->addAsColumn('APP_INIT_USER', 'APPCTN.APP_INIT_USER');
+        $Criteria->addAsColumn('APP_INIT_DATE', 'APPCTN.APP_INIT_DATE');
+
+
 
         $CriteriaCount->addAlias('CU', 'USERS');
         $CriteriaCount->addJoin(AppCacheViewPeer::USR_UID, 'CU.USR_UID', Criteria::LEFT_JOIN);
@@ -538,41 +552,41 @@ class Applications
                     $dateTo = $dateTo . " 23:59:59";
                 }
 
-                $Criteria->add($Criteria->getNewCriterion(AppCacheViewPeer::DEL_DELEGATE_DATE, $dateFrom, Criteria::GREATER_EQUAL)->addAnd($Criteria->getNewCriterion(AppCacheViewPeer::DEL_DELEGATE_DATE, $dateTo, Criteria::LESS_EQUAL)));
-                $CriteriaCount->add($CriteriaCount->getNewCriterion(AppCacheViewPeer::DEL_DELEGATE_DATE, $dateFrom, Criteria::GREATER_EQUAL)->addAnd($CriteriaCount->getNewCriterion(AppCacheViewPeer::DEL_DELEGATE_DATE, $dateTo, Criteria::LESS_EQUAL)));
+                $Criteria->add($Criteria->getNewCriterion(AppCacheViewPeer::APP_UPDATE_DATE, $dateFrom, Criteria::GREATER_EQUAL)->addAnd($Criteria->getNewCriterion(AppCacheViewPeer::APP_UPDATE_DATE, $dateTo, Criteria::LESS_EQUAL)));
+                $CriteriaCount->add($CriteriaCount->getNewCriterion(AppCacheViewPeer::APP_UPDATE_DATE, $dateFrom, Criteria::GREATER_EQUAL)->addAnd($CriteriaCount->getNewCriterion(AppCacheViewPeer::APP_UPDATE_DATE, $dateTo, Criteria::LESS_EQUAL)));
             } else {
                 $dateFrom = $dateFrom . " 00:00:00";
 
-                $Criteria->add(AppCacheViewPeer::DEL_DELEGATE_DATE, $dateFrom, Criteria::GREATER_EQUAL);
-                $CriteriaCount->add(AppCacheViewPeer::DEL_DELEGATE_DATE, $dateFrom, Criteria::GREATER_EQUAL);
+                $Criteria->add(AppCacheViewPeer::APP_UPDATE_DATE, $dateFrom, Criteria::GREATER_EQUAL);
+                $CriteriaCount->add(AppCacheViewPeer::APP_UPDATE_DATE, $dateFrom, Criteria::GREATER_EQUAL);
             }
         } elseif ($dateTo != "") {
             $dateTo = $dateTo . " 23:59:59";
 
-            $Criteria->add(AppCacheViewPeer::DEL_DELEGATE_DATE, $dateTo, Criteria::LESS_EQUAL);
-            $CriteriaCount->add(AppCacheViewPeer::DEL_DELEGATE_DATE, $dateTo, Criteria::LESS_EQUAL);
+            $Criteria->add(AppCacheViewPeer::APP_UPDATE_DATE, $dateTo, Criteria::LESS_EQUAL);
+            $CriteriaCount->add(AppCacheViewPeer::APP_UPDATE_DATE, $dateTo, Criteria::LESS_EQUAL);
         }
 
         if ($newerThan != '') {
             if ($oldestThan != '') {
                 $Criteria->add(
-                    $Criteria->getNewCriterion(AppCacheViewPeer::DEL_DELEGATE_DATE, $newerThan, Criteria::GREATER_THAN)->addAnd(
-                    $Criteria->getNewCriterion(AppCacheViewPeer::DEL_DELEGATE_DATE, $oldestThan, Criteria::LESS_THAN)
+                    $Criteria->getNewCriterion(AppCacheViewPeer::APP_UPDATE_DATE, $newerThan, Criteria::GREATER_THAN)->addAnd(
+                    $Criteria->getNewCriterion(AppCacheViewPeer::APP_UPDATE_DATE, $oldestThan, Criteria::LESS_THAN)
                     )
                 );
                 $CriteriaCount->add(
-                    $CriteriaCount->getNewCriterion(AppCacheViewPeer::DEL_DELEGATE_DATE, $newerThan, Criteria::GREATER_THAN)->addAnd(
-                    $CriteriaCount->getNewCriterion(AppCacheViewPeer::DEL_DELEGATE_DATE, $oldestThan, Criteria::LESS_THAN)
+                    $CriteriaCount->getNewCriterion(AppCacheViewPeer::APP_UPDATE_DATE, $newerThan, Criteria::GREATER_THAN)->addAnd(
+                    $CriteriaCount->getNewCriterion(AppCacheViewPeer::APP_UPDATE_DATE, $oldestThan, Criteria::LESS_THAN)
                     )
                 );
             } else {
-                $Criteria->add(AppCacheViewPeer::DEL_DELEGATE_DATE, $newerThan, Criteria::GREATER_THAN);
-                $CriteriaCount->add(AppCacheViewPeer::DEL_DELEGATE_DATE, $newerThan, Criteria::GREATER_THAN);
+                $Criteria->add(AppCacheViewPeer::APP_UPDATE_DATE, $newerThan, Criteria::GREATER_THAN);
+                $CriteriaCount->add(AppCacheViewPeer::APP_UPDATE_DATE, $newerThan, Criteria::GREATER_THAN);
             }
         } else {
             if ($oldestThan != '') {
-                $Criteria->add(AppCacheViewPeer::DEL_DELEGATE_DATE, $oldestThan, Criteria::LESS_THAN);
-                $CriteriaCount->add(AppCacheViewPeer::DEL_DELEGATE_DATE, $oldestThan, Criteria::LESS_THAN);
+                $Criteria->add(AppCacheViewPeer::APP_UPDATE_DATE, $oldestThan, Criteria::LESS_THAN);
+                $CriteriaCount->add(AppCacheViewPeer::APP_UPDATE_DATE, $oldestThan, Criteria::LESS_THAN);
             }
         }
 
@@ -803,16 +817,19 @@ class Applications
         $oDataset = AppCacheViewPeer::doSelectRS($Criteria, Propel::getDbConnection('workflow_ro'));
 
         $oDataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
-
         $result = [];
         $result['totalCount'] = $totalCount;
         $rows = [];
         $aPriorities = array('1' => 'VL','2' => 'L','3' => 'N','4' => 'H','5' => 'VH');
         $index = $start;
 
+        //Get a new connection
+        $con2 = Propel::getConnection(AppDelegationPeer::DATABASE_NAME);
+
         while ($oDataset->next()) {
             $aRow = $oDataset->getRow();
-
+            $processInfo = $this->doGetProcessInfo($aRow['PRO_UID'], $con2);
+            $processDescription = $processInfo['PRO_DESCRIPTION'];
             //Current delegation (*)
             if ($action == 'sent' || $action == 'simple_search' || $action == 'to_reassign') {
                 //Current task
@@ -842,6 +859,7 @@ class Applications
             if (isset($aRow['DEL_PRIORITY'])) {
                 $aRow['DEL_PRIORITY'] = G::LoadTranslation("ID_PRIORITY_{$aPriorities[$aRow['DEL_PRIORITY']]}");
             }
+            $aRow['PROCESS_DESCRIPTION'] = $processDescription;
 
             $rows[] = $aRow;
         }
@@ -849,6 +867,16 @@ class Applications
         $result['data'] = $rows;
 
         return $result;
+    }
+
+    public function doGetProcessInfo($pro_uid, $con) {
+        // check for transaction if performance issues occur
+        if(empty($pro_uid) || empty($con))
+            return false;
+        $sql = "Select PRO_DESCRIPTION from PROCESS where PRO_UID = '$pro_uid'";
+        $rs = $con->executeQuery($sql);
+        $rs->next();
+        return $row = $rs->getRow();
     }
 
     //TODO: Encapsulates these and another default generation functions inside a class

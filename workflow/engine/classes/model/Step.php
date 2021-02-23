@@ -225,7 +225,7 @@ class Step extends BaseStep
             $oCriteria = new Criteria( 'workflow' );
             $oCriteria->addSelectColumn( '(COUNT(*) + 1) AS POSITION' );
             $oCriteria->add( StepPeer::TAS_UID, $sTaskUID );
-            $oDataset = StepPeer::doSelectRS( $oCriteria );
+            $oDataset = StepPeer::doSelectRS( $oCriteria, Propel::getDbConnection('workflow_ro'));
             $oDataset->setFetchmode( ResultSet::FETCHMODE_ASSOC );
             $oDataset->next();
             $aRow = $oDataset->getRow();

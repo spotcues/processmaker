@@ -487,32 +487,26 @@ class Task extends BaseTask
         return $row;
     }
 
-    /**
-     * Load the properties related to the task
-     *
-     * @param string $tasUid
-     *
-     * @return array
-     * @throws Exception
-    */
-    public function load($tasUid)
+    public function load($TasUid)
     {
         try {
-            $rows = TaskPeer::retrieveByPK($tasUid);
+            $oRow = TaskPeer::retrieveByPK($TasUid);
 
-            if (!is_null($rows)) {
-                $fields = $rows->toArray(BasePeer::TYPE_FIELDNAME);
-                $this->fromArray($fields, BasePeer::TYPE_FIELDNAME); //Populating an object from of the array
-                //Populating attributes
+            if (!is_null($oRow)) {
+                $aFields = $oRow->toArray(BasePeer::TYPE_FIELDNAME);
+
+                $this->fromArray($aFields, BasePeer::TYPE_FIELDNAME); //Populating an object from of the array
+                                                                      //Populating attributes
                 $this->setNew(false);
 
 
-                return $fields;
+                ///////
+                return $aFields;
             } else {
-                throw new Exception("The row '" . $tasUid . "' in table TASK doesn't exist!");
+                throw (new Exception("The row '" . $TasUid . "' in table TASK doesn't exist!"));
             }
-        } catch (Exception $error) {
-            throw $error;
+        } catch (Exception $oError) {
+            throw ($oError);
         }
     }
 
@@ -738,9 +732,6 @@ class Task extends BaseTask
         $calendarObj->assignCalendarTo($taskUid, $calendarUid, 'TASK');
     }
 
-    /**
-     * @deprecated Method deprecated in Release 3.5.x
-     */
     public function getDelegatedTaskData($TAS_UID, $APP_UID, $DEL_INDEX)
     {
         require_once ('classes/model/AppDelegation.php');

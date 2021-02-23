@@ -4,19 +4,16 @@ NAME:
 
 VERSION:
 
-    3.6.8
+    3.6.7
 
-## Project Status
+AUTHOR:
 
-See the Project Status issue on GitHub at https://github.com/dapphp/securimage/issues/99
+    Drew Phillips <drew@drew-phillips.com>
 
 DOWNLOAD:
 
-    Download and browse the code at https://github.com/dapphp/securimage.
-    Beta code is available at https://github.com/dapphp/securimage/tree/nextgen.
-
-    Other information is available at [phpcaptcha.org](https://www.phpcaptcha.org)
-
+    The latest version can always be
+    found at http://www.phpcaptcha.org
 
 DOCUMENTATION:
 

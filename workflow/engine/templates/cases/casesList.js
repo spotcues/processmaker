@@ -18,19 +18,19 @@ new Ext.KeyMap(document, {
 
 
 /*** global variables **/
-var storeCases,
-    storeReassignCases,
-    grid,
-    textJump,
-    ids = '',
-    winReassignInCasesList,
-    casesNewTab,
-    mask,
-    loadingMessage,
-    timeoutMark = false,
-    processProxy,
-    processStore,
-    comboCategory;
+var storeCases;
+var storeReassignCases;
+var grid;
+var textJump;
+var ids = '';
+var winReassignInCasesList;
+var casesNewTab;
+var mask;
+var loadingMessage;
+var timeoutMark = false;
+var processProxy;
+var processStore;
+var comboCategory;
 
 function formatAMPM(date, initVal, calendarDate) {
 
@@ -2205,7 +2205,6 @@ Ext.onReady ( function() {
     grid = new Ext.grid.GridPanel({
         region: 'center',
         id: 'casesGrid',
-        stateId : workspace + parent._action + window.userUid + 'gridProcessMain',
         store: storeCases,
         cm: cm,
         loadMask: mask,
@@ -2421,14 +2420,6 @@ Ext.onReady ( function() {
             storeCases.setBaseParam("dateTo",
                 typeof filtersValues !== 'undefined' && filtersValues.advanced && filtersValues.advanced.dateTo ?
                 filtersValues.advanced.dateTo : ""
-            );
-            storeCases.setBaseParam("user",
-                typeof filtersValues !== 'undefined' && filtersValues.advanced && filtersValues.advanced.user ?
-                filtersValues.advanced.user : ""
-            );
-            storeCases.setBaseParam("user_label",
-                typeof filtersValues !== 'undefined' && filtersValues.advanced && filtersValues.advanced.user_label ?
-                filtersValues.advanced.user_label : ""
             );
             break;
         case "unassigned":

@@ -6,7 +6,6 @@ use Bootstrap;
 use G;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
 use ProcessMaker\Core\System;
 use ProcessMaker\Services\OAuth2\Server;
 use ProcessMaker\Util\PhpShorthandByte;
@@ -27,16 +26,6 @@ class ValidationUploadedFiles
      * @var array 
      */
     private $fails = [];
-
-    /**
-     * Return this constant when rule is invalid.
-     */
-    private const INVALID = true;
-
-    /**
-     * Return this constant when rule is valid.
-     */
-    private const VALID = false;
 
     /**
      * Check if the loaded files comply with the validation rules, add here if you 
@@ -62,12 +51,18 @@ class ValidationUploadedFiles
                 ->status(550)
                 ->message(G::LoadTranslation('ID_THE_UPLOAD_OF_PHP_FILES_WAS_DISABLED'))
                 ->log(function($rule) {
-                    $message = $rule->getMessage();
-                    $context = [
-                        'filename' => $rule->getData()->filename,
-                        'url' => $_SERVER["REQUEST_URI"] ?? ''
-                    ];
-                    Log::channel(':phpUpload')->alert($message, Bootstrap::context($context));
+                    /**
+                     * Levels supported by MonologProvider is:
+                     * 100 "DEBUG"
+                     * 200 "INFO"
+                     * 250 "NOTICE"
+                     * 300 "WARNING"
+                     * 400 "ERROR"
+                     * 500 "CRITICAL"
+                     * 550 "ALERT"
+                     * 600 "EMERGENCY"
+                     */
+                    Bootstrap::registerMonologPhpUploadExecution('phpUpload', 550, $rule->getMessage(), $rule->getData()->filename);
                 });
 
         //rule: upload_attempts_limit_per_user
@@ -94,12 +89,18 @@ class ValidationUploadedFiles
                 ->status(429)
                 ->message(G::LoadTranslation('ID_TOO_MANY_REQUESTS'))
                 ->log(function($rule) {
-                    $message = $rule->getMessage();
-                    $context = [
-                        'filename' => $rule->getData()->filename,
-                        'url' => $_SERVER["REQUEST_URI"] ?? ''
-                    ];
-                    Log::channel(':phpUpload')->notice($message, Bootstrap::context($context));
+                    /**
+                     * Levels supported by MonologProvider is:
+                     * 100 "DEBUG"
+                     * 200 "INFO"
+                     * 250 "NOTICE"
+                     * 300 "WARNING"
+                     * 400 "ERROR"
+                     * 500 "CRITICAL"
+                     * 550 "ALERT"
+                     * 600 "EMERGENCY"
+                     */
+                    Bootstrap::registerMonologPhpUploadExecution('phpUpload', 250, $rule->getMessage(), $rule->getData()->filename);
                 });
 
         //rule: mimeType
@@ -117,7 +118,7 @@ class ValidationUploadedFiles
                     $file = new File($path);
                     $guessExtension = $file->guessExtension();
                     $mimeTypeFile = $file->getMimeType();
-
+                    return false;
                     //mimeType known
                     if ($extension === $guessExtension && $mimeType === $mimeTypeFile) {
                         return false;
@@ -148,12 +149,18 @@ class ValidationUploadedFiles
                 ->status(415)
                 ->message(G::LoadTranslation('ID_THE_MIMETYPE_EXTENSION_ERROR'))
                 ->log(function($rule) {
-                    $message = $rule->getMessage();
-                    $context = [
-                        'filename' => $rule->getData()->filename,
-                        'url' => $_SERVER["REQUEST_URI"] ?? ''
-                    ];
-                    Log::channel(':phpUpload')->notice($message, Bootstrap::context($context));
+                    /**
+                     * Levels supported by MonologProvider is:
+                     * 100 "DEBUG"
+                     * 200 "INFO"
+                     * 250 "NOTICE"
+                     * 300 "WARNING"
+                     * 400 "ERROR"
+                     * 500 "CRITICAL"
+                     * 550 "ALERT"
+                     * 600 "EMERGENCY"
+                     */
+                    Bootstrap::registerMonologPhpUploadExecution('phpUpload', 250, $rule->getMessage(), $rule->getData()->filename);
                 });
 
         return $validator->validate();
@@ -267,98 +274,7 @@ class ValidationUploadedFiles
                 })
                 ->status(400)
                 ->log(function($rule) {
-                    $message = $rule->getMessage();
-                    $context = [
-                        'filename' => "",
-                        'url' => $_SERVER["REQUEST_URI"] ?? ''
-                    ];
-                    Log::channel(':phpUpload')->error($message, Bootstrap::context($context));
-                });
-
-        return $validator->validate();
-    }
-
-    /**
-     * Check if the loaded files comply with the validation rules, add here if you 
-     * want more validation rules. 
-     * Accept per argument an array or object that contains a "filename" and "path" values.
-     * The rules are verified in the order in which they have been added.
-     * 
-     * @param array|object $file 
-     * @return Validator
-     */
-    public function runRulesForPostFilesOfNote($file)
-    {
-        $validator = $this->runRules($file);
-
-        //rule: file exists
-        $rule = $validator->addRule();
-        $rule->validate($file, function($file) use($rule) {
-                    $path = isset($file->path) ? $file->path : "";
-                    $filesystem = new Filesystem();
-                    if (!$filesystem->exists($path)) {
-                        $rule->message(G::LoadTranslation('ID_NOT_EXISTS_FILE'));
-                        return self::INVALID;
-                    }
-                    return self::VALID;
-                })
-                ->status(400)
-                ->log(function($rule) {
-                    $message = $rule->getMessage();
-                    $context = [
-                        'filename' => $rule->getData()->filename,
-                        'url' => $_SERVER["REQUEST_URI"] ?? ''
-                    ];
-                    Log::channel(':phpUpload')->error($message, Bootstrap::context($context));
-                });
-
-        //rule: extensions
-        $rule = $validator->addRule();
-        $rule->validate($file, function($file) use($rule) {
-                    $filesystem = new Filesystem();
-                    $extension = strtolower($filesystem->extension($file->filename));
-                    $extensions = [
-                        'pdf', 'gif', 'jpg', 'png', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'mp4', 'mpv', 'mpeg', 'mpg', 'mov'
-                    ];
-                    if (!in_array($extension, $extensions)) {
-                        $rule->message(G::LoadTranslation('ID_YOU_UPLOADED_AN_UNSUPPORTED_FILE_EXTENSION'));
-                        return self::INVALID;
-                    }
-                    return self::VALID;
-                })
-                ->status(400)
-                ->log(function($rule) {
-                    $message = $rule->getMessage();
-                    $context = [
-                        'filename' => $rule->getData()->filename,
-                        'url' => $_SERVER["REQUEST_URI"] ?? ''
-                    ];
-                    Log::channel(':phpUpload')->error($message, Bootstrap::context($context));
-                });
-
-        //rule: file size
-        $rule = $validator->addRule();
-        $rule->validate($file, function($file) use($rule) {
-                    $path = isset($file->path) ? $file->path : "";
-                    $filesystem = new Filesystem();
-                    $limitSize = '10M';
-                    $size = $filesystem->size($path);
-                    $phpShorthandByte = new PhpShorthandByte();
-                    $postMaxSizeBytes = $phpShorthandByte->valueToBytes($limitSize);
-                    if ($size > $postMaxSizeBytes) {
-                        $rule->message(G::LoadTranslation('ID_YOUR_FILE_HAS_EXCEEDED', [$limitSize]));
-                        return self::INVALID;
-                    }
-                    return self::VALID;
-                })
-                ->status(400)
-                ->log(function($rule) {
-                    $message = $rule->getMessage();
-                    $context = [
-                        'filename' => $rule->getData()->filename,
-                        'url' => $_SERVER["REQUEST_URI"] ?? ''
-                    ];
-                    Log::channel(':phpUpload')->error($message, Bootstrap::context($context));
+                    Bootstrap::registerMonologPhpUploadExecution('phpUpload', 400, $rule->getMessage(), "");
                 });
 
         return $validator->validate();

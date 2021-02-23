@@ -51,6 +51,16 @@ use PDepend\Source\Tokenizer\Tokens;
 /**
  * Concrete parser implementation that supports features up to PHP version 7.0.
  *
+ * TODO:
+ * - Tokens: trait, callable, insteadof
+ *   - allowed as
+ *     - method
+ *     - constant
+ *   - not allowed as
+ *     - class
+ *     - interface
+ *     - trait
+ *
  * @copyright 2008-2017 Manuel Pichler. All rights reserved.
  * @license http://www.opensource.org/licenses/bsd-license.php BSD License
  * @since 2.3
@@ -80,15 +90,12 @@ abstract class PHPParserVersion70 extends PHPParserVersion56
             case Tokens::T_ENDFOREACH:
             case Tokens::T_ENDIF:
             case Tokens::T_ENDWHILE:
-            case Tokens::T_EMPTY:
-            case Tokens::T_EVAL:
             case Tokens::T_LOGICAL_AND:
             case Tokens::T_GLOBAL:
             case Tokens::T_GOTO:
             case Tokens::T_INSTANCEOF:
             case Tokens::T_INSTEADOF:
             case Tokens::T_INTERFACE:
-            case Tokens::T_ISSET:
             case Tokens::T_NAMESPACE:
             case Tokens::T_NEW:
             case Tokens::T_LOGICAL_OR:
@@ -130,7 +137,6 @@ abstract class PHPParserVersion70 extends PHPParserVersion56
             //case Tokens::T_DIE:
             case Tokens::T_SELF:
             case Tokens::T_PARENT:
-            case Tokens::T_UNSET:
                 return true;
         }
         return parent::isConstantName($tokenType);
@@ -218,14 +224,6 @@ abstract class PHPParserVersion70 extends PHPParserVersion56
     protected function parseTypeHint()
     {
         switch ($this->tokenizer->peek()) {
-            case Tokens::T_ARRAY:
-                $type = $this->parseArrayType();
-                break;
-
-            case Tokens::T_SELF:
-                $type = $this->parseSelfType();
-                break;
-
             case Tokens::T_STRING:
             case Tokens::T_BACKSLASH:
             case Tokens::T_NAMESPACE:
@@ -235,12 +233,10 @@ abstract class PHPParserVersion70 extends PHPParserVersion56
                     ? $this->parseScalarOrCallableTypeHint($name)
                     : $this->builder->buildAstClassOrInterfaceReference($name);
                 break;
-
             default:
                 $type = parent::parseTypeHint();
                 break;
         }
-
         return $type;
     }
 

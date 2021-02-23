@@ -2,9 +2,7 @@
 
 use ProcessMaker\BusinessModel\Cases as BmCases;
 use ProcessMaker\BusinessModel\Cases\ChangeLog;
-use ProcessMaker\Model\Task as ModelTask;
 use ProcessMaker\Plugins\PluginRegistry;
-use ProcessMaker\Util\DateTime;
 
 if (!isset($_SESSION['USER_LOGGED'])) {
     $responseObject = new stdclass();
@@ -17,6 +15,7 @@ if (!isset($_SESSION['USER_LOGGED'])) {
 
 $filter = new InputFilter();
 $_REQUEST = $filter->xssFilterHard($_REQUEST);
+$_POST = $filter->xssFilterHard($_POST);
 
 if (isset($_REQUEST['action']) && $_REQUEST['action'] == "verifySession") {
     if (!isset($_SESSION['USER_LOGGED'])) {
@@ -184,14 +183,14 @@ class Ajax
         $c->add(AppThreadPeer::APP_THREAD_STATUS, 'OPEN');
         $cant = AppThreadPeer::doCount($c);
 
-        $case = new Cases();
-        $fields = $case->loadCase($appUid, $index);
+        $oCase = new Cases();
+        $aFields = $oCase->loadCase($appUid, $index);
 
         global $RBAC;
 
         $options = [];
 
-        switch ($fields['APP_STATUS']) {
+        switch ($aFields['APP_STATUS']) {
             case 'DRAFT':
                 if (!AppDelay::isPaused($appUid, $index)) {
                     $options[] = ['text' => G::LoadTranslation('ID_PAUSED_CASE'), 'fn' => 'setUnpauseCaseDate'];
@@ -201,11 +200,6 @@ class Ajax
                 // Check if the user has the permission for the action Delete Case
                 if ($RBAC->userCanAccess('PM_DELETECASE') == 1) {
                     $options[] = ['text' => G::LoadTranslation('ID_DELETE'), 'fn' => 'deleteCase'];
-                } else {
-                    // Check if the user is the owner
-                    if ($fields['APP_INIT_USER'] === $RBAC->aUserInfo['USER_INFO']['USR_UID']) {
-                        $options[] = ['text' => G::LoadTranslation('ID_DELETE'), 'fn' => 'deleteCase'];
-                    }
                 }
                 // Check if the user has the permission for the action Reassign Case
                 if ($RBAC->userCanAccess('PM_REASSIGNCASE') == 1 || $RBAC->userCanAccess('PM_REASSIGNCASE_SUPERVISOR') == 1) {
@@ -253,7 +247,7 @@ class Ajax
         }
 
         if ($_SESSION["TASK"] != "" && $_SESSION["TASK"] != "-1") {
-            $task = new Task();
+            $oTask = new Task();
             $tasksInParallel = explode('|', $_SESSION['TASK']);
             $tasksInParallel = array_filter($tasksInParallel, function ($value) {
                 return !empty($value);
@@ -261,12 +255,12 @@ class Ajax
             $nTasksInParallel = count($tasksInParallel);
 
             if ($nTasksInParallel > 1) {
-                $taskProperties = $task->load($tasksInParallel[$nTasksInParallel - 1]);
+                $aTask = $oTask->load($tasksInParallel[$nTasksInParallel - 1]);
             } else {
-                $taskProperties = $task->load($_SESSION['TASK']);
+                $aTask = $oTask->load($_SESSION['TASK']);
             }
 
-            if ($taskProperties['TAS_TYPE'] == 'ADHOC') {
+            if ($aTask['TAS_TYPE'] == 'ADHOC') {
                 $options[] = ['text' => G::LoadTranslation('ID_ADHOC_ASSIGNMENT'), 'fn' => 'adhocAssignmentUsers'];
             }
         }
@@ -427,9 +421,9 @@ class Ajax
         }
         $taskUid = $arrayTaskUid[0];
 
-        $task = new ModelTask();
-        $taskData = $task->information($_SESSION['APPLICATION'], $taskUid, $_SESSION['INDEX']);
-        $taskData = DateTime::convertUtcToTimeZone($taskData);
+        $taskData = $task->getDelegatedTaskData($taskUid, $_SESSION['APPLICATION'], $_SESSION['INDEX']);
+
+        $taskData = \ProcessMaker\Util\DateTime::convertUtcToTimeZone($taskData);
 
         print(G::json_encode($taskData));
     }
@@ -549,44 +543,45 @@ class Ajax
         G::RenderPage('publish', 'extJs');
     }
 
-    /**
-     * Cancel case from actions menu
-     *
-     * @link https://wiki.processmaker.com/3.3/Cases/Actions#Cancel
-     *
-     * @return void
-     */
     public function cancelCase()
     {
-        try {
-            $appUid = !empty($_SESSION['APPLICATION']) ? $_SESSION['APPLICATION'] : '';
-            $index = !empty($_SESSION['INDEX']) ? $_SESSION['INDEX'] : '';
-            $usrUid = !empty($_SESSION['USER_LOGGED']) ? $_SESSION['USER_LOGGED'] : '';
-            $result = new stdclass();
-            if (!empty($appUid) && !empty($index) && !empty($usrUid)) {
-                $ws = new WsBase();
-                $response = (object)$ws->cancelCase($appUid, $index, $usrUid);
-                // Review if the case was cancelled, true if the case was cancelled
-                $result->status = ($response->status_code == 0) ? true : false;
-                $result->msg = $response->message;
-                // Register in cases notes
-                if (!empty($_POST['NOTE_REASON'])) {
-                    $appNotes = new AppNotes();
-                    $noteContent = addslashes($_POST['NOTE_REASON']);
-                    $appNotes->postNewNote(
-                        $appUid, $usrUid, $noteContent, $_POST['NOTIFY_CANCEL']
-                    );
-                }
-            } else {
-                $result->status = false;
-                $result->msg = G::LoadTranslation("ID_CASE_USER_INVALID_CANCEL_CASE", [$usrUid]);
+        $oCase = new Cases();
+        $multiple = false;
+
+        if (isset($_POST['APP_UID']) && isset($_POST['DEL_INDEX'])) {
+            $APP_UID = $_POST['APP_UID'];
+            $DEL_INDEX = $_POST['DEL_INDEX'];
+
+            $appUids = explode(',', $APP_UID);
+            $delIndexes = explode(',', $DEL_INDEX);
+            if (count($appUids) > 1 && count($delIndexes) > 1) {
+                $multiple = true;
             }
-        } catch (Exception $e) {
-            $result->status = false;
-            $result->msg = $e->getMessage();
+        } elseif (isset($_POST['sApplicationUID']) && isset($_POST['iIndex'])) {
+            $APP_UID = $_POST['sApplicationUID'];
+            $DEL_INDEX = $_POST['iIndex'];
+        } else {
+            $APP_UID = $_SESSION['APPLICATION'];
+            $DEL_INDEX = $_SESSION['INDEX'];
         }
 
-        print G::json_encode($result);
+        // Save the note pause reason
+        if ($_POST['NOTE_REASON'] != '') {
+            require_once("classes/model/AppNotes.php");
+            $appNotes = new AppNotes();
+            $noteContent = addslashes($_POST['NOTE_REASON']);
+            $appNotes->postNewNote($APP_UID, $_SESSION['USER_LOGGED'], $noteContent, $_POST['NOTIFY_PAUSE']);
+        }
+        // End save
+
+
+        if ($multiple) {
+            foreach ($appUids as $i => $appUid) {
+                $oCase->cancelCase($appUid, $delIndexes[$i], $_SESSION['USER_LOGGED']);
+            }
+        } else {
+            $oCase->cancelCase($APP_UID, $DEL_INDEX, $_SESSION['USER_LOGGED']);
+        }
     }
 
     public function getUsersToReassign()
@@ -671,11 +666,12 @@ class Ajax
             $result->msg = G::LoadTranslation('ID_REASSIGNMENT_SUCCESS', SYS_LANG, $data);
 
             // Save the note reassign reason
-            if (!empty($_POST['NOTE_REASON'])) {
+            if (isset($_POST['NOTE_REASON']) && $_POST['NOTE_REASON'] !== '') {
+                require_once("classes/model/AppNotes.php");
+                $appNotes = new AppNotes();
                 $noteContent = addslashes($_POST['NOTE_REASON']);
                 $notifyReassign = $_POST['NOTIFY_REASSIGN'] === 'true' ? true: false;
-                $cases = new BmCases();
-                $response = $cases->addNote($_SESSION['APPLICATION'], $_SESSION['USER_LOGGED'], $noteContent, $notifyReassign);
+                $appNotes->postNewNote($_SESSION['APPLICATION'], $_SESSION['USER_LOGGED'], $noteContent, $notifyReassign);
             }
         } catch (Exception $e) {
             $result->status = 1;

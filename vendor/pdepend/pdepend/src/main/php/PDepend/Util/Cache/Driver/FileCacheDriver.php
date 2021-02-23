@@ -60,9 +60,6 @@ use PDepend\Util\Cache\Driver\File\FileCacheGarbageCollector;
  */
 class FileCacheDriver implements CacheDriver
 {
-
-    const DEFAULT_TTL = 2592000; //30 days
-
     /**
      * Default cache entry type.
      */
@@ -98,21 +95,25 @@ class FileCacheDriver implements CacheDriver
     private $cacheKey;
 
     /**
+     * @var \PDepend\Util\Cache\Driver\File\FileCacheGarbageCollector
+     */
+    private $garbageCollector;
+
+    /**
      * This method constructs a new file cache instance for the given root
      * directory.
      *
-     * @param string $root          The cache root directory.
-     * @param int $ttl              The cache TTL.
-     * @param string|null $cacheKey Unique key for this cache instance.
+     * @param string $root     The cache root directory.
+     * @param string $cacheKey Unique key for this cache instance.
      */
-    public function __construct($root, $ttl = self::DEFAULT_TTL, $cacheKey = null)
+    public function __construct($root, $cacheKey = null)
     {
         $this->directory = new FileCacheDirectory($root);
         $this->version   = preg_replace('(^(\d+\.\d+).*)', '\\1', phpversion());
 
         $this->cacheKey = $cacheKey;
 
-        $this->garbageCollect($root, $ttl);
+        $this->garbageCollect($root);
     }
 
     /**
@@ -197,9 +198,8 @@ class FileCacheDriver implements CacheDriver
      */
     protected function restoreFile($file, $hash)
     {
-        // unserialize() throws E_NOTICE when data is corrupt
-        $data = @unserialize($this->read($file));
-        if ($data !== false && $data['hash'] === $hash) {
+        $data = unserialize($this->read($file));
+        if ($data['hash'] === $hash) {
             return $data['data'];
         }
         return null;
@@ -287,12 +287,11 @@ class FileCacheDriver implements CacheDriver
      * Cleans old cache files.
      *
      * @param string $root
-     * @param int $ttl
      * @return void
      */
-    protected function garbageCollect($root, $ttl)
+    protected function garbageCollect($root)
     {
-        $garbageCollector = new FileCacheGarbageCollector($root, $ttl);
+        $garbageCollector = new FileCacheGarbageCollector($root);
         $garbageCollector->garbageCollect();
     }
 }

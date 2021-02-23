@@ -1,9 +1,6 @@
 <?php
 
-use App\Jobs\GenerateReportTable;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use ProcessMaker\Core\JobsManager;
 use ProcessMaker\Model\Application;
 
 /**
@@ -206,119 +203,172 @@ class ReportTables
      */
     public function populateTable($tableName, $connectionShortName = 'report', $type = 'NORMAL', $fields = [], $proUid = '', $grid = '')
     {
-        $config = System::getSystemConfiguration();
-        $reportTableBatchRegeneration = $config['report_table_batch_regeneration'];
-
         $tableName = $this->sPrefix . $tableName;
         //we have to do the propel connection
         $database = $this->chooseDB($connectionShortName);
         $connection = Propel::getConnection($database);
+        $statement = $connection->createStatement();
         if ($type == 'GRID') {
             $aux = explode('-', $grid);
             $grid = $aux[0];
         }
         $case = new Cases();
         try {
-            $applicationTableName = (new Application())->getTable();
-            $deleteQuery = "TRUNCATE TABLE `{$tableName}` ";
-            DB::delete($deleteQuery);
-
-            $applications = Application::getByProUid($proUid);
-            $i = 1;
-            $queryValues = "";
-            $numberRecords = $reportTableBatchRegeneration;
-            $n = count($applications);
-            foreach ($applications as $application) {
-                $appData = $case->unserializeData($application->APP_DATA);
-                if ($type == 'NORMAL') {
-                    $query = 'INSERT INTO `' . $tableName . '` (';
-                    $query .= '`APP_UID`,`APP_NUMBER`';
-                    foreach ($fields as $field) {
-                        $query .= ',`' . $field['sFieldName'] . '`';
-                    }
-                    $headQuery = $query . ") VALUES ";
-                    $query = "('" . $application->APP_UID . "'," . $application->APP_NUMBER;
-                    foreach ($fields as $field) {
-                        switch ($field['sType']) {
-                            case 'number':
-                                $query .= ',' . (isset($appData[$field['sFieldName']]) ? (float) str_replace(',', '', $appData[$field['sFieldName']]) : '0');
-                                break;
-                            case 'char':
-                            case 'text':
-                                if (!isset($appData[$field['sFieldName']])) {
-                                    $appData[$field['sFieldName']] = '';
-                                }
-                                $string = $appData[$field['sFieldName']];
-                                if (is_array($string)) {
-                                    $string = implode($string, ",");
-                                }
-                                $query .= ",'" . (isset($appData[$field['sFieldName']]) ? mysqli_real_escape_string($connection->getResource(), $string) : '') . "'";
-                                break;
-                            case 'date':
-                                $value = (isset($appData[$field['sFieldName']]) && trim($appData[$field['sFieldName']])) != '' ? "'" . $appData[$field['sFieldName']] . "'" : 'NULL';
-                                $query .= "," . $value;
-                                break;
-                        }
-                    }
-                    $query .= ')';
-                    $queryValues = $queryValues . $query . ",";
-                    if ($i % $numberRecords === 0 || $i === $n) {
-                        $queryValues = rtrim($queryValues, ",");
-                        $query = $headQuery . $queryValues;
-                        $queryValues = "";
-
-                        //add to queue
-                        $closure = function() use($query) {
-                            DB::insert($query);
-                        };
-                        JobsManager::getSingleton()->dispatch(GenerateReportTable::class, $closure);
-                    }
-                } else {
-                    if (isset($appData[$grid])) {
-                        $query = 'INSERT INTO `' . $tableName . '` (';
-                        $query .= '`APP_UID`,`APP_NUMBER`,`ROW`';
-                        foreach ($fields as $field) {
-                            $query .= ',`' . $field['sFieldName'] . '`';
-                        }
-                        $headQuery = $query . ") VALUES ";
-                        foreach ($appData[$grid] as $indexRow => $gridRow) {
-                            $query = "('" . $application->APP_UID . "'," . (int) $application->APP_NUMBER . ',' . $indexRow;
+            switch (DB_ADAPTER) {
+                case 'mysql':
+                    $applications = Application::getByProUid($proUid);
+                    foreach ($applications as $application) {
+                        $appData = $case->unserializeData($application->APP_DATA);
+                        DB::delete("DELETE FROM `{$tableName}` WHERE APP_UID = '{$application->APP_UID}'");
+                        if ($type == 'NORMAL') {
+                            $query = 'INSERT INTO `' . $tableName . '` (';
+                            $query .= '`APP_UID`,`APP_NUMBER`';
+                            foreach ($fields as $field) {
+                                $query .= ',`' . $field['sFieldName'] . '`';
+                            }
+                            $query .= ") VALUES ('" . $application->APP_UID . "'," . $application->APP_NUMBER;
                             foreach ($fields as $field) {
                                 switch ($field['sType']) {
                                     case 'number':
-                                        $query .= ',' . (isset($gridRow[$field['sFieldName']]) ? (float) str_replace(',', '', $gridRow[$field['sFieldName']]) : '0');
+                                        $query .= ',' . (isset($appData[$field['sFieldName']]) ? (float) str_replace(',', '', $appData[$field['sFieldName']]) : '0');
                                         break;
                                     case 'char':
                                     case 'text':
-                                        if (!isset($gridRow[$field['sFieldName']])) {
-                                            $gridRow[$field['sFieldName']] = '';
+                                        if (!isset($appData[$field['sFieldName']])) {
+                                            $appData[$field['sFieldName']] = '';
                                         }
-                                        $stringEscape = mysqli_real_escape_string($connection->getResource(), $gridRow[$field['sFieldName']]);
-                                        $query .= ",'" . (isset($gridRow[$field['sFieldName']]) ? $stringEscape : '') . "'";
+                                        $string = $appData[$field['sFieldName']];
+                                        if (is_array($string)) {
+                                            $string = implode($string, ",");
+                                        }
+                                        $query .= ",'" . (isset($appData[$field['sFieldName']]) ? mysqli_real_escape_string($connection->getResource(), $string) : '') . "'";
                                         break;
                                     case 'date':
-                                        $value = (isset($gridRow[$field['sFieldName']]) && trim($gridRow[$field['sFieldName']])) != '' ? "'" . $gridRow[$field['sFieldName']] . "'" : 'NULL';
+                                        $value = (isset($appData[$field['sFieldName']]) && trim($appData[$field['sFieldName']])) != '' ? "'" . $appData[$field['sFieldName']] . "'" : 'NULL';
                                         $query .= "," . $value;
                                         break;
                                 }
                             }
                             $query .= ')';
-                            $queryValues = $queryValues . $query . ",";
-                        }
-                        if ($i % $numberRecords === 0 || $i === $n) {
-                            $queryValues = rtrim($queryValues, ",");
-                            $query = $headQuery . $queryValues;
-                            $queryValues = "";
-
-                            //add to queue
-                            $closure = function() use($query) {
-                                DB::insert($query);
-                            };
-                            JobsManager::getSingleton()->dispatch(GenerateReportTable::class, $closure);
+                            DB::insert($query);
+                        } else {
+                            if (isset($appData[$grid])) {
+                                foreach ($appData[$grid] as $indexRow => $gridRow) {
+                                    $query = 'INSERT INTO `' . $tableName . '` (';
+                                    $query .= '`APP_UID`,`APP_NUMBER`,`ROW`';
+                                    foreach ($fields as $field) {
+                                        $query .= ',`' . $field['sFieldName'] . '`';
+                                    }
+                                    $query .= ") VALUES ('" . $application->APP_UID . "'," . (int) $application->APP_NUMBER . ',' . $indexRow;
+                                    foreach ($fields as $field) {
+                                        switch ($field['sType']) {
+                                            case 'number':
+                                                $query .= ',' . (isset($gridRow[$field['sFieldName']]) ? (float) str_replace(',', '', $gridRow[$field['sFieldName']]) : '0');
+                                                break;
+                                            case 'char':
+                                            case 'text':
+                                                if (!isset($gridRow[$field['sFieldName']])) {
+                                                    $gridRow[$field['sFieldName']] = '';
+                                                }
+                                                $stringEscape = mysqli_real_escape_string($connection->getResource(), $gridRow[$field['sFieldName']]);
+                                                $query .= ",'" . (isset($gridRow[$field['sFieldName']]) ? $stringEscape : '') . "'";
+                                                break;
+                                            case 'date':
+                                                $value = (isset($gridRow[$field['sFieldName']]) && trim($gridRow[$field['sFieldName']])) != '' ? "'" . $gridRow[$field['sFieldName']] . "'" : 'NULL';
+                                                $query .= "," . $value;
+                                                break;
+                                        }
+                                    }
+                                    $query .= ')';
+                                    DB::insert($query);
+                                }
+                            }
                         }
                     }
-                }
-                $i = $i + 1;
+                    break;
+
+                /**
+                 * For SQLServer code
+                 * Note: It is only possible to create Report Tables in MySQL databases. The list will only show connections to those databases even if the project has connections to other DBMS.
+                 * This section is not used and has been marked for deletion.
+                 * @link https://wiki.processmaker.com/3.0/Report_Tables#Creating_Report_Tables
+                 * @deprecated
+                 */
+                case 'mssql':
+                    $criteria = new Criteria('workflow');
+                    $criteria->add(ApplicationPeer::PRO_UID, $proUid);
+                    $criteria->addAscendingOrderByColumn(ApplicationPeer::APP_NUMBER);
+                    $dataset = ApplicationPeer::doSelectRS($criteria);
+                    $dataset->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+                    $dataset->next();
+                    while ($row = $dataset->getRow()) {
+                        $appData = unserialize($row['APP_DATA']);
+                        //verify use mssql
+                        mysqli_query(
+                                $connection->getResource(), 'DELETE FROM [' . $tableName . "] WHERE APP_UID = '" . $row['APP_UID'] . "'"
+                        );
+                        if ($type == 'NORMAL') {
+                            $query = 'INSERT INTO [' . $tableName . '] (';
+                            $query .= '[APP_UID],[APP_NUMBER]';
+                            foreach ($fields as $field) {
+                                $query .= ',[' . $field['sFieldName'] . ']';
+                            }
+                            $query .= ") VALUES ('" . $row['APP_UID'] . "'," . (int) $row['APP_NUMBER'];
+                            foreach ($fields as $field) {
+                                switch ($field['sType']) {
+                                    case 'number':
+                                        $query .= ',' . (isset($appData[$field['sFieldName']]) ? (float) str_replace(',', '', $appData[$field['sFieldName']]) : '0');
+                                        break;
+                                    case 'char':
+                                    case 'text':
+                                        if (!isset($appData[$field['sFieldName']])) {
+                                            $appData[$field['sFieldName']] = '';
+                                        }
+                                        $stringEscape = mysqli_real_escape_string($connection->getResource(), $appData[$field['sFieldName']]);
+                                        $query .= ",'" . (isset($appData[$field['sFieldName']]) ? $stringEscape : '') . "'";
+                                        break;
+                                    case 'date':
+                                        $query .= ",'" . (isset($appData[$field['sFieldName']]) ? $appData[$field['sFieldName']] : '') . "'";
+                                        break;
+                                }
+                            }
+                            $query .= ')';
+                            $rs = $statement->executeQuery($query);
+                        } else {
+                            if (isset($appData[$grid])) {
+                                foreach ($appData[$grid] as $indexRow => $gridRow) {
+                                    $query = 'INSERT INTO [' . $tableName . '] (';
+                                    $query .= '`APP_UID`,`APP_NUMBER`,`ROW`';
+                                    foreach ($fields as $field) {
+                                        $query .= ',[' . $field['sFieldName'] . ']';
+                                    }
+                                    $query .= ") VALUES ('" . $row['APP_UID'] . "'," . (int) $row['APP_NUMBER'] . ',' . $indexRow;
+                                    foreach ($fields as $field) {
+                                        switch ($field['sType']) {
+                                            case 'number':
+                                                $query .= ',' . (isset($gridRow[$field['sFieldName']]) ? (float) str_replace(',', '', $gridRow[$field['sFieldName']]) : '0');
+                                                break;
+                                            case 'char':
+                                            case 'text':
+                                                if (!isset($gridRow[$field['sFieldName']])) {
+                                                    $gridRow[$field['sFieldName']] = '';
+                                                }
+                                                $stringEscape = mysqli_real_escape_string($connection->getResource(), $gridRow[$field['sFieldName']]);
+                                                $query .= ",'" . (isset($gridRow[$field['sFieldName']]) ? $stringEscape : '') . "'";
+                                                break;
+                                            case 'date':
+                                                $query .= ",'" . (isset($gridRow[$field['sFieldName']]) ? $gridRow[$field['sFieldName']] : '') . "'";
+                                                break;
+                                        }
+                                    }
+                                    $query .= ')';
+                                    $rs = $statement->executeQuery($query);
+                                }
+                            }
+                        }
+                        $dataset->next();
+                    }
+                    break;
             }
         } catch (Exception $oError) {
             throw ($oError);
@@ -615,12 +665,14 @@ class ReportTables
                             try {
                                 $rs = $stmt->executeQuery($sQuery);
                             } catch (Exception $e) {
-                                $message = 'Sql Execution';
-                                $context = [
-                                    'sql' => $sQuery, 
-                                    'error' => $e->getMessage()
-                                ];
-                                Log::channel(':sqlExecution')->error($message, Bootstrap::context($context));
+                                Bootstrap::registerMonolog(
+                                    'sqlExecution',
+                                    400,
+                                    'Sql Execution',
+                                    ['sql' => $sQuery, 'error' => $e->getMessage()],
+                                    config("system.workspace"),
+                                    'processmaker.log'
+                                );
                             }
                         }
                     } else {
@@ -665,12 +717,14 @@ class ReportTables
                         try {
                             $rs = $stmt->executeQuery($sQuery);
                         } catch (Exception $e) {
-                            $message = 'Sql Execution';
-                            $context = [
-                                'sql' => $sQuery,
-                                'error' => $e->getMessage()
-                            ];
-                            Log::channel(':sqlExecution')->error($message, Bootstrap::context($context));
+                            Bootstrap::registerMonolog(
+                                'sqlExecution',
+                                400,
+                                'Sql Execution',
+                                ['sql' => $sQuery, 'error' => $e->getMessage()],
+                                config("system.workspace"),
+                                'processmaker.log'
+                            );
                         }
                     }
                 } else {

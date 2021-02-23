@@ -246,7 +246,7 @@
   }
 
   .select2-container {
-    width: 100% !important;
+    width: 98% !important;
   }
 }
 @media all and (max-width: 550px) and (min-width: 300px) {
@@ -318,7 +318,7 @@
   }
 
   .select2-container {
-    width: 100% !important;
+    width: 95% !important;
   }
 }
 @media all and (max-width: 300px) {
@@ -390,7 +390,7 @@
   }
 
   .select2-container {
-    width: 100% !important;
+    width: 93% !important;
   }
 }
 @media print {
@@ -707,22 +707,10 @@
     text-align: left;
     padding: 0px 4px 0px 0px;
     list-style-type: none;
-    white-space: pre-line;
   }
 
   .content-print li {
     list-style-type: none;
-  }
-
-  .content-print {
-    white-space: pre-wrap !important;
-  }
-
-  @-moz-document url-prefix() {
-    .content-print {
-      position: absolute;
-      overflow: visible !important;
-    }
   }
 }
 @page {
@@ -1508,10 +1496,6 @@ textarea {
 
 .pmdynaform-edit-datetime .pmdynaform-control-datetime {
   background: #ffffff;
-}
-
-.bootstrap-datetimepicker-widget table td span.disabled, .bootstrap-datetimepicker-widget table td span.disabled:hover {
-  overflow-y: hidden;
 }
 
 .pmdynaform-grid-thead-static {

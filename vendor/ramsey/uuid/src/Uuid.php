@@ -350,8 +350,8 @@ class Uuid implements UuidInterface
             throw new UnsupportedOperationException('Not a time-based UUID');
         }
 
-        $unixTimeNanoseconds = $this->getTimestamp() - 0x01b21dd213814000;
-        $unixTime = ($unixTimeNanoseconds - $unixTimeNanoseconds % 1e7) / 1e7;
+        $unixTime = ($this->getTimestamp() - 0x01b21dd213814000) / 1e7;
+        $unixTime = number_format($unixTime, 0, '', '');
 
         return new DateTime("@{$unixTime}");
     }
@@ -676,7 +676,7 @@ class Uuid implements UuidInterface
      */
     public static function isValid($uuid)
     {
-        $uuid = str_replace(['urn:', 'uuid:', 'URN:', 'UUID:', '{', '}'], '', $uuid);
+        $uuid = str_replace(['urn:', 'uuid:', '{', '}'], '', $uuid);
 
         if ($uuid == self::NIL) {
             return true;

@@ -597,10 +597,10 @@ function getBrowserTimeZoneOffset()
  * @returns {undefined}
  */
 function setExtStateManagerSetProvider(cache, additionalPrefix) {
-    var workspace = 'ws-undefined',
-        pathname = location.pathname.split('/'),
-        localStorageProvider = new Ext.state.LocalStorageProvider(),
-        i;
+    var workspace = 'ws-undefined';
+    var pathname = location.pathname.split('/');
+    var cookieProvider = new Ext.state.CookieProvider();
+    var i;
     if (additionalPrefix === undefined) {
         additionalPrefix = '';
     }
@@ -608,12 +608,22 @@ function setExtStateManagerSetProvider(cache, additionalPrefix) {
         workspace = pathname[1].replace('sys', '');
     }
     workspace = workspace + additionalPrefix;
-    localStorageProvider.on('statechange', function (provider, key, value) {
+    cookieProvider.on('statechange', function (provider, key, value) {
         if (value !== null && JSON.stringify(Ext.state.Manager.get(workspace + window.userUid + cache)) !== JSON.stringify(value)) {
             Ext.state.Manager.set(workspace + window.userUid + cache, value);
         }
     });
-    Ext.state.Manager.setProvider(localStorageProvider);
+    Ext.state.Manager.setProvider(cookieProvider);
+    Ext.state.Manager.clear(cache);
+    try {
+        if (window.extJsViewState !== undefined) {
+            for (i in extJsViewState) {
+                Ext.state.Manager.clear(i);
+            }
+            Ext.state.Manager.set(cache, Ext.state.Manager.getProvider().decodeValue(extJsViewState[workspace + window.userUid + cache]));
+        }
+    } catch (e) {
+    }
 }
 
 /**

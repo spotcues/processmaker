@@ -217,7 +217,7 @@ class BinaryFileResponse extends Response
             }
             if ('x-accel-redirect' === strtolower($type)) {
                 // Do X-Accel-Mapping substitutions.
-                // @link https://www.nginx.com/resources/wiki/start/topics/examples/x-accel/#x-accel-redirect
+                // @link http://wiki.nginx.org/X-accel#X-Accel-Redirect
                 $parts = HeaderUtils::split($request->headers->get('X-Accel-Mapping', ''), ',=');
                 foreach ($parts as $part) {
                     list($pathPrefix, $location) = $part;

@@ -72,12 +72,7 @@
         this.data = {label: "data".translate(), value: [], type: "hidden"};
         this.dataType = {label: "variable data type".translate(), value: "", type: "label"};
         this.value = {label: "value".translate(), value: "", type: "text"};
-        this.defaultValue = {
-            label: "default value".translate(),
-            value: "",
-            type: "text",
-            helpButton: "Allows setting a default value manually<br>or variables permitted using prefixes @@, @=, @#".translate()
-        };
+        this.defaultValue = {label: "default value".translate(), value: "", type: "text"};
         this.textTransform = {
             label: "text transform to".translate(), value: "none", type: "select", items: [
                 {value: "none", label: "none".translate()},
@@ -194,7 +189,6 @@
         };
         this.dbConnection = {label: "", value: "workflow", type: "hidden"};
         this.sql = {label: "sql".translate(), value: "", type: "labelbutton", labelButton: "..."};
-        this.memoryCache = {label: "Memory cache".translate(), value: false, type: "checkbox"};
         this.dataVariable = {
             label: "data variable".translate(),
             value: "",
@@ -238,7 +232,7 @@
             label: "min date".translate(),
             value: "",
             type: "datepicker",
-            helpButton: "Allows date selection after this date<br>(in YYYY-MM-DD HH:MM:SS format)<br>Variables permitted @@, @=<br>(must use the same date format for dependencies)".translate(),
+            helpButton: "Allows date selection after this date<br>(in YYYY-MM-DD HH:MM:SS format)".translate(),
             clearButton: "clear".translate(),
             regExp: /^[1-9][0-9][0-9][0-9]-(0[1-9]|1[0-2])-(0[1-9]|1[0-9]|2[0-9]|3[0-1])$|^(@@|@#|@%|@=|@\?|@\$)[a-zA-Z]+[0-9a-zA-Z_]*$|^$|^[1-9][0-9][0-9][0-9]-(0[1-9]|1[0-2])-(0[1-9]|1[0-9]|2[0-9]|3[0-1])\s(0[0-9]|1[0-9]|2[0-3]):(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9]):(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])$|^[1-9][0-9][0-9][0-9]-(0[1-9]|1[0-2])-(0[1-9]|1[0-9]|2[0-9]|3[0-1])\s(0[0-9]|1[0-9]|2[0-3])$|^[1-9][0-9][0-9][0-9]-(0[1-9]|1[0-2])-(0[1-9]|1[0-9]|2[0-9]|3[0-1])\s(0[0-9]|1[0-9]|2[0-3]):(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])$/
         };
@@ -246,7 +240,7 @@
             label: "max date".translate(),
             value: "",
             type: "datepicker",
-            helpButton: "Allows date selection before this date<br>(in YYYY-MM-DD HH:MM:SS format)<br>Variables permitted @@, @=<br>(must use the same date format for dependencies)".translate(),
+            helpButton: "Allows date selection before this date<br>(in YYYY-MM-DD HH:MM:SS format)".translate(),
             clearButton: "clear".translate(),
             regExp: /^[1-9][0-9][0-9][0-9]-(0[1-9]|1[0-2])-(0[1-9]|1[0-9]|2[0-9]|3[0-1])$|^(@@|@#|@%|@=|@\?|@\$)[a-zA-Z]+[0-9a-zA-Z_]*$|^$|^[1-9][0-9][0-9][0-9]-(0[1-9]|1[0-2])-(0[1-9]|1[0-9]|2[0-9]|3[0-1])\s(0[0-9]|1[0-9]|2[0-3]):(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9]):(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])$|^[1-9][0-9][0-9][0-9]-(0[1-9]|1[0-2])-(0[1-9]|1[0-9]|2[0-9]|3[0-1])\s(0[0-9]|1[0-9]|2[0-3])$|^[1-9][0-9][0-9][0-9]-(0[1-9]|1[0-2])-(0[1-9]|1[0-9]|2[0-9]|3[0-1])\s(0[0-9]|1[0-9]|2[0-3]):(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])$/
         };
@@ -297,7 +291,7 @@
             label: "default date".translate(),
             value: "",
             type: "datepicker",
-            helpButton: "Set the date picker to this date by default<br>(in YYYY-MM-DD HH:MM:SS format)<br>Variables permitted @@, @=<br>(must use the same date format for dependencies)".translate(),
+            helpButton: "Set the date picker to this date by default<br>(in YYYY-MM-DD HH:MM:SS format)".translate(),
             clearButton: "clear".translate(),
             regExp: /^[1-9][0-9][0-9][0-9]-(0[1-9]|1[0-2])-(0[1-9]|1[0-9]|2[0-9]|3[0-1])$|^(@@|@#|@%|@=|@\?|@\$)[a-zA-Z]+[0-9a-zA-Z_]*$|^$|^[1-9][0-9][0-9][0-9]-(0[1-9]|1[0-2])-(0[1-9]|1[0-9]|2[0-9]|3[0-1])\s(0[0-9]|1[0-9]|2[0-3]):(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9]):(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])$|^[1-9][0-9][0-9][0-9]-(0[1-9]|1[0-2])-(0[1-9]|1[0-9]|2[0-9]|3[0-1])\s(0[0-9]|1[0-9]|2[0-3])$|^[1-9][0-9][0-9][0-9]-(0[1-9]|1[0-2])-(0[1-9]|1[0-9]|2[0-9]|3[0-1])\s(0[0-9]|1[0-9]|2[0-3]):(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9])$/
         };
@@ -378,7 +372,6 @@
             accepts: "string or jQuery object".translate()
         };
         this.keepOpen = {label: "keep open".translate(), value: false, type: "hidden"};
-        this.fixedLocation = {label: "Fixed location".translate(), value: false, type: "checkbox"};
 
         //custom properties
         if (this.owner instanceof FormDesigner.main.GridItem) {
@@ -471,7 +464,7 @@
             this.pf = ["type", "variable", "var_uid", "dataType", "protectedValue", "id", "name", "label", "tabIndex",
                 "defaultValue", "placeholder", "hint", "ariaLabel", "required", "requiredFieldErrorMessage", "textTransform",
                 "validate", "validateMessage", "maxLength", "formula", "mode", "operation", "dbConnection",
-                "dbConnectionLabel", "sql", "memoryCache"];
+                "dbConnectionLabel", "sql"];
             if (this.owner instanceof FormDesigner.main.FormItem) {
                 this.operation.type = "hidden";
             }
@@ -484,7 +477,7 @@
         if (type === FormDesigner.main.TypesControl.textarea) {
             this.pf = ["type", "variable", "var_uid", "dataType", "protectedValue", "id", "name", "label", "tabIndex",
                 "defaultValue", "placeholder", "hint", "ariaLabel", "required", "requiredFieldErrorMessage", "validate",
-                "validateMessage", "mode", "dbConnection", "dbConnectionLabel", "sql", "memoryCache", "rows"];
+                "validateMessage", "mode", "dbConnection", "dbConnectionLabel", "sql", "rows"];
             if (this.owner instanceof FormDesigner.main.GridItem) {
                 this.pf.push("columnWidth");
                 this.tabIndex.type = "hidden";
@@ -494,7 +487,7 @@
         if (type === FormDesigner.main.TypesControl.dropdown) {
             this.pf = ["type", "variable", "var_uid", "dataType", "protectedValue", "id", "name", "label", "tabIndex",
                 "defaultValue", "placeholder", "hint", "ariaLabel", "required", "requiredFieldErrorMessage", "mode", "datasource",
-                "dbConnection", "dbConnectionLabel", "sql", "memoryCache", "dataVariable", "options"];
+                "dbConnection", "dbConnectionLabel", "sql", "dataVariable", "options"];
             if (this.owner instanceof FormDesigner.main.GridItem) {
                 this.pf.push("columnWidth");
                 this.tabIndex.type = "hidden";
@@ -505,7 +498,6 @@
             this.pf = ["type", "variable", "var_uid", "dataType", "protectedValue", "id", "name", "label", "tabIndex",
                 "defaultValue", "hint", "ariaLabel", "ariaLabelVisible", "required", "requiredFieldErrorMessage", "mode", "options"];
             this.defaultValue.type = "checkbox";
-            this.defaultValue.helpButton = "";
             if (this.owner instanceof FormDesigner.main.FormItem) {
                 this.options.type = "hidden";
             }
@@ -523,12 +515,12 @@
         if (type === FormDesigner.main.TypesControl.checkgroup) {
             this.pf = ["type", "variable", "var_uid", "dataType", "protectedValue", "id", "name", "label", "tabIndex",
                 "defaultValue", "hint", "ariaLabel", "ariaLabelVisible", "required", "requiredFieldErrorMessage", "mode", "datasource", "dbConnection",
-                "dbConnectionLabel", "sql", "memoryCache", "dataVariable", "options"];
+                "dbConnectionLabel", "sql", "dataVariable", "options"];
         }
         if (type === FormDesigner.main.TypesControl.radio) {
             this.pf = ["type", "variable", "var_uid", "dataType", "protectedValue", "id", "name", "label", "tabIndex",
                 "defaultValue", "hint", "ariaLabel", "ariaLabel", "ariaLabelVisible", "required", "requiredFieldErrorMessage", "mode", "datasource", "dbConnection",
-                "dbConnectionLabel", "sql", "memoryCache", "dataVariable", "options"];
+                "dbConnectionLabel", "sql", "dataVariable", "options"];
         }
         if (type === FormDesigner.main.TypesControl.datetime) {
             this.pf = ["type", "variable", "var_uid", "dataType", "protectedValue", "id", "name", "label", "tabIndex",
@@ -549,7 +541,7 @@
         if (type === FormDesigner.main.TypesControl.suggest) {
             this.pf = ["type", "variable", "var_uid", "dataType", "protectedValue", "id", "name", "label", "tabIndex",
                 "defaultValue", "placeholder", "hint", "ariaLabel", "required", "requiredFieldErrorMessage", "mode", "datasource",
-                "dbConnection", "dbConnectionLabel", "sql", "memoryCache", "dataVariable", "options", "delay", "resultsLimit",
+                "dbConnection", "dbConnectionLabel", "sql", "dataVariable", "options", "delay", "resultsLimit",
                 "forceSelection"];
             if (this.owner instanceof FormDesigner.main.GridItem) {
                 this.pf.push("columnWidth");
@@ -574,7 +566,7 @@
             this.pf = ["type"];
         }
         if (type === FormDesigner.main.TypesControl.geomap) {
-            this.pf = ["type", "variable", "var_uid", "protectedValue", "id", "name", "label", "hint", "fixedLocation"];
+            this.pf = ["type", "variable", "var_uid", "protectedValue", "id", "name", "label", "hint"];
             this.label.type = "text";
         }
         if (type === FormDesigner.main.TypesControl.qrcode) {

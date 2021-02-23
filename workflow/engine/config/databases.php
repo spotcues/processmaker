@@ -1,4 +1,27 @@
 <?php
+/**
+ * databases.php
+ *
+ * ProcessMaker Open Source Edition
+ * Copyright (C) 2004 - 2008 Colosa Inc.23
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * For more information, contact Colosa Inc, 2566 Le Jeune Rd.,
+ * Coral Gables, FL, 33134, USA, or email info@colosa.com.
+ *
+ */
 
 if (defined('PATH_DB') && !empty(config("system.workspace"))) {
 
@@ -6,32 +29,7 @@ if (defined('PATH_DB') && !empty(config("system.workspace"))) {
         throw new Exception("Could not find db.php in current workspace " . config("system.workspace"));
     }
 
-    //These constants must not exist, they will be created by "db.php".
-    $constants = [
-        'DB_ADAPTER',
-        'DB_HOST',
-        'DB_NAME',
-        'DB_USER',
-        'DB_PASS',
-        'DB_RBAC_HOST',
-        'DB_RBAC_NAME',
-        'DB_RBAC_USER',
-        'DB_RBAC_PASS' ,
-        'DB_REPORT_HOST',
-        'DB_REPORT_NAME',
-        'DB_REPORT_USER',
-        'DB_REPORT_PASS',
-    ];
-    $load = true;
-    foreach ($constants as $value) {
-        if (defined($value)) {
-            $load = false;
-            break;
-        }
-    }
-    if ($load === true) {
-        require_once(PATH_DB . config("system.workspace") . '/db.php');
-    }
+    require_once(PATH_DB . config("system.workspace") . '/db.php');
     //to do: enable for other databases
     $dbType = DB_ADAPTER;
     $dsn = DB_ADAPTER . '://' . DB_USER . ':' . urlencode(DB_PASS) . '@' . DB_HOST . '/' . DB_NAME;
@@ -44,12 +42,15 @@ if (defined('PATH_DB') && !empty(config("system.workspace"))) {
 
     switch (DB_ADAPTER) {
         case 'mysql':
-            $dsn .= '?encoding=utf8';
-            $dsnRbac .= '?encoding=utf8';
+            $dsn       .= '?encoding=utf8';
+            $dsnRbac   .= '?encoding=utf8';
             $dsnReport .= '?encoding=utf8';
             break;
         case 'mssql':
         case 'sqlsrv':
+            //$dsn       .= '?sendStringAsUnicode=false';
+            //$dsnRbac   .= '?sendStringAsUnicode=false';
+            //$dsnReport .= '?sendStringAsUnicode=false';
             break;
         default:
             break;
@@ -63,8 +64,7 @@ if (defined('PATH_DB') && !empty(config("system.workspace"))) {
 
     $pro ['datasources']['rp']['connection'] = $dsnReport;
     $pro ['datasources']['rp']['adapter'] = DB_ADAPTER;
-
-    // "workflow" connection
+    
     $dbHost = explode(':', DB_HOST);
     config(['database.connections.workflow.host' => $dbHost[0]]);
     config(['database.connections.workflow.database' => DB_NAME]);
@@ -73,31 +73,14 @@ if (defined('PATH_DB') && !empty(config("system.workspace"))) {
     if (count($dbHost) > 1) {
         config(['database.connections.workflow.port' => $dbHost[1]]);
     }
-
-    // "rbac" connection
-    $dbRbacHost = explode(':', DB_RBAC_HOST);
-    config(['database.connections.rbac.driver' => DB_ADAPTER]);
-    config(['database.connections.rbac.host' => $dbRbacHost[0]]);
-    config(['database.connections.rbac.database' => DB_RBAC_NAME]);
-    config(['database.connections.rbac.username' => DB_RBAC_USER]);
-    config(['database.connections.rbac.password' => DB_RBAC_PASS]);
-    if (count($dbRbacHost) > 1) {
-        config(['database.connections.rbac.port' => $dbRbacHost[1]]);
-    }
-
-    // "rp" connection
-    $dbReportHost = explode(':', DB_REPORT_HOST);
-    config(['database.connections.rp.driver' => DB_ADAPTER]);
-    config(['database.connections.rp.host' => $dbReportHost[0]]);
-    config(['database.connections.rp.database' => DB_REPORT_NAME]);
-    config(['database.connections.rp.username' => DB_REPORT_USER]);
-    config(['database.connections.rp.password' => DB_REPORT_PASS]);
-    if (count($dbReportHost) > 1) {
-        config(['database.connections.rp.port' => $dbReportHost[1]]);
-    }
 }
 
 $pro ['datasources']['dbarray']['connection'] = 'dbarray://user:pass@localhost/pm_os';
-$pro ['datasources']['dbarray']['adapter'] = 'dbarray';
+$pro ['datasources']['dbarray']['adapter']    = 'dbarray';
+
+if (defined('SYS_SYS') && SYS_SYS != 'workflow') {
+    //$pro ['datasources']['workflow_ro']['connection'] = 'mysql://'. DB_USER . ':' . urlencode(DB_PASS) . '@' . 'ec2-35-160-235-146.us-west-2.compute.amazonaws.com:3306/wf_'.SYS_SYS.'?encoding=utf8';
+    //$pro ['datasources']['workflow_ro']['adapter']    = 'mysql';
+}
 
 return $pro;

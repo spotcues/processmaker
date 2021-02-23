@@ -10,12 +10,10 @@ $factory->define(\ProcessMaker\Model\Dynaform::class, function(Faker $faker) {
     $date = $faker->dateTime();
     return [
         'DYN_UID' => G::generateUniqueID(),
+        'DYN_ID' => $faker->unique()->numberBetween(1, 10000),
         'DYN_TITLE' => $faker->sentence(2),
         'DYN_DESCRIPTION' => $faker->sentence(5),
-        'PRO_UID' => function() {
-            $process = factory(Process::class)->create();
-            return $process->PRO_UID;
-        },
+        'PRO_UID' => G::generateUniqueID(),
         'DYN_TYPE' => 'xmlform',
         'DYN_FILENAME' => '',
         'DYN_CONTENT' => '',
@@ -29,6 +27,7 @@ $factory->state(\ProcessMaker\Model\Dynaform::class, 'foreign_keys', function (F
     $date = $faker->dateTime();
     return [
         'DYN_UID' => G::generateUniqueID(),
+        'DYN_ID' => $faker->unique()->numberBetween(1, 10000),
         'DYN_TITLE' => $faker->sentence(2),
         'DYN_DESCRIPTION' => $faker->sentence(5),
         'PRO_UID' => function() {
@@ -50,12 +49,10 @@ $factory->state(\ProcessMaker\Model\Dynaform::class, 'translations', function (F
     $date = $faker->dateTime();
     return [
         'DYN_UID' => G::generateUniqueID(),
+        'DYN_ID' => $faker->unique()->numberBetween(1, 10000),
         'DYN_TITLE' => $faker->sentence(2),
         'DYN_DESCRIPTION' => $faker->sentence(5),
-        'PRO_UID' => function() {
-            $process = factory(Process::class)->create();
-            return $process->PRO_UID;
-        },
+        'PRO_UID' => G::generateUniqueID(),
         'DYN_TYPE' => 'xmlform',
         'DYN_FILENAME' => '',
         'DYN_CONTENT' => '',

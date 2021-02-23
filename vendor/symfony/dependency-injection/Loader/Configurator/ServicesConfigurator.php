@@ -83,14 +83,13 @@ class ServicesConfigurator extends AbstractConfigurator
 
             $id = sprintf('.%d_%s', ++$this->anonymousCount, preg_replace('/^.*\\\\/', '', $class).'~'.$this->anonymousHash);
             $definition->setPublic(false);
-        } elseif (!$defaults->isPublic() || !$defaults->isPrivate()) {
-            $definition->setPublic($defaults->isPublic() && !$defaults->isPrivate());
+        } else {
+            $definition->setPublic($defaults->isPublic());
         }
 
         $definition->setAutowired($defaults->isAutowired());
         $definition->setAutoconfigured($defaults->isAutoconfigured());
-        // deep clone, to avoid multiple process of the same instance in the passes
-        $definition->setBindings(unserialize(serialize($defaults->getBindings())));
+        $definition->setBindings($defaults->getBindings());
         $definition->setChanges([]);
 
         $configurator = new ServiceConfigurator($this->container, $this->instanceof, $allowParent, $this, $definition, $id, $defaults->getTags(), $this->path);
@@ -104,10 +103,7 @@ class ServicesConfigurator extends AbstractConfigurator
     final public function alias(string $id, string $referencedId): AliasConfigurator
     {
         $ref = static::processValue($referencedId, true);
-        $alias = new Alias((string) $ref);
-        if (!$this->defaults->isPublic() || !$this->defaults->isPrivate()) {
-            $alias->setPublic($this->defaults->isPublic());
-        }
+        $alias = new Alias((string) $ref, $this->defaults->isPublic());
         $this->container->setAlias($id, $alias);
 
         return new AliasConfigurator($this, $alias);

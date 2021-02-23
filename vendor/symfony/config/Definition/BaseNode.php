@@ -26,7 +26,7 @@ abstract class BaseNode implements NodeInterface
 {
     const DEFAULT_PATH_SEPARATOR = '.';
 
-    private static $placeholderUniquePrefixes = [];
+    private static $placeholderUniquePrefix;
     private static $placeholders = [];
 
     protected $name;
@@ -48,7 +48,7 @@ abstract class BaseNode implements NodeInterface
     public function __construct(?string $name, NodeInterface $parent = null, string $pathSeparator = self::DEFAULT_PATH_SEPARATOR)
     {
         if (false !== strpos($name = (string) $name, $pathSeparator)) {
-            throw new \InvalidArgumentException('The name must not contain ".'.$pathSeparator.'".');
+            throw new \InvalidArgumentException('The name must not contain "'.$pathSeparator.'".');
         }
 
         $this->name = $name;
@@ -74,7 +74,7 @@ abstract class BaseNode implements NodeInterface
     }
 
     /**
-     * Adds a common prefix for dynamic placeholder values.
+     * Sets a common prefix for dynamic placeholder values.
      *
      * Matching configuration values will be skipped from being processed and are returned as is, thus preserving the
      * placeholder. An exact match provided by {@see setPlaceholder()} might take precedence.
@@ -83,7 +83,7 @@ abstract class BaseNode implements NodeInterface
      */
     public static function setPlaceholderUniquePrefix(string $prefix): void
     {
-        self::$placeholderUniquePrefixes[] = $prefix;
+        self::$placeholderUniquePrefix = $prefix;
     }
 
     /**
@@ -93,7 +93,7 @@ abstract class BaseNode implements NodeInterface
      */
     public static function resetPlaceholders(): void
     {
-        self::$placeholderUniquePrefixes = [];
+        self::$placeholderUniquePrefix = null;
         self::$placeholders = [];
     }
 
@@ -438,7 +438,7 @@ abstract class BaseNode implements NodeInterface
 
                 throw $e;
             } catch (\Exception $e) {
-                throw new InvalidConfigurationException(sprintf('Invalid configuration for path "%s": ', $this->getPath()).$e->getMessage(), $e->getCode(), $e);
+                throw new InvalidConfigurationException(sprintf('Invalid configuration for path "%s": %s', $this->getPath(), $e->getMessage()), $e->getCode(), $e);
             }
         }
 
@@ -513,10 +513,8 @@ abstract class BaseNode implements NodeInterface
                 return self::$placeholders[$value];
             }
 
-            foreach (self::$placeholderUniquePrefixes as $placeholderUniquePrefix) {
-                if (0 === strpos($value, $placeholderUniquePrefix)) {
-                    return [];
-                }
+            if (self::$placeholderUniquePrefix && 0 === strpos($value, self::$placeholderUniquePrefix)) {
+                return [];
             }
         }
 
@@ -526,7 +524,7 @@ abstract class BaseNode implements NodeInterface
     private function doValidateType($value): void
     {
         if (null !== $this->handlingPlaceholder && !$this->allowPlaceholders()) {
-            $e = new InvalidTypeException(sprintf('A dynamic value is not compatible with a "%s" node type at path "%s".', static::class, $this->getPath()));
+            $e = new InvalidTypeException(sprintf('A dynamic value is not compatible with a "%s" node type at path "%s".', \get_class($this), $this->getPath()));
             $e->setPath($this->getPath());
 
             throw $e;
