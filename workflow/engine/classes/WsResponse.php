@@ -43,11 +43,10 @@ class WsResponse
      * 36 ID_CASE_COULD_NOT_REASSIGNED
      *
      * 100 Exception
-     */
+    */
     public $status_code = 0;
     public $message = '';
     public $timestamp = '';
-    private $extraParams = [];
 
     /**
      * Function __construct
@@ -57,31 +56,11 @@ class WsResponse
      * @param string $message
      * @return void
      */
-    public function __construct($status, $message)
+    function __construct ($status, $message)
     {
         $this->status_code = $status;
         $this->message = $message;
-        $this->timestamp = date('Y-m-d H:i:s');
-    }
-
-    /**
-     * Get extra parameters for message response.
-     * @return mixed
-     */
-    public function getExtraParam(string $name)
-    {
-        return isset($this->extraParams[$name]) ? $this->extraParams[$name] : '';
-    }
-
-    /**
-     * Add extra parameters for message response.
-     * @param string $name
-     * @param mixed $value
-     * @return void
-     */
-    public function addExtraParam(string $name, $value): void
-    {
-        $this->extraParams[$name] = $value;
+        $this->timestamp = date( 'Y-m-d H:i:s' );
     }
 
     /**
@@ -90,12 +69,13 @@ class WsResponse
      * @param string $operation
      * @return string
      */
-    public function getPayloadString($operation)
+    function getPayloadString ($operation)
     {
         $res = "<$operation>\n";
         $res .= "<status_code>" . $this->status_code . "</status_code>";
         $res .= "<message>" . $this->message . "</message>";
         $res .= "<timestamp>" . $this->timestamp . "</timestamp>";
+        //    $res .= "<array>" . $this->timestamp . "</array>";
         $res .= "<$operation>";
         return $res;
     }
@@ -105,8 +85,9 @@ class WsResponse
      *
      * @return array
      */
-    public function getPayloadArray()
+    function getPayloadArray ()
     {
-        return ["status_code" => $this->status_code, 'message' => $this->message, 'timestamp' => $this->timestamp];
+        return array ("status_code" => $this->status_code,'message' => $this->message,'timestamp' => $this->timestamp
+        );
     }
 }

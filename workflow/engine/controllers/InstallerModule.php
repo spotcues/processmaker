@@ -12,7 +12,6 @@ include PATH_LANGUAGECONT . "translation." . SYS_LANG;
 
 class InstallerModule extends Controller
 {
-    const MYSQL_VERSION_MAXIMUM_SUPPORTED = "5.7";
     const PHP_VERSION_MINIMUM_SUPPORTED = "7.1";
     const PHP_VERSION_NOT_SUPPORTED = "7.4";
     public $path_config;
@@ -1173,6 +1172,7 @@ class InstallerModule extends Controller
     {
         $filter = new InputFilter();
         ini_set('max_execution_time', '0');
+        ini_set('memory_limit', '256M');
 
         $serv = 'http://';
         if (isset($_SERVER['HTTPS']) && !empty(trim($_SERVER['HTTPS']))) {

@@ -54,8 +54,6 @@ use Symfony\Component\Config\Definition\ConfigurationInterface;
  */
 class Configuration implements ConfigurationInterface
 {
-    const DEFAULT_TTL = 2592000; //30 days
-
     /**
      * @var array<Extension>
      */
@@ -85,8 +83,7 @@ class Configuration implements ConfigurationInterface
             ->addDefaultsIfNotSet()
             ->children()
             ->enumNode('driver')->defaultValue($defaultCacheDriver)->values(array('file', 'memory'))->end()
-            ->scalarNode('location')->info('This value is only used for the file cache.')->defaultValue($home . '/.pdepend')->end()
-            ->integerNode('ttl')->info('This value is only used for the file cache. Value in seconds.')->defaultValue(self::DEFAULT_TTL)->end()
+            ->scalarNode('location')->defaultValue($home . '/.pdepend')->end()
             ->end()
             ->end()
             ->arrayNode('image_convert')

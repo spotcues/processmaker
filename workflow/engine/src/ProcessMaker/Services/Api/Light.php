@@ -407,7 +407,9 @@ class Light extends Api
         $date_from = '',
         $date_to = '',
         $newerThan = '',
-        $oldestthan = ''
+        $oldestthan = '',
+        $status = '',
+        $isDraftEnabled = false
     ) {
         try {
             if (preg_match($this->regexNull, $newerThan)) {
@@ -432,7 +434,8 @@ class Light extends Api
             $dataList['dateTo'] = $date_to;
             $dataList['newerThan'] = $newerThan;
             $dataList['oldestthan'] = $oldestthan;
-
+            $dataList['status'] = !empty($status) ? $status : $_REQUEST['status'];
+            $dataList['isDraftEnabled'] = !empty($isDraftEnabled) ? $isDraftEnabled : $_REQUEST['isDraftEnabled'];
             Validator::throwExceptionIfDataNotMetIso8601Format($dataList, $this->arrayFieldIso8601);
             $dataList = DateTime::convertDataToUtc($dataList, $this->arrayFieldIso8601);
 
@@ -669,11 +672,11 @@ class Light extends Api
     {
         $response = array();
         foreach ($data as $field => $d) {
-            $field = preg_quote($field);
+            $field = preg_quote($field, "/");
             if (is_array($d)) {
                 $newData = array();
                 foreach ($d as $field => $value) {
-                    $field = preg_quote($field);
+                    $field = preg_quote($field, "/");
                     if (
                         preg_match(
                             '/\|(' . $field . ')\|/i',
@@ -800,6 +803,8 @@ class Light extends Api
             'USR_NAME' => 'userFullName',
             'APP_TYPE' => 'flowStatus', // is null default Router in FE
             'DEL_DELEGATE_DATE' => 'dueDate',
+            'DEL_FINISH_DATE' => 'finishDate',
+            'TAS_UID' => 'taskId',
             //)
         );
 

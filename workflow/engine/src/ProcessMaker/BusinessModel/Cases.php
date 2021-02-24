@@ -14,7 +14,6 @@ use AppHistoryPeer;
 use Application;
 use ApplicationPeer;
 use Applications;
-use AppNotes;
 use AppNotesPeer;
 use AppSolr;
 use BasePeer;
@@ -31,10 +30,9 @@ use Exception;
 use G;
 use Groups;
 use GroupUserPeer;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use InputDocument;
 use InvalidIndexSearchTextException;
+use ListParticipatedLast;
 use PmDynaform;
 use PmTable;
 use ProcessMaker\BusinessModel\ProcessSupervisor as BmProcessSupervisor;
@@ -42,16 +40,12 @@ use ProcessMaker\BusinessModel\Task as BmTask;
 use ProcessMaker\BusinessModel\User as BmUser;
 use ProcessMaker\Core\System;
 use ProcessMaker\Exception\UploadException;
-use ProcessMaker\Exception\CaseNoteUploadFile;
 use ProcessMaker\Model\Application as ModelApplication;
-use ProcessMaker\Model\AppNotes as Notes;
 use ProcessMaker\Model\Delegation;
-use ProcessMaker\Model\Documents;
 use ProcessMaker\Plugins\PluginRegistry;
 use ProcessMaker\Services\OAuth2\Server;
 use ProcessMaker\Util\DateTime as UtilDateTime;
 use ProcessMaker\Validation\ExceptionRestApi;
-use ProcessMaker\Validation\ValidationUploadedFiles;
 use ProcessMaker\Validation\Validator as FileValidator;
 use ProcessPeer;
 use ProcessUser;
@@ -301,6 +295,7 @@ class Cases
         $process = isset($dataList["process"]) ? $dataList["process"] : "";
         $category = isset($dataList["category"]) ? $dataList["category"] : "";
         $status = isset($dataList["status"]) ? strtoupper($dataList["status"]) : "";
+        $isDraftEnabled = isset($dataList["isDraftEnabled"]) ? $dataList["isDraftEnabled"] : false;
         $search = isset($dataList["search"]) ? $dataList["search"] : "";
         $action = isset($dataList["action"]) ? $dataList["action"] : "todo";
         $paged = isset($dataList["paged"]) ? $dataList["paged"] : true;
@@ -330,7 +325,8 @@ class Cases
             true,
             $paged,
             $newerThan,
-            $oldestThan
+            $oldestThan,
+            $isDraftEnabled
         );
         if (!empty($response['data'])) {
             foreach ($response['data'] as &$value) {
@@ -1132,26 +1128,26 @@ class Cases
         Validator::isString($appUid, '$app_uid');
         Validator::appUid($appUid, '$app_uid');
 
-        // Review the status and owner
+        // Review the permission for delete case
+        global $RBAC;
+        if ($RBAC->userCanAccess('PM_DELETECASE') != 1) {
+            throw new Exception(G::LoadTranslation('ID_NOT_ABLE_DELETE_CASES'));
+        }
+        // Review the status and user
         $caseInfo = ModelApplication::getCase($appUid);
-        if (!empty($caseInfo)) {
-            // Check if the requester is the owner
-            if ($caseInfo['APP_INIT_USER'] !== $usrUid) {
-                global $RBAC;
-                // If no we need to review if have the permission
-                if ($RBAC->userCanAccess('PM_DELETECASE') != 1) {
-                    throw new Exception(G::LoadTranslation('ID_NOT_ABLE_DELETE_CASES'));
-                }
-            }
-
+        if (!empty($caseInfo)){
             // Review the status
             if ($caseInfo['APP_STATUS'] != 'DRAFT') {
                 throw new Exception(G::LoadTranslation("ID_DELETE_CASE_NO_STATUS"));
             }
-
-            $case = new ClassesCases();
-            $case->removeCase($appUid);
+            // Review the user requester
+            if ($caseInfo['APP_INIT_USER'] != $usrUid) {
+                throw new Exception(G::LoadTranslation("ID_DELETE_CASE_NO_OWNER"));
+            }
         }
+
+        $case = new ClassesCases();
+        $case->removeCase($appUid);
     }
 
     /**
@@ -3236,6 +3232,7 @@ class Cases
         $arrayApplicationData = $this->getApplicationRecordByPk($applicationUid, [], false);
         $arrayApplicationData['APP_DATA'] = $case->unserializeData($arrayApplicationData['APP_DATA']);
         $flagDelete = false;
+
         foreach ($arrayVariableDocumentToDelete as $key => $value) {
             if (is_array($value) && !empty($value)) {
                 $type = '';
@@ -3260,15 +3257,13 @@ class Cases
                         $arrayDocumentDelete = $value;
 
                         foreach ($arrayDocumentDelete as $value2) {
-                            if ($value2['appDocUid'] !== "") {
-                                $appDocument->remove($value2['appDocUid'], (int)($value2['version']));
+                            $appDocument->remove($value2['appDocUid'], (int)($value2['version']));
 
-                                $arrayApplicationData['APP_DATA'] = $this->applicationDataDeleteMultipleFile(
-                                    $arrayApplicationData['APP_DATA'], $variable, null, $type, $value2
-                                );
+                            $arrayApplicationData['APP_DATA'] = $this->applicationDataDeleteMultipleFile(
+                                $arrayApplicationData['APP_DATA'], $variable, null, $type, $value2
+                            );
 
-                                $flagDelete = true;
-                            }
+                            $flagDelete = true;
                         }
                         break;
                     case 'GRID':
@@ -3280,15 +3275,13 @@ class Cases
                                 $arrayDocumentDelete = $value3;
 
                                 foreach ($arrayDocumentDelete as $value4) {
-                                    if ($value4['appDocUid'] !== "") {
-                                        $appDocument->remove($value4['appDocUid'], (int)($value4['version']));
+                                    $appDocument->remove($value4['appDocUid'], (int)($value4['version']));
 
-                                        $arrayApplicationData['APP_DATA'] = $this->applicationDataDeleteMultipleFile(
-                                            $arrayApplicationData['APP_DATA'], $grid, $variable, $type, $value4
-                                        );
+                                    $arrayApplicationData['APP_DATA'] = $this->applicationDataDeleteMultipleFile(
+                                        $arrayApplicationData['APP_DATA'], $grid, $variable, $type, $value4
+                                    );
 
-                                        $flagDelete = true;
-                                    }
+                                    $flagDelete = true;
                                 }
                             }
                         }
@@ -3312,9 +3305,7 @@ class Cases
                         }
                         $arrayApplicationData['APP_DATA'][$key] = G::json_encode($files);
                     } catch (Exception $e) {
-                        $message = $e->getMessage();
-                        $context = $value;
-                        Log::channel(':DeleteFile')->error($message, Bootstrap::context($context));
+                        Bootstrap::registerMonolog('DeleteFile', 400, $e->getMessage(), $value, config("system.workspace"), 'processmaker.log');
                     }
                 }
                 $flagDelete = true;
@@ -3786,22 +3777,17 @@ class Cases
      * @param string $varName
      * @param mixed $inpDocUid
      * @param string $appDocUid
-     * @param int $delegationIndex
      *
      * @return array
      * @throws Exception
      */
-    public function uploadFiles($userUid, $appUid, $varName, $inpDocUid = -1, $appDocUid = null, $delegationIndex = null)
+    public function uploadFiles($userUid, $appUid, $varName, $inpDocUid = -1, $appDocUid = null)
     {
         $response = [];
         if (isset($_FILES["form"]["name"]) && count($_FILES["form"]["name"]) > 0) {
             // Get the delIndex related to the case
             $cases = new ClassesCases();
-            if (!empty($delegationIndex)) {
-                $delIndex = $delegationIndex;
-            } else {
-                $delIndex = $cases->getCurrentDelegation($appUid, $userUid);
-            }
+            $delIndex = $cases->getCurrentDelegation($appUid, $userUid);
             // Get information about the user
             $user = new ModelUsers();
             $userCreator = $user->loadDetailed($userUid)['USR_FULLNAME'];
@@ -3857,186 +3843,6 @@ class Cases
     }
 
     /**
-     * Add a case note
-     *
-     * @param string $appUid
-     * @param string $userUid
-     * @param string $note
-     * @param bool $sendMail
-     * @param array $files
-     *
-     * @return array
-     */
-    public function addNote($appUid, $userUid, $note, $sendMail = false, $files = [])
-    {
-        // Register the note
-        $attributes = [
-            "APP_UID" => $appUid,
-            "USR_UID" => $userUid,
-            "NOTE_DATE" => date("Y-m-d H:i:s"),
-            "NOTE_CONTENT" => $note,
-            "NOTE_TYPE" => "USER",
-            "NOTE_AVAILABILITY" => "PUBLIC",
-            "NOTE_RECIPIENTS" => ""
-        ];
-        $newNote = Notes::create($attributes);
-        // Get the FK
-        $noteId = $newNote->NOTE_ID;
-
-        $attachments = [];
-        // Register the files related to the note
-        if (!empty($files) || !empty($_FILES["filesToUpload"])) {
-            $filesResponse = $this->uploadFilesInCaseNotes($userUid, $appUid, $files, $noteId);
-            foreach ($filesResponse['attachments'] as $key => $value) {
-                $attachments[$key] = [];
-                $attachments[$key]['APP_DOC_FILENAME'] = $value['APP_DOC_FILENAME'];
-                $attachments[$key]['LINK'] = "../cases/casesShowCaseNotes?a=" . $value["APP_DOC_UID"] . "&v=" . $value["DOC_VERSION"];
-            }
-
-        }
-
-        // Send the email
-        if ($sendMail) {
-            // Get the recipients
-            $case = new ClassesCases();
-            $p = $case->getUsersParticipatedInCase($appUid, 'ACTIVE');
-            $noteRecipientsList = [];
-
-            foreach ($p["array"] as $key => $userParticipated) {
-                if ($key != '') {
-                    $noteRecipientsList[] = $key;
-                }
-            }
-
-            $noteRecipients = implode(",", $noteRecipientsList);
-            $note = stripslashes($note);
-
-            // Send the notification
-            $appNote = new AppNotes();
-            $appNote->sendNoteNotification($appUid, $userUid, $note, $noteRecipients, '', 0, $noteId);
-        }
-
-        // Prepare the response
-        $result = [];
-        $result['success'] = 'success';
-        $result['message'] = '';
-        $result['attachments'] = $attachments;
-        $result['attachment_errors'] = [];
-
-        return $result;
-    }
-
-    /**
-     * Upload file related to the case notes
-     *
-     * @param string $userUid
-     * @param string $appUid
-     * @param array $filesReferences
-     * @param int $noteId
-     *
-     * @return array
-     * @throws Exception
-     */
-    public function uploadFilesInCaseNotes($userUid, $appUid, $filesReferences = [], $noteId = 0)
-    {
-        $files = [];
-        if (!empty($_FILES["filesToUpload"])) {
-            $upload = true;
-            // This format is from ext-js multipart
-            $filesName = !empty($_FILES["filesToUpload"]["name"]) ? $_FILES["filesToUpload"]["name"] : [];
-            $filesTmpName = !empty($_FILES["filesToUpload"]["tmp_name"]) ? $_FILES["filesToUpload"]["tmp_name"] : [];
-            $filesError = !empty($_FILES["filesToUpload"]["error"]) ? $_FILES["filesToUpload"]["error"] : [];
-
-            foreach ($filesName as $index => $value) {
-                if (!empty($value)) {
-                    $files[] = [
-                        'name' => $filesName[$index],
-                        'tmp_name' => $filesTmpName[$index],
-                        'error' => $filesError[$index]
-                    ];
-                }
-            }
-        } elseif (!empty($filesReferences)) {
-            $upload = false;
-            // Array with path references
-            foreach ($filesReferences as $fileIndex => $fileName) {
-                $nameFile = !is_numeric($fileIndex) ? basename($fileIndex) : basename($fileName);
-                $files[] = [
-                    'name' => $nameFile,
-                    'tmp_name' => $fileName,
-                    'error' => UPLOAD_ERR_OK
-                ];
-            }
-        }
-
-        //rules validation
-        foreach ($files as $key => $value) {
-            $entry = [
-                "filename" => $value['name'],
-                "path" => $value['tmp_name']
-            ];
-            $validator = ValidationUploadedFiles::getValidationUploadedFiles()
-                    ->runRulesForPostFilesOfNote($entry);
-            if ($validator->fails()) {
-                Notes::where('NOTE_ID', '=', $noteId)->delete();
-                $messageError = G::LoadTranslation('ID_THE_FILE_COULDNT_BE_UPLOADED');
-                throw new CaseNoteUploadFile($messageError . ' ' . $validator->getMessage());
-            }
-        }
-
-        // Get the delIndex related to the case
-        $cases = new ClassesCases();
-        $delIndex = $cases->getCurrentDelegation($appUid);
-
-        // We will to register the files in the database
-        $response = [];
-        $response['attachments'] = [];
-        $response['attachment_errors'] = [];
-        if (!empty($files)) {
-            $i = 0;
-            $j = 0;
-            foreach ($files as $fileIndex => $fileName) {
-                // There is no error, the file uploaded with success
-                if ($fileName["error"] === UPLOAD_ERR_OK) {
-                    $appDocUid = G::generateUniqueID();
-
-                    // Upload or move the file
-                    $isUploaded = saveAppDocument($fileName, $appUid, $appDocUid, 1, $upload);
-
-                    // If the file was uploaded correctly we will to register in the DB
-                    if ($isUploaded) {
-                        $attributes = [
-                            "DOC_ID" => $noteId,
-                            "APP_DOC_UID" => $appDocUid,
-                            "DOC_VERSION" => 1,
-                            "APP_UID" => $appUid,
-                            "DEL_INDEX" => $delIndex,
-                            "USR_UID" => $userUid,
-                            "DOC_UID" => -1,
-                            "APP_DOC_TYPE" => 'CASE_NOTE',
-                            "APP_DOC_CREATE_DATE" => date("Y-m-d H:i:s"),
-                            "APP_DOC_FILENAME" => $fileName["name"]
-                        ];
-                        Documents::create($attributes);
-
-                        // List of files uploaded or copy
-                        $response['attachments'][$i++] = $attributes;
-                    } else {
-                        $response['attachment_errors'][$j++] = [
-                            'error' => 'error',
-                            'file' => $fileName["name"]
-                        ];
-                    }
-                } else {
-                    throw new UploadException($fileName['error']);
-                }
-            }
-        }
-
-        return $response;
-    }
-
-    /**
      * Run the validations related to an Input Document
      *
      * @param array $file
@@ -4067,12 +3873,8 @@ class Cases
                     ->status(415)
                     ->message(G::LoadTranslation('ID_UPLOAD_INVALID_DOC_TYPE_FILE', [$inpDocTypeFile]))
                     ->log(function ($rule) {
-                        $message = $rule->getMessage();
-                        $context = [
-                            'filename' => $rule->getData()->filename,
-                            'url' => $_SERVER["REQUEST_URI"] ?? ''
-                        ];
-                        Log::channel(':phpUpload')->notice($message, Bootstrap::context($context));
+                        Bootstrap::registerMonologPhpUploadExecution('phpUpload', 250, $rule->getMessage(),
+                            $rule->getData()->filename);
                     });
                 // Rule: maximum file size
                 $validator->addRule()
@@ -4091,12 +3893,8 @@ class Cases
                     ->message(G::LoadTranslation("ID_UPLOAD_INVALID_DOC_MAX_FILESIZE",
                         [$inpDocMaxFileSize . $inpDocMaxFileSizeUnit]))
                     ->log(function ($rule) {
-                        $message = $rule->getMessage();
-                        $context = [
-                            'filename' => $rule->getData()->filename,
-                            'url' => $_SERVER["REQUEST_URI"] ?? ''
-                        ];
-                        Log::channel(':phpUpload')->notice($message, Bootstrap::context($context));
+                        Bootstrap::registerMonologPhpUploadExecution('phpUpload', 250, $rule->getMessage(),
+                            $rule->getData()->filename);
                     });
                 $validator->validate();
                 // We will to review if the validator has some error
@@ -4107,172 +3905,5 @@ class Cases
         }
 
         return true;
-    }
-
-    /**
-     * Get the cases related to the self services timeout that needs to execute the trigger related
-     *
-     * @return array
-     * @throws Exception
-    */
-    public static function executeSelfServiceTimeout()
-    {
-        try {
-            $casesSelfService = ListUnassigned::selfServiceTimeout();
-            $casesExecuted = [];
-            foreach ($casesSelfService as $row) {
-                $appUid = $row["APP_UID"];
-                $appNumber = $row["APP_NUMBER"];
-                $delIndex = $row["DEL_INDEX"];
-                $delegateDate = $row["DEL_DELEGATE_DATE"];
-                $proUid = $row["PRO_UID"];
-                $taskUid = $row["TAS_UID"];
-                $taskSelfServiceTime = intval($row["TAS_SELFSERVICE_TIME"]);
-                $taskSelfServiceTimeUnit = $row["TAS_SELFSERVICE_TIME_UNIT"];
-                $triggerUid = $row["TAS_SELFSERVICE_TRIGGER_UID"];
-
-                /*----------------------------------********---------------------------------*/
-                $typeOfExecution = $row["TAS_SELFSERVICE_EXECUTION"];
-                $flagExecuteOnce = true;
-                // This option will be executed just once, can check if was executed before
-                if ($typeOfExecution == 'ONCE') {
-                    $appTimeout = new AppTimeoutAction();
-                    $appTimeout->setCaseUid($appUid);
-                    $appTimeout->setIndex($delIndex);
-                    $caseExecuted = $appTimeout->cases();
-                    $flagExecuteOnce = !empty($caseExecuted) ? false : true;
-                }
-                /*----------------------------------********---------------------------------*/
-
-                // Add the time in the corresponding unit to the delegation date
-                $delegateDate = calculateDate($delegateDate, $taskSelfServiceTimeUnit, $taskSelfServiceTime);
-
-                // Define the current time
-                $datetime = new DateTime('now');
-                $currentDate = $datetime->format('Y-m-d H:i:s');
-
-                // Check if the triggers to be executed
-                if ($currentDate >= $delegateDate && $flagExecuteOnce) {
-                    // Review if the session process is defined
-                    $sessProcess = null;
-                    $sessProcessSw = false;
-                    if (isset($_SESSION["PROCESS"])) {
-                        $sessProcess = $_SESSION["PROCESS"];
-                        $sessProcessSw = true;
-                    }
-                    // Load case data
-                    $case = new ClassesCases();
-                    $appFields = $case->loadCase($appUid);
-                    $appFields["APP_DATA"]["APPLICATION"] = $appUid;
-                    // Set the process defined in the case related
-                    $_SESSION["PROCESS"] = $appFields["PRO_UID"];
-
-                    // Get the trigger related and execute
-                    $triggersList = [];
-                    if (!empty($triggerUid)) {
-                        $trigger = new Triggers();
-                        $trigger->setTrigger($triggerUid);
-                        $triggersList = $trigger->triggers();
-                    }
-
-                    // If the trigger exist, let's to execute
-                    if (!empty($triggersList)) {
-                        // Execute the trigger defined in the self service timeout
-                        $fieldsCase['APP_DATA'] = $case->executeTriggerFromList(
-                            $triggersList,
-                            $appFields['APP_DATA'],
-                            'SELF_SERVICE_TIMEOUT',
-                            '',
-                            '',
-                            '',
-                            false
-                        );
-
-                        // Update the case
-                        $case->updateCase($appUid, $fieldsCase);
-
-                        /*----------------------------------********---------------------------------*/
-                        if ($typeOfExecution == 'ONCE') {
-                            // Saving the case`s data if the 'Execution' is set in ONCE.
-                            $appTimeoutActionExecuted = new AppTimeoutActionExecuted();
-                            $dataSelf = [];
-                            $dataSelf["APP_UID"] = $appUid;
-                            $dataSelf["DEL_INDEX"] = $delIndex;
-                            $dataSelf["EXECUTION_DATE"] = time();
-                            $appTimeoutActionExecuted->create($dataSelf);
-                        }
-                        /*----------------------------------********---------------------------------*/
-
-                        array_push($casesExecuted, $appNumber); // Register the cases executed
-
-                        // Logging this action
-                        $context = [
-                            'appUid' => $appUid,
-                            'appNumber' => $appNumber,
-                            'triUid' => $triggerUid,
-                            'proUid' => $proUid,
-                            'tasUid' => $taskUid,
-                            'selfServiceTime' => $taskSelfServiceTime,
-                            'selfServiceTimeUnit' => $taskSelfServiceTimeUnit,
-                        ];
-                        Log::channel(':TriggerExecution')->info('Timeout trigger execution', Bootstrap::context($context));
-                    }
-
-                    unset($_SESSION["PROCESS"]);
-
-                    if ($sessProcessSw) {
-                        $_SESSION["PROCESS"] = $sessProcess;
-                    }
-                }
-            }
-
-            return $casesExecuted;
-        } catch (Exception $e) {
-            throw $e;
-        }
-    }
-
-    /**
-     * Get DynaForms Uids assigned as steps in the related process by application Uid
-     *
-     * @param string $appUid
-     * @param int $sourceTask
-     * @param string $dynUid
-     * @param string $caseStatus
-     * @return array
-     */
-    public static function dynaFormsByApplication($appUid, $sourceTask = 0, $dynUid = '', $caseStatus = '')
-    {
-        // Select distinct DYN_UID
-        $query = ModelApplication::query()->select('STEP.STEP_UID_OBJ AS DYN_UID')->distinct();
-
-        // Join with STEP table
-        $query->join('STEP', function ($join)  {
-            $join->on('APPLICATION.PRO_UID', '=', 'STEP.PRO_UID');
-            $join->on('STEP.STEP_TYPE_OBJ', '=', DB::raw("'DYNAFORM'"));
-        });
-
-        // Filter by application Uid
-        $query->where('APPLICATION.APP_UID', '=', $appUid);
-
-        // Filter by source task
-        if ($caseStatus != 'COMPLETED' && $sourceTask != '' && (int)$sourceTask != 0) {
-            $query->where('STEP.TAS_UID', '=', $sourceTask);
-        }
-
-        // Filter by DynaForm Uid
-        if ($dynUid != '' && $dynUid != '0') {
-            $query->where('STEP.STEP_UID_OBJ', '=', $dynUid);
-        }
-
-        // Get results
-        $dynaForms = [];
-        $items = $query->get();
-        $items->each(function ($item) use (&$dynaForms) {
-            $dynaForms[] = $item->DYN_UID;
-        });
-
-        // Return results
-        return $dynaForms;
     }
 }

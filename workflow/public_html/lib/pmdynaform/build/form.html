@@ -227,7 +227,7 @@
 						value="<%-data['label']%>"
 					<%}%>
 				>
-				<span class="content-print" style="white-space: pre-wrap"></span>
+				<span class="content-print"></span>
 			</div>
 
 		</div>
@@ -360,7 +360,7 @@
 					value="<%-options[i].value%>"
 					type="checkbox"
 					<% if(options[i].selected){%>checked<%}%>
-					<% if(disabled === true || mode === 'view'){%>disabled<%}%>
+					<% if(disabled === true){%>disabled<%}%>
 					<%if(tabIndex !== ""){%>
 						tabindex="<%-tabIndex%>"
 					<%}%>
@@ -386,19 +386,6 @@
 	>
 	<span class="content-print"></span>
 	</div>
-	</div>
-</script>
-
-<script type="text/template" id="tpl-checkbox_view_mode">
-	<div class="<%-namespace%>-field-<%-type%>" style="text-align: center;">
-			<input
-			id = "form<%-id%>"
-			name ="form<%-name%>"
-			value="<%-value%>"
-			type="checkbox"
-			<% if(data.value == '1'){ %>checked <%}%>
-			disabled
-			>
 	</div>
 </script>
 
@@ -438,12 +425,12 @@
 							class="<%-namespace%>-control-<%-type%>"
 							value="<%-options[i].value%>"
 							type="<%-type%>"
-							<% if(data["value"] == options[i].value){%>checked<%}%>
+							<% if(value == options[i].value){%>checked<%}%>
 							<% if(disabled === true){%>disabled<%}%>
 							<%if(tabIndex !== ""){%>
 								tabindex="<%-tabIndex%>"
 							<%}%>
-							<%if(data["value"]  === options[i].value && ariaLabelVisible){%>
+							<%if(value === options[i].value && ariaLabelVisible){%>
 								aria-label="<%-options[i].label%>"
 							<%}%>
 							>
@@ -460,15 +447,6 @@
 				id = "form[<%-id%>_label]"
 				name ="form[<%-name%>_label]"
 				<%}%>
-				>
-				<input type="hidden" value="<%-data['value']%>"
-					<% if  ( group === "grid") { %>
-						id = "form<%-id%>"
-						name ="form<%-name%>"
-					<%} else{%>
-						id = "form[<%-id%>]"
-						name ="form[<%-name%>]"
-					<%}%>
 				>
 				<% if (group === "form") { %>
 				<%if (hint !== "" && hint !== null){%>
@@ -520,12 +498,12 @@
 						aria-label="<%-ariaLabel%>"
 					<%}%>
 					>
-					<%if(therePlaceholder && placeholderOption){%>
+					<%if(therePlaceholder){%>
 						<option disabled id="placeholder-option" value=<%-placeholderOption["value"]%> ><%-placeholderOption["label"]%></option>
 					<%}%>
 					<% for(var i=0; i<options.length; i+=1) { %>
 						<option value="<%-options[i].value%>"
-						<%if( options[i].value == data["value"]){%>
+						<%if( options[i].value == value ){%>
 							selected<%}%>
 						><%-options[i].label%></option>
 					<% } %>
@@ -818,73 +796,6 @@
 	</div>
 </script>
 
-<script type="text/template" id="tpl-label-extension">
-	<div id="<%-id%>" name="field-<%-name%>" class="<%-namespace%>-field-<%-originalType%> <%if (group === 'form'){%> form-group col-sm-<%-colSpan%> col-md-<%-colSpan%> col-lg-<%-colSpan%> <%}%> <%-namespace%>-<%-mode%>-<%-type%> pmdynaform-field">
-		<% if(group === "form") {%>
-			<div class="col-sm-<%-colSpanLabel%> col-md-<%-colSpanLabel%> col-lg-<%-colSpanLabel%>">
-				<label class="control-label pmdynaform-label">
-					<span class="textlabel"
-					<%if(ariaLabel !== ""){%>
-						aria-label="<%-ariaLabel%>"
-					<%}%>
-					><%=label %></span>
-					<%if(required){%>
-					<span class="pmdynaform-field-required">*</span>
-					<%}%>
-				</label>
-			</div>
-		<%} else if((group !== "form") && (layout === "form")){%>
-		<label class="hidden-lg hidden-md hidden-sm visible-xs control-label pmdynaform-label col-xs-<%-colSpanLabel%>">
-			<span class="textlabel"><%=label %></span>
-		</label>
-		<%}%>
-		<div <%if (group === 'form'){ %>
-		class="col-sm-<%-colSpanControl%> col-md-<%-colSpanControl%> col-lg-<%-colSpanControl%> pmdynaform-field-control"
-		<%} else if (layout === "form"){ %>
-		class="col-xs-<%-colSpanControl%> col-sm-12 col-md-12 col-lg-12"
-		<%} else if (layout === "responsive") {%>
-		class="col-xs-12 col-sm-12 col-md-12 col-lg-12"
-		<%}%>>
-		<div class="pmdynaform-label-options form-control">
-			<span title="<%-data['label']%>"
-			class = "label-<%-type%>"
-			><%-data['label']%></span>
-
-            <% if (originalType === "checkgroup") {
-            _.each(data['value'], function (item, index) { %>
-                <input type="hidden" value="<%-item%>" name="form[<%-name%>][]" id="form[<%-id%>][<%-index%>]"/>
-            <% });
-            } else {
-            %>
-                <input class="value-hidden" type="hidden" value="<%-data['value']%>"
-                <% if  ( group === "grid") { %>
-                id = "form<%-id%>"
-                name ="form<%-name%>"
-                <%} else{%>
-                id = "form[<%-id%>]"
-                name ="form[<%-name%>]"
-                <%}%>
-                >
-            <% } %>
-			<input class="label-hidden" type="hidden" value="<%-data['label']%>"
-			<% if  ( group === "grid") { %>
-			id = "form<%-id%>_label"
-			name ="form<%-name%>_label"
-			<%} else{%>
-			id = "form[<%-id%>_label]"
-			name ="form[<%-name%>_label]"
-			<%}%>
-			>
-		</div>
-		<% if (group === "form") { %>
-		<%if (hint !== "" && hint !== null){%>
-		<span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" data-container="body" data-placement="bottom" title="<%=hint%>"></span>
-		<%}%>
-		<% } %>
-	</div>
-	</div>
-</script>
-
 <script type="text/template" id="tpl-hidden">
 	<div id="<%-id%>" class="<%-namespace%>-field-<%-type%> pmdynaform-field">
 		<input
@@ -1046,7 +957,7 @@
 is called to PMDynaform.view.Dropdown method "_setOptions()"
 -->
 <script type='text/template' id='tpl-dropdown-options'>
-	<%if(therePlaceholder && placeholderOption){%>
+	<%if(therePlaceholder){%>
 	<option disabled id="placeholder-option" value=<%-placeholderOption["value"]%> ><%-placeholderOption["label"]%></option>
 	<%}%>
 	<% for(var i=0; i<options.length; i+=1) { %>
@@ -1156,7 +1067,7 @@ is called to PMDynaform.view.Radio method "_setOptions()"
 						name="form[<%-name%>]"
 					<%}%>
 					type = <%-type%> class="<%-namespace%>-control-<%-type%> form-control"
-					placeholder= "<%-placeholder%>" value = "<%-data['value']%>"
+					placeholder= "<%-placeholder%>" value = "<%-data['label']%>"
 					<% if(disabled === true){%>disabled<%}%>
 					<% if (autoComplete === "on" || autoComplete === "off") { %>
 						autocomplete = "<%-autoComplete%>"
@@ -1183,16 +1094,16 @@ is called to PMDynaform.view.Radio method "_setOptions()"
 				<% if ( group === "grid") { %>
 					id = "form<%-id%>"
 					name ="form<%-name%>"
-					value="<%-data['label']%>"
 				<%} else{%>
 					id = "form[<%-id%>_label]"
 					name ="form[<%-name%>_label]"
-					value="<%-data['label']%>"
 				<%}%>
+				value="<%-data['value']%>"
 			>
 		</div>
 	</div>
 </script>
+
 <script type="text/template" id="tpl-grid">
 	<div id="<%-id%>" class="<%-namespace%>-field-<%-type%> form-group col-sm-<%-colSpan%> col-md-<%-colSpan%> col-lg-<%-colSpan%> <%-namespace%>-<%-mode%>-<%-type%> <%-layout%>">
 		<div class="<%-namespace%>-<%-type%>-new">
@@ -1960,9 +1871,6 @@ is called to PMDynaform.view.Radio method "_setOptions()"
         </div>
     </div>
     <ul class="content-print"></ul>
-    <input name="form<%-id%>[0][appDocUid]" type="hidden" value="">
-    <input name="form<%-id%>[0][name]" type="hidden" value="">
-    <input name="form<%-id%>[0][version]" type="hidden" value="">
 </script>
 
 <script type="text/template" id="tpl-multiplefile-grid-field">

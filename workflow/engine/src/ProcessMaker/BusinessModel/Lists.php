@@ -6,7 +6,6 @@ use G;
 use Criteria;
 use PMLicensedFeatures;
 use ProcessMaker\Model\Delegation;
-use ProcessMaker\Model\User;
 use UsersPeer;
 
 /**
@@ -57,20 +56,15 @@ class Lists
      */
     public function __construct()
     {
-        $this->mapList = [
+        $this->mapList = array(
             'ListInbox' => 'CASES_INBOX',
             'ListDraft' => 'CASES_DRAFT',
             'ListCanceled' => 'CASES_CANCELLED',
             'ListParticipated' => 'CASES_SENT',
             'ListPaused' => 'CASES_PAUSED',
             'ListCompleted' => 'CASES_COMPLETED',
-        ];
-
-        // If the feature for highlight the home folders is disabled, add self-service list to the map
-        $flag = defined('HIGHLIGHT_HOME_FOLDER_ENABLE') ? HIGHLIGHT_HOME_FOLDER_ENABLE : 0;
-        if (!$flag) {
-            $this->mapList['ListSelfService'] = 'CASES_SELFSERVICE';
-        }
+            'ListSelfService' => 'CASES_SELFSERVICE'
+        );
 
         $this->ListInbox = new \ListInbox();
         $this->ListDraft = new \ListInbox();
@@ -208,51 +202,30 @@ class Lists
         $result = $list->loadList($userUid, $filters);
         if (!empty($result)) {
             foreach ($result as &$value) {
-                // For backward compatibility with "light" endpoints, we need to cast to string
-                $value['APP_NUMBER'] = (string)$value['APP_NUMBER'];
-                $value['DEL_INDEX'] = (string)$value['DEL_INDEX'];
-
                 if (isset($value['DEL_PREVIOUS_USR_UID'])) {
                     $value['PREVIOUS_USR_UID'] = $value['DEL_PREVIOUS_USR_UID'];
                     $value['PREVIOUS_USR_USERNAME'] = $value['DEL_PREVIOUS_USR_USERNAME'];
                     $value['PREVIOUS_USR_FIRSTNAME'] = $value['DEL_PREVIOUS_USR_FIRSTNAME'];
                     $value['PREVIOUS_USR_LASTNAME'] = $value['DEL_PREVIOUS_USR_LASTNAME'];
-                } elseif (!empty($value["USR_ID"])) {
-                    $user = User::where("USR_ID", $value["USR_ID"])->first();
-                    $value["PREVIOUS_USR_UID"] = $value["DEL_PREVIOUS_USR_UID"] = $user->USR_UID;
-                    $value["PREVIOUS_USR_USERNAME"] = $value["DEL_PREVIOUS_USR_USERNAME"] = $user->USR_USERNAME;
-                    $value["PREVIOUS_USR_FIRSTNAME"] = $value["DEL_PREVIOUS_USR_FIRSTNAME"] = $user->USR_FIRSTNAME;
-                    $value["PREVIOUS_USR_LASTNAME"] = $value["DEL_PREVIOUS_USR_LASTNAME"] = $user->USR_LASTNAME;
                 }
-
                 if (isset($value['DEL_DUE_DATE'])) {
                     $value['DEL_TASK_DUE_DATE'] = $value['DEL_DUE_DATE'];
                 }
-
                 if (isset($value['APP_PAUSED_DATE'])) {
                     $value['APP_UPDATE_DATE'] = $value['APP_PAUSED_DATE'];
                 }
-
                 if (isset($value['DEL_CURRENT_USR_USERNAME'])) {
                     $value['USR_USERNAME'] = $value['DEL_CURRENT_USR_USERNAME'];
                     $value['USR_FIRSTNAME'] = $value['DEL_CURRENT_USR_FIRSTNAME'];
                     $value['USR_LASTNAME'] = $value['DEL_CURRENT_USR_LASTNAME'];
                     $value['APP_UPDATE_DATE'] = $value['DEL_DELEGATE_DATE'];
                 }
-
-                if (isset($value['DEL_CURRENT_TAS_TITLE']) && $value['DEL_CURRENT_TAS_TITLE'] != '') {
-                    $value['APP_TAS_TITLE'] = $value['DEL_CURRENT_TAS_TITLE'];
-                } elseif (!empty($value["TAS_TITLE"]) && empty($value["APP_TAS_TITLE"])) {
-                    $value["APP_TAS_TITLE"] = $value["TAS_TITLE"];
-                }
-
                 if (isset($value['APP_STATUS'])) {
                     $value['APP_STATUS_LABEL'] = G::LoadTranslation("ID_{$value['APP_STATUS']}");
                 }
 
-                if (!empty($value["PRO_TITLE"]) && empty($value["APP_PRO_TITLE"])) {
-                    $value["APP_PRO_TITLE"] = $value["PRO_TITLE"];
-                }
+
+                //$value = array_change_key_case($value, CASE_LOWER);
             }
         }
         $response = array();

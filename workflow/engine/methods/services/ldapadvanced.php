@@ -1,7 +1,4 @@
 <?php
-
-use Illuminate\Support\Facades\Log;
-
 class ldapadvancedClassCron
 {
     public $deletedRemoved = 0; //Users in the removed OU
@@ -363,12 +360,10 @@ class ldapadvancedClassCron
                 //Update Users data based on the LDAP Server
                 $plugin->usersUpdateData($arrayAuthenticationSourceData["AUTH_SOURCE_UID"]);
             } catch (Exception $e) {
-                $message = $e->getMessage();
-                $context = [
-                    'action' => 'ldapSynchronize',
-                    'authSource' => $arrayAuthenticationSourceData
-                ];
-                Log::channel(':ldapSynchronize')->error($message, Bootstrap::context($context));
+                $context = Bootstrap::getDefaultContextLog();
+                $context["action"] = "ldapSynchronize";
+                $context["authSource"] = $arrayAuthenticationSourceData;
+                Bootstrap::registerMonolog("ldapSynchronize", 400, $e->getMessage(), $context, $context["workspace"], "processmaker.log");
             }
         }
 

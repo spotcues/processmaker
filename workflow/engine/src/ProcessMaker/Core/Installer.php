@@ -365,7 +365,9 @@ class Installer
             }
 
             //ACTIVE ENTERPRISE
+
             ini_set('max_execution_time', '0');
+            ini_set('memory_limit', '256M');
 
             $serv = 'http://';
             if (isset($_SERVER['HTTPS']) && trim($_SERVER['HTTPS']) != '') {

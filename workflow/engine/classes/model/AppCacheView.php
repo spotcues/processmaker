@@ -270,6 +270,46 @@ class AppCacheView extends BaseAppCacheView
     }
 
     /**
+     * gets the MYTASK cases list criteria
+     * param $userUid the current userUid
+     * param $doCount if true this will return the criteria for count cases only
+     * @return Criteria object $Criteria
+     */
+    public function getMyTask($userUid, $isDraftEnabled)
+    {
+        $criteria = $this->addPMFieldsToCriteria('todo');
+        $criteria->addSelectColumn(AppCacheViewPeer::TAS_UID);
+        $criteria->addSelectColumn(AppCacheViewPeer::PRO_UID);
+        if($isDraftEnabled === true){
+            $criteria->add(
+                $criteria->getNewCriterion(AppCacheViewPeer::APP_STATUS, "DRAFT", CRITERIA::EQUAL)->addOr($criteria->getNewCriterion(AppCacheViewPeer::APP_STATUS, "TO_DO", CRITERIA::EQUAL))
+            );
+        }else{
+            $criteria->add(AppCacheViewPeer::APP_STATUS, "TO_DO");
+        }
+
+        if (!empty($userUid)) {
+            $criteria->add(AppCacheViewPeer::USR_UID, $userUid);
+        }
+
+        //$criteria->add(AppCacheViewPeer::DEL_FINISH_DATE, null, Criteria::ISNULL);
+        $criteria->add(AppCacheViewPeer::APP_THREAD_STATUS, 'OPEN');
+        $criteria->add(AppCacheViewPeer::DEL_THREAD_STATUS, 'OPEN');
+
+        return $criteria;
+    }
+
+    /**
+     * gets the DRAFT cases list criteria for list
+     * param $userUid the current userUid
+     * @return Criteria object $Criteria
+     */
+    public function getMyTaskListCriteria($userUid, $isDraftEnabled)
+    {
+        return $this->getMyTask($userUid, $isDraftEnabled);
+    }
+
+    /**
      * get user's SelfService tasks
      * @param string $sUIDUser
      * @return $rows
@@ -1800,6 +1840,270 @@ class AppCacheView extends BaseAppCacheView
         $criteria->addSelectColumn(AppCacheViewPeer::APP_UPDATE_DATE);
         $criteria->addSelectColumn(AppCacheViewPeer::APP_OVERDUE_PERCENTAGE);
         return $criteria;
+    }
+
+    //Added By Irfan
+    public function getCurrentDelIndexOfUserForCase($user_uid, $app_uid)
+    {
+        $oCriteria = new Criteria("workflow");
+        $oCriteria->addSelectColumn(AppCacheViewPeer::DEL_INDEX);
+        $oCriteria->add(AppCacheViewPeer::APP_UID, $app_uid);
+        $oCriteria->add(AppCacheViewPeer::USR_UID, $user_uid);
+        $oCriteria->addDescendingOrderByColumn(AppCacheViewPeer::DEL_INDEX);
+        $oCriteria->setLimit(1);
+        $dat = AppCacheViewPeer::doSelectRS($oCriteria);
+        $dat->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+        $aRows = array();
+        $dat->next();
+        $row = $dat->getRow();
+        return $row["DEL_INDEX"];
+    }
+
+    // Added by Irfan
+    public function getCasesWithCaseInfo($appUids){
+        $oCriteria = $this->getSentListCriteria('');
+        $oCriteria->addSelectColumn(AppCacheViewPeer::APP_UID);
+        $oCriteria->addSelectColumn(AppCacheViewPeer::APP_STATUS);
+        $oCriteria->addSelectColumn(AppCacheViewPeer::USR_UID);
+        $oCriteria->addSelectColumn(AppCacheViewPeer::PREVIOUS_USR_UID);
+        $oCriteria->addSelectColumn(AppCacheViewPeer::APP_PRO_TITLE);
+        $oCriteria->addSelectColumn(AppCacheViewPeer::APP_TAS_TITLE);
+        $oCriteria->addSelectColumn(AppCacheViewPeer::DEL_TASK_DUE_DATE);
+        $oCriteria->addSelectColumn(AppCacheViewPeer::APP_UPDATE_DATE);
+        $oCriteria->addSelectColumn(AppCacheViewPeer::DEL_INDEX);
+        $oCriteria->add(AppCacheViewPeer::APP_UID, $appUids, Criteria::IN);
+        $oCriteria->addDescendingOrderByColumn(AppCacheViewPeer::APP_UPDATE_DATE);
+        $oCriteria->setLimit(10);
+        $oCriteria->setOffset(0);
+        $dat = AppCacheViewPeer::doSelectRS($oCriteria);
+        $dat->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+        $resultRows = array();
+
+        $resultRows['cases'] = [];
+
+        $appUids = [];
+
+        while ($dat->next()) {
+            $aRows = array();
+            $row = $dat->getRow();
+            $aRows["caseId"] = $row["APP_UID"];
+            $appUids[] = $row["APP_UID"];
+            $aRows["delIndex"] = $row["DEL_INDEX"];
+            $aRows["caseNumber"] = $row["APP_NUMBER"];
+            $aRows["caseTitle"] = "#".$row["APP_NUMBER"];
+            $aRows["caseStatus"] = $row["APP_STATUS"];
+            $aRows["user"] = array();
+            $aRows["user"]["userId"] = $row["USR_UID"];
+            $aRows["prevUser"]["userId"] = $row["PREVIOUS_USR_UID"];
+            $aRows["process"] = array();
+            $aRows["process"]["name"] = $row["APP_PRO_TITLE"];
+            $aRows["process"]["processId"] = $row["PRO_UID"];
+            $aRows["process"]["processDescription"] = "";
+            $aRows["task"] = array();
+            $aRows["task"]["name"] = $row["APP_TAS_TITLE"];
+            $aRows["task"]["taskId"] = $row["TAS_UID"];
+            $aRows["task"]["taskDescription"] = "";
+            $aRows["dueDate"] = $row["DEL_TASK_DUE_DATE"];
+            $aRows["delegateDate"] = $row["APP_UPDATE_DATE"];
+            $aRows["date"] = $row["APP_UPDATE_DATE"];
+            $aRows["currentUsers"] = array();
+            $aRows["currentUsers"][] = $row["USR_UID"];
+            $resultRows['cases'] [] = $aRows;
+        }
+
+         /*
+            select APP_NUMBER, APP_UID, DEL_INDEX, DEL_LAST_INDEX, TAS_UID, APP_TAS_TITLE, USR_UID from APP_CACHE_VIEW where APP_NUMBER IN ('710') ORDER BY DEL_LAST_INDEX DESC, DEL_INDEX DESC;
+        */
+        $oCriteria = new Criteria("workflow");
+        $oCriteria->addSelectColumn(AppCacheViewPeer::APP_NUMBER);
+        $oCriteria->addSelectColumn(AppCacheViewPeer::APP_UID);
+        $oCriteria->addSelectColumn(AppCacheViewPeer::DEL_INDEX);
+        $oCriteria->addSelectColumn(AppCacheViewPeer::DEL_LAST_INDEX);
+        $oCriteria->addSelectColumn(AppCacheViewPeer::TAS_UID);
+        $oCriteria->addSelectColumn(AppCacheViewPeer::APP_TAS_TITLE);
+        $oCriteria->addSelectColumn(AppCacheViewPeer::USR_UID);
+        $oCriteria->addSelectColumn(AppCacheViewPeer::DEL_FINISH_DATE);
+        $oCriteria->addSelectColumn(AppDelayPeer::APP_TYPE);
+        //join with APP_DELAY table using APP_UID and DEL_INDEX
+        $arrayCondition = array();
+        $arrayCondition[] = array(AppCacheViewPeer::APP_UID, AppDelayPeer::APP_UID);
+        $arrayCondition[] = array(AppCacheViewPeer::DEL_INDEX, AppDelayPeer::APP_DEL_INDEX);
+        $oCriteria->addJoinMC($arrayCondition, Criteria::LEFT_JOIN);
+        $oCriteria->add(AppCacheViewPeer::APP_UID, $appUids, Criteria::IN);
+        $oCriteria->addDescendingOrderByColumn(AppCacheViewPeer::DEL_LAST_INDEX);
+        $oCriteria->addDescendingOrderByColumn(AppCacheViewPeer::DEL_INDEX);
+        $dat = AppCacheViewPeer::doSelectRS($oCriteria);
+        $dat->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+        $resultRows["_previousTasks"] = $this->parseThePreviousTasksInfoDetails($dat);
+        return $resultRows;
+    }
+
+    // Added by Irfan
+    public function getCasesOfUserWithCaseInfoByAction($action, $usr_uid, $start, $limit, $oldestThan, $isDraftEnabled = "false", $status = ""){
+        switch ($action) {
+            case "mytask":
+                $oCriteria = $this->getMyTaskListCriteria($usr_uid, $isDraftEnabled);
+                break;
+            case "todo":
+                $oCriteria = $this->getToDoListCriteria($usr_uid);
+                break;
+            case "draft":
+                $oCriteria = $this->getDraftListCriteria($usr_uid);
+                break;
+            case "sent":
+                $oCriteria = $this->getSentListCriteria($usr_uid);
+                if($isDraftEnabled === false){
+                    $oCriteria->add(AppCacheViewPeer::APP_STATUS, 'DRAFT', Criteria::NOT_EQUAL);
+                }
+
+                if (!empty($status)) {
+                    $oCriteria->add(AppCacheViewPeer::APP_STATUS, $status);
+                }
+                break;
+            case "selfservice":
+            case "unassigned":
+                //$userUid can't be empty or null
+                $oCriteria = $this->getUnassignedListCriteria($usr_uid);
+                break;
+        }
+        $oCriteria->addSelectColumn(AppCacheViewPeer::APP_UID);
+        $oCriteria->addSelectColumn(AppCacheViewPeer::APP_STATUS);
+        $oCriteria->addSelectColumn(AppCacheViewPeer::USR_UID);
+        $oCriteria->addSelectColumn(AppCacheViewPeer::PREVIOUS_USR_UID);
+        $oCriteria->addSelectColumn(AppCacheViewPeer::APP_PRO_TITLE);
+        $oCriteria->addSelectColumn(AppCacheViewPeer::APP_TAS_TITLE);
+        $oCriteria->addSelectColumn(AppCacheViewPeer::DEL_TASK_DUE_DATE);
+        $oCriteria->addSelectColumn(AppCacheViewPeer::APP_UPDATE_DATE);
+        $oCriteria->addSelectColumn(AppCacheViewPeer::DEL_INDEX);
+        if($oldestThan != ''){
+            $oCriteria->add(AppCacheViewPeer::DEL_DELEGATE_DATE, $oldestThan, Criteria::LESS_THAN);
+        }
+        $oCriteria->addDescendingOrderByColumn(AppCacheViewPeer::APP_UPDATE_DATE);
+        $oCriteria->setLimit($limit);
+        $oCriteria->setOffset($start);
+        $dat = AppCacheViewPeer::doSelectRS($oCriteria);
+        $dat->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+        $resultRows = array();
+
+        $resultRows['cases'] = [];
+
+        $appUids = [];
+
+        while ($dat->next()) {
+            $aRows = array();
+            $row = $dat->getRow();
+            $aRows["caseId"] = $row["APP_UID"];
+            if($action == "sent"){
+                $appUids[] = $row["APP_UID"];
+            }
+            $aRows["delIndex"] = $row["DEL_INDEX"];
+            $aRows["caseNumber"] = $row["APP_NUMBER"];
+            $aRows["caseTitle"] = "#".$row["APP_NUMBER"];
+            $aRows["caseStatus"] = $row["APP_STATUS"];
+            $aRows["user"] = array();
+            $aRows["user"]["userId"] = $row["USR_UID"];
+            $aRows["prevUser"]["userId"] = $row["PREVIOUS_USR_UID"];
+            $aRows["process"] = array();
+            $aRows["process"]["name"] = $row["APP_PRO_TITLE"];
+            $aRows["process"]["processId"] = $row["PRO_UID"];
+            $aRows["process"]["processDescription"] = "";
+            $aRows["task"] = array();
+            $aRows["task"]["name"] = $row["APP_TAS_TITLE"];
+            $aRows["task"]["taskId"] = $row["TAS_UID"];
+            $aRows["task"]["taskDescription"] = "";
+            $aRows["dueDate"] = $row["DEL_TASK_DUE_DATE"];
+            $aRows["delegateDate"] = $row["APP_UPDATE_DATE"];
+            $aRows["date"] = $row["APP_UPDATE_DATE"];
+            $aRows["currentUsers"] = array();
+            $aRows["currentUsers"][] = $row["USR_UID"];
+            $resultRows['cases'] [] = $aRows;
+        }
+
+        if($action == "sent"){
+            /*
+                select APP_NUMBER, APP_UID, DEL_INDEX, DEL_LAST_INDEX, TAS_UID, APP_TAS_TITLE, USR_UID from APP_CACHE_VIEW where APP_NUMBER IN ('710') ORDER BY DEL_LAST_INDEX DESC, DEL_INDEX DESC;
+            */
+            $oCriteria = new Criteria("workflow");
+            $oCriteria->addSelectColumn(AppCacheViewPeer::APP_NUMBER);
+            $oCriteria->addSelectColumn(AppCacheViewPeer::APP_UID);
+            $oCriteria->addSelectColumn(AppCacheViewPeer::DEL_INDEX);
+            $oCriteria->addSelectColumn(AppCacheViewPeer::DEL_LAST_INDEX);
+            $oCriteria->addSelectColumn(AppCacheViewPeer::TAS_UID);
+            $oCriteria->addSelectColumn(AppCacheViewPeer::APP_TAS_TITLE);
+            $oCriteria->addSelectColumn(AppCacheViewPeer::USR_UID);
+            $oCriteria->addSelectColumn(AppCacheViewPeer::DEL_FINISH_DATE);
+            $oCriteria->addSelectColumn(AppDelayPeer::APP_TYPE);
+            //join with APP_DELAY table using APP_UID and DEL_INDEX
+            $arrayCondition = array();
+            $arrayCondition[] = array(AppCacheViewPeer::APP_UID, AppDelayPeer::APP_UID);
+            $arrayCondition[] = array(AppCacheViewPeer::DEL_INDEX, AppDelayPeer::APP_DEL_INDEX);
+            $oCriteria->addJoinMC($arrayCondition, Criteria::LEFT_JOIN);
+            $oCriteria->add(AppCacheViewPeer::APP_UID, $appUids, Criteria::IN);
+            $oCriteria->addDescendingOrderByColumn(AppCacheViewPeer::DEL_LAST_INDEX);
+            $oCriteria->addDescendingOrderByColumn(AppCacheViewPeer::DEL_INDEX);
+            $dat = AppCacheViewPeer::doSelectRS($oCriteria,Propel::getDbConnection('workflow_ro'));
+            $dat->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+            $resultRows["_previousTasks"] = $this->parseThePreviousTasksInfoDetails($dat);
+        }
+        return $resultRows;
+    }
+
+    private function parseThePreviousTasksInfoDetails($dat){
+        $prevTaskRows = [];
+
+        while ($dat->next()) {
+            $aRows = array();
+            $curRow = $dat->getRow();;
+            $prevTaskRows [] = $curRow;
+        }
+        return $prevTaskRows;
+    }
+
+    //Added By Irfan
+    public function getCurrentUsersAndCaseInfo($app_uid)
+    {
+        $oCriteria = new Criteria("workflow");
+        $oCriteria->addSelectColumn(AppCacheViewPeer::USR_UID);
+        $oCriteria->addSelectColumn(AppCacheViewPeer::PRO_UID);
+        $oCriteria->addSelectColumn(AppCacheViewPeer::APP_PRO_TITLE);
+        $oCriteria->addSelectColumn(AppCacheViewPeer::TAS_UID);
+        $oCriteria->addSelectColumn(AppCacheViewPeer::APP_TAS_TITLE);
+        $oCriteria->addSelectColumn(AppCacheViewPeer::DEL_TASK_DUE_DATE);
+        $oCriteria->addSelectColumn(AppCacheViewPeer::APP_UPDATE_DATE);
+        $oCriteria->addSelectColumn(AppCacheViewPeer::DEL_INDEX);
+        $oCriteria->add(AppCacheViewPeer::APP_UID, $app_uid);
+        $ct1 = $oCriteria->getNewCriterion(AppCacheViewPeer::DEL_THREAD_STATUS, "OPEN");
+        $ct2 = $oCriteria->getNewCriterion(AppCacheViewPeer::APP_THREAD_STATUS, "OPEN");
+        $ct3 = $oCriteria->getNewCriterion(AppCacheViewPeer::APP_STATUS, "COMPLETED");
+        $ct1->addAnd($ct2);
+        $ct3->addOr($ct1);
+        $oCriteria->add($ct3);
+        $dat = AppCacheViewPeer::doSelectRS($oCriteria,Propel::getDbConnection('workflow_ro'));
+        $dat->setFetchmode(ResultSet::FETCHMODE_ASSOC);
+        $aRows = array();
+        $dat->next();
+        $row = $dat->getRow();
+        $aRows["process"] = array();
+        $aRows["process"]["name"] = $row["APP_PRO_TITLE"];
+        $aRows["process"]["processId"] = $row["PRO_UID"];
+        $aRows["process"]["processDescription"] = "";
+        $aRows["task"] = array();
+        $aRows["task"]["name"] = $row["APP_TAS_TITLE"];
+        $aRows["task"]["taskId"] = $row["TAS_UID"];
+        $aRows["task"]["taskDescription"] = "";
+        $aRows["dueDate"] = $row["DEL_TASK_DUE_DATE"];
+        $aRows["delegateDate"] = $row["APP_UPDATE_DATE"];
+        $aRows["date"] = $row["APP_UPDATE_DATE"];
+        $aRows["currentUsers"] = array();
+        $aRows["currentUsersMap"] = array();
+        $aRows["currentUsers"][] = $row["USR_UID"];
+        $aRows["currentUsersMap"][$row["USR_UID"]] = $row["DEL_INDEX"];
+        while ($dat->next()) {
+            $row = $dat->getRow();
+            $aRows["currentUsers"][] = $row["USR_UID"];
+            $aRows["currentUsersMap"][$row["USR_UID"]] = $row["DEL_INDEX"];
+        }
+        return $aRows;
     }
 
 }

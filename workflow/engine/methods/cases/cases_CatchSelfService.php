@@ -1,7 +1,6 @@
 <?php
 
 use ProcessMaker\Util\DateTime;
-use ProcessMaker\Model\Task as ModelTask;
 
 switch ($RBAC->userCanAccess('PM_CASES')) {
     case -2:
@@ -76,13 +75,7 @@ if (
         $fieldsCase['PREVIOUS_USER'] = G::LoadTranslation('ID_NO_PREVIOUS_USR_UID');
     }
 
-    // Get the label of previous task
-    if (!empty($fieldsDelegation['TAS_ID'])) {
-        $taskInstance = new ModelTask();
-        $fieldsCase['PREVIOUS_TASK'] = $taskInstance->title($fieldsDelegation['TAS_ID']);
-    }
-
-    // To enable information (dynaforms, steps) before claim a case
+    //To enable information (dynaforms, steps) before claim a case
     $_SESSION['bNoShowSteps'] = true;
     $G_MAIN_MENU = 'processmaker';
     $G_SUB_MENU = 'caseOptions';

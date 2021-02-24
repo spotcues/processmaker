@@ -53,21 +53,20 @@ if ($RBAC->userCanAccess('PM_FOLDERS_ALL') != 1 && defined('DISABLE_DOWNLOAD_DOC
         $sAppDocUid
     )
     ) {
-        G::header('Location: /errors/error403.php?url=' . urlencode($_SERVER['REQUEST_URI']));
+        G::header('Location: /errors/error403.php');
         die();
     }
 }
 
 $docFileName = fixContentDispositionFilename($oAppDocument->getAppDocFilename());
 $info = pathinfo($docFileName);
-
 if (!isset($_GET['ext'])) {
-    $ext = (!empty($info['extension'])) ? $info['extension']: 'pdf';
+    $ext = $info['extension'];
 } else {
     if ($_GET['ext'] != '') {
         $ext = $_GET['ext'];
     } else {
-        $ext = (!empty($info['extension'])) ? $info['extension']: 'pdf';
+        $ext = $info['extension'];
     }
 }
 $ver = (isset($_GET['v']) && $_GET['v'] != '') ? '_' . $_GET['v'] : '';

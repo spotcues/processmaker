@@ -1,6 +1,13 @@
 <?php
+/**
+ * spoolRun - brief send email from the spool database, and see if we have all the addresses we send to.
+ *
+ * @author Ian K Armstrong <ika@[REMOVE_THESE_CAPITALS]openmail.cc>
+ * @copyright Copyright (c) 2007, Ian K Armstrong
+ * @license http://www.opensource.org/licenses/gpl-3.0.html GNU Public License
+ * @link http://www.openmail.cc
+ */
 
-use Illuminate\Support\Facades\Log;
 use ProcessMaker\Core\System;
 
 /**
@@ -102,16 +109,6 @@ class SpoolRun
     public function getSpoolId()
     {
         return $this->spoolId;
-    }
-
-    /**
-     * Set the fileData property
-     *
-     * @param array $fileData
-     */
-    public function setFileData($fileData)
-    {
-        $this->fileData = $fileData;
     }
 
     /**
@@ -329,9 +326,6 @@ class SpoolRun
     private function updateSpoolStatus()
     {
         $oAppMessage = AppMessagePeer::retrieveByPK($this->spoolId);
-        if (empty($oAppMessage)) {
-            return;
-        }
         if (is_array($this->fileData['attachments'])) {
             $attachment = implode(",", $this->fileData['attachments']);
             $oAppMessage->setappMsgAttach($attachment);
@@ -358,13 +352,11 @@ class SpoolRun
         $appMessage->setAppMsgSendDate(date('Y-m-d H:i:s'));
         $appMessage->save();
 
-        $message = $msgError;
-        $context = [
-            "action" => "Send email",
-            "appMsgUid" => $this->getAppMsgUid(),
-            "appUid" => $this->getAppUid()
-        ];
-        Log::channel(':SendEmail')->error($message, Bootstrap::context($context));
+        $context = Bootstrap::getDefaultContextLog();
+        $context["action"] = "Send email";
+        $context["appMsgUid"] = $this->getAppMsgUid();
+        $context["appUid"] = $this->getAppUid();
+        Bootstrap::registerMonolog("SendEmail", 400, $msgError, $context);
     }
 
     /**
@@ -680,6 +672,42 @@ class SpoolRun
                             }
                         } catch (Exception $error) {
                             $this->updateSpoolError($error->getMessage());
+                        }
+                        break;
+                    case 'OPENMAIL':
+                        $pack = new package($this->fileData);
+                        $header = $pack->returnHeader();
+                        $body = $pack->returnBody();
+                        $send = new smtp();
+                        $send->setServer($this->config['MESS_SERVER']);
+                        $send->setPort($this->config['MESS_PORT']);
+                        $send->setUsername($this->config['MESS_ACCOUNT']);
+
+                        $passwd = $this->config['MESS_PASSWORD'];
+                        $passwdDec = G::decrypt($passwd, 'EMAILENCRYPT');
+                        $auxPass = explode('hash:', $passwdDec);
+
+                        if (count($auxPass) > 1) {
+                            if (count($auxPass) == 2) {
+                                $passwd = $auxPass[1];
+                            } else {
+                                array_shift($auxPass);
+                                $passwd = implode('', $auxPass);
+                            }
+                        }
+
+                        $this->config['MESS_PASSWORD'] = $passwd;
+                        $send->setPassword($this->config['MESS_PASSWORD']);
+                        $send->setReturnPath($this->fileData['from_email']);
+                        $send->setHeaders($header);
+                        $send->setBody($body);
+                        $send->setEnvelopeTo($this->fileData['envelope_to']);
+                        if ($send->sendMessage()) {
+                            $this->error = '';
+                            $this->status = 'sent';
+                        } else {
+                            $this->error = implode(', ', $send->returnErrors());
+                            $this->status = 'failed';
                         }
                         break;
                 }

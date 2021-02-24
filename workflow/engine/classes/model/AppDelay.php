@@ -152,7 +152,6 @@ class AppDelay extends BaseAppDelay
 
     /**
      * Build the row for the appDelay to be inserted
-     * This function check the instance of RBAC
      *
      * @param string $proUid
      * @param integer $proId

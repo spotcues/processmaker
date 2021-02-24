@@ -1,11 +1,7 @@
 <?php
 
-use Illuminate\Support\Facades\Log;
-use ProcessMaker\BusinessModel\Cases as BusinessModelCases;
-use ProcessMaker\BusinessModel\Task as BusinessModelTask;
 use ProcessMaker\BusinessModel\User as BusinessModelUser;
 use ProcessMaker\BusinessModel\WebEntryEvent;
-use ProcessMaker\Cases\CasesTrait;
 use ProcessMaker\Core\System;
 use ProcessMaker\Plugins\PluginRegistry;
 use ProcessMaker\Util\DateTime;
@@ -17,7 +13,6 @@ use ProcessMaker\Util\DateTime;
  */
 class Cases
 {
-    use CasesTrait;
     private $appSolr = null;
     public $dir = 'ASC';
     public $sort = 'APP_MSG_DATE';
@@ -109,16 +104,14 @@ class Cases
     }
 
     /**
-     * Get user's starting tasks
-     *
-     * @param string $uidUser
-     * @param bool $withoutDummyTasks
-     * @return array
+     * get user starting tasks
+     * @param string $sUIDUser
+     * @return $rows
      */
-    public function getStartCases($uidUser = '', $withoutDummyTasks = false)
+    public function getStartCases($sUIDUser = '')
     {
-        $rows = [['uid' => 'char', 'value' => 'char']];
-        $tasks = [];
+        $rows[] = array('uid' => 'char', 'value' => 'char');
+        $tasks = array();
 
         $c = new Criteria();
         $c->clearSelectColumns();
@@ -128,7 +121,7 @@ class Cases
         $c->addJoin(TaskPeer::TAS_UID, TaskUserPeer::TAS_UID, Criteria::LEFT_JOIN);
         $c->add(ProcessPeer::PRO_STATUS, 'ACTIVE');
         $c->add(TaskPeer::TAS_START, 'TRUE');
-        $c->add(TaskUserPeer::USR_UID, $uidUser);
+        $c->add(TaskUserPeer::USR_UID, $sUIDUser);
         $c->add(TaskUserPeer::TU_TYPE, 1);
         $rs = TaskPeer::doSelectRS($c);
         $rs->setFetchmode(ResultSet::FETCHMODE_ASSOC);
@@ -143,7 +136,7 @@ class Cases
 
         //check groups
         $group = new Groups();
-        $groups = $group->getActiveGroupsForAnUser($uidUser);
+        $aGroups = $group->getActiveGroupsForAnUser($sUIDUser);
 
         $c = new Criteria();
         $c->clearSelectColumns();
@@ -153,7 +146,7 @@ class Cases
         $c->addJoin(TaskPeer::TAS_UID, TaskUserPeer::TAS_UID, Criteria::LEFT_JOIN);
         $c->add(ProcessPeer::PRO_STATUS, 'ACTIVE');
         $c->add(TaskPeer::TAS_START, 'TRUE');
-        $c->add(TaskUserPeer::USR_UID, $groups, Criteria::IN);
+        $c->add(TaskUserPeer::USR_UID, $aGroups, Criteria::IN);
         $c->add(TaskUserPeer::TU_TYPE, 1);
         $rs = TaskPeer::doSelectRS($c);
         $rs->setFetchmode(ResultSet::FETCHMODE_ASSOC);
@@ -173,21 +166,17 @@ class Cases
         $c->addSelectColumn(ProcessPeer::PRO_TITLE);
         $c->addJoin(TaskPeer::PRO_UID, ProcessPeer::PRO_UID, Criteria::LEFT_JOIN);
         $c->add(TaskPeer::TAS_UID, $tasks, Criteria::IN);
-        // Include or not the dummy tasks
-        if ($withoutDummyTasks) {
-            $c->add(TaskPeer::TAS_TYPE, BusinessModelTask::getDummyTypes(), Criteria::NOT_IN);
-        }
         $c->addAscendingOrderByColumn(ProcessPeer::PRO_TITLE);
         $c->addAscendingOrderByColumn(TaskPeer::TAS_TITLE);
         $rs = TaskPeer::doSelectRS($c);
         $rs->setFetchmode(ResultSet::FETCHMODE_ASSOC);
         $rs->next();
         while ($row = $rs->getRow()) {
-            $rows[] = [
+            $rows[] = array(
                 'uid' => $row['TAS_UID'],
                 'value' => $row['PRO_TITLE'] . ' (' . $row['TAS_TITLE'] . ')',
                 'pro_uid' => $row['PRO_UID']
-            ];
+            );
             $rs->next();
             $row = $rs->getRow();
         }
@@ -567,7 +556,7 @@ class Cases
                 }
             }
             return $fields;
-        } catch (Exception $e) {
+        } catch (exception $e) {
             throw ($e);
         }
     }
@@ -879,7 +868,7 @@ class Cases
      * @see \ProcessMaker\BusinessModel\Cases\Variable::delete()
      * @see \ProcessMaker\BusinessModel\Cases\Variable::update()
      */
-    public function updateCase($appUid, $Fields = [])
+    public function updateCase($appUid, $Fields = [],$skipUpdateDate = false)
     {
         try {
             $application = new Application;
@@ -888,7 +877,9 @@ class Cases
             }
             $appData = $Fields['APP_DATA'];
             $Fields['APP_UID'] = $appUid;
-            $Fields['APP_UPDATE_DATE'] = 'now';
+            if(!$skipUpdateDate){
+                $Fields['APP_UPDATE_DATE'] = 'now';
+            }
             $Fields['APP_DATA'] = serialize($Fields['APP_DATA']);
 
             $app = ApplicationPeer::retrieveByPk($appUid);
@@ -1083,12 +1074,7 @@ class Cases
                     $oDerivation->verifyIsCaseChild($sAppUid);
                 }
             } catch (Exception $e) {
-                $message = 'Error in sub-process when trying to route a child case related to the case';
-                $context = [
-                    'application_uid' => $sAppUid,
-                    'error' => $e->getMessage()
-                ];
-                Log::channel(':DeleteCases')->info($message, Bootstrap::context($context));
+                Bootstrap::registerMonolog('DeleteCases', 200, 'Error in sub-process when trying to route a child case related to the case', ['application_uid' => $sAppUid, 'error' => $e->getMessage()], config("system.workspace"), 'processmaker.log');
             }
 
             //Delete the registries in the table SUB_APPLICATION
@@ -1122,13 +1108,12 @@ class Cases
                 }
             }
 
-            /** ProcessMaker log */
-            $message = 'Delete Case';
-            $context = [
-                'appUid' => $appUidCopy,
-                'request' => $nameFiles
-            ];
-            Log::channel(':DeleteCases')->info($message, Bootstrap::context($context));
+            /** ProcessMaker log*/
+            $context = Bootstrap::getDefaultContextLog();
+            $context['appUid'] = $appUidCopy;
+            $context['request'] = $nameFiles;
+            Bootstrap::registerMonolog('DeleteCases', 200, 'Delete Case', $context);
+
             return $result;
         } catch (exception $e) {
             throw ($e);
@@ -2171,8 +2156,7 @@ class Cases
         }
 
         //Log
-        $message = 'Create case';
-        $context = $data = [
+        $data = [
             "appUid" => $sAppUid,
             "usrUid" => $sUsrUid,
             "tasUid" => $sTasUid,
@@ -2181,7 +2165,8 @@ class Cases
             "delIndex" => $iDelIndex,
             "appInitDate" => $Fields['APP_INIT_DATE']
         ];
-        Log::channel(':CreateCase')->info($message, Bootstrap::context($context));
+        Bootstrap::registerMonolog('CreateCase', 200, "Create case", $data, config("system.workspace"), 'processmaker.log');
+
         //call plugin
         if (class_exists('folderData')) {
             $folderData = new folderData($sProUid, $proFields['PRO_TITLE'], $sAppUid, $newValues['APP_TITLE'], $sUsrUid);
@@ -2202,134 +2187,127 @@ class Cases
      * Get the next step
      *
      * @name getNextStep
-     * @param string $proUid
-     * @param string $appUid
-     * @param integer $delIndex
-     * @param integer $position
+     * @param string $sProUid
+     * @param string $sAppUid
+     * @param integer $iDelIndex
+     * @param integer $iPosition
      * @return array
      */
-    public function getNextStep($proUid = '', $appUid = '', $delIndex = 0, $position = 0)
+    public function getNextStep($sProUid = '', $sAppUid = '', $iDelIndex = 0, $iPosition = 0)
     {
-        $pmScript = new PMScript();
-        $application = new Application();
-        $fields = $application->Load($appUid);
-        $data = Cases::unserializeData($fields['APP_DATA']);
-        unset($data['USER_LOGGED']);
-        unset($data['USR_USERNAME']);
-
-        if (!is_array($fields['APP_DATA'])) {
-            $fields['APP_DATA'] = G::array_merges(G::getSystemConstants(), $data);
+        $oPMScript = new PMScript();
+        $oApplication = new Application();
+        $aFields = $oApplication->Load($sAppUid);
+        if (!is_array($aFields['APP_DATA'])) {
+            $aFields['APP_DATA'] = G::array_merges(G::getSystemConstants(), unserialize($aFields['APP_DATA']));
         }
-
-        $pmScript->setFields($fields['APP_DATA']);
+        $oPMScript->setFields($aFields['APP_DATA']);
 
         try {
             //get the current Delegation, and TaskUID
             $c = new Criteria('workflow');
-            $c->add(AppDelegationPeer::PRO_UID, $proUid);
-            $c->add(AppDelegationPeer::APP_UID, $appUid);
-            $c->add(AppDelegationPeer::DEL_INDEX, $delIndex);
-            $rows = AppDelegationPeer::doSelect($c);
+            $c->add(AppDelegationPeer::PRO_UID, $sProUid);
+            $c->add(AppDelegationPeer::APP_UID, $sAppUid);
+            $c->add(AppDelegationPeer::DEL_INDEX, $iDelIndex);
+            $aRow = AppDelegationPeer::doSelect($c);
 
-            if (!isset($rows[0])) {
+            if (!isset($aRow[0])) {
                 return false;
             }
 
-            $taskUid = $rows[0]->getTasUid();
+            $sTaskUid = $aRow[0]->getTasUid();
 
             //get max step for this task
             $c = new Criteria();
             $c->clearSelectColumns();
             $c->addSelectColumn('MAX(' . StepPeer::STEP_POSITION . ')');
-            $c->add(StepPeer::PRO_UID, $proUid);
-            $c->add(StepPeer::TAS_UID, $taskUid);
+            $c->add(StepPeer::PRO_UID, $sProUid);
+            $c->add(StepPeer::TAS_UID, $sTaskUid);
             $rs = StepPeer::doSelectRS($c);
             $rs->next();
             $row = $rs->getRow();
-            $lastStep = intval($row[0]);
-            if ($position != 10000 && $position > $lastStep) {
-                throw (new Exception(G::LoadTranslation('ID_STEP_DOES_NOT_EXIST',
-                    [G::LoadTranslation('ID_POSITION'), $position])));
+            $iLastStep = intval($row[0]);
+            if ($iPosition != 10000 && $iPosition > $iLastStep) {
+                throw (new Exception(G::LoadTranslation('ID_STEP_DOES_NOT_EXIST', array(G::LoadTranslation('ID_POSITION'), $iPosition))));
             }
-            $position += 1;
-            $nextStep = null;
-            if ($position <= $lastStep) {
-                while ($position <= $lastStep) {
-                    $accessStep = false;
+            $iPosition += 1;
+            $aNextStep = null;
+            if ($iPosition <= $iLastStep) {
+                while ($iPosition <= $iLastStep) {
+                    $bAccessStep = false;
                     //step
-                    $step = new Step;
-                    $step = $step->loadByProcessTaskPosition($proUid, $taskUid, $position);
-                    if ($step) {
-                        if (trim($step->getStepCondition()) !== '') {
-                            $pmScript->setScript($step->getStepCondition());
-                            $pmScript->setExecutedOn(PMScript::CONDITION);
-                            $accessStep = $pmScript->evaluate();
+                    $oStep = new Step;
+                    $oStep = $oStep->loadByProcessTaskPosition($sProUid, $sTaskUid, $iPosition);
+                    if ($oStep) {
+                        if (trim($oStep->getStepCondition()) !== '') {
+                            $oPMScript->setScript($oStep->getStepCondition());
+                            $oPMScript->setExecutedOn(PMScript::CONDITION);
+                            $bAccessStep = $oPMScript->evaluate();
                         } else {
-                            $accessStep = true;
+                            $bAccessStep = true;
                         }
-                        if ($accessStep) {
-                            switch ($step->getStepTypeObj()) {
+                        if ($bAccessStep) {
+                            switch ($oStep->getStepTypeObj()) {
                                 case 'DYNAFORM':
-                                    $action = 'EDIT';
+                                    $sAction = 'EDIT';
                                     break;
                                 case 'OUTPUT_DOCUMENT':
-                                    $action = 'GENERATE';
+                                    $sAction = 'GENERATE';
                                     break;
                                 case 'INPUT_DOCUMENT':
-                                    $action = 'ATTACH';
+                                    $sAction = 'ATTACH';
                                     break;
                                 case 'EXTERNAL':
-                                    $action = 'EDIT';
+                                    $sAction = 'EDIT';
                                     break;
                                 case 'MESSAGE':
-                                    $action = '';
+                                    $sAction = '';
                                     break;
                             }
-                            if (array_key_exists('gmail', $_SESSION) || (array_key_exists('gmail',
-                                        $_GET) && $_GET['gmail'] == 1)) {
-                                $nextStep = [
-                                    'TYPE' => $step->getStepTypeObj(),
-                                    'UID' => $step->getStepUidObj(),
-                                    'POSITION' => $step->getStepPosition(),
-                                    'PAGE' => 'cases_Step?TYPE=' . $step->getStepTypeObj() . '&UID=' .
-                                        $step->getStepUidObj() . '&POSITION=' . $step->getStepPosition() .
-                                        '&ACTION=' . $action .
-                                        '&gmail=1'
-                                ];
+                            if (array_key_exists('gmail', $_SESSION) || (array_key_exists('gmail', $_GET) && $_GET['gmail'] == 1)) {
+                                $aNextStep = array(
+                                    'TYPE' => $oStep->getStepTypeObj(),
+                                    'UID' => $oStep->getStepUidObj(),
+                                    'POSITION' => $oStep->getStepPosition(),
+                                    'PAGE' => 'cases_Step?TYPE=' . $oStep->getStepTypeObj() . '&UID=' .
+                                    $oStep->getStepUidObj() . '&POSITION=' . $oStep->getStepPosition() .
+                                    '&ACTION=' . $sAction .
+                                    '&gmail=1'
+                                );
                             } else {
-                                $nextStep = [
-                                    'TYPE' => $step->getStepTypeObj(),
-                                    'UID' => $step->getStepUidObj(),
-                                    'POSITION' => $step->getStepPosition(),
-                                    'PAGE' => 'cases_Step?TYPE=' . $step->getStepTypeObj() . '&UID=' .
-                                        $step->getStepUidObj() . '&POSITION=' . $step->getStepPosition() .
-                                        '&ACTION=' . $action
-                                ];
+                                $aNextStep = array(
+                                    'TYPE' => $oStep->getStepTypeObj(),
+                                    'UID' => $oStep->getStepUidObj(),
+                                    'POSITION' => $oStep->getStepPosition(),
+                                    'PAGE' => 'cases_Step?TYPE=' . $oStep->getStepTypeObj() . '&UID=' .
+                                    $oStep->getStepUidObj() . '&POSITION=' . $oStep->getStepPosition() .
+                                    '&ACTION=' . $sAction
+                                );
                             }
-                            $position = $lastStep;
+                            $iPosition = $iLastStep;
                         }
                     }
-                    $position += 1;
+                    $iPosition += 1;
                 }
             }
-            if (!$nextStep) {
+            if (!$aNextStep) {
                 if (array_key_exists('gmail', $_SESSION) || (array_key_exists('gmail', $_GET) && $_GET['gmail'] == 1)) {
-                    $nextStep = [
+                    $aNextStep = array(
                         'TYPE' => 'DERIVATION',
                         'UID' => -1,
-                        'POSITION' => ($lastStep + 1),
+                        'POSITION' => ($iLastStep + 1),
                         'PAGE' => 'cases_Step?TYPE=ASSIGN_TASK&UID=-1&POSITION=10000&ACTION=ASSIGN&gmail=1'
-                    ];
+                    );
                 } else {
-                    $nextStep = [
+                    $aNextStep = array(
                         'TYPE' => 'DERIVATION',
                         'UID' => -1,
-                        'POSITION' => ($lastStep + 1),
+                        'POSITION' => ($iLastStep + 1),
                         'PAGE' => 'cases_Step?TYPE=ASSIGN_TASK&UID=-1&POSITION=10000&ACTION=ASSIGN'
-                    ];
+                    );
                 }
             }
-            return $nextStep;
+            return $aNextStep;
         } catch (exception $e) {
             throw ($e);
         }
@@ -4237,7 +4215,7 @@ class Cases
         /** Create a register in APP_DELAY */
         $delay = new AppDelay();
 
-        foreach ($indexesClosed as $value) {
+        foreach ($indexesClosed as $value){
             $dataList = [];
             $rowDelay = AppDelay::buildAppDelayRow(
                 $caseFields['PRO_UID'],
@@ -5333,19 +5311,17 @@ class Cases
                     $from = $fromName . (($fromMail != '') ? ' <' . $fromMail . '>' : '');
                     //If the configuration was not configured correctly
                     if (empty($fromMail)) {
-                        $message = 'Email server';
-                        $context = [
-                            'appUid' => $arrayData['APPLICATION'],
-                            'usrUid' => $arrayData['USER_LOGGED'],
-                            'appNumber' => $arrayData['APP_NUMBER'],
-                            'tasUid' => $arrayData['TASK'],
-                            'proUid' => $aTaskInfo['PRO_UID'],
-                            'appMessageStatus' => 'pending',
-                            'subject' => $sSubject,
-                            'from' => $from,
-                            'action' => G::LoadTranslation('ID_EMAIL_SERVER_FROM_MAIL_EMPTY')
-                        ];
-                        Log::channel(':EmailServer')->warning($message, Bootstrap::context($context));
+                        $dataLog = \Bootstrap::getDefaultContextLog();
+                        $dataLog['appUid'] = $arrayData['APPLICATION'];
+                        $dataLog['usrUid'] = $arrayData['USER_LOGGED'];
+                        $dataLog['appNumber'] = $arrayData['APP_NUMBER'];
+                        $dataLog['tasUid'] = $arrayData['TASK'];
+                        $dataLog['proUid'] = $aTaskInfo['PRO_UID'];
+                        $dataLog['appMessageStatus'] = 'pending';
+                        $dataLog['subject'] = $sSubject;
+                        $dataLog['from'] = $from;
+                        $dataLog['action'] = G::LoadTranslation('ID_EMAIL_SERVER_FROM_MAIL_EMPTY');
+                        Bootstrap::registerMonolog('EmailServer', 300, 'Email server', $dataLog, $dataLog['workspace'], 'processmaker.log');
                     }
                 }
                 $dataLastEmail['msgError'] = $msgError;
@@ -5416,19 +5392,17 @@ class Cases
                     $from = $fromName . (($fromMail != '') ? ' <' . $fromMail . '>' : '');
                     //If the configuration was not configured correctly
                     if (empty($fromMail)) {
-                        $message = 'Email server';
-                        $context = [
-                            'appUid' => $arrayData['APPLICATION'],
-                            'usrUid' => $arrayData['USER_LOGGED'],
-                            'appNumber' => $arrayData['APP_NUMBER'],
-                            'tasUid' => $arrayData['TASK'],
-                            'proUid' => $aTaskInfo['PRO_UID'],
-                            'appMessageStatus' => 'pending',
-                            'subject' => $sSubject,
-                            'from' => $from,
-                            'action' => G::LoadTranslation('ID_EMAIL_SERVER_FROM_MAIL_EMPTY')
-                        ];
-                        Log::channel(':EmailServer')->warning($message, Bootstrap::context($context));
+                        $dataLog = \Bootstrap::getDefaultContextLog();
+                        $dataLog['appUid'] = $arrayData['APPLICATION'];
+                        $dataLog['usrUid'] = $arrayData['USER_LOGGED'];
+                        $dataLog['appNumber'] = $arrayData['APP_NUMBER'];
+                        $dataLog['tasUid'] = $arrayData['TASK'];
+                        $dataLog['proUid'] = $aTaskInfo['PRO_UID'];
+                        $dataLog['appMessageStatus'] = 'pending';
+                        $dataLog['subject'] = $sSubject;
+                        $dataLog['from'] = $from;
+                        $dataLog['action'] = G::LoadTranslation('ID_EMAIL_SERVER_FROM_MAIL_EMPTY');
+                        Bootstrap::registerMonolog('EmailServer', 300, 'Email server', $dataLog, $dataLog['workspace'], 'processmaker.log');
                     }
                 }
                 $dataLastEmail['msgError'] = $msgError;
@@ -5672,6 +5646,7 @@ class Cases
                     }
 
                     $arrayAux1 = $tasks->getUsersOfTask($taskUid, 1);
+
                     foreach ($arrayAux1 as $arrayUser) {
                         $arrayTaskUser[] = $arrayUser['USR_UID'];
                     }
@@ -5694,7 +5669,7 @@ class Cases
                         if ($to == '') {
                             $to = $toAux;
                         } else {
-                            $to .= ',' . $toAux;
+                            $cc .= (($cc != '') ? ',' : '') . $toAux;
                         }
                     }
                 }
@@ -5715,7 +5690,7 @@ class Cases
                             $to = $toAux;
                             $sw = 0;
                         } else {
-                            $to .= ',' . $toAux;
+                            $cc = $cc . (($cc != null) ? "," : null) . $toAux;
                         }
                     }
                     $arrayResp ['to'] = $to;
@@ -5740,7 +5715,7 @@ class Cases
                             $to = $toAux;
                             $sw = 0;
                         } else {
-                            $to .= ',' . $toAux;
+                            $cc = $cc . (($cc != null) ? "," : null) . $toAux;
                         }
                     }
                     $arrayResp ['to'] = $to;
@@ -5891,7 +5866,7 @@ class Cases
                 switch ($opType) {
                     case 'ANY':
                         //For dynaforms
-                        $listDynaform = BusinessModelCases::dynaFormsByApplication(
+                        $listDynaform = $objectPermission->objectPermissionByDynaform(
                             $appUid,
                             $opTaskSource,
                             $opObjUid,
@@ -5948,7 +5923,7 @@ class Cases
                         $resultMessages = array_merge($resultMessages, $listMessage);
                         break;
                     case 'DYNAFORM':
-                        $listDynaform = BusinessModelCases::dynaFormsByApplication(
+                        $listDynaform = $objectPermission->objectPermissionByDynaform(
                             $appUid,
                             $opTaskSource,
                             $opObjUid,
@@ -7158,7 +7133,6 @@ class Cases
             $additionalTables = new AdditionalTables();
             $listTables = $additionalTables->getReportTables($applicationFields["PRO_UID"]);
             $pmTable = new PmTable();
-            $tableName = '';
             foreach ($listTables as $row) {
                 try {
                     $tableName = $row["ADD_TAB_NAME"];
@@ -7169,13 +7143,11 @@ class Cases
                     $criteria->add($pmTablePeer::APP_UID, $applicationUid);
                     $pmTablePeer::doDelete($criteria);
                 } catch (Exception $e) {
-                    $message = $e->getMessage();
-                    $context = [
-                        'appUid' => $applicationUid,
-                        'proUid' => $applicationFields["PRO_UID"],
-                        'reportTable' => $tableName
-                    ];
-                    Log::channel(':DeleteCases')->error($message, Bootstrap::context($context));
+                    $context = Bootstrap::getDefaultContextLog();
+                    $context['appUid'] = $applicationUid;
+                    $context['proUid'] = $applicationFields["PRO_UID"];
+                    $context['reportTable'] = $tableName;
+                    Bootstrap::registerMonolog('DeleteCases', 400, $e->getMessage(), $context);
                 }
             }
         }

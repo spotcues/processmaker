@@ -52,8 +52,6 @@ use PDepend\Util\Log;
  */
 class FileCacheGarbageCollector
 {
-    const DEFAULT_TTL = 2592000; //30 days
-
     /**
      * @var string
      */
@@ -62,16 +60,16 @@ class FileCacheGarbageCollector
     /**
      * @var integer
      */
-    private $expirationTimestamp;
+    private $minTime;
 
     /**
      * @param string $cacheDir
-     * @param integer $ttl
+     * @param integer $maxDays
      */
-    public function __construct($cacheDir, $ttl = self::DEFAULT_TTL)
+    public function __construct($cacheDir, $maxDays = 30)
     {
         $this->cacheDir = $cacheDir;
-        $this->expirationTimestamp = time() - $ttl;
+        $this->minTime = time() - ($maxDays * 86400);
     }
 
     /**
@@ -119,12 +117,12 @@ class FileCacheGarbageCollector
         }
 
         $time = $file->getATime();
-        if ($time > $this->expirationTimestamp) {
+        if ($time > $this->minTime) {
             return false;
         }
 
         $time = $file->getMTime();
-        if ($time > $this->expirationTimestamp) {
+        if ($time > $this->minTime) {
             return false;
         }
 

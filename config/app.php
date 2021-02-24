@@ -25,10 +25,10 @@ return [
         Laravel\Tinker\TinkerServiceProvider::class,
         Illuminate\Notifications\NotificationServiceProvider::class,
         Illuminate\Bus\BusServiceProvider::class,
-        Illuminate\Redis\RedisServiceProvider::class,
-        App\Providers\AppServiceProvider::class,
     ],
+
     'aliases' => [
         'Crypt' => Illuminate\Support\Facades\Crypt::class
     ],
+
 ];

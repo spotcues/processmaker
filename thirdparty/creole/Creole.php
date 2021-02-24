@@ -28,8 +28,6 @@ include_once 'creole/Connection.php';
 
 @ini_set('track_errors', true);
 
- use ProcessMaker\Core\System;
- 
 /**
  * This is the class that manages the database drivers.
  *
@@ -311,10 +309,6 @@ class Creole {
         );
 
         $info = parse_url($dsn);
-        if ($info === false) {
-            $info = System::parseUrlWithNotEncodedPassword($dsn);
-        }
-
         $info['pass'] = urldecode($info['pass']);
         if (count($info) === 1) { // if there's only one element in result, then it must be the phptype
             $parsed['phptype'] = array_pop($info);

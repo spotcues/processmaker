@@ -138,28 +138,26 @@ class Validator
     /**
      * Validate pro_uid
      *
-     * @param string $proUid , Uid for process
+     * @param string $pro_uid , Uid for process
      * @param string $nameField . Name of field for message
      *
      * @access public
+     * @author Brayan Pereyra (Cochalo) <brayan@colosa.com>
+     * @copyright Colosa - Bolivia
      *
-     * @return int
+     * @return string
      */
-    static public function proUid($proUid, $nameField = 'pro_uid')
+    static public function proUid($pro_uid, $nameField = 'pro_uid')
     {
-        $proUid = trim($proUid);
-        if (empty($proUid)) {
+        $pro_uid = trim($pro_uid);
+        if ($pro_uid == '') {
             throw (new Exception(G::LoadTranslation("ID_PROCESS_NOT_EXIST", array($nameField, ''))));
         }
-        $process = new \Process();
-        $proId = 0;
-        if (!($process->exists($proUid))) {
-            throw (new Exception(G::LoadTranslation("ID_PROCESS_NOT_EXIST", array($nameField, $proUid))));
-        } else {
-            $proId = $process->load($proUid)['PRO_ID'];
+        $oProcess = new \Process();
+        if (!($oProcess->exists($pro_uid))) {
+            throw (new Exception(G::LoadTranslation("ID_PROCESS_NOT_EXIST", array($nameField, $pro_uid))));
         }
-
-        return $proId;
+        return $pro_uid;
     }
 
     /**

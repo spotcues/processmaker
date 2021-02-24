@@ -488,13 +488,6 @@ class Propel
                      * @Description: this was added for the additional database connections *
                      ***********************************************************************/
                     DbConnections::loadAdditionalConnections();
-                    //Method "DbConnections::loadAdditionalConnections()" does not work 
-                    //well in a multi-threaded environment, its restructuring is quite 
-                    //expensive and should be done in another improvement. Forcing the 
-                    //load ensures that additional connections are obtained.
-                    if (empty(self::$configuration['datasources'][$name])) {
-                        DbConnections::loadAdditionalConnections(true);
-                    }
                     $dsn = isset(self::$configuration['datasources'][$name]['connection']) ? self::$configuration['datasources'][$name]['connection'] : null;
                 } else {
                     throw new PropelException("No connection params set for " . $name);
@@ -608,9 +601,7 @@ class Propel
         foreach (self::$connectionMap as $cnn) {
             if (get_class($cnn) != "DBArrayConnection") {
                 if (isset($cnn->lastQuery)) {
-                    $existsIsConnectedMethod = method_exists($cnn, "isConnected");
-                    $existsCloseMethod = method_exists($cnn, "close");
-                    if ($existsIsConnectedMethod && $existsCloseMethod && $cnn->isConnected() && $cnn->lastQuery != $lastQuery) {
+                    if (gettype($cnn->getResource()) == "resource" && $cnn->isConnected() && $cnn->lastQuery != $lastQuery) {
                         $cnn->close();
                     }
                     $lastQuery = $cnn->lastQuery;
@@ -626,7 +617,7 @@ class Propel
      */
     public static function getDbConnection($name)
     {
-            return null;
+           // return null;
 
         if (!empty(self::$configuration['datasources'][$name]['connection'])) {
             return self::getConnection($name);

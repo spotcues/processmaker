@@ -57,7 +57,7 @@ abstract class AbstractASTCallable extends AbstractASTArtifact implements ASTCal
     /**
      * The internal used cache instance.
      *
-     * @var   \PDepend\Util\Cache\CacheDriver|null
+     * @var   \PDepend\Util\Cache\CacheDriver
      * @since 0.10.0
      */
     protected $cache = null;
@@ -113,7 +113,7 @@ abstract class AbstractASTCallable extends AbstractASTArtifact implements ASTCal
     /**
      * List of method/function parameters.
      *
-     * @var \PDepend\Source\AST\ASTParameter[]|null
+     * @var \PDepend\Source\AST\ASTParameter[]
      */
     private $parameters = null;
 
@@ -256,7 +256,7 @@ abstract class AbstractASTCallable extends AbstractASTArtifact implements ASTCal
      * Returns all {@link \PDepend\Source\AST\AbstractASTClassOrInterface}
      * objects this function depends on.
      *
-     * @return ASTClassOrInterfaceReferenceIterator
+     * @return \PDepend\Source\AST\AbstractASTClassOrInterface[]
      */
     public function getDependencies()
     {
@@ -352,7 +352,7 @@ abstract class AbstractASTCallable extends AbstractASTArtifact implements ASTCal
      * Returns an iterator with thrown exception
      * {@link \PDepend\Source\AST\AbstractASTClassOrInterface} instances.
      *
-     * @return ASTClassOrInterfaceReferenceIterator
+     * @return \PDepend\Source\AST\AbstractASTClassOrInterface[]
      */
     public function getExceptionClasses()
     {
@@ -364,7 +364,7 @@ abstract class AbstractASTCallable extends AbstractASTArtifact implements ASTCal
     /**
      * Returns an array with all method/function parameters.
      *
-     * @return \PDepend\Source\AST\ASTParameter[]|null
+     * @return \PDepend\Source\AST\ASTParameter[]
      */
     public function getParameters()
     {

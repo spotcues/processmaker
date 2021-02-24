@@ -10,7 +10,6 @@ use EmailEventPeer;
 use EmailServerPeer;
 use Exception;
 use G;
-use Illuminate\Support\Facades\Log;
 use ProcessMaker\Util\Common;
 use Propel;
 use ResultSet;
@@ -534,12 +533,13 @@ class EmailEvent
                     WsBase::MESSAGE_TYPE_EMAIL_EVENT
                 );
             } else {
-                $message = G::LoadTranslation('ID_EMAIL_EVENT_CONFIGURATION_EMAIL', [$eventUid, $prj_uid]);
-                $context = [
-                    'eventUid' => $eventUid,
-                    'prj_uid' => $prj_uid
-                ];
-                Log::channel(':EmailEventMailError')->info($message, Bootstrap::context($context));
+                Bootstrap::registerMonolog(
+                    'EmailEventMailError',
+                    200,
+                    G::LoadTranslation('ID_EMAIL_EVENT_CONFIGURATION_EMAIL', [$eventUid, $prj_uid]),
+                    ['eventUid' => $eventUid, 'prj_uid' => $prj_uid],
+                    config('system.workspace'),
+                    'processmaker.log');
             }
         }
     }

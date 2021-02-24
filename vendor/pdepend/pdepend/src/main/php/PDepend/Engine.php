@@ -42,14 +42,14 @@
 
 namespace PDepend;
 
-use ArrayIterator;
-use GlobIterator;
 use PDepend\Input\CompositeFilter;
 use PDepend\Input\Filter;
 use PDepend\Input\Iterator;
 use PDepend\Metrics\AnalyzerCacheAware;
+use PDepend\Metrics\AnalyzerClassFileSystemLocator;
 use PDepend\Metrics\AnalyzerFactory;
 use PDepend\Metrics\AnalyzerFilterAware;
+use PDepend\Metrics\AnalyzerLoader;
 use PDepend\Report\CodeAwareGenerator;
 use PDepend\Source\AST\ASTArtifactList\ArtifactFilter;
 use PDepend\Source\AST\ASTArtifactList\CollectionArtifactFilter;
@@ -62,7 +62,6 @@ use PDepend\Source\Language\PHP\PHPTokenizerInternal;
 use PDepend\Source\Tokenizer\Tokenizer;
 use PDepend\Util\Cache\CacheFactory;
 use PDepend\Util\Configuration;
-use SplFileObject;
 
 /**
  * PDepend analyzes php class files and generates metrics.
@@ -92,13 +91,6 @@ class Engine
      * @since 0.10.0
      */
     protected $configuration = null;
-
-    /**
-     * Prefix for PHP streams.
-     *
-     * @var string
-     */
-    protected $phpStreamPrefix = 'php://';
 
     /**
      * List of source directories.
@@ -237,21 +229,17 @@ class Engine
      */
     public function addFile($file)
     {
-        if ($file === '-') {
-            $file = $this->phpStreamPrefix . 'stdin';
+        if ($file === '-' || $file === 'php://stdin') {
+            $fileName = 'php://stdin';
+        } else {
+            $fileName = realpath($file);
+
+            if (!is_file($fileName)) {
+                throw new \InvalidArgumentException(sprintf('The given file "%s" does not exist.', $file));
+            }
         }
 
-        if ($this->isPhpStream($file)) {
-            $this->files[] = $file;
-
-            return;
-        }
-
-        if (!is_file($file)) {
-            throw new \InvalidArgumentException(sprintf('The given file "%s" does not exist.', $file));
-        }
-
-        $this->files[] = realpath($file);
+        $this->files[] = $fileName;
     }
 
     /**
@@ -647,11 +635,7 @@ class Engine
         $fileIterator = new \AppendIterator();
 
         foreach ($this->files as $file) {
-            $fileIterator->append(
-                $this->isPhpStream($file)
-                    ? new ArrayIterator(array(new SplFileObject($file)))
-                    : new Iterator(new GlobIterator($file), $this->fileFilter)
-            );
+            $fileIterator->append(new Iterator(new \GlobIterator($file), $this->fileFilter));
         }
 
         foreach ($this->directories as $directory) {
@@ -677,7 +661,7 @@ class Engine
             if (is_string($file)) {
                 $files[$file] = $file;
             } else {
-                $pathname = $file->getRealPath() ?: $file->getPathname();
+                $pathname         = realpath($file->getPathname());
                 $files[$pathname] = $pathname;
             }
         }
@@ -691,7 +675,7 @@ class Engine
         ksort($files);
         // END
 
-        return new ArrayIterator(array_values($files));
+        return new \ArrayIterator(array_values($files));
     }
 
     private function createAnalyzers($options)
@@ -717,10 +701,5 @@ class Engine
         }
 
         return $analyzers;
-    }
-
-    private function isPhpStream($path)
-    {
-        return substr($path, 0, strlen($this->phpStreamPrefix)) === $this->phpStreamPrefix;
     }
 }

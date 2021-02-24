@@ -63,15 +63,11 @@ class DbSourceMapBuilder
         $tMap = $this->dbMap->addTable('DB_SOURCE');
         $tMap->setPhpName('DbSource');
 
-        $tMap->setUseIdGenerator(true);
-
-        $tMap->addColumn('DBS_ID', 'DbsId', 'int', CreoleTypes::INTEGER, true, null);
+        $tMap->setUseIdGenerator(false);
 
         $tMap->addPrimaryKey('DBS_UID', 'DbsUid', 'string', CreoleTypes::VARCHAR, true, 32);
 
         $tMap->addPrimaryKey('PRO_UID', 'ProUid', 'string', CreoleTypes::VARCHAR, true, 32);
-
-        $tMap->addColumn('PRO_ID', 'ProId', 'int', CreoleTypes::INTEGER, false, null);
 
         $tMap->addColumn('DBS_TYPE', 'DbsType', 'string', CreoleTypes::VARCHAR, true, 8);
 

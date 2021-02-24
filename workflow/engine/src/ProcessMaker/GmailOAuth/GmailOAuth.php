@@ -8,7 +8,6 @@ use G;
 use Google_Client;
 use Google_Service_Gmail;
 use Google_Service_Gmail_Message;
-use Illuminate\Support\Facades\Log;
 use PHPMailerOAuth;
 use ProcessMaker\BusinessModel\EmailServer;
 use ProcessMaker\Core\System;
@@ -351,7 +350,7 @@ class GmailOAuth
     {
         $templateTower = new TemplatePower(PATH_TPL . "admin" . PATH_SEP . "email.tpl");
         $templateTower->prepare();
-        $templateTower->assign("server", System::getServerProtocol() . System::getServerHost());
+        $templateTower->assign("server", System::getServerHostname());
         $templateTower->assign("date", date("H:i:s"));
         $templateTower->assign("ver", System::getVersion());
         $templateTower->assign("engine", G::LoadTranslation("ID_MESS_ENGINE_TYPE_4"));
@@ -465,6 +464,8 @@ class GmailOAuth
      */
     public function saveIntoStandardLogs(string $status = "")
     {
+        $channel = "Test Email Servers Configuration";
+        $severity = 200; //INFO
         $message = "Email Server test has been sent";
         $context = [
             "emailServerUid" => $this->emailServerUid,
@@ -475,6 +476,7 @@ class GmailOAuth
             "senderName" => $this->senderName,
             "status" => $status
         ];
-        Log::channel(':GmailOAuth')->info($message, Bootstrap::context($context));
+        $workspace = config("system.workspace");
+        Bootstrap::registerMonolog($channel, $severity, $message, $context, $workspace);
     }
 }

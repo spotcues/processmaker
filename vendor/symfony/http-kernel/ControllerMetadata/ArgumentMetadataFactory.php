@@ -48,7 +48,7 @@ final class ArgumentMetadataFactory implements ArgumentMetadataFactoryInterface
         if (!$type = $parameter->getType()) {
             return null;
         }
-        $name = $type instanceof \ReflectionNamedType ? $type->getName() : (string) $type;
+        $name = $type->getName();
 
         if ($function instanceof \ReflectionMethod) {
             $lcName = strtolower($name);

@@ -2,13 +2,10 @@
 
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use ProcessMaker\BusinessModel\Process as BmProcess;
 use ProcessMaker\Core\Installer;
 use ProcessMaker\Core\ProcessesManager;
 use ProcessMaker\Core\System;
-use ProcessMaker\Model\Application;
-use ProcessMaker\Model\Fields;
 use ProcessMaker\Plugins\Adapters\PluginAdapter;
 use ProcessMaker\Project\Adapter\BpmnWorkflow;
 use ProcessMaker\Upgrade\RunProcessUpgradeQuery;
@@ -4209,57 +4206,6 @@ class WorkspaceTools
         $con->commit();
         CLI::logging("-> Populating APP_ASSIGN_SELF_SERVICE_VALUE.TAS_ID  Done \n");
 
-        // Populating PROCESS_VARIABLES.PRO_ID
-        CLI::logging("->   Populating PROCESS_VARIABLES.PRO_ID \n");
-        $con->begin();
-        $stmt = $con->createStatement();
-        $rs = $stmt->executeQuery("UPDATE PROCESS_VARIABLES AS PV
-                                   INNER JOIN (
-                                       SELECT PROCESS.PRO_UID, PROCESS.PRO_ID
-                                       FROM PROCESS
-                                   ) AS PRO
-                                   ON (PV.PRJ_UID = PRO.PRO_UID)
-                                   SET PV.PRO_ID = PRO.PRO_ID
-                                   WHERE PV.PRO_ID = 0");
-        $con->commit();
-        CLI::logging("-> Populating PROCESS_VARIABLES.PRO_ID  Done \n");
-
-        // Populating PROCESS_VARIABLES.VAR_FIELD_TYPE_ID
-        CLI::logging("->   Populating PROCESS_VARIABLES.VAR_FIELD_TYPE_ID \n");
-        $con->begin();
-        $stmt = $con->createStatement();
-        $rs = $stmt->executeQuery("UPDATE PROCESS_VARIABLES
-                                   SET VAR_FIELD_TYPE_ID = (case
-                                        when VAR_FIELD_TYPE = 'string' then 1
-                                        when VAR_FIELD_TYPE = 'integer' then 2
-                                        when VAR_FIELD_TYPE = 'float' then 3
-                                        when VAR_FIELD_TYPE = 'boolean' then 4
-                                        when VAR_FIELD_TYPE = 'datetime' then 5
-                                        when VAR_FIELD_TYPE = 'grid' then 6
-                                        when VAR_FIELD_TYPE = 'array' then 7
-                                        when VAR_FIELD_TYPE = 'file' then 8
-                                        when VAR_FIELD_TYPE = 'multiplefile' then 9
-                                        when VAR_FIELD_TYPE = 'object' then 10
-                                    end)
-                                   WHERE VAR_FIELD_TYPE_ID = 0");
-        $con->commit();
-        CLI::logging("-> Populating PROCESS_VARIABLES.VAR_FIELD_TYPE_ID Done \n");
-
-        // Populating DB_SOURCE.PRO_ID
-        CLI::logging("->   Populating DB_SOURCE.PRO_ID \n");
-        $con->begin();
-        $stmt = $con->createStatement();
-        $rs = $stmt->executeQuery("UPDATE DB_SOURCE AS DS
-                                   INNER JOIN (
-                                       SELECT PROCESS.PRO_UID, PROCESS.PRO_ID
-                                       FROM PROCESS
-                                   ) AS PRO
-                                   ON (DS.PRO_UID = PRO.PRO_UID)
-                                   SET DS.PRO_ID = PRO.PRO_ID
-                                   WHERE DS.PRO_ID = 0");
-        $con->commit();
-        CLI::logging("-> Populating DB_SOURCE.PRO_ID  Done \n");
-
         //Complete all migrations
         CLI::logging("-> Migrating And Populating Indexing for avoiding the use of table APP_CACHE_VIEW Done \n");
     }
@@ -4691,171 +4637,6 @@ class WorkspaceTools
      * @param bool $rbac
      */
     public function upgradeQuery($query, $rbac)
-    {
-        $database = $this->getDatabase($rbac);
-        $database->executeQuery($query, true);
-    }
-    
-    /**
-     * This method regenerates data report with the APP_DATA data.
-     * @param string $tableName
-     * @param string $type
-     * @param string $processUid
-     * @param string $gridKey
-     * @param string $addTabUid
-     * @param string $className
-     * @param string $pathWorkspace
-     * @param int $start
-     * @param int $limit
-     * @throws Exception
-     */
-    public function generateDataReport(
-            $tableName, 
-            $type = 'NORMAL', 
-            $processUid = '', 
-            $gridKey = '', 
-            $addTabUid = '', 
-            $className = '', 
-            $pathWorkspace, 
-            int $start = 0, 
-            int $limit = 10)
-    {
-        $this->initPropel();
-        $dbHost = explode(':', $this->dbHost);
-        config(['database.connections.workflow.host' => $dbHost[0]]);
-        config(['database.connections.workflow.database' => $this->dbName]);
-        config(['database.connections.workflow.username' => $this->dbUser]);
-        config(['database.connections.workflow.password' => $this->dbPass]);
-        if (count($dbHost) > 1) {
-            config(['database.connections.workflow.port' => $dbHost[1]]);
-        }
-
-        //require file
-        set_include_path(get_include_path() . PATH_SEPARATOR . $pathWorkspace);
-        if (!file_exists($pathWorkspace . 'classes/' . $className . '.php')) {
-            throw new Exception("ERROR: " . $pathWorkspace . 'classes/' . $className . '.php' . " class file doesn't exit!");
-        }
-        require_once 'classes/model/AdditionalTables.php';
-        require_once $pathWorkspace . 'classes/' . $className . '.php';
-
-        //get fields
-        $fieldTypes = [];
-        if ($addTabUid != '') {
-            $fields = Fields::where('ADD_TAB_UID', '=', $addTabUid)->get();
-            foreach ($fields as $field) {
-                switch ($field->FLD_TYPE) {
-                    case 'FLOAT':
-                    case 'DOUBLE':
-                    case 'INTEGER':
-                        $fieldTypes[] = [$field->FLD_NAME => $field->FLD_TYPE];
-                        break;
-                    default:
-                        break;
-                }
-            }
-        }
-
-        $context = Bootstrap::context();
-        $case = new Cases();
-
-        //select cases for this Process, ordered by APP_NUMBER
-        $applications = Application::where('PRO_UID', '=', $processUid)
-                ->orderBy('APP_NUMBER', 'asc')
-                ->offset($start)
-                ->limit($limit)
-                ->get();
-        foreach ($applications as $application) {
-            //getting the case data
-            $appData = $case->unserializeData($application->APP_DATA);
-
-            //quick fix, map all empty values as NULL for Database
-            foreach ($appData as $appDataKey => $appDataValue) {
-                if (is_array($appDataValue) && count($appDataValue)) {
-                    $j = key($appDataValue);
-                    $appDataValue = is_array($appDataValue[$j]) ? $appDataValue : $appDataValue[$j];
-                }
-                if (is_string($appDataValue)) {
-                    foreach ($fieldTypes as $key => $fieldType) {
-                        foreach ($fieldType as $fieldTypeKey => $fieldTypeValue) {
-                            if (strtoupper($appDataKey) == $fieldTypeKey) {
-                                $appData[$appDataKey] = validateType($appDataValue, $fieldTypeValue);
-                                unset($fieldTypeKey);
-                            }
-                        }
-                    }
-                    // normal fields
-                    if (trim($appDataValue) === '') {
-                        $appData[$appDataKey] = null;
-                    }
-                } else {
-                    // grids
-                    if (is_array($appData[$appDataKey])) {
-                        foreach ($appData[$appDataKey] as $dIndex => $dRow) {
-                            if (is_array($dRow)) {
-                                foreach ($dRow as $k => $v) {
-                                    if (is_string($v) && trim($v) === '') {
-                                        $appData[$appDataKey][$dIndex][$k] = null;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            //populate data
-            if ($type === 'GRID') {
-                list($gridName, $gridUid) = explode('-', $gridKey);
-                $gridData = isset($appData[$gridName]) ? $appData[$gridName] : [];
-                foreach ($gridData as $i => $gridRow) {
-                    try {
-                        $obj = new $className();
-                        $obj->fromArray($appData, BasePeer::TYPE_FIELDNAME);
-                        $obj->setAppUid($application->APP_UID);
-                        $obj->setAppNumber($application->APP_NUMBER);
-                        if (method_exists($obj, 'setAppStatus')) {
-                            $obj->setAppStatus($application->APP_STATUS);
-                        }
-                        $obj->fromArray(array_change_key_case($gridRow, CASE_UPPER), BasePeer::TYPE_FIELDNAME);
-                        $obj->setRow($i);
-                        $obj->save();
-                    } catch (Exception $e) {
-                        $context["message"] = $e->getMessage();
-                        $context["tableName"] = $tableName;
-                        $context["appUid"] = $application->APP_UID;
-                        $message = 'Sql Execution';
-                        Log::channel(':sqlExecution')->critical($message, Bootstrap::context($context));
-                    }
-                    unset($obj);
-                }
-            } else {
-                try {
-                    $obj = new $className();
-                    $obj->fromArray(array_change_key_case($appData, CASE_UPPER), BasePeer::TYPE_FIELDNAME);
-                    $obj->setAppUid($application->APP_UID);
-                    $obj->setAppNumber($application->APP_NUMBER);
-                    if (method_exists($obj, 'setAppStatus')) {
-                        $obj->setAppStatus($application->APP_STATUS);
-                    }
-                    $obj->save();
-                } catch (Exception $e) {
-                    $context["message"] = $e->getMessage();
-                    $context["tableName"] = $tableName;
-                    $context["appUid"] = $application->APP_UID;
-                    $message = 'Sql Execution';
-                    Log::channel(':sqlExecution')->critical($message, Bootstrap::context($context));
-                }
-                unset($obj);
-            }
-        }
-    }
-
-    /**
-     * This method populates the table with a query string.
-     * @param string $query
-     * @param boolean $rbac
-     */
-    public function populateTableReport($query, $rbac)
     {
         $database = $this->getDatabase($rbac);
         $database->executeQuery($query, true);

@@ -35,21 +35,21 @@ class GoogleUser implements ResourceOwnerInterface
     /**
      * Get preferred first name.
      *
-     * @return string|null
+     * @return string
      */
     public function getFirstName()
     {
-        return $this->getResponseValue('given_name');
+        return $this->response['given_name'];
     }
 
     /**
      * Get preferred last name.
      *
-     * @return string|null
+     * @return string
      */
     public function getLastName()
     {
-        return $this->getResponseValue('family_name');
+        return $this->response['family_name'];
     }
 
     /**
@@ -59,7 +59,10 @@ class GoogleUser implements ResourceOwnerInterface
      */
     public function getLocale()
     {
-        return $this->getResponseValue('locale');
+        if (array_key_exists('locale', $this->response)) {
+            return $this->response['locale'];
+        }
+        return null;
     }
 
     /**
@@ -69,7 +72,10 @@ class GoogleUser implements ResourceOwnerInterface
      */
     public function getEmail()
     {
-        return $this->getResponseValue('email');
+        if (array_key_exists('email', $this->response)) {
+            return $this->response['email'];
+        }
+        return null;
     }
 
     /**
@@ -79,7 +85,10 @@ class GoogleUser implements ResourceOwnerInterface
      */
     public function getHostedDomain()
     {
-        return $this->getResponseValue('hd');
+        if (array_key_exists('hd', $this->response)) {
+            return $this->response['hd'];
+        }
+        return null;
     }
 
     /**
@@ -89,7 +98,10 @@ class GoogleUser implements ResourceOwnerInterface
      */
     public function getAvatar()
     {
-        return $this->getResponseValue('picture');
+        if (array_key_exists('picture', $this->response)) {
+            return $this->response['picture'];
+        }
+        return null;
     }
 
     /**
@@ -100,13 +112,5 @@ class GoogleUser implements ResourceOwnerInterface
     public function toArray()
     {
         return $this->response;
-    }
-
-    private function getResponseValue($key)
-    {
-        if (array_key_exists($key, $this->response)) {
-            return $this->response[$key];
-        }
-        return null;
     }
 }

@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Support\Facades\Log;
 use ProcessMaker\Exception\RBACException;
 
 class RBAC
@@ -13,7 +12,6 @@ class RBAC
     const PROCESSMAKER_GUEST = 'PROCESSMAKER_GUEST';
     const PROCESSMAKER_GUEST_UID = '00000000000000000000000000000005';
     const GUEST_USER_UID = '00000000000000000000000000000002';
-    public static $defaultPermissionsForAdmin = ['PM_TASK_SCHEDULER_ADMIN'];
 
     /**
      *
@@ -58,7 +56,6 @@ class RBAC
                 'ofToAssign' => ['PM_FACTORY'],
                 'usersGroup' => ['PM_FACTORY'],
                 'canDeleteUser' => ['PM_USERS'],
-                'privateProcesses' => ['PM_USERS'],
                 'deleteUser' => ['PM_USERS'],
                 'changeUserStatus' => ['PM_USERS'],
                 'availableGroups' => ['PM_USERS'],
@@ -618,11 +615,6 @@ class RBAC
                 'PER_UID' => '00000000000000000000000000000068',
                 'PER_CODE' => 'PM_FOLDERS_OWNER',
                 'PER_NAME' => 'View Your Folders'
-            ],
-            [
-                'PER_UID' => '00000000000000000000000000000069',
-                'PER_CODE' => 'PM_TASK_SCHEDULER_ADMIN',
-                'PER_NAME' => 'View Task Scheduler'
             ]
         ];
 
@@ -919,12 +911,10 @@ class RBAC
                                 return $res;
                             }
                         } catch (Exception $e) {
-                            $message = $e->getMessage();
-                            $context = [
-                                'action' => 'ldapSynchronize',
-                                'authSource' => $row
-                            ];
-                            Log::channel(':ldapSynchronize')->error($message, Bootstrap::context($context));
+                            $context = Bootstrap::getDefaultContextLog();
+                            $context["action"] = "ldapSynchronize";
+                            $context["authSource"] = $row;
+                            Bootstrap::registerMonolog("ldapSynchronize", 400, $e->getMessage(), $context, $context["workspace"], "processmaker.log");
                         }
                     }
 
@@ -1159,14 +1149,12 @@ class RBAC
                 $dataCase['USR_STATUS'] = 1;
             }
         }
-        $currentUser = $this->userObj;
-        $this->userObj = new RbacUsers();
+
         $this->userObj->update($dataCase);
         if ($rolCode != '') {
             $this->removeRolesFromUser($dataCase['USR_UID']);
             $this->assignRoleToUser($dataCase['USR_UID'], $rolCode);
         }
-        $this->userObj = $currentUser;
     }
 
     /**
@@ -1976,8 +1964,8 @@ class RBAC
             $o = new RolesPermissions();
             $o->setPerUid($item['PER_UID']);
             $o->setPermissionName($item['PER_NAME']);
-            // Assigning new permissions to specific roles
-            $this->assigningNewPermissionsForAdmin($item);
+            //assigning new permissions
+            $this->assigningNewPermissionsPmSetup($item);
             $this->assigningNewPermissionsPmEditProfile($item);
         }
 
@@ -1985,13 +1973,12 @@ class RBAC
     }
 
     /**
-     * Assign new permissions to the role defined
-     * Permissions with the name with PM_SETUP_* or defined in the array $defaultPermissionsForAdmin
+     * Permissions for tab ADMIN
      * @param array $item
      */
-    public function assigningNewPermissionsForAdmin($item = [])
+    public function assigningNewPermissionsPmSetup($item = [])
     {
-        if (strpos($item['PER_CODE'], 'PM_SETUP_') !== false || in_array($item['PER_CODE'], self::$defaultPermissionsForAdmin)) {
+        if (strpos($item['PER_CODE'], 'PM_SETUP_') !== false) {
             $rolesWithPermissionSetup = $this->getRolePermissionsByPerUid(self::SETUPERMISSIONUID);
             $rolesWithPermissionSetup->next();
             while ($aRow = $rolesWithPermissionSetup->getRow()) {

@@ -1,7 +1,6 @@
 <?php
 
 use Monolog\Handler\StreamHandler;
-use Monolog\Handler\SyslogUdpHandler;
 
 return [
 
@@ -36,8 +35,7 @@ return [
     'channels' => [
         'stack' => [
             'driver' => 'stack',
-            'channels' => ['daily'],
-            'ignore_exceptions' => false,
+            'channels' => ['single'],
         ],
 
         'single' => [
@@ -48,18 +46,12 @@ return [
 
         'daily' => [
             'driver' => 'daily',
-            'tap' => [App\Logging\CustomizeFormatter::class],
+            'tap' => [
+                App\Logging\CustomizeFormatter::class
+            ],
             'path' => storage_path('logs/processmaker.log'),
-            'level' => 'debug',
-            'days' => $app->make('config')->get('app.log_max_files', 60),
-        ],
-        
-        'audit' => [
-            'driver' => 'daily',
-            'tap' => [App\Logging\CustomizeFormatter::class],
-            'path' => storage_path('logs/audit.log'),
-            'level' => 'debug',
-            'days' => $app->make('config')->get('app.log_max_files', 60),
+            'level' => env('APP_LOG_LEVEL', 'debug'),
+            'days' => $app->make('config')->get('app.log_max_files', 5),
         ],
 
         'slack' => [
@@ -70,20 +62,9 @@ return [
             'level' => 'critical',
         ],
 
-        'papertrail' => [
-            'driver' => 'monolog',
-            'level' => 'debug',
-            'handler' => SyslogUdpHandler::class,
-            'handler_with' => [
-                'host' => env('PAPERTRAIL_URL'),
-                'port' => env('PAPERTRAIL_PORT'),
-            ],
-        ],
-
         'stderr' => [
             'driver' => 'monolog',
             'handler' => StreamHandler::class,
-            'formatter' => env('LOG_STDERR_FORMATTER'),
             'with' => [
                 'stream' => 'php://stderr',
             ],
@@ -98,6 +79,7 @@ return [
             'driver' => 'errorlog',
             'level' => 'debug',
         ],
+
     ],
 
 ];

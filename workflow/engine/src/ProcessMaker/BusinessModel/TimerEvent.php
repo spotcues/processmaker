@@ -1,9 +1,5 @@
 <?php
-
 namespace ProcessMaker\BusinessModel;
-
-use Bootstrap;
-use Illuminate\Support\Facades\Log;
 
 class TimerEvent
 {
@@ -1167,6 +1163,42 @@ class TimerEvent
     }
 
     /**
+     * The Syslog register the information in Monolog Class
+     *
+     * @param int $level DEBUG=100 INFO=200 NOTICE=250 WARNING=300 ERROR=400 CRITICAL=500
+     * @param string $message
+     * @param string $ipClient for Context information
+     * @param string $action for Context information
+     * @param string $timeZone for Context information
+     * @param string $workspace for Context information
+     * @param string $usrUid for Context information
+     * @param string $proUid for Context information
+     * @param string $tasUid for Context information
+     * @param string $appUid for Context information
+     * @param string $delIndex for Context information
+     * @param string $stepUid for Context information
+     * @param string $triUid for Context information
+     * @param string $outDocUid for Context information
+     * @param string $inpDocUid for Context information
+     * @param string $url for Context information
+     *
+     * return void
+     */
+    private function syslog(
+        $level,
+        $message,
+        $action='',
+        $aContext = array()
+    )
+    {
+        try {
+            \Bootstrap::registerMonolog('TimerEventCron', $level, $message, $aContext, config("system.workspace"), 'processmaker.log');
+        } catch (\Exception $e) {
+            throw $e;
+        }
+    }
+
+    /**
      * Start/Continue case by Timer-Event
      * 
      * @param string $datetime Datetime (yyyy-mm-dd hh:ii:ss)
@@ -1205,9 +1237,12 @@ class TimerEvent
                 ,'timeZone' => $datetime
                 ,'workspace'=> $sysSys
             );
-            $message = 'Start new cases';
-            $context = $aInfo;
-            Log::channel(':TimerEventCron')->info($message, Bootstrap::context($context));
+            $this->syslog(
+                200
+                ,'Start new cases'
+                ,'START-NEW-CASES'
+                ,$aInfo
+            );
 
             //Query
             $criteria = $this->getTimerEventCriteria();
@@ -1364,9 +1399,12 @@ class TimerEvent
                             ,'evnUid'   => $row['EVN_UID']
                             ,'evnName'  => $row['EVN_NAME']
                         );
-                        $message = "Case #$applicationNumber created";
-                        $context = $aInfo;
-                        Log::channel(':TimerEventCron')->info($message, Bootstrap::context($context));
+                        $this->syslog(
+                            200
+                            ,"Case #$applicationNumber created"
+                            ,'CREATED-NEW-CASE'
+                            ,$aInfo
+                        );
 
                         //Derivate new case
                         $result = $ws->derivateCase("", $applicationUid, 1);
@@ -1390,9 +1428,12 @@ class TimerEvent
                                 ,'evnUid'   => $row['EVN_UID']
                                 ,'evnName'  => $row['EVN_NAME']
                             );
-                            $message = "Case #$applicationNumber routed";
-                            $context = $aInfo;
-                            Log::channel(':TimerEventCron')->info($message, Bootstrap::context($context));
+                            $this->syslog(
+                                200
+                                ,"Case #$applicationNumber routed"
+                                ,'ROUTED-NEW-CASE'
+                                ,$aInfo
+                            );
                         } else {
                             $common->frontEndShow("TEXT", "    - Failed: " . $arrayResult["message"]);
 
@@ -1410,9 +1451,12 @@ class TimerEvent
                                 ,'evnUid'   => $row['EVN_UID']
                                 ,'evnName'  => $row['EVN_NAME']
                             );
-                            $message = "Failed case #$applicationNumber. " . $arrayResult["message"];
-                            $context = $aInfo;
-                            Log::channel(':TimerEventCron')->critical($message, Bootstrap::context($context));
+                            $this->syslog(
+                                500
+                                ,"Failed case #$applicationNumber. " . $arrayResult["message"]
+                                ,'ROUTED-NEW-CASE'
+                                ,$aInfo
+                            );
                         }
                     } else {
                         $common->frontEndShow("TEXT", "    - Failed: " . $arrayResult["message"]);
@@ -1428,9 +1472,12 @@ class TimerEvent
                             ,'evnUid'   => $row['EVN_UID']
                             ,'evnName'  => $row['EVN_NAME']
                         );
-                        $message = "Failed case #$applicationNumber. " . $arrayResult["message"];
-                        $context = $aInfo;
-                        Log::channel(':TimerEventCron')->critical($message, Bootstrap::context($context));
+                        $this->syslog(
+                            500
+                            ,"Failed case #$applicationNumber. " . $arrayResult["message"]
+                            ,'CREATED-NEW-CASE'
+                            ,$aInfo
+                        );
                     }
 
                     $flagRecord = true;
@@ -1444,12 +1491,15 @@ class TimerEvent
                 $aInfo = array(
                     'ip'        => \G::getIpAddress()
                     ,'action'   => $action
-                    ,'timeZone' => $datetime
+                    ,'TimeZone' => $datetime
                     ,'workspace'=> $sysSys
                 );
-                $message = 'Not exists any record to start a new case';
-                $context = $aInfo;
-                Log::channel(':TimerEventCron')->info($message, Bootstrap::context($context));
+                $this->syslog(
+                    200
+                    ,'Not exists any record to start a new case'
+                    ,'NO-RECORDS'
+                    ,$aInfo
+                );
             }
 
             $common->frontEndShow("END");
@@ -1460,12 +1510,15 @@ class TimerEvent
             $aInfo = array(
                 'ip'        => \G::getIpAddress()
                 ,'action'   => $action
-                ,'timeZone' => $datetime
+                ,'TimeZone' => $datetime
                 ,'workspace'=> $sysSys
             );
-            $message = 'Start continue the cases';
-            $context = $aInfo;
-            Log::channel(':TimerEventCron')->info($message, Bootstrap::context($context));
+            $this->syslog(
+                200
+                ,'Start continue the cases'
+                ,'START-CONTINUE-CASES'
+                ,$aInfo
+            );
 
             //Query
             $criteriaMain = $this->getTimerEventCriteria();
@@ -1655,9 +1708,12 @@ class TimerEvent
                                     ,'evnUid'   => $row['EVN_UID']
                                     ,'evnName'  => $row['EVN_NAME']
                                 );
-                                $message = "Case #$applicationNumber continued";
-                                $context = $aInfo;
-                                Log::channel(':TimerEventCron')->info($message, Bootstrap::context($context));
+                                $this->syslog(
+                                    200
+                                    ,"Case #$applicationNumber continued"
+                                    ,'CONTINUED-CASE'
+                                    ,$aInfo
+                                );
                             } else {
                                 $common->frontEndShow("TEXT", "    - Failed: " . $arrayResult["message"]);
 
@@ -1674,9 +1730,12 @@ class TimerEvent
                                     ,'evnUid'   => $row['EVN_UID']
                                     ,'evnName'  => $row['EVN_NAME']
                                 );
-                                $message = "Failed case #$applicationUid. " . $arrayResult["message"];
-                                $context = $aInfo;
-                                Log::channel(':TimerEventCron')->critical($message, Bootstrap::context($context));
+                                $this->syslog(
+                                    500
+                                    ,"Failed case #$applicationUid. " . $arrayResult["message"]
+                                    ,'CONTINUED-CASE'
+                                    ,$aInfo
+                                );
                             }
 
                             $flagRecord = true;
@@ -1695,9 +1754,12 @@ class TimerEvent
                                     ,'evnUid'   => $row['EVN_UID']
                                     ,'evnName'  => $row['EVN_NAME']
                                 );
-                        $message = 'Invalid date to continue ' . $continueCaseDate;
-                        $context = $aInfo;
-                        Log::channel(':TimerEventCron')->info($message, Bootstrap::context($context));
+                        $this->syslog(
+                            200
+                            ,'Continue date '. $continueCaseDate
+                            ,'INVALID-CONTINUE-DATE'
+                            ,$aInfo
+                        );
                     }
 
                     $counter++;
@@ -1715,12 +1777,15 @@ class TimerEvent
                 $aInfo = array(
                     'ip'        => \G::getIpAddress()
                     ,'action'   => $action
-                    ,'timeZone' => $datetime
+                    ,'TimeZone' => $datetime
                     ,'workspace'=> $sysSys
                 );
-                $message = 'No existing records to continue a case';
-                $context = $aInfo;
-                Log::channel(':TimerEventCron')->info($message, Bootstrap::context($context));
+                $this->syslog(
+                    200
+                    ,'No existing records to continue a case'
+                    ,'NO-RECORDS'
+                    ,$aInfo
+                );
             }
 
             $common->frontEndShow("END");

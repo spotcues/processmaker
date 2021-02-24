@@ -1,7 +1,5 @@
 <?php
 
-use Illuminate\Support\Facades\Log;
-use PhpMyAdmin\SqlParser\Parser;
 use ProcessMaker\Core\System;
 use ProcessMaker\BusinessModel\DynaForm\SuggestTrait;
 use ProcessMaker\BusinessModel\Cases;
@@ -24,7 +22,6 @@ class PmDynaform
     private $lastQueryError = null;
     private $propertiesToExclude = [];
     private $sysSys = null;
-    private $fieldsAppData;
     public $credentials = null;
     public $displayMode = null;
     public $fields = null;
@@ -32,7 +29,6 @@ class PmDynaform
     public $lang = SYS_LANG;
     public $translations = null;
     public $onPropertyRead = "onPropertyReadFormInstance";
-    public $onAfterPropertyRead = "onAfterPropertyReadFormInstance";
     public $pathRTLCss = '';
     public $record = null;
     public $records = null;
@@ -80,7 +76,7 @@ class PmDynaform
     public function __construct($fields = [])
     {
         $this->sysSys = (!empty(config("system.workspace"))) ? config("system.workspace") : "Undefined";
-        $this->context = Bootstrap::context();
+        $this->context = \Bootstrap::getDefaultContextLog();
         $this->dataSources = array("database", "dataVariable");
         $this->pathRTLCss = '/lib/pmdynaform/build/css/PMDynaform-rtl.css';
         $this->serverConf = ServerConf::getSingleton();
@@ -94,7 +90,6 @@ class PmDynaform
         if (is_array($this->fields) && !isset($this->fields["APP_UID"])) {
             $this->fields["APP_UID"] = null;
         }
-        $this->fieldsAppData = isset($this->fields["APP_DATA"]) ? $this->fields["APP_DATA"] : [];
 
         //todo: compatibility checkbox
         if ($this->record !== null && isset($this->record["DYN_CONTENT"]) && $this->record["DYN_CONTENT"] !== "") {
@@ -154,16 +149,12 @@ class PmDynaform
         return $labelsPo;
     }
 
-    /**
-     * Get the title of a Dynaform
-     *
-     * @param string $dynUid
-     * @return string
-     */
-    public function getDynaformTitle($dynUid)
+    public function getDynaformTitle($idDynaform)
     {
-        $dynaform = ModelDynaform::getByDynUid($dynUid);
-        return $dynaform->DYN_TITLE;
+        $d = new Dynaform();
+        $d->setDynUid($idDynaform);
+        $titleDynaform = $d->getDynTitle();
+        return $titleDynaform;
     }
 
     /**
@@ -231,10 +222,6 @@ class PmDynaform
             $flagTrackerUser = true;
         }
         if ($this->credentials != null) {
-            // Destroy variable "USER_LOGGED" in session if is a not authenticated user
-            if ($flagTrackerUser) {
-                unset($_SESSION["USER_LOGGED"]);
-            }
             return $this->credentials;
         }
         if (isset($_SESSION["PMDYNAFORM_CREDENTIALS"]) && isset($_SESSION["PMDYNAFORM_CREDENTIALS_EXPIRES"])) {
@@ -242,12 +229,6 @@ class PmDynaform
             $time2 = strtotime($_SESSION["PMDYNAFORM_CREDENTIALS_EXPIRES"]);
             if ($time1 < $time2) {
                 $this->credentials = $_SESSION["PMDYNAFORM_CREDENTIALS"];
-
-                // Destroy variable "USER_LOGGED" in session if is a not authenticated user
-                if ($flagTrackerUser) {
-                    unset($_SESSION["USER_LOGGED"]);
-                }
-
                 return $this->credentials;
             }
         }
@@ -262,7 +243,6 @@ class PmDynaform
             "clientSecret" => $a["client_secret"]
         );
 
-        // Destroy variable "USER_LOGGED" in session if is a not authenticated user
         if ($flagTrackerUser) {
             unset($_SESSION["USER_LOGGED"]);
         }
@@ -353,7 +333,7 @@ class PmDynaform
                                 }
                             }
                         }
-                        $sql = $this->replaceDataField($json->sql, $dtFields);
+                        $sql = G::replaceDataField($json->sql, $dtFields, 'mysql', false);
                         if ($value === "suggest") {
                             $sql = $this->prepareSuggestSql($sql, $json);
                         }
@@ -561,7 +541,6 @@ class PmDynaform
                     if (isset($this->fields["APP_DATA"][$json->name . "_label"])) {
                         $json->data->label = $this->fields["APP_DATA"][$json->name . "_label"];
                     }
-                    $this->setDependentOptionsForDatetime($json, $this->fields);
                 }
                 if ($key === "type" && ($value === "file") && isset($this->fields["APP_DATA"]["APPLICATION"])) {
                     $oCriteriaAppDocument = new Criteria("workflow");
@@ -788,11 +767,6 @@ class PmDynaform
                         }
                     }
                 }
-                //read event after
-                $fn = $this->onAfterPropertyRead;
-                if (is_callable($fn) || function_exists($fn)) {
-                    $fn($json, $key, $value);
-                }
             }
         }
     }
@@ -850,12 +824,7 @@ class PmDynaform
         }
     }
 
-    /**
-     * Get the values of the dependent references.
-     * @param object $json
-     * @return array
-     */
-    private function getValuesDependentFields($json): array
+    private function getValuesDependentFields($json)
     {
         if (!isset($this->record["DYN_CONTENT"])) {
             return array();
@@ -870,7 +839,7 @@ class PmDynaform
         }
         if (isset($json->dbConnection) && isset($json->sql)) {
             $result = array();
-            preg_match_all('/\@(?:([\@\%\#\=\?\!Qq])([a-zA-Z\_]\w*)|([a-zA-Z\_][\w\-\>\:]*)\(((?:[^\\\\\)]*?)*)\))/', $json->sql, $result, PREG_PATTERN_ORDER | PREG_OFFSET_CAPTURE);
+            preg_match_all('/\@(?:([\@\%\#\=\!Qq])([a-zA-Z\_]\w*)|([a-zA-Z\_][\w\-\>\:]*)\(((?:[^\\\\\)]*?)*)\))/', $json->sql, $result, PREG_PATTERN_ORDER | PREG_OFFSET_CAPTURE);
             $variables = isset($result[2]) ? $result[2] : array();
             foreach ($variables as $key => $value) {
                 //Prevents an infinite cycle. If the name of the variable is used within its own dependent.
@@ -885,7 +854,7 @@ class PmDynaform
                 }
             }
             if ($json->dbConnection !== "" && $json->dbConnection !== "none" && $json->sql !== "") {
-                $sql = $this->replaceDataField($json->sql, $data);
+                $sql = G::replaceDataField($json->sql, $data, 'mysql', false);
                 $dt = $this->getCacheQueryData($json->dbConnection, $sql, $json->type);
                 $row = isset($dt[0]) ? $dt[0] : [];
                 $index = $json->variable === "" ? $json->id : $json->variable;
@@ -940,16 +909,18 @@ class PmDynaform
 
                 $this->context["action"] = "execute-sql" . $type;
                 $this->context["sql"] = $sql;
-                $message = 'Sql Execution';
-                Log::channel(':sqlExecution')->info($message, Bootstrap::context($this->context));
+                \Bootstrap::registerMonolog("sqlExecution", 200, "Sql Execution", $this->context, $this->sysSys, "processmaker.log");
             }
         } catch (Exception $e) {
             $this->context["action"] = "execute-sql" . $type;
             $this->context["exception"] = (array) $e;
             $this->lastQueryError = $e;
-            $message = 'Sql Execution';
-            $context = $this->basicExceptionData($e, $sql);
-            Log::channel(':sqlExecution')->error($message, Bootstrap::context($context));
+            \Bootstrap::registerMonolog("sqlExecution",
+                                            400,
+                                            "Sql Execution",
+                                            $this->basicExceptionData($e, $sql),
+                                            $this->sysSys,
+                                            "processmaker.log");
         }
         return $data;
     }
@@ -1044,16 +1015,6 @@ class PmDynaform
                         $dt[$key]["alias"] = "";
                     }
                     if ($key == 0) {
-                        //compatibility with table name alias when uses the sentence 'AS'
-                        if (strtoupper($dt[$key]["alias"]) === 'AS') {
-                            $parser = new Parser($sql);
-                            if (isset($parser->statements[$key]) && isset($parser->statements[$key]->from[$key])) {
-                                $obj1 = $parser->statements[$key]->from[$key];
-                                if (!empty($obj1->alias)) {
-                                    $dt[$key]["alias"] = $dt[$key]["alias"] . ' ' . $obj1->alias;
-                                }
-                            }
-                        }
                         $from .= $dt[$key]["table"]
                                 . ($dt[$key]["table"] == $dt[$key]["alias"] ? "" : " " . $dt[$key]["alias"]);
                     } else {
@@ -1776,7 +1737,8 @@ class PmDynaform
             return false;
         }
         foreach ($result as $row) {
-            $json = G::json_decode($row->DYN_CONTENT);
+            $dynaform = new PmDynaform(["CURRENT_DYNAFORM" => $row->DYN_UID]);
+            $json = G::json_decode($dynaform->record["DYN_CONTENT"]);
             if ($this->jsoni($json, $variable)) {
                 return $row->DYN_UID;
             }
@@ -1810,11 +1772,12 @@ class PmDynaform
      * @param string $dynUid
      * @param string $fieldId
      * @param string $proUid
-     * @param array $and
+     *
      * @return object
+     *
      * @see \ProcessMaker\BusinessModel\Variable::executeSqlControl()
-     */
-    public function searchField($dynUid, $fieldId, $proUid = null, array $and = [])
+    */
+    public function searchField($dynUid, $fieldId, $proUid = null)
     {
         //get pro_uid if empty
         if (empty($proUid)) {
@@ -1857,8 +1820,8 @@ class PmDynaform
                 }
             }
         }
-        $this->completeAdditionalHelpInformationOnControls($json);
-        return $this->jsonsf($json, $fieldId, "id", $and);
+
+        return $this->jsonsf($json, $fieldId);
     }
 
     public function searchFieldByName($dyn_uid, $name)
@@ -1875,92 +1838,19 @@ class PmDynaform
         return $this->jsonsf($json, $name, "name");
     }
 
-    /**
-     * Replace data field with custom variables.
-     * @param string $sql
-     * @param array $data
-     * @return string
-     */
-    private function replaceDataField(string $sql, array $data): string
-    {
-        $textParse = '';
-        $dbEngine = 'mysql';
-        $start = 0;
-
-        $prefix = '\?';
-        $pattern = '/\@(?:([' . $prefix . 'Qq\!])([a-zA-Z\_]\w*)|([a-zA-Z\_][\w\-\>\:]*)\(((?:[^\\\\\)]*(?:[\\\\][\w\W])?)*)\))((?:\s*\[[\'"]?\w+[\'"]?\])+|\-\>([a-zA-Z\_]\w*))?/';
-        $result = preg_match_all($pattern, $sql, $match, PREG_PATTERN_ORDER | PREG_OFFSET_CAPTURE);
-        for ($r = 0; $result !== false && $r < $result; $r++) {
-            $dataGlobal = array_merge($this->fieldsAppData, $data);
-            if (!isset($dataGlobal[$match[2][$r][0]])) {
-                $dataGlobal[$match[2][$r][0]] = '';
-            }
-            if (!is_array($dataGlobal[$match[2][$r][0]])) {
-                $textParse = $textParse . substr($sql, $start, $match[0][$r][1] - $start);
-                $start = $match[0][$r][1] + strlen($match[0][$r][0]);
-                if (($match[1][$r][0] == '?') && (isset($dataGlobal[$match[2][$r][0]]))) {
-                    $textParse = $textParse . $dataGlobal[$match[2][$r][0]];
-                    continue;
-                }
-            }
-        }
-        $textParse = $textParse . substr($sql, $start);
-
-        $sqlResult = G::replaceDataField($textParse, $data, $dbEngine, false);
-        return $sqlResult;
-    }
-
-    /**
-     * complete additional help information on controls.
-     * @param object $json
-     */
-    private function completeAdditionalHelpInformationOnControls(&$json)
+    private function jsonsf(&$json, $id, $for = "id")
     {
         foreach ($json as $key => $value) {
             $sw1 = is_array($value);
             $sw2 = is_object($value);
             if ($sw1 || $sw2) {
-                $this->completeAdditionalHelpInformationOnControls($value);
-            }
-            if (!$sw1 && !$sw2) {
-                if ($key === "type" && ($value === "grid")) {
-                    foreach ($json->columns as $column) {
-                        $column->gridName = $json->id;
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     * Gets an element within an object that represents the dynaform. Search is 
-     * done by 'id', 'property' and additional filters.
-     * @param object $json
-     * @param string $id
-     * @param string $for
-     * @param array $and
-     * @return mixed
-     */
-    private function jsonsf(&$json, string $id, string $for = "id", array $and = [])
-    {
-        foreach ($json as $key => $value) {
-            $sw1 = is_array($value);
-            $sw2 = is_object($value);
-            if ($sw1 || $sw2) {
-                $val = $this->jsonsf($value, $id, $for, $and);
+                $val = $this->jsonsf($value, $id, $for);
                 if ($val !== null) {
                     return $val;
                 }
             }
             if (!$sw1 && !$sw2) {
-                $filter = empty($and);
-                foreach ($and as $keyAnd => $valueAnd) {
-                    $filter = isset($json->{$keyAnd}) && $json->{$keyAnd} === $valueAnd;
-                    if ($filter === false) {
-                        break;
-                    }
-                }
-                if ($key === $for && $id === $value && $filter) {
+                if ($key === $for && $id === $value) {
                     return $json;
                 }
             }
@@ -2395,13 +2285,14 @@ class PmDynaform
             $jsonData = G::json_encode($json);
 
             //Log
-            $message = 'JSON encoded string error ' . $jsonLastError . ': ' . $jsonLastErrorMsg;
-            $context = [
-                'token' => $token,
-                'projectUid' => $this->record['PRO_UID'],
-                'dynaFormUid' => $this->record['DYN_UID']
-            ];
-            Log::channel(':RenderDynaForm')->error($message, Bootstrap::context($context));
+            \Bootstrap::registerMonolog(
+                'RenderDynaForm',
+                400,
+                'JSON encoded string error ' . $jsonLastError . ': ' . $jsonLastErrorMsg,
+                ['token' => $token, 'projectUid' => $this->record['PRO_UID'], 'dynaFormUid' => $this->record['DYN_UID']],
+                config("system.workspace"),
+                'processmaker.log'
+            );
         }
 
         //Return
@@ -2594,39 +2485,5 @@ class PmDynaform
             }
             $json->dataSchema[$key] = $columnsData;
         }
-    }
-
-    /**
-     * Sets the dependentOptions property for datetime control, if it contains dependent fields.
-     * @param stdClass $json
-     * @param array $fields
-     * @return void
-     */
-    private function setDependentOptionsForDatetime(stdClass &$json, array $fields = []): void
-    {
-        if (!isset($json->type)) {
-            return;
-        }
-        if ($json->type !== 'datetime') {
-            return;
-        }
-        $json->dependentOptions = '';
-        $backup = $this->onAfterPropertyRead;
-        $properties = [
-            'defaultDate' => $json->defaultDate,
-            'minDate' => $json->minDate,
-            'maxDate' => $json->maxDate
-        ];
-        $this->onAfterPropertyRead = function(stdClass &$json, $key, $value) use($backup, $properties) {
-            if (isset($json->type) && $json->type === 'datetime' && $key === "dependentOptions") {
-                $json->dependentOptions = new stdClass();
-                foreach ($properties as $property => $value) {
-                    if (is_string($value) && in_array(substr($value, 0, 2), self::$prefixs)) {
-                        $json->dependentOptions->{$property} = $value;
-                    }
-                }
-                $this->onAfterPropertyRead = $backup;
-            }
-        };
     }
 }

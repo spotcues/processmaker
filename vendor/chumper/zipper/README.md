@@ -1,10 +1,3 @@
-# Note
-
-I haven't updated this package in a long time except merging PRs. The last time I was using this package was with PHP5.
-I archived the repository for the reason that I am no longer working with PHP (we all have to move on sometimes) and have no time to take proper care of it anymore.
-
-Feel free to read the code, to fork it or to use it in whatever way you want.
-
 # Zipper
 
 [![Build Status](https://travis-ci.org/Chumper/Zipper.png)](https://travis-ci.org/Chumper/Zipper)
@@ -20,8 +13,8 @@ This is a simple Wrapper around the ZipArchive methods with some handy functions
 
 3. Go to `app/config/app.php`
 
-  * add to providers `Chumper\Zipper\ZipperServiceProvider::class`
-  * add to aliases `'Zipper' => Chumper\Zipper\Zipper::class`
+  * add to providers `'Chumper\Zipper\ZipperServiceProvider'`
+  * add to aliases `'Zipper' => 'Chumper\Zipper\Zipper'`
 
 You can now access Zipper with the `Zipper` alias.
 
@@ -72,12 +65,12 @@ It will return the Zipper instance so you can chain easily.
 
 ## add($files/folder)
 
-You can add an array of Files, or a Folder and all the files in that folder will then be added, so from the first example we could instead do something like `$files = 'public/files/';`.
+You can add and array of Files, or a Folder which all the files in that folder will then be added, so from the first example we could instead do something like `$files = 'public/files/';`.
 
 
 ## addString($filename, $content)
 
-add a single file to the zip by specifying a name and the content as strings.
+add a single file to the zip by specifying a name and content as strings.
 
 
 ## remove($file/s)
@@ -89,10 +82,9 @@ removes a single file or an array of files from the zip.
 
 Specify a folder to 'add files to' or 'remove files from' from the zip, example
 
-```php
-Zipper::make('test.zip')->folder('test')->add('composer.json');
-Zipper::make('test.zip')->folder('test')->remove('composer.json');
-```
+	Zipper::make('test.zip')->folder('test')->add('composer.json');
+	Zipper::make('test.zip')->folder('test')->remove('composer.json');
+
 
 ## listFiles($regexFilter = null)
 
@@ -137,9 +129,7 @@ closes the zip and writes all changes.
 
 Extracts the content of the zip archive to the specified location, for example
 
-```php
-Zipper::make('test.zip')->folder('test')->extractTo('foo');
-```
+    Zipper::make('test.zip')->folder('test')->extractTo('foo');
 
 This will go into the folder `test` in the zip file and extract the content of that folder only to the folder `foo`, this is equal to using the `Zipper::WHITELIST`.
 
@@ -197,12 +187,12 @@ Extracts the content of the zip archive matching regular expression to the speci
 
 Example: extract all files ending with `.php` from `src` folder and its sub folders.
 ```php
-Zipper::make('test.zip')->folder('src')->extractMatchingRegex($path, '/\.php$/i'); 
+Zipper::make('test.zip')->folder->('src')->extractMatchingRegex($path, '/\.php$/i'); 
 ```
 
 Example: extract all files **except** those ending with `test.php` from `src` folder and its sub folders.
 ```php
-Zipper::make('test.zip')->folder('src')->extractMatchingRegex($path, '/^(?!.*test\.php).*$/i'); 
+Zipper::make('test.zip')->folder->('src')->extractMatchingRegex($path, '/^(?!.*test\.php).*$/i'); 
 ```
 
 # Development

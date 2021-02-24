@@ -1034,7 +1034,7 @@ class User
 
             $criteria->add(UsersPeer::USR_UID, $userUid, Criteria::EQUAL);
 
-            $rsCriteria = UsersPeer::doSelectRS($criteria);
+            $rsCriteria = UsersPeer::doSelectRS($criteria,Propel::getDbConnection('workflow_ro'));
             $rsCriteria->setFetchmode(ResultSet::FETCHMODE_ASSOC);
 
             $result = $rsCriteria->next();

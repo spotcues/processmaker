@@ -13,7 +13,7 @@ var navbarExportUpdate = function () {
 
     var handlerExportGranular = function () {
         var optionExportNormal = $("<div class='mafe-button-submenu-option normalExport'>" + "Normal".translate() + "</div>"),
-            optionExportGranular = $("<div class='mafe-button-submenu-option granularExport'>" + "Custom".translate() + "</div>"),
+            optionExportGranular = $("<div class='mafe-button-submenu-option granularExport'>" + "Granular".translate() + "</div>"),
             menuExport = $("<div class='mafe-button-menu-container sub-nav'></div>").hide(),
             $item = $("#idNavBar").find(".mafe-button-export-process").closest("li");
 
@@ -295,8 +295,7 @@ var defaultNavbarPanelMenus = {
                     class: 'mafe-undo',
                     child: [
                         {
-                            element: 'b',
-                            class: 'mafe-action-undo',
+                            element: 'a',
                             child: [
                                 {
                                     element: 'span',
@@ -307,7 +306,7 @@ var defaultNavbarPanelMenus = {
                     ]
                 },
                 actions: {
-                    selector: ".mafe-action-undo",
+                    selector: ".mafe-button-undo",
                     tooltip: "Undo Action".translate(),
                     label: {
                         text: ''
@@ -328,8 +327,7 @@ var defaultNavbarPanelMenus = {
                     class: 'mafe-redo',
                     child: [
                         {
-                            element: 'b',
-                            class: 'mafe-action-redo',
+                            element: 'a',
                             child: [
                                 {
                                     element: 'span',
@@ -340,7 +338,7 @@ var defaultNavbarPanelMenus = {
                     ]
                 },
                 actions: {
-                    selector: ".mafe-action-redo",
+                    selector: ".mafe-button-redo",
                     tooltip: "Redo Action".translate(),
                     label: {
                         text: ''

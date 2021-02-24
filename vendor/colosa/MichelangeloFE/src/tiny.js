@@ -16,8 +16,6 @@ var PMTiny = function (options) {
     this.processID = null;
     this.domainURL = null;
     this.baseURL = null;
-    this.contentCss = null;
-    this.themeAdvancedFonts = null;
     PMTiny.prototype.init.call(this, options);
 };
 
@@ -43,9 +41,7 @@ PMTiny.prototype.init = function (options) {
         skinVariant: "silver",
         processID: null,
         domainURL: "/sys" + WORKSPACE + "/" + LANG + "/" + SKIN + "/",
-        baseURL: "/js/tinymce/jscripts/tiny_mce",
-        contentCss: "",
-        themeAdvancedFonts: "Andale Mono=andale mono,times;Arial=arial,helvetica,sans-serif;Arial Black=arial black,avant garde;Book Antiqua=book antiqua,palatino;Comic Sans MS=comic sans ms,sans-serif;Courier New=courier new,courier;Georgia=georgia,palatino;Helvetica=helvetica;Impact=impact,chicago;Symbol=symbol;Tahoma=tahoma,arial,helvetica,sans-serif;Terminal=terminal,monaco;Times New Roman=times new roman,times;Trebuchet MS=trebuchet ms,geneva;Verdana=verdana,geneva;Webdings=webdings;Wingdings=wingdings,zapf dingbats;"
+        baseURL: "/js/tinymce/jscripts/tiny_mce"
     };
 
     jQuery.extend(true, defaults, options);
@@ -65,9 +61,7 @@ PMTiny.prototype.init = function (options) {
         .setDomainURL(defaults.domainURL)
         .setBaseURL(defaults.baseURL)
         .setHeightTiny(defaults.heightTiny)
-        .setWidthTiny(defaults.widthTiny)
-        .setContentCss(defaults.contentCss)
-        .setThemeAdvancedFonts(defaults.themeAdvancedFonts);
+        .setWidthTiny(defaults.widthTiny);
 };
 
 PMTiny.prototype.setTheme = function (theme) {
@@ -134,26 +128,6 @@ PMTiny.prototype.setHeightTiny = function (heightTiny) {
     this.heightTiny = heightTiny;
     return this;
 };
-/**
- * Set CSS used in the content editor
- *
- * @param string contentCss
- * @returns {PMTiny}
- */
-PMTiny.prototype.setContentCss = function (contentCss) {
-    this.contentCss = contentCss;
-    return this;
-};
-/**
- * Set fonts list for the advanced theme
- *
- * @param string themeAdvancedFonts
- * @returns {PMTiny}
- */
-PMTiny.prototype.setThemeAdvancedFonts = function (themeAdvancedFonts) {
-    this.themeAdvancedFonts = themeAdvancedFonts;
-    return this;
-};
 
 
 PMTiny.prototype.setParameterTiny = function () {
@@ -177,8 +151,6 @@ PMTiny.prototype.setParameterTiny = function () {
         relative_urls: false,
         remove_script_host: false,
         convert_urls: this.convert_urls,
-        content_css: this.contentCss,
-        theme_advanced_fonts: this.themeAdvancedFonts,
         oninit: function () {
             tinyMCE.activeEditor.processID = PMDesigner.project.id;
             tinyMCE.activeEditor.domainURL = domainURL;

@@ -579,6 +579,9 @@ abstract class BaseEmailServerPeer
             }
         } else {
 
+        if ($obj->isNew() || $obj->isColumnModified(EmailServerPeer::MESS_ENGINE))
+            $columns[EmailServerPeer::MESS_ENGINE] = $obj->getMessEngine();
+
         }
 
         return BasePeer::doValidate(EmailServerPeer::DATABASE_NAME, EmailServerPeer::TABLE_NAME, $columns);

@@ -66,7 +66,7 @@ class ASTClassOrInterfaceReference extends ASTType
     /**
      * An already loaded type instance.
      *
-     * @var \PDepend\Source\AST\AbstractASTClassOrInterface|null
+     * @var \PDepend\Source\AST\AbstractASTClassOrInterface
      */
     protected $typeInstance = null;
 
